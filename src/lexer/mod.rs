@@ -11,18 +11,19 @@ use crate::lexer::token_stream::TokenStream;
 type Line = (Int, String);
 type LineList = Vec<Line>;
 
-pub struct Lexer {
+pub struct Lexer<'a> {
     path: PathBuf,
     current_string: String,
     parse_multi_line_string: bool,
     indent_stack: IntList,
     lines: LineList,
     paren_level: Int,
-    tokens: TokenList,
+    tokens: TokenList<'a>,
 }
 
-impl<'a> Lexer {
-    pub fn new(path: &PathBuf) -> IOResult<Lexer> {
+impl<'a> Lexer<'a> {
+    
+    pub fn new(path: &PathBuf) -> IOResult<Lexer<'a>> {
         if !path.exists() {
             return Err(Error::new(ErrorKind::NotFound, format!("{:?}", path)));
         }
@@ -37,7 +38,7 @@ impl<'a> Lexer {
         })
     }
 
-    pub fn scan(&mut self) -> IOResult<TokenStream> {
+    pub fn scan(&mut self) -> IOResult<TokenStream<'a>> {
         let file = File::open(&self.path)?;
         let reader = io::BufReader::new(file);
         self.lines = reader
@@ -57,7 +58,7 @@ impl<'a> Lexer {
         self.scan_lines()
     }
 
-    fn scan_lines(&mut self) -> IOResult<TokenStream> {
+    fn scan_lines(&mut self) -> IOResult<TokenStream<'a>> {
         self.tokens = vec![];
         self.indent_stack = vec![0];
         self.map_lines();
@@ -72,7 +73,7 @@ impl<'a> Lexer {
         }
     }
 
-    fn scan_line(&mut self, text: &str, _line_number: &Int) -> TokenList {
+    fn scan_line(&mut self, text: &str, _line_number: &Int) -> TokenList<'a> {
         let p = find_comment_pos(text);
         let (text, comment) = text.split_at(p);
         let tokens = text.split_whitespace();

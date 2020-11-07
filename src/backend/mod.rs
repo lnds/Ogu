@@ -44,6 +44,7 @@ pub fn run(params: Params) -> IOResult<()> {
 
 fn run_module(path: &PathBuf, params: &Params) -> IOResult<()> {
     let mut lexer = Lexer::new(path)?;
-    let _tokens = lexer.scan()?;
+    let tokens = lexer.scan()?;
+    println!("TOKENS: {:?}", tokens);
     Ok(())
 }

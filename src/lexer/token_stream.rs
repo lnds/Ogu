@@ -1,25 +1,13 @@
 use std::io::Result as IOResult;
+use crate::lexer::tokens::Token;
 
-enum Symbol {
-    Oper,
-}
 
-pub type Int = usize;
-
-pub type IntList = Vec<Int>;
-
-pub struct Token {
-    symbol: Symbol,
-    line: Int,
-}
-
-pub type TokenList = Vec<Token>;
-
+#[derive(Debug)]
 pub struct TokenStream {
     tokens: Vec<Token>,
 }
 
-impl TokenStream {
+impl<'a> TokenStream {
     pub fn new(tokens: Vec<Token>) -> IOResult<TokenStream> {
         Ok(TokenStream { tokens })
     }

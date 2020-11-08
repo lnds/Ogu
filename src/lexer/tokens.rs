@@ -1,11 +1,13 @@
 use logos::{Logos, Lexer};
 
-pub type Int = usize;
+pub type LineSize = usize;
 
-pub type IntList = Vec<Int>;
+pub type LineNumber = usize;
+
+pub type IndentStack = Vec<LineSize>;
 
 #[derive(Logos, Debug, Clone, PartialEq)]
-enum Symbol<'a> {
+pub enum Symbol<'a> {
     INDENT,
     DEDENT,
     #[error]
@@ -14,8 +16,7 @@ enum Symbol<'a> {
     WS,
     #[regex(r"--.*", logos::skip)]
     COMMENT,
-    #[regex(r"[\n\r]", logos::skip)]
-
+    #[regex(r"[\n\r]+")]
     NL,
     #[token("as", priority=2000)]
     AS,
@@ -205,13 +206,22 @@ fn extract_slice<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     Some(slice)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {
-    symbol: Symbol<'a>,
-    line: Int,
+    pub symbol: Symbol<'a>,
+    pub line: LineSize,
+}
+
+impl<'a> Token<'a> {
+
+    pub fn new(symbol: Symbol<'a>, line: LineSize) -> Self {
+        Token { symbol, line }
+    }
 }
 
 pub type TokenList<'a> = Vec<Token<'a>>;
+
+pub type SymbolList<'a> = Vec<Symbol<'a>>;
 
 pub type OptSymbol<'a> = Option<Symbol<'a>>;
 

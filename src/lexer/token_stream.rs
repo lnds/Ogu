@@ -1,6 +1,4 @@
-use std::io::Result as IOResult;
 use crate::lexer::tokens::Token;
-
 
 #[derive(Debug)]
 pub struct TokenStream<'a> {
@@ -8,7 +6,11 @@ pub struct TokenStream<'a> {
 }
 
 impl<'a> TokenStream<'a> {
-    pub fn new(tokens: Vec<Token>) -> IOResult<TokenStream> {
-        Ok(TokenStream { tokens })
+    pub fn new(tokens: Vec<Token>) -> TokenStream {
+        TokenStream { tokens }
+    }
+
+    pub fn iter(&'a self) -> std::slice::Iter<'a, Token<'a>> {
+        return self.tokens.iter();
     }
 }

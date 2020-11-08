@@ -1,124 +1,182 @@
 mod tokens;
 mod token_stream;
 
+use logos::Logos;
+
 use std::fs::File;
-use std::io::{self, BufRead, Error, ErrorKind, Result as IOResult};
+use std::io::{self, Cursor, BufRead, Error, ErrorKind, Result as IOResult};
 use std::path::PathBuf;
 
-use crate::lexer::tokens::{IntList, Int, TokenList};
+use crate::lexer::tokens::{IndentStack, LineSize, TokenList, Symbol, SymbolList, Token, LineNumber};
 use crate::lexer::token_stream::TokenStream;
 
-type Line = (Int, String);
-type LineList = Vec<Line>;
+type Line = (LineSize, String);
+type LineList<'a> = Vec<Line>;
+
+enum LexerSource {
+    File(PathBuf),
+    Text(String),
+}
 
 pub struct Lexer<'a> {
-    path: PathBuf,
+    source: LexerSource,
     current_string: String,
     parse_multi_line_string: bool,
-    indent_stack: IntList,
-    lines: LineList,
-    paren_level: Int,
+    paren_level: LineSize,
     tokens: TokenList<'a>,
+    lines: LineList<'a>,
 }
 
 impl<'a> Lexer<'a> {
-    
     pub fn new(path: &PathBuf) -> IOResult<Lexer<'a>> {
         if !path.exists() {
             return Err(Error::new(ErrorKind::NotFound, format!("{:?}", path)));
         }
         Ok(Lexer {
-            path: path.clone(),
+            source: LexerSource::File(path.clone()),
             current_string: String::new(),
             parse_multi_line_string: false,
-            indent_stack: vec![],
-            lines: vec![],
             paren_level: 0,
             tokens: vec![],
+            lines: vec![],
         })
     }
 
-    pub fn scan(&mut self) -> IOResult<TokenStream<'a>> {
-        let file = File::open(&self.path)?;
-        let reader = io::BufReader::new(file);
-        self.lines = reader
-            .lines()
-            .enumerate()
-            .filter_map(|a| match a {
-                (i, Ok(line)) => {
-                    if String::is_empty(&line) {
-                        None
-                    } else {
-                        Some((i, line))
-                    }
-                }
-                _ => None,
-            })
-            .collect();
-        self.scan_lines()
-    }
-
-    fn scan_lines(&mut self) -> IOResult<TokenStream<'a>> {
-        self.tokens = vec![];
-        self.indent_stack = vec![0];
-        self.map_lines();
-        Ok(TokenStream::new(self.tokens.to_vec())?)
-    }
-
-    fn map_lines(&mut self) {
-        if let Some((line_number, text)) = self.lines.pop() {
-            let mut line_tokens = self.scan_line(&text[..], &line_number);
-            self.tokens.append(&mut line_tokens);
-            self.map_lines()
+    pub fn from(str: &str) -> Self {
+        Lexer {
+            source: LexerSource::Text(str.to_string()),
+            current_string: String::new(),
+            parse_multi_line_string: false,
+            paren_level: 0,
+            tokens: vec![],
+            lines: vec![],
         }
     }
 
-    fn scan_line(&mut self, text: &str, _line_number: &Int) -> TokenList<'a> {
-        let p = find_comment_pos(text);
-        let (text, comment) = text.split_at(p);
-        let tokens = text.split_whitespace();
-        vec![]
+    pub fn scan(&'a mut self) -> IOResult<TokenStream<'a>> {
+        self.lines = match &self.source {
+            LexerSource::File(path) => {
+                let file = File::open(&path)?;
+                let reader = io::BufReader::new(file);
+                reader
+                    .lines()
+                    .enumerate()
+                    .filter_map(|a| match a {
+                        (i, Ok(line)) => {
+                            if String::is_empty(&line) {
+                                None
+                            } else {
+                                Some((i, line))
+                            }
+                        }
+                        _ => None,
+                    })
+                    .collect()
+            }
+            LexerSource::Text(text) => {
+                let reader = Cursor::new(text.as_bytes());
+                reader
+                    .lines()
+                    .enumerate()
+                    .filter_map(|a| match a {
+                        (i, Ok(line)) => {
+                            if String::is_empty(&line) {
+                                None
+                            } else {
+                                Some((i, line))
+                            }
+                        }
+                        _ => None,
+                    })
+                    .collect()
+            }
+        };
+
+
+        self.scan_lines()
+    }
+
+    fn scan_lines(&'a mut self) -> IOResult<TokenStream<'a>> {
+        let tokens = self.map_lines();
+        Ok(TokenStream::new(tokens))
+    }
+
+    fn map_lines(&'a mut self) -> TokenList<'a> {
+        let mut tokens = vec![];
+        let mut indent_stack = vec![0];
+        for (line_number, text) in self.lines.iter() {
+            let mut line_tokens = scan_line(&text[..], &line_number, self.paren_level, &mut indent_stack);
+            tokens.append(&mut line_tokens);
+        }
+        tokens
     }
 }
 
 
-/// a comment start with --
-fn find_comment_pos(text: &str) -> usize {
-    let mut inside_string = false;
-    let mut iter = text.chars().enumerate();
-    while let Some((i, c)) = iter.next() {
-        match c {
-            '\\' => { iter.next(); }
-            '\"' => { inside_string = !inside_string; }
-            '-' => if let Some((_, q)) = iter.next() {
-                if q == '-' && !inside_string {
-                    return i;
-                }
-            }
-            _ => continue
-        }
+fn scan_line<'a>(text: &'a str, line_number: &LineNumber, paren_level: LineSize, mut indent_stack: &mut IndentStack) -> TokenList<'a> {
+    let line_len = text.len();
+    let text = text.trim_start();
+    let indentation = line_len - text.len();
+    let mut line_symbols = vec![];
+    if paren_level == 0 {
+        println!("scan line indentatioon!! {}", indentation);
+        line_symbols = scan_indentation(indentation, &mut indent_stack);
     }
-    return 0;
+    let lexer = Symbol::lexer(text);
+    for sym in lexer {
+        line_symbols.push(sym);
+    }
+    line_symbols.iter().map(|s|
+        Token::new(s.clone(), *line_number+1)
+    ).collect::<TokenList<'a>>()
+}
+
+fn scan_indentation<'a>(start_pos: LineSize, indent_stack: &mut IndentStack) -> SymbolList<'a> {
+    match indent_stack.last() {
+        None => vec![],
+        Some(&pos) =>
+            if start_pos > pos {
+                indent_stack.push(start_pos);
+                vec![Symbol::INDENT]
+            } else if start_pos < pos {
+                println!("!!ACA!!");
+                let indent_length = indent_stack.len();
+                while let Some(&p) = indent_stack.last() {
+                    if start_pos < p && p > 0 {
+                        indent_stack.pop();
+                    } else {
+                        break;
+                    }
+                }
+                vec![Symbol::DEDENT; indent_length - indent_stack.len()]
+            } else {
+                vec![]
+            }
+    }
 }
 
 #[cfg(test)]
 mod test_lexer {
-    use crate::lexer::find_comment_pos;
+    use crate::lexer::Lexer;
+    use crate::lexer::tokens::{Token, Symbol};
 
     #[test]
-    fn test_find_coment_post() {
-        assert_eq!(find_comment_pos(""), 0);
-        assert_eq!(find_comment_pos("--"), 0);
-        assert_eq!(find_comment_pos("-- comentario"), 0);
-        assert_eq!(find_comment_pos("a = a + 1 -- incrementa ah, duh!"), 10);
-        assert_eq!(find_comment_pos("s = \" -- incrementa ah, duh! -- \" "), 0);
-        assert_eq!(find_comment_pos("str = \" -- incrementa ah, duh! -- \" -- comentario"), 36);
-        assert_eq!(find_comment_pos("str =  -- \" -- incrementa ah, duh! -- \" -- comentario"), 7);
-        assert_eq!(find_comment_pos("str =  \\\" -- "), 10);
-        assert_eq!(find_comment_pos("str =  \\\"\" -- \"--"), 15);
+    fn test_scan_indentation() {
+        let mut lexer = Lexer::from("fn func =\n  this is a function\nend");
+        let stream_result = lexer.scan();
+        assert!(stream_result.is_ok());
+        let mut stream = stream_result.unwrap();
+        let mut iter = stream.iter();
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::FN, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("func"), line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ASSIGN, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INDENT, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("this"), line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::IS, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("a"), line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("function"), line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::DEDENT, line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("end"), line: 3 }));
+        assert_eq!(iter.next(), None);
     }
-
-    #[test]
-    fn test_scan_line() {}
 }
-

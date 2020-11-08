@@ -105,7 +105,7 @@ impl<'a> Lexer<'a> {
         let mut tokens = vec![];
         let mut indent_stack = vec![0];
         for (line_number, text) in self.lines.iter() {
-            let mut line_tokens = scan_line(&text[..], &line_number, self.paren_level, &mut indent_stack);
+            let mut line_tokens = scan_line(&text[..], &line_number, &mut self.paren_level, &mut indent_stack);
             tokens.append(&mut line_tokens);
         }
         tokens
@@ -113,17 +113,26 @@ impl<'a> Lexer<'a> {
 }
 
 
-fn scan_line<'a>(text: &'a str, line_number: &LineNumber, paren_level: LineSize, mut indent_stack: &mut IndentStack) -> TokenList<'a> {
+fn scan_line<'a>(text: &'a str, line_number: &LineNumber, mut paren_level: &mut LineSize, mut indent_stack: &mut IndentStack) -> TokenList<'a> {
     let line_len = text.len();
     let text = text.trim_start();
     let indentation = line_len - text.len();
     let mut line_symbols = vec![];
-    if paren_level == 0 {
-        println!("scan line indentatioon!! {}", indentation);
+    if *paren_level == 0 {
         line_symbols = scan_indentation(indentation, &mut indent_stack);
     }
     let lexer = Symbol::lexer(text);
     for sym in lexer {
+        if sym.is_open_paren() {
+            *paren_level += 1;
+        }
+        else if sym.is_close_paren() {
+            if *paren_level == 0 {
+                line_symbols.push(Symbol::ERROR);
+            } else {
+                *paren_level -= 1;
+            }
+        }
         line_symbols.push(sym);
     }
     line_symbols.iter().map(|s|
@@ -139,7 +148,6 @@ fn scan_indentation<'a>(start_pos: LineSize, indent_stack: &mut IndentStack) -> 
                 indent_stack.push(start_pos);
                 vec![Symbol::INDENT]
             } else if start_pos < pos {
-                println!("!!ACA!!");
                 let indent_length = indent_stack.len();
                 while let Some(&p) = indent_stack.last() {
                     if start_pos < p && p > 0 {
@@ -177,6 +185,66 @@ mod test_lexer {
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("function"), line: 2 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::DEDENT, line: 3 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("end"), line: 3 }));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_scan_paren() {
+        let mut lexer = Lexer::from("fn func = (1, \n  2, 3, 4)\n  this is a function\nend");
+        let stream_result = lexer.scan();
+        assert!(stream_result.is_ok());
+        let mut stream = stream_result.unwrap();
+        let mut iter = stream.iter();
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::FN, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("func"), line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ASSIGN, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::LPAREN, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INTEGER("1"), line:1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::COMMA, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INTEGER("2"), line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::COMMA, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INTEGER("3"), line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::COMMA, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INTEGER("4"), line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::RPAREN, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INDENT, line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("this"), line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::IS, line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("a"), line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("function"), line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::DEDENT, line: 4 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("end"), line: 4 }));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_scan_unbalanced_paren() {
+        let mut lexer = Lexer::from("fn func = (1, \n  2, 3, 4))\n  this is a function\nend");
+        let stream_result = lexer.scan();
+        assert!(stream_result.is_ok());
+        let mut stream = stream_result.unwrap();
+        let mut iter = stream.iter();
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::FN, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("func"), line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ASSIGN, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::LPAREN, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INTEGER("1"), line:1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::COMMA, line: 1 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INTEGER("2"), line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::COMMA, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INTEGER("3"), line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::COMMA, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INTEGER("4"), line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::RPAREN, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ERROR, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::RPAREN, line: 2 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INDENT, line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("this"), line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::IS, line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("a"), line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("function"), line: 3 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::DEDENT, line: 4 }));
+        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("end"), line: 4 }));
         assert_eq!(iter.next(), None);
     }
 }

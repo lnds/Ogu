@@ -1,4 +1,5 @@
 use logos::{Logos, Lexer};
+use crate::lexer::tokens::Symbol::{LPAREN, LCURLY, LBRACKET, RPAREN, RBRACKET, RCURLY};
 
 pub type LineSize = usize;
 
@@ -195,6 +196,16 @@ pub enum Symbol<'a> {
 
 }
 
+impl<'a> Symbol<'a> {
+
+    pub fn is_open_paren(&self) -> bool {
+        *self == LPAREN || *self == LBRACKET || *self == LCURLY
+    }
+
+    pub fn is_close_paren(&self) -> bool {
+        *self == RPAREN || *self == RBRACKET || *self == RCURLY
+    }
+}
 
 fn extract_string<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     let slice = lex.slice();

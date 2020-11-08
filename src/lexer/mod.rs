@@ -167,6 +167,8 @@ fn scan_indentation<'a>(start_pos: LineSize, indent_stack: &mut IndentStack) -> 
 mod test_lexer {
     use crate::lexer::Lexer;
     use crate::lexer::tokens::{Token, Symbol};
+    use walkdir::WalkDir;
+    use std::path::PathBuf;
 
     #[test]
     fn test_scan_indentation() {
@@ -246,5 +248,45 @@ mod test_lexer {
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::DEDENT, line: 4 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("end"), line: 4 }));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn scan_test_files() {
+        for entry in WalkDir::new("./tests/") {
+            let entry = entry.unwrap();
+            if entry.file_type().is_file() {
+                let path = entry.path();
+                let spath = entry.path().display().to_string();
+                if spath.ends_with(".ogu") {
+                    let mut lex = Lexer::new(&PathBuf::from(path));
+                    assert!(lex.is_ok());
+                    let mut lexer = lex.unwrap();
+                    let stream = lexer.scan();
+                    assert!(stream.is_ok());
+                    let stream = stream.unwrap();
+                    assert!(stream.len() > 0);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn scan_demos() {
+        for entry in WalkDir::new("./demos/") {
+            let entry = entry.unwrap();
+            if entry.file_type().is_file() {
+                let path = entry.path();
+                let spath = entry.path().display().to_string();
+                if spath.ends_with(".ogu") {
+                    let mut lex = Lexer::new(&PathBuf::from(path));
+                    assert!(lex.is_ok());
+                    let mut lexer = lex.unwrap();
+                    let stream = lexer.scan();
+                    assert!(stream.is_ok());
+                    let stream = stream.unwrap();
+                    assert!(stream.len() > 0);
+                }
+            }
+        }
     }
 }

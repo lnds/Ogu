@@ -193,6 +193,10 @@ pub enum Symbol<'a> {
     FLOAT(&'a str),
     #[regex(r"[\+\-]?[0-9]+/[0-9]+", priority=2000, callback=extract_slice)]
     RATIO(&'a str),
+    #[regex(r"#(\d+)-(\d+)-(\d+)(T(\d+):(\d+)(:(\d+)(\.(\d+))?)?(Z|([+-]\d+(:\d+)?))?)?", callback=extract_slice)]
+    ISODATE(&'a str),
+
+
 
 }
 
@@ -525,4 +529,25 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::ID("first")));
         assert_eq!(lex.next(), None);
     }
+
+    #[test]
+    fn test_dates() {
+        let mut lex = Symbol::lexer("#2017-02-26");
+        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26")));
+        let mut lex = Symbol::lexer("#2017-02-26T23:50");
+        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50")));
+        let mut lex = Symbol::lexer("#2017-02-26T23:50:30");
+        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30")));
+        let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120");
+        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120")));
+        let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120Z");
+        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120Z")));
+        let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120-3");
+        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120-3")));
+        let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120+3");
+        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3")));
+        let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120+3:30");
+        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3:30")));
+    }
+
 }

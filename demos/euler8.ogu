@@ -1,4 +1,3 @@
-
 let num-1000 = "73167176531330624919225119674426574742355349194934
 96983520312774506326239578318016984801869478851843
 85861560789112949495459501737958331952853208805511
@@ -22,9 +21,9 @@ let num-1000 = "73167176531330624919225119674426574742355349194934
 
 let nums = num-1000 |> map \n -> ((int n) - (int '0')) |> filter \n -> n >= 0
 
-def calc-13 num-seq = reduce (*) (take 13 num-seq)
+fn calc-13 num-seq = reduce (*) (take 13 num-seq)
 
-def s13 = seqs-of-13 nums
-    where seqs-of-13 n = lazy (calc-13 n) :: (seqs-of-13 $ tail n)
+fn s13 () = seqs-of-13 nums
+  where seqs-of-13 n = lazy (calc-13 n) :: (seqs-of-13 $ tail n)
 
-take 1000 (s13) |> reduce max |> println!
+s13 () |> take 1000 |> reduce max |> println!

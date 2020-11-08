@@ -1,11 +1,11 @@
 
-def sum-n n = (n * (n + 1)) / 2
+fn sum-n n = (n * (n + 1)) / 2
 
-def square-sum n = let s = sum-n n in s * s
+fn square-sum n = let s = sum-n n in s * s
 
-def sum-n-square n = reduce (+) (map (\x -> x * x) [1..n])
+fn sum-n-square n = reduce (+) (map (\x -> x * x) [1..n])
 
-def dif-squares n = (square-sum n) - (sum-n-square n)
+fn dif-squares n = (square-sum n) - (sum-n-square n)
 
 dif-squares 100 |> println!
 

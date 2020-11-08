@@ -1,16 +1,17 @@
 
-def primes n =
+fn primes n =
     let root =  n |> Math.sqrt |> int,
         sieve = boolean-array! n true
     in
-        loop i = 2 do
+        with i = 2 loop
             when i < root then
                 when aget sieve i then
-                    loop j = i * 2 do
+                    with j = i * 2 loop
                        when j < n then
-                         aset! sieve j false
-                         repeat j' = j + i
-                repeat i' = inc i
+                         do
+                           aset! sieve j false
+                           repeat j + i
+                repeat inc i
         filter (\i -> aget sieve i)  [2..<n]
 
 

@@ -195,7 +195,8 @@ pub enum Symbol<'a> {
     RATIO(&'a str),
     #[regex(r"#(\d+)-(\d+)-(\d+)(T(\d+):(\d+)(:(\d+)(\.(\d+))?)?(Z|([+-]\d+(:\d+)?))?)?", callback=extract_slice)]
     ISODATE(&'a str),
-
+    #[regex(r"#((/[^/]*/)|(\?[^?]*\?))", callback=extract_slice_from_1)]
+    REGEX(&'a str)
 
 
 }
@@ -219,6 +220,11 @@ fn extract_string<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
 fn extract_slice<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
     Some(slice)
+}
+
+fn extract_slice_from_1<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
+    let slice = lex.slice();
+    Some(&slice[1..])
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -247,6 +253,7 @@ pub type OptSymbolList<'a> = Vec<Option<Symbol<'a>>>;
 mod test_tokens {
     use logos::Logos;
     use crate::lexer::tokens::Symbol;
+    use logos::internal::CallbackResult;
 
     #[test]
     fn test_symbols() {
@@ -548,6 +555,22 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3")));
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120+3:30");
         assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3:30")));
+    }
+
+    #[test]
+    fn test_regex() {
+        let mut lex = Symbol::lexer("\"aaabbb\" =~ #/(a|b)+/");
+        assert_eq!(lex.next(), Some(Symbol::STRING("aaabbb")));
+        assert_eq!(lex.next(), Some(Symbol::MATCHES));
+        assert_eq!(lex.next(), Some(Symbol::REGEX("/(a|b)+/")));
+        assert_eq!(lex.next(), None);
+
+        let mut lex = Symbol::lexer("\"aaabbb\" =~ #?(a|b)+?");
+        assert_eq!(lex.next(), Some(Symbol::STRING("aaabbb")));
+        assert_eq!(lex.next(), Some(Symbol::MATCHES));
+        assert_eq!(lex.next(), Some(Symbol::REGEX("?(a|b)+?")));
+        assert_eq!(lex.next(), None);
+
     }
 
 }

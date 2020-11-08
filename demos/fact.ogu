@@ -1,17 +1,17 @@
 
-def fact 0 = 1
-def fact 1 = 1
-def fact n = n * (fact $ dec n)
+fn fact 0 = 1
+fn fact 1 = 1
+fn fact n = n * (fact $ dec n)
 
-def test a = fact a
-def test a b = (fact  a) + (fact b)
+fn test a = fact a
+fn test a b = (fact  a) + (fact b)
 
-def funny 0 0 = 0
-def funny 0 1 = 2
-def funny 1 0 = 4
-def funny 1 b = 4 + 2 * b
-def funny a 1 = 4 * a + 2
-def funny a b = 4 * a +  2 * b
+fn funny 0 0 = 0
+fn funny 0 1 = 2
+fn funny 1 0 = 4
+fn funny 1 b = 4 + 2 * b
+fn funny a 1 = 4 * a + 2
+fn funny a b = 4 * a +  2 * b
 
 
 println $ funny 0 0

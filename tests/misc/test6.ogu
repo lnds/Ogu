@@ -2,9 +2,9 @@
 
 -- seudo currying
 
-def multiplicar x y = x * y
+multiplicar x y = x * y
 
-let doblar = curry multiplicar 2
+doblar = curry multiplicar 2
 
 doblar 4
 

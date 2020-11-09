@@ -1,6 +1,6 @@
 
 
-def strIMC peso altura =
+strIMC peso altura =
     cond
       imc <= 18.5 -> "estas bajo el peso normal"
       imc <= 25.0 -> "tu peso es normal"

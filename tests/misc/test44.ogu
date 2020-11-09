@@ -1,6 +1,6 @@
 
 
-def head-overlaps-body? {(head :: body) :body} = member? head body
+head-overlaps-body? {(head :: body) :body} = member? head body
 
 println! head-overlaps-body? {:body [:a, :b, :c, :a, :b, :c]}
 

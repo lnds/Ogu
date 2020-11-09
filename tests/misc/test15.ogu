@@ -1,9 +1,9 @@
 
-def fun = fun 10
+fun = fun 10
 
-def fun a = fun 10 a
+fun a = fun 10 a
 
-def fun a b = a + b
+fun a b = a + b
 
 (fun) + (fun 10) + (fun 10 10)
 

@@ -1,6 +1,6 @@
 -- algebraic data types
 
-data Tree = Empty | Leaf(value) | Node(left, right)
+type Tree = Empty | Leaf value | Node left right
 
 dispatch tmax with type
 

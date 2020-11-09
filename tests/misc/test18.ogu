@@ -1,9 +1,10 @@
--- this a ugly way to program in Ogu, but is a demo of imperative style and use of vars
-def factorial x =
-    var acc = 1, cnt = x in
-        while cnt > 0 do
-            set acc = acc * cnt
-            set cnt = dec cnt
+factorial x =
+    for acc = 1, cnt = x
+    while cnt > 0
+    loop
+        acc = acc * cnt
+        cnt = dec cnt
+    return
         acc
 
 factorial 7

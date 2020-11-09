@@ -1,8 +1,9 @@
 
-def mult-tuple (x, y, z) = x * y * z
+mult-tuple (x, y, z) = x * y * z
 
 
-def variadic (x, y, params...) =
+variadic (x, y, params...) =
+  do
     println! $ x * y
     println! "rest = " params
 

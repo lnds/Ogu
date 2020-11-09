@@ -1,12 +1,16 @@
+-- mmmm
+
+
 dispatch greeting with \x -> (x "language")
 
-def greeting "French" ?  person = str "Bonjour " (person "name")
 
-def greeting "English" ?  person = str "Hello " (person "name")
+greeting "French" ?  person = str "Bonjour " (person "name")
 
-def greeting "Spanish" ?  person = str "Hola " (person "name")
+greeting "English" ?  person = str "Hello " (person "name")
 
-def greeting otherwise ?  _ = str "?????"
+greeting "Spanish" ?  person = str "Hola " (person "name")
+
+greeting otherwise ?  _ = str "?????"
 
 greeting  {"name" "Michelle", "language" "French"} -- Bonjour Michell
 

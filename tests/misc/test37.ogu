@@ -1,10 +1,10 @@
-def add1 x = x + 1
+add1 x = x + 1
 
-def times2 x = x * 2
+times2 x = x * 2
 
-let add1Times2 = add1 >> times2
+add1Times2 = add1 >> times2
 
-let times2Add1 = add1 << times2
+times2Add1 = add1 << times2
 
 println! $ add1Times2 10 -- 22
 

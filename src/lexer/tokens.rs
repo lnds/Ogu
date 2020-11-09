@@ -21,6 +21,8 @@ pub enum Symbol<'a> {
     NL,
     #[token("as", priority=2000)]
     AS,
+    #[token("case", priority=2000)]
+    CASE,
     #[token("class", priority=2000)]
     CLASS,
     #[token("cond", priority=2000)]
@@ -45,6 +47,8 @@ pub enum Symbol<'a> {
     HANDLE,
     #[token("if", priority=2000)]
     IF,
+    #[token("import", priority=2000)]
+    IMPORT,
     #[token("in", priority=2000)]
     IN,
     #[token("is", priority=2000)]
@@ -59,6 +63,8 @@ pub enum Symbol<'a> {
     MODULE,
     #[token("not", priority=2000)]
     NOT,
+    #[token("of", priority=2000)]
+    OF,
     #[token("otherwise", priority=2000)]
     OTHERWISE,
     #[token("record", priority=2000)]
@@ -85,6 +91,8 @@ pub enum Symbol<'a> {
     WHILE,
     #[token("with", priority=2000)]
     WITH,
+    #[token("yield", priority=2000)]
+    YIELD,
     #[token("&&", priority=1000)]
     AND,
     #[token("&", priority=1000)]

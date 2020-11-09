@@ -1,4 +1,4 @@
-let matrix = [[ 8, 2,22,97,38,15, 0,40, 0,75, 4, 5, 7,78,52,12,50,77,91, 8],
+matrix = [[ 8, 2,22,97,38,15, 0,40, 0,75, 4, 5, 7,78,52,12,50,77,91, 8],
               [49,49,99,40,17,81,18,57,60,87,17,40,98,43,69,48, 4,56,62, 0],
               [81,49,31,73,55,79,14,29,93,71,40,67,53,88,30, 3,49,13,36,65],
               [52,70,95,23, 4,60,11,42,69,24,68,56, 1,32,56,71,37, 2,36,91],
@@ -20,27 +20,27 @@ let matrix = [[ 8, 2,22,97,38,15, 0,40, 0,75, 4, 5, 7,78,52,12,50,77,91, 8],
               [ 1,70,54,71,83,51,54,69,16,92,33,48,61,43,52, 1,89,19,67,48]]
 
 
-def get_elem mat row col =
+get_elem mat row col =
       if row >= 0 && row < 20 && col >= 0 && col < 20 then
         nth (nth mat row) col
       else
         0
 
-def get_right matrix row col =
+get_right matrix row col =
       reduce $ (*)  map (\x -> get_elem matrix row (x + col)) (range 4)
 
 
-def get_down matrix row col =
+get_down matrix row col =
       reduce $ (*)  map  (\x -> get_elem matrix (x + row) col) (range 4)
 
 
-def get_down_left matrix row col =
+get_down_left matrix row col =
     reduce $ (*)  map  (\x -> get_elem matrix (x + row) (col - x)) (range 4)
 
-def get_down_right matrix row col =
+get_down_right matrix row col =
     reduce $ (*) map (\x -> get_elem matrix (x + row) (col + x)) (range 4)
 
-let values = [[get_right matrix r c,
+values = [[get_right matrix r c,
                get_down matrix r c,
                get_down_left matrix r c,
                get_down_right matrix r c] | r <- (range 20), c <- (range 20)]

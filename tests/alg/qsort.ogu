@@ -1,6 +1,6 @@
 
 
-def quicksort a
+quicksort a
     | empty? a = []
     | otherwise = let x = head a, xs = tail a,
                       smallerSorted = quicksort [a | a <- xs, a <= x],

@@ -1,27 +1,30 @@
-record Banana {quantity}
-record Grape  {quantity}
-record Orange {quantity}
+type Banana = Banana {quantity}
+type Grape = Grape  {quantity}
+type Orange = Orange {quantity}
 
 trait Fruit
+where
 
-    def subtotal item
+    subtotal : Fruit -> Int
 
 
 extends Banana with Fruit
-
-    def subtotal item = 158 * (.quantity item)
+where
+    subtotal item = 158 * (.quantity item)
 
 extends Grape with Fruit
 
-    def subtotal item = 178 * (.quantity item)
+where
+   subtotal item = 178 * (.quantity item)
 
 
-extends Orange with Fruit
+extends Orange with Fruit where
 
-    def subtotal item = 98 * (.quantity item)
+    subtotal item = 98 * (.quantity item)
 
 
-def coupon item = reify Fruit
-                     def subtotal _ = 0.75 * (subtotal item)
+coupon item = reify Fruit
+              where
+                     subtotal _ = 0.75 * (subtotal item)
 
 [Orange{10}, Banana{15}, coupon Grape{10}]  |> map subtotal |> sum

@@ -1,49 +1,54 @@
 trait Shape
+where
+    area : Shape -> Int
 
-    def area self
-
-    def move self x y
+    move! : Shape -> Int -> Int -> ()
 
 trait Draw
+where
 
-    def show self
+    show! : Draw -> ()
 
 class Circle(x,  y, radius)
 
    extends Shape
+   where
 
-       def area self = pi * (radius ^ 2)
+       area self = pi * (radius ^ 2)
 
-       def move self x y =
+       move! self x y =
             println! "move to " x y
 
    extends Draw
-
-        def show this = println! "this circle is at " this.x "," this.y " with radius = " this.radius
+   where
+        show! this = println! "this circle is at " this.x "," this.y " with radius = " this.radius
 
 
 class Rectangle(x, y, width, height)
 
-
 extends Rectangle with Shape
 
-    def area self = (.width self) * (.height self)
+    where
+        area self = (.width self) * (.height self)
 
 
 class Triangle(b, h)
 
     extends Shape
+    where
+        area self = self.b * self.h
 
-        def area self = self.b * self.h
 
 
-def test-area shape : Rectangle = str "area of rectangle: " (area shape)
+test-area : Rectangle -> ()
+test-area shape  = str "area of rectangle: " (area shape)
 
-def test-area shape : Shape = str  "area of shape: "  (area shape)
+test-area : Shape -> ()
+test-area shape = str  "area of shape: "  (area shape)
 
-let cir = Circle(10, 10, 10)
-let rec = Rectangle(0,0, 100, 50)
-let tri = Triangle(10, 20)
+cir = Circle(10, 10, 10)
+rec = Rectangle(0,0, 100, 50)
+tri = Triangle(10, 20)
 
 println! cir.x cir.y cir.radius
 

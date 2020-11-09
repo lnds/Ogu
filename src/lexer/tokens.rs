@@ -259,11 +259,6 @@ pub type TokenList<'a> = Vec<Token<'a>>;
 
 pub type SymbolList<'a> = Vec<Symbol<'a>>;
 
-pub type OptSymbol<'a> = Option<Symbol<'a>>;
-
-pub type OptSymbolList<'a> = Vec<Option<Symbol<'a>>>;
-
-
 #[cfg(test)]
 mod test_tokens {
     use logos::Logos;

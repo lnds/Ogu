@@ -11,33 +11,27 @@ use crate::lexer::tokens::{IndentStack, LineSize, TokenList, Symbol, SymbolList,
 use crate::lexer::token_stream::TokenStream;
 
 type Line = (LineSize, String);
-type LineList<'a> = Vec<Line>;
+type LineList = Vec<Line>;
 
 enum LexerSource {
     File(PathBuf),
     Text(String),
 }
 
-pub struct Lexer<'a> {
+pub struct Lexer {
     source: LexerSource,
-    current_string: String,
-    parse_multi_line_string: bool,
     paren_level: LineSize,
-    tokens: TokenList<'a>,
-    lines: LineList<'a>,
+    lines: LineList,
 }
 
-impl<'a> Lexer<'a> {
-    pub fn new(path: &PathBuf) -> IOResult<Lexer<'a>> {
+impl<'a> Lexer {
+    pub fn new(path: &PathBuf) -> IOResult<Lexer> {
         if !path.exists() {
             return Err(Error::new(ErrorKind::NotFound, format!("{:?}", path)));
         }
         Ok(Lexer {
             source: LexerSource::File(path.clone()),
-            current_string: String::new(),
-            parse_multi_line_string: false,
             paren_level: 0,
-            tokens: vec![],
             lines: vec![],
         })
     }
@@ -45,10 +39,7 @@ impl<'a> Lexer<'a> {
     pub fn from(str: &str) -> Self {
         Lexer {
             source: LexerSource::Text(str.to_string()),
-            current_string: String::new(),
-            parse_multi_line_string: false,
             paren_level: 0,
-            tokens: vec![],
             lines: vec![],
         }
     }
@@ -113,7 +104,7 @@ impl<'a> Lexer<'a> {
 }
 
 
-fn scan_line<'a>(text: &'a str, line_number: &LineNumber, mut paren_level: &mut LineSize, mut indent_stack: &mut IndentStack) -> TokenList<'a> {
+fn scan_line<'a>(text: &'a str, line_number: &LineNumber, paren_level: &mut LineSize, mut indent_stack: &mut IndentStack) -> TokenList<'a> {
     let line_len = text.len();
     let text = text.trim_start();
     let indentation = line_len - text.len();

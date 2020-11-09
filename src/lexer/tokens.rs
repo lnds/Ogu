@@ -1,5 +1,5 @@
-use logos::{Logos, Lexer};
-use crate::lexer::tokens::Symbol::{LPAREN, LCURLY, LBRACKET, RPAREN, RBRACKET, RCURLY};
+use crate::lexer::tokens::Symbol::{LBRACKET, LCURLY, LPAREN, RBRACKET, RCURLY, RPAREN};
+use logos::{Lexer, Logos};
 
 pub type LineSize = usize;
 
@@ -19,179 +19,179 @@ pub enum Symbol<'a> {
     COMMENT,
     #[regex(r"[\n\r]+")]
     NL,
-    #[token("as", priority=2000)]
+    #[token("as", priority = 2000)]
     AS,
-    #[token("case", priority=2000)]
+    #[token("case", priority = 2000)]
     CASE,
-    #[token("class", priority=2000)]
+    #[token("class", priority = 2000)]
     CLASS,
-    #[token("cond", priority=2000)]
+    #[token("cond", priority = 2000)]
     COND,
-    #[token("do", priority=2000)]
+    #[token("do", priority = 2000)]
     DO,
-    #[token("eager", priority=2000)]
+    #[token("eager", priority = 2000)]
     EAGER,
-    #[token("elif", priority=2000)]
+    #[token("elif", priority = 2000)]
     ELIF,
-    #[token("else", priority=2000)]
+    #[token("else", priority = 2000)]
     ELSE,
-    #[token("extends", priority=2000)]
+    #[token("extends", priority = 2000)]
     EXTENDS,
-    #[token("false", priority=2000)]
+    #[token("false", priority = 2000)]
     FALSE,
-    #[token("for", priority=2000)]
+    #[token("for", priority = 2000)]
     FOR,
-    #[token("from", priority=2000)]
+    #[token("from", priority = 2000)]
     FROM,
-    #[token("handle", priority=2000)]
+    #[token("handle", priority = 2000)]
     HANDLE,
-    #[token("if", priority=2000)]
+    #[token("if", priority = 2000)]
     IF,
-    #[token("import", priority=2000)]
+    #[token("import", priority = 2000)]
     IMPORT,
-    #[token("in", priority=2000)]
+    #[token("in", priority = 2000)]
     IN,
-    #[token("is", priority=2000)]
+    #[token("is", priority = 2000)]
     IS,
-    #[token("lazy", priority=2000)]
+    #[token("lazy", priority = 2000)]
     LAZY,
-    #[token("let", priority=2000)]
+    #[token("let", priority = 2000)]
     LET,
-    #[token("loop", priority=2000)]
+    #[token("loop", priority = 2000)]
     LOOP,
-    #[token("module", priority=2000)]
+    #[token("module", priority = 2000)]
     MODULE,
-    #[token("not", priority=2000)]
+    #[token("not", priority = 2000)]
     NOT,
-    #[token("of", priority=2000)]
+    #[token("of", priority = 2000)]
     OF,
-    #[token("otherwise", priority=2000)]
+    #[token("otherwise", priority = 2000)]
     OTHERWISE,
-    #[token("record", priority=2000)]
+    #[token("record", priority = 2000)]
     RECORD,
-    #[token("recur", priority=2000)]
+    #[token("recur", priority = 2000)]
     RECUR,
-    #[token("reify", priority=2000)]
+    #[token("reify", priority = 2000)]
     REIFY,
-    #[token("repeat", priority=2000)]
+    #[token("repeat", priority = 2000)]
     REPEAT,
-    #[token("return", priority=2000)]
+    #[token("return", priority = 2000)]
     RETURN,
-    #[token("then", priority=2000)]
+    #[token("then", priority = 2000)]
     THEN,
-    #[token("trait", priority=2000)]
+    #[token("trait", priority = 2000)]
     TRAIT,
-    #[token("until", priority=2000)]
+    #[token("until", priority = 2000)]
     UNTIL,
-    #[token("when", priority=2000)]
+    #[token("when", priority = 2000)]
     WHEN,
-    #[token("where", priority=2000)]
+    #[token("where", priority = 2000)]
     WHERE,
-    #[token("while", priority=2000)]
+    #[token("while", priority = 2000)]
     WHILE,
-    #[token("with", priority=2000)]
+    #[token("with", priority = 2000)]
     WITH,
-    #[token("yield", priority=2000)]
+    #[token("yield", priority = 2000)]
     YIELD,
-    #[token("&&", priority=1000)]
+    #[token("&&", priority = 1000)]
     AND,
-    #[token("&", priority=1000)]
+    #[token("&", priority = 1000)]
     ANDB,
-    #[token("@", priority=1000)]
+    #[token("@", priority = 1000)]
     ARROBA,
-    #[token("->", priority=1000)]
+    #[token("->", priority = 1000)]
     ARROW,
-    #[token("=", priority=1000)]
+    #[token("=", priority = 1000)]
     ASSIGN,
-    #[token("<-", priority=1000)]
+    #[token("<-", priority = 1000)]
     BACKARROW,
-    #[token(":", priority=1000)]
+    #[token(":", priority = 1000)]
     COLON,
-    #[token(",", priority=1000)]
+    #[token(",", priority = 1000)]
     COMMA,
-    #[token(">>", priority=1000)]
+    #[token(">>", priority = 1000)]
     COMPOSEFORWARD,
-    #[token("<<", priority=1000)]
+    #[token("<<", priority = 1000)]
     COMPOSEBACKWARD,
-    #[token("::", priority=1000)]
+    #[token("::", priority = 1000)]
     CONS,
-    #[token("/", priority=1000)]
+    #[token("/", priority = 1000)]
     DIV,
-    #[token("//", priority=1010)]
+    #[token("//", priority = 1010)]
     DIVDIV,
-    #[token("$", priority=1000)]
+    #[token("$", priority = 1000)]
     DOLLAR,
-    #[token("...", priority=1000)]
+    #[token("...", priority = 1000)]
     DOTDOTDOT,
-    #[token("..<", priority=1000)]
+    #[token("..<", priority = 1000)]
     DOTDOTLESS,
-    #[token("..", priority=1000)]
+    #[token("..", priority = 1000)]
     DOTDOT,
-    #[token(".", priority=1000)]
+    #[token(".", priority = 1000)]
     DOT,
-    #[token("!>", priority=1000)]
+    #[token("!>", priority = 1000)]
     DOTO,
-    #[token("<!", priority=1000)]
+    #[token("<!", priority = 1000)]
     DOTOBACK,
-    #[token("==", priority=1000)]
+    #[token("==", priority = 1000)]
     EQUALS,
-    #[token(">=", priority=1000)]
+    #[token(">=", priority = 1000)]
     GE,
-    #[token(">", priority=1000)]
+    #[token(">", priority = 1000)]
     GT,
-    #[token("|", priority=1000)]
+    #[token("|", priority = 1000)]
     GUARD,
-    #[token("\\", priority=1000)]
+    #[token("\\", priority = 1000)]
     LAMBDA,
-    #[token("<=", priority=1000)]
+    #[token("<=", priority = 1000)]
     LE,
-    #[token("[", priority=1000)]
+    #[token("[", priority = 1000)]
     LBRACKET,
-    #[token("{", priority=1000)]
+    #[token("{", priority = 1000)]
     LCURLY,
-    #[token("(", priority=1000)]
+    #[token("(", priority = 1000)]
     LPAREN,
-    #[token("<", priority=1000)]
+    #[token("<", priority = 1000)]
     LT,
-    #[token("~", priority=1000)]
+    #[token("~", priority = 1000)]
     MATCH,
-    #[token("=~", priority=1000)]
+    #[token("=~", priority = 1000)]
     MATCHES,
-    #[token("-", priority=1000)]
+    #[token("-", priority = 1000)]
     MINUS,
-    #[token("%", priority=1000)]
+    #[token("%", priority = 1000)]
     MOD,
-    #[token("*", priority=1000)]
+    #[token("*", priority = 1000)]
     MULT,
-    #[token("/=", priority=1000)]
+    #[token("/=", priority = 1000)]
     NOTEQUALS,
-    #[token("||", priority=1000)]
+    #[token("||", priority = 1000)]
     OR,
-    #[token("<|", priority=1000)]
+    #[token("<|", priority = 1000)]
     PIPELEFT,
-    #[token("|<", priority=1000)]
+    #[token("|<", priority = 1000)]
     PIPELEFTFIRSTARG,
     #[token("|>")]
     PIPERIGHT,
     #[token(">|")]
     PIPERIGHTFIRSTARG,
-    #[token("+", priority=1000)]
+    #[token("+", priority = 1000)]
     PLUS,
-    #[token("++", priority=1000)]
+    #[token("++", priority = 1000)]
     PLUSPLUS,
     #[token("^")]
     POW,
-    #[token("?", priority=1000)]
+    #[token("?", priority = 1000)]
     QUESTION,
-    #[token("]", priority=1000)]
+    #[token("]", priority = 1000)]
     RBRACKET,
-    #[token("}", priority=1000)]
+    #[token("}", priority = 1000)]
     RCURLY,
-    #[token(")", priority=1000)]
+    #[token(")", priority = 1000)]
     RPAREN,
     #[regex(r"[A-Z][_a-zA-Z0-9]*", priority = 110, callback=extract_slice)]
     TID(&'a str),
-    #[regex(r"[_a-zA-Z\-\+\*\$<>=!\?][_a-zA-Z0-9\-\+\*\$<>=!\?]*", priority = 100,  callback=extract_slice)]
+    #[regex(r"[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100,  callback=extract_slice)]
     ID(&'a str),
     #[regex(r#""([^"]*)""#, priority=20, callback = extract_string)]
     STRING(&'a str),
@@ -206,13 +206,12 @@ pub enum Symbol<'a> {
     #[regex(r"#(\d+)-(\d+)-(\d+)(T(\d+):(\d+)(:(\d+)(\.(\d+))?)?(Z|([+-]\d+(:\d+)?))?)?", callback=extract_slice)]
     ISODATE(&'a str),
     #[regex(r"#((/[^/]*/)|(\?[^?]*\?))", callback=extract_slice_from_1)]
-    REGEX(&'a str)
-
-
+    REGEX(&'a str),
+    #[regex(r#"'(.|\\n|\\r|\\t|\\u[0-9]+)'"#, callback=extract_string)]
+    CHAR(&'a str),
 }
 
 impl<'a> Symbol<'a> {
-
     pub fn is_open_paren(&self) -> bool {
         *self == LPAREN || *self == LBRACKET || *self == LCURLY
     }
@@ -224,12 +223,12 @@ impl<'a> Symbol<'a> {
 
 fn extract_string<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
-    Some(&slice[1..slice.len()-1])
+    Some(&slice[1..slice.len() - 1])
 }
 
 fn extract_f_string<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
-    Some(&slice[2..slice.len()-1])
+    Some(&slice[2..slice.len() - 1])
 }
 
 fn extract_slice<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
@@ -249,7 +248,6 @@ pub struct Token<'a> {
 }
 
 impl<'a> Token<'a> {
-
     pub fn new(symbol: Symbol<'a>, line: LineSize) -> Self {
         Token { symbol, line }
     }
@@ -261,9 +259,8 @@ pub type SymbolList<'a> = Vec<Symbol<'a>>;
 
 #[cfg(test)]
 mod test_tokens {
-    use logos::Logos;
     use crate::lexer::tokens::Symbol;
-    use logos::internal::CallbackResult;
+    use logos::Logos;
 
     #[test]
     fn test_symbols() {
@@ -272,7 +269,6 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::ID("a+b")));
         assert_eq!(lex.slice(), "a+b");
         assert_eq!(lex.next(), Some(Symbol::RPAREN));
-
     }
 
     #[test]
@@ -285,7 +281,6 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::ID("b")));
         assert_eq!(lex.slice(), "b");
         assert_eq!(lex.next(), Some(Symbol::RPAREN));
-
     }
 
     #[test]
@@ -342,7 +337,6 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::DOT));
         assert_eq!(lex.next(), Some(Symbol::ID("question?")));
         assert_eq!(lex.next(), None);
-
     }
 
     #[test]
@@ -369,7 +363,8 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::LAZY));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("let loop module otherwise record recur reify repeat then until");
+        let mut lex =
+            Symbol::lexer("let loop module otherwise record recur reify repeat then until");
         assert_eq!(lex.next(), Some(Symbol::LET));
         assert_eq!(lex.next(), Some(Symbol::LOOP));
         assert_eq!(lex.next(), Some(Symbol::MODULE));
@@ -520,15 +515,13 @@ mod test_tokens {
     }
 
     #[test]
-    fn test_indent()
-    {
+    fn test_indent() {
         let mut lex = Symbol::lexer("  a");
         assert_eq!(lex.next(), Some(Symbol::ID("a")));
     }
 
     #[test]
-    fn test_some_expressions()
-    {
+    fn test_some_expressions() {
         let mut lex = Symbol::lexer("\"a b c d\" |> .toUpperCase |> .split \" \" |> first");
         assert_eq!(lex.next(), Some(Symbol::STRING("a b c d")));
         assert_eq!(lex.next(), Some(Symbol::PIPERIGHT));
@@ -552,15 +545,30 @@ mod test_tokens {
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30");
         assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30")));
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120");
-        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120")));
+        assert_eq!(
+            lex.next(),
+            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120"))
+        );
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120Z");
-        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120Z")));
+        assert_eq!(
+            lex.next(),
+            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120Z"))
+        );
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120-3");
-        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120-3")));
+        assert_eq!(
+            lex.next(),
+            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120-3"))
+        );
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120+3");
-        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3")));
+        assert_eq!(
+            lex.next(),
+            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3"))
+        );
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120+3:30");
-        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3:30")));
+        assert_eq!(
+            lex.next(),
+            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3:30"))
+        );
     }
 
     #[test]
@@ -576,7 +584,6 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::MATCHES));
         assert_eq!(lex.next(), Some(Symbol::REGEX("?(a|b)+?")));
         assert_eq!(lex.next(), None);
-
     }
 
     #[test]
@@ -586,7 +593,15 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::ASSIGN));
         assert_eq!(lex.next(), Some(Symbol::FSTRING("\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): ")));
         assert_eq!(lex.next(), None);
-
     }
 
+    #[test]
+    fn test_chars() {
+        let mut lex = Symbol::lexer("'a' 'b' '\\n' '\\u3829'");
+        assert_eq!(lex.next(), Some(Symbol::CHAR("a")));
+        assert_eq!(lex.next(), Some(Symbol::CHAR("b")));
+        assert_eq!(lex.next(), Some(Symbol::CHAR("\\n")));
+        assert_eq!(lex.next(), Some(Symbol::CHAR("\\u3829")));
+        assert_eq!(lex.next(), None);
+    }
 }

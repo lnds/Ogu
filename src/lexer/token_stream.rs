@@ -11,7 +11,7 @@ impl<'a> TokenStream<'a> {
     }
 
     pub fn iter(&'a self) -> std::slice::Iter<'a, Token<'a>> {
-        return self.tokens.iter();
+        self.tokens.iter()
     }
 
     pub fn len(&'a self) -> usize {

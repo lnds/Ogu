@@ -1,33 +1,31 @@
 
 
-record Banana {quantity}
-record Grape  {quantity}
-record Orange {quantity}
-
-trait Fruit
-
-    def subtotal item
+type Banana = Banana {quantity:Number}
+type Grape = Grape {quantity:Number}
+type Orange = Orange {quantity:Number}
 
 
-extends Banana with Fruit
+trait Fruit where
 
-    def subtotal item = 158 * (.quantity item)
-
-extends Grape with Fruit
-
-    def subtotal item = 178 * (.quantity item)
+    subtotal : Fruit -> Number
 
 
-extends Orange with Fruit
+extends Banana with Fruit where
 
-    def subtotal item = 98 * (.quantity item)
+    subtotal item = 158 * item.quantity
+
+extends Grape with Fruit where
+
+    subtotal item = 178 * item.quantity
+
+extends Orange with Fruit where
+
+    subtotal item = 98 * item.quantity
 
 
-def coupon item = reify Fruit
-                     def subtotal _ = 0.75 * (subtotal item)
+coupon : Fruit -> Number -> Fruit
+coupon item discount =
+    reify Fruit where
+      subtotal _ = (1.0 - discoount) * (subtotal item)
 
-
-
-
-
-[Orange{10}, Banana{15}, coupon Grape{10}] |> map subtotal |> sum |> println!
+[Orange{quantity=10}, Banana{quantity=15}, coupon Grape{10}] |> map subtotal |> sum |> println!

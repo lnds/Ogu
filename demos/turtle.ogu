@@ -1,13 +1,17 @@
 from ogu.turtle import *
 
-def fib turtle depth =
-    forward turtle 30
-    when depth > 2 then
-        left turtle 15
-        fib turtle (depth - 1)
-        right turtle 30
-        fib turtle (depth - 2)
-        left turtle 15
-    back turtle 30
+draw-fib! turtle depth =
+   do
+     move-forward! turtle 30
+     if depth > 2 then
+     do
+       turn-left! turtle 15
+       draw-fib! turtle (depth - 1)
+       turn-right! turtle 30
+       draw-fib! turtle (depth - 2)
+       turn-left! turtle 15
+       move-back! turtle 30
+     else
+       move-back! turtle 30
 
-turtle 400 400 !> pen-up !> go 0 -100 !> pen-down  !> fib 10 !> show
+create-turtle! 400 400 !> pen-up! !> go-to! 0 -100 !> pen-down!  !> draw-fib! 10 !> show!

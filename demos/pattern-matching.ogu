@@ -1,34 +1,34 @@
-fn charName 'a' = "Albert"
-fn charName 'b' = "Broseph"
-fn charName 'c' = "Cecil"
+charName 'a' = "Albert"
+charName 'b' = "Broseph"
+charName 'c' = "Cecil"
 
 
 println! $ charName 'b'
 
 
-fn fact 0 = 1
-fn fact 1 = 1
-fn fact n = n * (fact $ n - 1)
+fact 0 = 1
+fact 1 = 1
+fact n = n * (fact $ n - 1)
 
 println! $ fact 7
 
 
-fn frst (x, _, _) = x
+frst (x, _, _) = x
 
 println! $ frst (1, 2, 3)
 
-let tuple = (:a, :b, :c)
+tuple = (:a, :b, :c)
 
 println! $ frst tuple
 
 
-fn qsort []  = []
-fn qsort (x :: xs) = (qsort lesser) ++ [x] ++ (qsort greater)
+qsort []  = []
+qsort (x :: xs) = (qsort lesser) ++ [x] ++ (qsort greater)
   where
     lesser  =  [a | a <- xs, a <= x]
     greater =  [a | a <- xs, a > x ]
 
-let array = [5, 9, 1, 3, 4, 7, 8, 2, 0, 6]
+array = [5, 9, 1, 3, 4, 7, 8, 2, 0, 6]
 
 println $ qsort array
 

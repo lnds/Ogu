@@ -1,18 +1,11 @@
 
-fn primes n =
-    let root =  n |> Math.sqrt |> int,
-        sieve = boolean-array! n true
-    in
-        with i = 2 loop
-            when i < root then
-                when aget sieve i then
-                    with j = i * 2 loop
-                       when j < n then
-                         do
-                           aset! sieve j false
-                           repeat j + i
-                repeat inc i
-        filter (\i -> aget sieve i)  [2..<n]
+primes = 2 :: filter (prime-factors >> length >> (==1)) [3,5..]
 
+prime-factors n = factor n primes
+  where
+    factor n (p::ps)
+      | p*p > n = [n]
+      | n % p == 0 = p :: factor (n // p) (p::ps)
+      | otherwise = factor n ps
 
-println! $ reduce (+) (primes (dec 2000000))
+println! $ reduce add (primes (dec 2000000))

@@ -1,27 +1,27 @@
 
-fn fact 0 = 1
-fn fact 1 = 1
-fn fact n = n * (fact $ dec n)
+fact 0 = 1
+fact 1 = 1
+fact n = n * (fact $ dec n)
 
-fn test a = fact a
-fn test a b = (fact  a) + (fact b)
+test a = fact a
+ftest a b = (fact  a) + (fact b)
 
-fn funny 0 0 = 0
-fn funny 0 1 = 2
-fn funny 1 0 = 4
-fn funny 1 b = 4 + 2 * b
-fn funny a 1 = 4 * a + 2
-fn funny a b = 4 * a +  2 * b
-
-
-println $ funny 0 0
-println $ funny 0 1
-println $ funny 1 0
-println $ funny 2 2
+funny 0 0 = 0
+funny 0 1 = 2
+funny 1 0 = 4
+funny 1 b = 4 + 2 * b
+funny a 1 = 4 * a + 2
+funny a b = 4 * a +  2 * b
 
 
-println $ test 4
+println! $ funny 0 0
+println! $ funny 0 1
+println! $ funny 1 0
+println! $ funny 2 2
 
-println $ test 3 4
+
+println! $ test 4
+
+println! $ test 3 4
 
 

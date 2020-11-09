@@ -1,18 +1,19 @@
 module toque-y-fama
 
-def ingresar tam = prompt! #"Ingresa una secuencia de ${tam} dígitos distintos (o escribe salir):"
+ingresar! tam = prompt! #"Ingresa una secuencia de ${tam} dígitos distintos (o escribe salir):"
 
-def famas num xs = zip num xs |> filter \x -> first x == second x |> count
+famas num xs = zip num xs |> filter \x -> first x == second x |> count
 
-def toques num xs =
-    println "toques nun = " num " xs = " xs
-    num |> filter \x -> xs contains x |> count
+toques! num xs =
+    do
+      println "toques nun = " num " xs = " xs
+      return num |> filter \x -> xs contains x |> count
 
-def validar n xs = if (length num) == n then num else []
+validar n xs = if (length num) == n then num else []
     where num = xs |> filter is-digit?  |> map to-digit  |> uniq
 
-let tam = 5
-let sec = shuffle [0 .. 9] |> take tam
+tam = 5
+sec = shuffle [0 .. 9] |> take tam
 
 println! $ fmt "Bienvenido a Toque y Fama.\n" ++
 "==========================\n\n" ++
@@ -25,22 +26,26 @@ println! $ fmt "Bienvenido a Toque y Fama.\n" ++
 "resultado: 2 Toques 2 Famas\n\n\n"
 
 
-loop intentos = 1, accion = ingresar tam do
+for intentos = 1, accion = ingresar tam loop
     if accion == "salir" || empty? accion then
-        println! "\ngracias por jugar, adios."
+      println! "\ngracias por jugar, adios."
     else
-       let num = validar tam accion
-       if empty? num then
-          println! "error!\n"
-          repeat with intentos = inc intentos, accion = ingresar tam
-       else
-          println! "tu ingresaste " num "(es " sec ")"
-          let t = toques num sec,
-              f = famas num sec
-          in
-              println! "resultado: "  (t - t)  " Toques "  f  "Famas"
-              if f == tam then
-                 println! #"Ganaste! Acertaste al intento ${intentos}! La secuencia era ${sec}"
-              else
-                 repeat with intentos = inc intentos, accion = ingresar tam
+      let num = validar tam accion
+      in
+        if empty? num then
+        do
+           println! "error!\n"
+           recur intentos = inc intentos, accion = ingresar tam
+        else
+        do
+           println! "tu ingresaste " num "(es " sec ")"
+           let t = toques num sec,
+               f = famas num sec
+           in
+           do
+             println! "resultado: "  (t - t)  " Toques "  f  "Famas"
+             if f == tam then
+               println! #"Ganaste! Acertaste al intento ${intentos}! La secuencia era ${sec}"
+             else
+               recur intentos = inc intentos, accion = ingresar tam
 

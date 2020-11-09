@@ -1,51 +1,51 @@
-trait Vehicle
-    def move this
+trait Vehicle where
+    move! : Vehicle -> ()
 
+type Car = Car {company: String, model: String, year: Number}
+    extends Vehicle where
+        move! this = do println! "moving car " company model year
 
-record Car {company, model, year}
-    extends Vehicle
+type Plane = Plane {company: String, series: String, year: Number}
+   extends Vehicle where
+        move! this = println! "flying plane " company series year
 
-        def move this = println! "moving car " company model year
+type Ship = Ship {name: String}
 
-record Plane {company, series, year}
-   extends Vehicle
-        def move this = println! "flying plane " company series year
+    extends Vehicle where
 
-record Ship {name}
+        move! this
+            | this.name == "Titanic" do println! name "sink"
+            | otherwise do println! "sail"
 
-    extends Vehicle
+mustang56 = Car {company = "Ford", model = "Mustang", year = 1956}
 
-        def move this
-            | name == "Titanic" = println! name "sink"
-            | otherwise = println! "sail"
+boeing747 = Plane {company = "Boeing", series = "747", year = 2000}
 
-let mustang56 = Car {company = "Ford", model = "Mustang", year = 1956}
+show-model! : Plane -> ()
+show-model! p = println! p.series  p.company
 
-let boeing747 = Plane{company = "Boeing", series = "747", year = 2000}
+show-model! : Car -> ()
+show-model car do println! car.model car.company
 
-def show-model p:Plane = println! (.series  p) (.company  p)
-def show-model c:Car   = println! !c.model !c.company
+show! : Plane -> ()
+show! plane = println! "plane " (show-model! plane)
 
-dispatch show with class
+show! : Car -> ()
+show! car = println!   "car " (show-model! car)
 
-def show Plane ? plane = println! "plane " -- (show-model plane)
-def show Car   ? car = println!   "car " -- (show-model car)
+titanic = Ship ("Titanic")
+queen = Ship ("Queen Mary")
 
-let titanic = Ship ("Titanic")
-let queen = Ship ("Queen Mary")
+show! mustang56
+show! boeing747
 
-show mustang56
-show boeing747
+show-model! mustang56
+show-model! boeing747
 
-show-model mustang56
-show-model boeing747
+move! mustang56
 
-move mustang56
+move! boeing747
 
-move boeing747
+move! titanic
 
-move titanic
-
-move queen
-
-
+move! queen

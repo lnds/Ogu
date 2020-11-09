@@ -1,25 +1,29 @@
 
-data Tree = Leaf(value) | Node(value, left, right)
+type Tree = Leaf {value:Number}
+          | Node {value:Number, left:Tree, right:Tree}
 
-dispatch t-max with type
+trait Max where
+    t-max : Max -> Number
 
-def t-max Leaf ? leaf = .value leaf
+extends Leaf with Max where
 
-def t-max Node ? node = max ml mr mn
- where ml = .left node |> t-max
-	 mr = .right node |> t-max
-	 mn = .value node
+    t-max leaf = leaf.value
 
-dispatch t-sum with type
+extends Node with Max where
 
-def t-sum Leaf ? leaf = .value leaf
+    t-max node = max ml mr mn
+       where ml = node.left |> t-max
+             mr = node.right |> t-max
+             mn = node.value
 
-def t-sum Node ? node = [t-sum node.left, t-sum node.right, node.value] |> sum
-
-let arbol = Node(30, Leaf(70),
-			     Node(15,
-			     	Node(42, Leaf(54), Leaf(66)),
-			     	Node(25, Leaf(89), Leaf(72))))
+arbol = Node
+    { value = 30
+    , left = Leaf { value = 70 }
+    , right = Node { value = 15
+                   , left = Node { value = 42, left = Leaf {54}, right = Leaf{66} }
+                   , right = Node { 25, Leaf {89}, Leaf {72} }
+                   }
+    }
 
 t-max arbol |> println "El valor maximo del arbol  es: "
 

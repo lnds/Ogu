@@ -25,12 +25,6 @@ pub enum Symbol<'a> {
     CLASS,
     #[token("cond", priority=2000)]
     COND,
-    #[token("data", priority=2000)]
-    DATA,
-    #[token("def", priority=2000)]
-    DEF, // deprecated
-    #[token("dispatch", priority=2000)]
-    DISPATCH,
     #[token("do", priority=2000)]
     DO,
     #[token("eager", priority=2000)]
@@ -45,8 +39,6 @@ pub enum Symbol<'a> {
     FALSE,
     #[token("for", priority=2000)]
     FOR,
-    #[token("fn", priority=2000)]
-    FN,
     #[token("from", priority=2000)]
     FROM,
     #[token("handle", priority=2000)]
@@ -65,6 +57,8 @@ pub enum Symbol<'a> {
     LOOP,
     #[token("module", priority=2000)]
     MODULE,
+    #[token("not", priority=2000)]
+    NOT,
     #[token("otherwise", priority=2000)]
     OTHERWISE,
     #[token("record", priority=2000)]
@@ -75,14 +69,20 @@ pub enum Symbol<'a> {
     REIFY,
     #[token("repeat", priority=2000)]
     REPEAT,
+    #[token("return", priority=2000)]
+    RETURN,
     #[token("then", priority=2000)]
     THEN,
+    #[token("trait", priority=2000)]
+    TRAIT,
     #[token("until", priority=2000)]
     UNTIL,
     #[token("when", priority=2000)]
     WHEN,
     #[token("where", priority=2000)]
     WHERE,
+    #[token("while", priority=2000)]
+    WHILE,
     #[token("with", priority=2000)]
     WITH,
     #[token("&&", priority=1000)]
@@ -187,6 +187,8 @@ pub enum Symbol<'a> {
     ID(&'a str),
     #[regex(r#""([^"]*)""#, priority=20, callback = extract_string)]
     STRING(&'a str),
+    #[regex(r#"f"([^"]*)""#, priority=20, callback = extract_f_string)]
+    FSTRING(&'a str),
     #[regex(r"[\+\-]?[0-9]+", priority=2000,  callback=extract_slice)]
     INTEGER(&'a str),
     #[regex(r"[\+\-]?[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?", priority=2000,  callback=extract_slice)]
@@ -215,6 +217,11 @@ impl<'a> Symbol<'a> {
 fn extract_string<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
     Some(&slice[1..slice.len()-1])
+}
+
+fn extract_f_string<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
+    let slice = lex.slice();
+    Some(&slice[2..slice.len()-1])
 }
 
 fn extract_slice<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
@@ -337,24 +344,20 @@ mod test_tokens {
 
     #[test]
     fn test_keywords() {
-        let mut lex = Symbol::lexer("as class cond data def dispatch do eager elif else");
+        let mut lex = Symbol::lexer("as class cond  do eager elif else");
         assert_eq!(lex.next(), Some(Symbol::AS));
         assert_eq!(lex.next(), Some(Symbol::CLASS));
         assert_eq!(lex.next(), Some(Symbol::COND));
-        assert_eq!(lex.next(), Some(Symbol::DATA));
-        assert_eq!(lex.next(), Some(Symbol::DEF));
-        assert_eq!(lex.next(), Some(Symbol::DISPATCH));
         assert_eq!(lex.next(), Some(Symbol::DO));
         assert_eq!(lex.next(), Some(Symbol::EAGER));
         assert_eq!(lex.next(), Some(Symbol::ELIF));
         assert_eq!(lex.next(), Some(Symbol::ELSE));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("extends false for fn from handle if in is lazy");
+        let mut lex = Symbol::lexer("extends false for from handle if in is lazy");
         assert_eq!(lex.next(), Some(Symbol::EXTENDS));
         assert_eq!(lex.next(), Some(Symbol::FALSE));
         assert_eq!(lex.next(), Some(Symbol::FOR));
-        assert_eq!(lex.next(), Some(Symbol::FN));
         assert_eq!(lex.next(), Some(Symbol::FROM));
         assert_eq!(lex.next(), Some(Symbol::HANDLE));
         assert_eq!(lex.next(), Some(Symbol::IF));
@@ -569,6 +572,16 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::STRING("aaabbb")));
         assert_eq!(lex.next(), Some(Symbol::MATCHES));
         assert_eq!(lex.next(), Some(Symbol::REGEX("?(a|b)+?")));
+        assert_eq!(lex.next(), None);
+
+    }
+
+    #[test]
+    fn test_strings() {
+        let mut lex = Symbol::lexer("msj = f\"\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): \"");
+        assert_eq!(lex.next(), Some(Symbol::ID("msj")));
+        assert_eq!(lex.next(), Some(Symbol::ASSIGN));
+        assert_eq!(lex.next(), Some(Symbol::FSTRING("\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): ")));
         assert_eq!(lex.next(), None);
 
     }

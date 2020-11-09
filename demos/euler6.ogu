@@ -1,11 +1,11 @@
 
-fn sum-n n = (n * (n + 1)) / 2
+sum-n n = (n * (n + 1)) / 2
 
-fn square-sum n = let s = sum-n n in s * s
+square-sum n = let s = sum-n n in s * s
 
-fn sum-n-square n = reduce (+) (map (\x -> x * x) [1..n])
+sum-n-square n = reduce add <| (map (\x -> x * x) [1..n])
 
-fn dif-squares n = (square-sum n) - (sum-n-square n)
+dif-squares n = (square-sum n) - (sum-n-square n)
 
 dif-squares 100 |> println!
 

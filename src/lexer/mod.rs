@@ -172,12 +172,11 @@ mod test_lexer {
 
     #[test]
     fn test_scan_indentation() {
-        let mut lexer = Lexer::from("fn func =\n  this is a function\nend");
+        let mut lexer = Lexer::from("func =\n  this is a function\nend");
         let stream_result = lexer.scan();
         assert!(stream_result.is_ok());
         let mut stream = stream_result.unwrap();
         let mut iter = stream.iter();
-        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::FN, line: 1 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("func"), line: 1 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ASSIGN, line: 1 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::INDENT, line: 2 }));
@@ -192,12 +191,11 @@ mod test_lexer {
 
     #[test]
     fn test_scan_paren() {
-        let mut lexer = Lexer::from("fn func = (1, \n  2, 3, 4)\n  this is a function\nend");
+        let mut lexer = Lexer::from("func = (1, \n  2, 3, 4)\n  this is a function\nend");
         let stream_result = lexer.scan();
         assert!(stream_result.is_ok());
         let mut stream = stream_result.unwrap();
         let mut iter = stream.iter();
-        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::FN, line: 1 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("func"), line: 1 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ASSIGN, line: 1 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::LPAREN, line: 1 }));
@@ -221,12 +219,11 @@ mod test_lexer {
 
     #[test]
     fn test_scan_unbalanced_paren() {
-        let mut lexer = Lexer::from("fn func = (1, \n  2, 3, 4))\n  this is a function\nend");
+        let mut lexer = Lexer::from("func = (1, \n  2, 3, 4))\n  this is a function\nend");
         let stream_result = lexer.scan();
         assert!(stream_result.is_ok());
         let mut stream = stream_result.unwrap();
         let mut iter = stream.iter();
-        assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::FN, line: 1 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("func"), line: 1 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ASSIGN, line: 1 }));
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::LPAREN, line: 1 }));
@@ -249,6 +246,7 @@ mod test_lexer {
         assert_eq!(iter.next(), Some(&Token{ symbol: Symbol::ID("end"), line: 4 }));
         assert_eq!(iter.next(), None);
     }
+
 
     #[test]
     fn scan_test_files() {

@@ -1,7 +1,7 @@
-for i in [0 .. 1000] loop
-  if i % 3 == 0 then
-    println! #"${i} FIZZ"
-  elif i % 5 == 0 then
-    println! #"${i} BUZZ"
-  else
-    println! i
+
+fizz-buzz! i
+    | i % 3 == 0 = println! f"${i} FIZZ"
+    | i % 5 == 0 = println! f"${i} BUZZ"
+    | otherwise  = println! i
+
+[0..1000] |> fizz-buzz!

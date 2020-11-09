@@ -1,12 +1,11 @@
 
-fn rev num =
-  with reversed = 0, n = num loop
-    if zero? n then
-      reversed
-    else
-      repeat reversed * 10 + n % 10, int (n / 10)
+rev num =
+    for reversed = 0, n = num
+    loop
+        if zero? n then reversed
+        else recur (reversed * 10 + n % 10) (n // 10)
 
-fn palindrome? n = n == rev n
+palindrome? n = n == rev n
 
 [x * y | x <- [100..<1000], y <- [100..<1000]] |> filter palindrome? |> apply max |> println!
 

@@ -1,60 +1,65 @@
 
-trait Shape
+trait Shape where
 
-    def area self
+    area : Shape -> Number
 
-trait Widget
+trait Widget where
 
-     def draw! self
+     draw! : Shape -> ()
 
-     def move! self x y
+     move! : Shape -> Number -> Number -> Shape
 
-trait Origin
+trait Origin where
 
-     def getX self
-     def getY self
+     get-x : Origin -> Number
 
-class Circle (x, y, radius)
+     get-y : Origin -> Number
 
-  extends Shape
+class Circle (x : Number, y: Number, radius : Number)
 
-      def area self = pi * (self.radius ^ 2)
+  extends Shape where
 
-  extends Widget
+       area self = pi * (self.radius ^ 2)
 
-      def draw! self = println! "draw a circle at (" x ", " y ") with radius " radius
+  extends Widget where
 
-      def move! self new-x new-y =
-            Circle(new-x, new-y, self.radius)
+      draw! self = println! "draw a circle at (" x ", " y ") with radius " radius
 
-  extends Origin
+      move! self new-x new-y =
+         Circle(new-x, new-y, self.radius)
 
-     def getX self = x
+  extends Origin where
 
-     def getY self = y
+      get-x self = x
 
-
-class Rectangle (x,  y, width, height)
+      get-y self = y
 
 
-extends Rectangle with Shape
-
-     def area self = (.width self) * (.height self)
-
-extends Rectangle  with Widget
-
-     def draw! self = println! "draw a rectangle at (" self.x  ", " self.y   ") with width = " (.width self) " and height = " (.height self)
-
-     def move! self new-x new-y =
-           draw! self
-
-def show-area! shape : Rectangle = println! "el area de un rectangulo es " (area shape) " y es de tipo " (typeof shape )
-
-def show-area! shape : Shape = println! "el area es " (area shape) " y es de tipo " (typeof shape )
+class Rectangle (x: Number,  y: Number, width: Number, height: Number)
 
 
-let cir = Circle(10, 10, 10)
-let rec = Rectangle(0,0, 100, 50)
+extends Rectangle with Shape where
+
+     area self = self.width * self.height
+
+extends Rectangle with Widget
+where
+     draw! self do println! "draw a rectangle at (" self.x  ", " self.y   ") with width = " (.width self) " and height = " (.height self)
+
+     move! self new-x new-y =
+        new-rect = Rectangle(new-x, new-y, self.width, self.height)
+        draw! new-rect
+        return new-rect
+
+show-area! : Rectangle -> ()
+show-area! shape do println! "el area de un rectangulo es " (area shape) " y es de tipo " (typeof shape )
+
+show-area! : Shape -> ()
+show-area! shape do println! "el area es " (area shape) " y es de tipo " (typeof shape )
+
+
+cir = Circle(10, 10, 10)
+rec = Rectangle(0,0, 100, 50)
 
 draw! cir
 
@@ -64,8 +69,7 @@ show-area! cir
 
 show-area! rec
 
-(move! cir 20 20)
+cir = move! cir 20 20
 
-
-println!  (getX cir) (getY cir) cir.radius
+println! (get-x cir) (get-y cir) cir.radius
 

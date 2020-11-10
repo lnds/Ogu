@@ -1,10 +1,12 @@
-mod token_stream;
-mod tokens;
+pub mod token_stream;
+pub mod tokens;
 
 use logos::Logos;
 
+use crate::backend::OguError;
+use anyhow::{Error, Result};
 use std::fs::File;
-use std::io::{self, BufRead, Cursor, Error, ErrorKind, Result as IOResult};
+use std::io::{self, BufRead, Cursor};
 use std::path::PathBuf;
 
 use crate::lexer::token_stream::TokenStream;
@@ -27,9 +29,9 @@ pub struct Lexer {
 }
 
 impl<'a> Lexer {
-    pub fn new(path: &PathBuf) -> IOResult<Lexer> {
+    pub fn new(path: &PathBuf) -> Result<Lexer> {
         if !path.exists() {
-            return Err(Error::new(ErrorKind::NotFound, format!("{:?}", path)));
+            return Err(Error::new(OguError::NotFound(format!("{:?}", path))));
         }
         Ok(Lexer {
             source: LexerSource::File(path.clone()),
@@ -46,7 +48,7 @@ impl<'a> Lexer {
         }
     }
 
-    pub fn scan(&'a mut self) -> IOResult<TokenStream<'a>> {
+    pub fn scan(&'a mut self) -> Result<TokenStream<'a>> {
         self.lines = match &self.source {
             LexerSource::File(path) => {
                 let file = File::open(&path)?;
@@ -88,7 +90,7 @@ impl<'a> Lexer {
         self.scan_lines()
     }
 
-    fn scan_lines(&'a mut self) -> IOResult<TokenStream<'a>> {
+    fn scan_lines(&'a mut self) -> Result<TokenStream<'a>> {
         let tokens = self.map_lines();
         Ok(TokenStream::new(tokens))
     }

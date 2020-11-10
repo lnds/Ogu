@@ -1,5 +1,6 @@
 use crate::lexer::tokens::Symbol::{LBRACKET, LCURLY, LPAREN, RBRACKET, RCURLY, RPAREN};
 use logos::{Lexer, Logos};
+use std::fmt::Display;
 
 pub type LineSize = usize;
 
@@ -189,25 +190,25 @@ pub enum Symbol<'a> {
     RCURLY,
     #[token(")", priority = 1000)]
     RPAREN,
-    #[regex(r"[A-Z][_a-zA-Z0-9]*", priority = 110, callback=extract_slice)]
+    #[regex(r"[A-Z][_a-zA-Z0-9]*", priority = 110, callback = extract_slice)]
     TID(&'a str),
-    #[regex(r"[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100,  callback=extract_slice)]
+    #[regex(r"[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100, callback = extract_slice)]
     ID(&'a str),
-    #[regex(r#""([^"]*)""#, priority=20, callback = extract_string)]
+    #[regex(r#""([^"]*)""#, priority = 20, callback = extract_string)]
     STRING(&'a str),
-    #[regex(r#"f"([^"]*)""#, priority=20, callback = extract_f_string)]
+    #[regex(r#"f"([^"]*)""#, priority = 20, callback = extract_f_string)]
     FSTRING(&'a str),
-    #[regex(r"[\+\-]?[0-9]+", priority=2000,  callback=extract_slice)]
+    #[regex(r"[\+\-]?[0-9]+", priority = 2000, callback = extract_slice)]
     INTEGER(&'a str),
-    #[regex(r"[\+\-]?[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?", priority=2000,  callback=extract_slice)]
+    #[regex(r"[\+\-]?[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?", priority = 2000, callback = extract_slice)]
     FLOAT(&'a str),
-    #[regex(r"[\+\-]?[0-9]+/[0-9]+", priority=2000, callback=extract_slice)]
+    #[regex(r"[\+\-]?[0-9]+/[0-9]+", priority = 2000, callback = extract_slice)]
     RATIO(&'a str),
-    #[regex(r"#(\d+)-(\d+)-(\d+)(T(\d+):(\d+)(:(\d+)(\.(\d+))?)?(Z|([+-]\d+(:\d+)?))?)?", callback=extract_slice)]
+    #[regex(r"#(\d+)-(\d+)-(\d+)(T(\d+):(\d+)(:(\d+)(\.(\d+))?)?(Z|([+-]\d+(:\d+)?))?)?", callback = extract_slice)]
     ISODATE(&'a str),
-    #[regex(r"#((/[^/]*/)|(\?[^?]*\?))", callback=extract_slice_from_1)]
+    #[regex(r"#((/[^/]*/)|(\?[^?]*\?))", callback = extract_slice_from_1)]
     REGEX(&'a str),
-    #[regex(r#"'(.|\\n|\\r|\\t|\\u[0-9]+)'"#, callback=extract_string)]
+    #[regex(r#"'(.|\\n|\\r|\\t|\\u[0-9]+)'"#, callback = extract_string)]
     CHAR(&'a str),
 }
 
@@ -219,6 +220,10 @@ impl<'a> Symbol<'a> {
     pub fn is_close_paren(&self) -> bool {
         *self == RPAREN || *self == RBRACKET || *self == RCURLY
     }
+}
+
+impl<'a> Display for Symbol<'a> {
+    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> { todo!() }
 }
 
 fn extract_string<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {

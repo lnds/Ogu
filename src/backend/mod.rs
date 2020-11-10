@@ -1,11 +1,25 @@
 use crate::backend::banner::akarru;
 use crate::lexer::Lexer;
+use crate::parser::{ParseError, Parser};
+use anyhow::Result;
 use std::fmt::Debug;
-use std::io::Result as IOResult;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use thiserror::Error;
 
 pub mod banner;
+
+#[derive(Error, Debug)]
+pub enum OguError {
+    #[error("Can't load Figfont")]
+    FigfontError(String),
+    #[error("Source not found")]
+    NotFound(String),
+    #[error("Parser error")]
+    ParserError(ParseError),
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+}
 
 const HELP_GREETINGS: &str = "\n\t\tOLA AMIKO MIO DE MI\n\n";
 
@@ -32,7 +46,7 @@ pub struct Params {
     args: Vec<String>,
 }
 
-pub fn run(params: Params) -> IOResult<()> {
+pub fn run(params: Params) -> Result<()> {
     if params.banner {
         akarru()?
     }
@@ -42,9 +56,11 @@ pub fn run(params: Params) -> IOResult<()> {
     Ok(())
 }
 
-fn run_module(path: &PathBuf, _params: &Params) -> IOResult<()> {
+fn run_module(path: &PathBuf, _params: &Params) -> Result<()> {
     let mut lexer = Lexer::new(path)?;
     let tokens = lexer.scan()?;
-    println!("TOKENS: {:?}", tokens);
+    let mut parser = Parser::new(tokens)?;
+    let module = parser.parse(path)?;
+    println!("Module = {:?}", module);
     Ok(())
 }

@@ -152,6 +152,8 @@ pub enum Symbol<'a> {
     LBRACKET,
     #[token("{", priority = 1000)]
     LCURLY,
+    #[token("#{", priority = 100)]
+    HASHCURLY,
     #[token("(", priority = 1000)]
     LPAREN,
     #[token("<", priority = 1000)]
@@ -432,7 +434,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::DOTO));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("<! == >= > | \\ <= [ { (");
+        let mut lex = Symbol::lexer("<! == >= > | \\ <= [ { #{ (");
         assert_eq!(lex.next(), Some(Symbol::DOTOBACK));
         assert_eq!(lex.next(), Some(Symbol::EQUALS));
         assert_eq!(lex.next(), Some(Symbol::GE));
@@ -442,6 +444,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::LE));
         assert_eq!(lex.next(), Some(Symbol::LBRACKET));
         assert_eq!(lex.next(), Some(Symbol::LCURLY));
+        assert_eq!(lex.next(), Some(Symbol::HASHCURLY));
         assert_eq!(lex.next(), Some(Symbol::LPAREN));
         assert_eq!(lex.next(), None);
 

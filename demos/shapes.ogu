@@ -1,3 +1,4 @@
+module Shapes exposing (Shape, Widget, Circle, Rectangle, show-area!)
 
 trait Shape where
 

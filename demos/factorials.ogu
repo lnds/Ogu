@@ -1,4 +1,4 @@
-
+module Factorials exposing (lazy-fact)
 
 lazy-fact = go 1 1
     where go f i = lazy f :: go (f * i) (i + 1)

@@ -36,6 +36,8 @@ pub enum Symbol<'a> {
     ELIF,
     #[token("else", priority = 2000)]
     ELSE,
+    #[token("exposing", priority = 2000)]
+    EXPOSING,
     #[token("extends", priority = 2000)]
     EXTENDS,
     #[token("false", priority = 2000)]

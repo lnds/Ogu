@@ -16,6 +16,10 @@ pub enum ParseError {
     TypeIdExpected,
     #[error("Expecting symbol")]
     ExpectingSymbol(String),
+    #[error("Expecting '(' after exposing keyword")]
+    ExposingExpectOpenParenthesis,
+    #[error("Expecting identifier")]
+    ExpectingIdentifier,
 }
 
 pub struct Parser<'a> {
@@ -32,41 +36,23 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(&'a mut self, filename: &PathBuf) -> Result<Module> {
-        Module::parse(self, filename)
+        Module::parse(self, filename, 0)
     }
 
-    pub fn peek(&'a self, symbol: Symbol) -> bool {
-        match self.tokens.peek() {
+    pub fn peek(&'a self, pos: usize, symbol: Symbol) -> bool {
+        match self.tokens.peek(pos) {
             None => false,
             Some(tok) => tok.symbol == symbol,
         }
     }
 
-    pub fn current_line(&'a mut self) -> LineNumber {
-        self.current_line
+    pub fn get(&'a self, pos: usize) -> Option<Token> {
+        self.tokens.peek(pos)
     }
 
-    pub fn next_symbol(&'a mut self) -> Option<Symbol> {
-        self.tokens.next().map(|t| t.symbol)
+    pub fn get_symbol(&'a self, pos: usize) -> Option<Symbol> {
+        self.tokens.peek(pos).map(|t| t.symbol)
     }
 
-    pub fn next_token(&'a mut self) -> Option<Token> {
-        self.tokens.next()
-    }
 
-    pub fn consume(&'a mut self, symbol: Symbol) -> Result<()> {
-        match self.tokens.next() {
-            Some(Token{symbol:s, line:_}) =>
-                if s != symbol {
-                    Err(Error::new(OguError::ParserError(ExpectingSymbol(symbol.to_string()))))
-                } else {
-                    Ok(())
-                }
-            _ => Err(Error::new(OguError::ParserError(ExpectingSymbol(symbol.to_string()))))
-        }
-    }
-
-    pub fn skip(&'a mut self, symbol: Symbol<'a>) -> Option<Token> {
-        self.tokens.skip(symbol)
-    }
 }

@@ -200,11 +200,11 @@ pub enum Symbol<'a> {
     STRING(&'a str),
     #[regex(r#"f"([^"]*)""#, priority = 20, callback = extract_f_string)]
     FSTRING(&'a str),
-    #[regex(r"[\+\-]?[0-9]+", priority = 2000, callback = extract_slice)]
+    #[regex(r"[\+\-]?[0-9]+[N]?", priority = 2000, callback = extract_slice)]
     INTEGER(&'a str),
-    #[regex(r"[\+\-]?[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?", priority = 2000, callback = extract_slice)]
+    #[regex(r"[\+\-]?[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?[M]?", priority = 2000, callback = extract_slice)]
     FLOAT(&'a str),
-    #[regex(r"[\+\-]?[0-9]+/[0-9]+", priority = 2000, callback = extract_slice)]
+    #[regex(r"[\+\-]?[0-9]+/[0-9]+[M]?", priority = 2000, callback = extract_slice)]
     RATIO(&'a str),
     #[regex(r"#(\d+)-(\d+)-(\d+)(T(\d+):(\d+)(:(\d+)(\.(\d+))?)?(Z|([+-]\d+(:\d+)?))?)?", callback = extract_slice)]
     ISODATE(&'a str),
@@ -487,6 +487,11 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::FLOAT(".333")));
         assert_eq!(lex.next(), Some(Symbol::FLOAT("-.455")));
         assert_eq!(lex.next(), None);
+
+        let mut lex = Symbol::lexer("2.4M 200N");
+        assert_eq!(lex.next(), Some(Symbol::FLOAT("2.4M")));
+        assert_eq!(lex.next(), Some(Symbol::INTEGER("200N")));
+        assert_eq!(lex.next(), None);
     }
 
     #[test]
@@ -586,10 +591,10 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::REGEX("/(a|b)+/")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("\"aaabbb\" =~ #?(a|b)+?");
+        let mut lex = Symbol::lexer("\"aaabbb\" =~ #?(a|b|/)+?");
         assert_eq!(lex.next(), Some(Symbol::STRING("aaabbb")));
         assert_eq!(lex.next(), Some(Symbol::MATCHES));
-        assert_eq!(lex.next(), Some(Symbol::REGEX("?(a|b)+?")));
+        assert_eq!(lex.next(), Some(Symbol::REGEX("?(a|b|/)+?")));
         assert_eq!(lex.next(), None);
     }
 

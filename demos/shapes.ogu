@@ -16,7 +16,7 @@ trait Origin where
 
      get-y : Origin -> Number
 
-class Circle (x : Number, y: Number, radius : Number)
+type Circle = Circle (x : Number, y: Number, radius : Number)
 
   extends Shape where
 

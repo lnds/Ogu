@@ -1,4 +1,6 @@
-use crate::lexer::tokens::Symbol::{LBRACKET, LCURLY, LPAREN, RBRACKET, RCURLY, RPAREN};
+use crate::lexer::tokens::Symbol::{
+    LeftBracket, LeftCurly, LeftParen, RightBracket, RightCurly, RightParen,
+};
 use logos::{Lexer, Logos};
 use std::fmt::Display;
 
@@ -10,226 +12,220 @@ pub type IndentStack = Vec<LineSize>;
 
 #[derive(Logos, Debug, Clone, PartialEq)]
 pub enum Symbol<'a> {
-    INDENT,
-    DEDENT,
+    Indent,
+    Dedent,
     #[error]
-    ERROR,
+    Error,
     #[regex(r"[ \t]", logos::skip)]
-    WS,
+    Ws,
     #[regex(r"--.*", logos::skip)]
-    COMMENT,
+    Comment,
     #[regex(r"[\n\r]+")]
-    NL,
+    NewLine,
     #[token("as", priority = 2000)]
-    AS,
+    As,
     #[token("case", priority = 2000)]
-    CASE,
-    #[token("class", priority = 2000)]
-    CLASS,
+    Case,
     #[token("cond", priority = 2000)]
-    COND,
+    Cond,
     #[token("do", priority = 2000)]
-    DO,
+    Do,
     #[token("eager", priority = 2000)]
-    EAGER,
+    Eager,
     #[token("elif", priority = 2000)]
-    ELIF,
+    Elif,
     #[token("else", priority = 2000)]
-    ELSE,
+    Else,
     #[token("exposing", priority = 2000)]
-    EXPOSING,
+    Exposing,
     #[token("extends", priority = 2000)]
-    EXTENDS,
+    Extends,
     #[token("false", priority = 2000)]
-    FALSE,
+    False,
     #[token("for", priority = 2000)]
-    FOR,
+    For,
     #[token("from", priority = 2000)]
-    FROM,
-    #[token("handle", priority = 2000)]
-    HANDLE,
+    From,
     #[token("if", priority = 2000)]
-    IF,
+    If,
     #[token("import", priority = 2000)]
-    IMPORT,
+    Import,
     #[token("in", priority = 2000)]
-    IN,
+    In,
     #[token("is", priority = 2000)]
-    IS,
+    Is,
     #[token("lazy", priority = 2000)]
-    LAZY,
+    Lazy,
     #[token("let", priority = 2000)]
-    LET,
+    Let,
     #[token("loop", priority = 2000)]
-    LOOP,
+    Loop,
     #[token("module", priority = 2000)]
-    MODULE,
+    Module,
     #[token("not", priority = 2000)]
-    NOT,
+    Not,
     #[token("of", priority = 2000)]
-    OF,
+    Of,
     #[token("otherwise", priority = 2000)]
-    OTHERWISE,
-    #[token("record", priority = 2000)]
-    RECORD,
+    Otherwise,
     #[token("recur", priority = 2000)]
-    RECUR,
+    Recur,
     #[token("reify", priority = 2000)]
-    REIFY,
-    #[token("repeat", priority = 2000)]
-    REPEAT,
+    Reify,
     #[token("return", priority = 2000)]
-    RETURN,
+    Return,
     #[token("then", priority = 2000)]
-    THEN,
+    Then,
     #[token("trait", priority = 2000)]
-    TRAIT,
+    Trait,
     #[token("until", priority = 2000)]
-    UNTIL,
+    Until,
     #[token("when", priority = 2000)]
-    WHEN,
+    When,
     #[token("where", priority = 2000)]
-    WHERE,
+    Where,
     #[token("while", priority = 2000)]
-    WHILE,
+    While,
     #[token("with", priority = 2000)]
-    WITH,
+    With,
     #[token("yield", priority = 2000)]
-    YIELD,
+    Yield,
     #[token("&&", priority = 1000)]
-    AND,
+    And,
     #[token("&", priority = 1000)]
-    ANDB,
+    BitAnd,
     #[token("@", priority = 1000)]
-    ARROBA,
+    Arroba,
     #[token("->", priority = 1000)]
-    ARROW,
+    Arrow,
     #[token("=", priority = 1000)]
-    ASSIGN,
+    Assign,
     #[token("<-", priority = 1000)]
-    BACKARROW,
+    BackArrow,
     #[token(":", priority = 1000)]
-    COLON,
+    Colon,
     #[token(",", priority = 1000)]
-    COMMA,
+    Comma,
     #[token(">>", priority = 1000)]
-    COMPOSEFORWARD,
+    ComposeForward,
     #[token("<<", priority = 1000)]
-    COMPOSEBACKWARD,
+    ComposeBackward,
     #[token("::", priority = 1000)]
-    CONS,
+    Cons,
     #[token("/", priority = 1000)]
-    DIV,
+    Div,
     #[token("//", priority = 1010)]
-    DIVDIV,
+    DivDiv,
     #[token("$", priority = 1000)]
-    DOLLAR,
+    Dollar,
     #[token("...", priority = 1000)]
-    DOTDOTDOT,
+    DotDotDot,
     #[token("..<", priority = 1000)]
-    DOTDOTLESS,
+    DotDotLess,
     #[token("..", priority = 1000)]
-    DOTDOT,
+    DotDot,
     #[token(".", priority = 1000)]
-    DOT,
+    Dot,
     #[token("!>", priority = 1000)]
-    DOTO,
+    Doto,
     #[token("<!", priority = 1000)]
-    DOTOBACK,
+    DotoBack,
     #[token("==", priority = 1000)]
-    EQUALS,
+    Eq,
     #[token(">=", priority = 1000)]
-    GE,
+    Ge,
     #[token(">", priority = 1000)]
-    GT,
+    Gt,
     #[token("|", priority = 1000)]
-    GUARD,
+    Guard,
     #[token("\\", priority = 1000)]
-    LAMBDA,
+    Lambda,
     #[token("<=", priority = 1000)]
-    LE,
+    Le,
     #[token("[", priority = 1000)]
-    LBRACKET,
+    LeftBracket,
     #[token("{", priority = 1000)]
-    LCURLY,
+    LeftCurly,
     #[token("#{", priority = 100)]
-    HASHCURLY,
+    HashCurly,
     #[token("(", priority = 1000)]
-    LPAREN,
+    LeftParen,
     #[token("<", priority = 1000)]
-    LT,
+    LessThan,
     #[token("~", priority = 1000)]
-    MATCH,
+    Match,
     #[token("=~", priority = 1000)]
-    MATCHES,
+    Matches,
     #[token("-", priority = 1000)]
-    MINUS,
+    Minus,
     #[token("%", priority = 1000)]
-    MOD,
+    Mod,
     #[token("*", priority = 1000)]
-    MULT,
+    Mult,
     #[token("/=", priority = 1000)]
-    NOTEQUALS,
+    NotEqual,
     #[token("||", priority = 1000)]
-    OR,
+    Or,
     #[token("<|", priority = 1000)]
-    PIPELEFT,
+    PipeLeft,
     #[token("|<", priority = 1000)]
-    PIPELEFTFIRSTARG,
+    PipeLeftArgs,
     #[token("|>")]
-    PIPERIGHT,
+    PipeRight,
     #[token(">|")]
-    PIPERIGHTFIRSTARG,
+    PipeRightFirstArg,
     #[token("+", priority = 1000)]
-    PLUS,
+    Plus,
     #[token("++", priority = 1000)]
-    PLUSPLUS,
+    PlusPlus,
     #[token("^")]
-    POW,
+    Pow,
     #[token("?", priority = 1000)]
-    QUESTION,
+    Question,
     #[token("]", priority = 1000)]
-    RBRACKET,
+    RightBracket,
     #[token("}", priority = 1000)]
-    RCURLY,
+    RightCurly,
     #[token(")", priority = 1000)]
-    RPAREN,
+    RightParen,
     #[regex(r"[A-Z][_a-zA-Z0-9]*", priority = 110, callback = extract_slice)]
-    TID(&'a str),
+    TypeId(&'a str),
     #[regex(r"[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100, callback = extract_slice)]
-    ID(&'a str),
+    Id(&'a str),
     #[regex(r":[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100, callback = extract_slice)]
-    KEY(&'a str),
+    Key(&'a str),
     #[regex(r#""([^"]*)""#, priority = 20, callback = extract_string)]
-    STRING(&'a str),
+    String(&'a str),
     #[regex(r#"f"([^"]*)""#, priority = 20, callback = extract_f_string)]
-    FSTRING(&'a str),
+    FormatString(&'a str),
     #[regex(r"[\+\-]?[0-9]+[N]?", priority = 2000, callback = extract_slice)]
-    INTEGER(&'a str),
+    Integer(&'a str),
     #[regex(r"[\+\-]?[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?[M]?", priority = 2000, callback = extract_slice)]
-    FLOAT(&'a str),
+    Float(&'a str),
     #[regex(r"[\+\-]?[0-9]+/[0-9]+[M]?", priority = 2000, callback = extract_slice)]
-    RATIO(&'a str),
+    Ratio(&'a str),
     #[regex(r"#(\d+)-(\d+)-(\d+)(T(\d+):(\d+)(:(\d+)(\.(\d+))?)?(Z|([+-]\d+(:\d+)?))?)?", callback = extract_slice)]
-    ISODATE(&'a str),
+    IsoDate(&'a str),
     #[regex(r"#((/[^/]*/)|(`[^`]*`))#", callback = extract_regex)]
-    REGEX(&'a str),
+    RegExp(&'a str),
     #[regex(r#"'(.|\\n|\\r|\\t|\\u[0-9]+)'"#, callback = extract_string)]
-    CHAR(&'a str),
+    Char(&'a str),
 }
 
 impl<'a> Symbol<'a> {
     pub fn is_open_paren(&self) -> bool {
-        *self == LPAREN || *self == LBRACKET || *self == LCURLY
+        *self == LeftParen || *self == LeftBracket || *self == LeftCurly
     }
 
     pub fn is_close_paren(&self) -> bool {
-        *self == RPAREN || *self == RBRACKET || *self == RCURLY
+        *self == RightParen || *self == RightBracket || *self == RightCurly
     }
 }
 
 impl<'a> Display for Symbol<'a> {
-    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> { todo!() }
+    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        todo!()
+    }
 }
 
 fn extract_string<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
@@ -252,10 +248,9 @@ fn extract_slice_from_1<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> 
     Some(&slice[1..])
 }
 
-
 fn extract_regex<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
-    Some(&slice[2..slice.len()-2])
+    Some(&slice[2..slice.len() - 2])
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -282,356 +277,355 @@ mod test_tokens {
     #[test]
     fn test_symbols() {
         let mut lex = Symbol::lexer("(a+b)");
-        assert_eq!(lex.next(), Some(Symbol::LPAREN));
-        assert_eq!(lex.next(), Some(Symbol::ID("a+b")));
+        assert_eq!(lex.next(), Some(Symbol::LeftParen));
+        assert_eq!(lex.next(), Some(Symbol::Id("a+b")));
         assert_eq!(lex.slice(), "a+b");
-        assert_eq!(lex.next(), Some(Symbol::RPAREN));
+        assert_eq!(lex.next(), Some(Symbol::RightParen));
     }
 
     #[test]
     fn test_opers() {
         let mut lex = Symbol::lexer("(a + b)");
-        assert_eq!(lex.next(), Some(Symbol::LPAREN));
-        assert_eq!(lex.next(), Some(Symbol::ID("a")));
+        assert_eq!(lex.next(), Some(Symbol::LeftParen));
+        assert_eq!(lex.next(), Some(Symbol::Id("a")));
         assert_eq!(lex.slice(), "a");
-        assert_eq!(lex.next(), Some(Symbol::PLUS));
-        assert_eq!(lex.next(), Some(Symbol::ID("b")));
+        assert_eq!(lex.next(), Some(Symbol::Plus));
+        assert_eq!(lex.next(), Some(Symbol::Id("b")));
         assert_eq!(lex.slice(), "b");
-        assert_eq!(lex.next(), Some(Symbol::RPAREN));
+        assert_eq!(lex.next(), Some(Symbol::RightParen));
     }
 
     #[test]
     fn test_string() {
         let mut lex = Symbol::lexer("\"ab\" ++ \"cd\"");
-        assert_eq!(lex.next(), Some(Symbol::STRING("ab")));
-        assert_eq!(lex.next(), Some(Symbol::PLUSPLUS));
-        assert_eq!(lex.next(), Some(Symbol::STRING("cd")));
+        assert_eq!(lex.next(), Some(Symbol::String("ab")));
+        assert_eq!(lex.next(), Some(Symbol::PlusPlus));
+        assert_eq!(lex.next(), Some(Symbol::String("cd")));
     }
 
     #[test]
     fn test_comments() {
         let mut lex = Symbol::lexer("ab ++ cd -- with comments");
-        assert_eq!(lex.next(), Some(Symbol::ID("ab")));
-        assert_eq!(lex.next(), Some(Symbol::PLUSPLUS));
-        assert_eq!(lex.next(), Some(Symbol::ID("cd")));
+        assert_eq!(lex.next(), Some(Symbol::Id("ab")));
+        assert_eq!(lex.next(), Some(Symbol::PlusPlus));
+        assert_eq!(lex.next(), Some(Symbol::Id("cd")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_ids() {
         let mut lex = Symbol::lexer("a.b");
-        assert_eq!(lex.next(), Some(Symbol::ID("a")));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("b")));
+        assert_eq!(lex.next(), Some(Symbol::Id("a")));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("b")));
         assert_eq!(lex.next(), None);
         let mut lex = Symbol::lexer("Type.b");
-        assert_eq!(lex.next(), Some(Symbol::TID("Type")));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("b")));
+        assert_eq!(lex.next(), Some(Symbol::TypeId("Type")));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("b")));
         assert_eq!(lex.next(), None);
         let mut lex = Symbol::lexer("Type.a+b");
-        assert_eq!(lex.next(), Some(Symbol::TID("Type")));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("a+b")));
+        assert_eq!(lex.next(), Some(Symbol::TypeId("Type")));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("a+b")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("Type.**weird-id**");
-        assert_eq!(lex.next(), Some(Symbol::TID("Type")));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("**weird-id**")));
+        assert_eq!(lex.next(), Some(Symbol::TypeId("Type")));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("**weird-id**")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("Type.**weird-id**.<name>.$value.bang!.question?");
-        assert_eq!(lex.next(), Some(Symbol::TID("Type")));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("**weird-id**")));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("<name>")));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("$value")));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("bang!")));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("question?")));
+        assert_eq!(lex.next(), Some(Symbol::TypeId("Type")));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("**weird-id**")));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("<name>")));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("$value")));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("bang!")));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("question?")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer(":id :lost+found");
-        assert_eq!(lex.next(), Some(Symbol::KEY(":id")));
-        assert_eq!(lex.next(), Some(Symbol::KEY(":lost+found")));
+        assert_eq!(lex.next(), Some(Symbol::Key(":id")));
+        assert_eq!(lex.next(), Some(Symbol::Key(":lost+found")));
         assert_eq!(lex.next(), None);
-
     }
 
     #[test]
     fn test_keywords() {
         let mut lex = Symbol::lexer("as class cond  do eager elif else");
-        assert_eq!(lex.next(), Some(Symbol::AS));
-        assert_eq!(lex.next(), Some(Symbol::CLASS));
-        assert_eq!(lex.next(), Some(Symbol::COND));
-        assert_eq!(lex.next(), Some(Symbol::DO));
-        assert_eq!(lex.next(), Some(Symbol::EAGER));
-        assert_eq!(lex.next(), Some(Symbol::ELIF));
-        assert_eq!(lex.next(), Some(Symbol::ELSE));
+        assert_eq!(lex.next(), Some(Symbol::As));
+        assert_eq!(lex.next(), Some(Symbol::Class));
+        assert_eq!(lex.next(), Some(Symbol::Cond));
+        assert_eq!(lex.next(), Some(Symbol::Do));
+        assert_eq!(lex.next(), Some(Symbol::Eafer));
+        assert_eq!(lex.next(), Some(Symbol::Elif));
+        assert_eq!(lex.next(), Some(Symbol::Else));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("extends false for from handle if in is lazy");
-        assert_eq!(lex.next(), Some(Symbol::EXTENDS));
-        assert_eq!(lex.next(), Some(Symbol::FALSE));
-        assert_eq!(lex.next(), Some(Symbol::FOR));
-        assert_eq!(lex.next(), Some(Symbol::FROM));
+        assert_eq!(lex.next(), Some(Symbol::Extends));
+        assert_eq!(lex.next(), Some(Symbol::False));
+        assert_eq!(lex.next(), Some(Symbol::For));
+        assert_eq!(lex.next(), Some(Symbol::From));
         assert_eq!(lex.next(), Some(Symbol::HANDLE));
-        assert_eq!(lex.next(), Some(Symbol::IF));
-        assert_eq!(lex.next(), Some(Symbol::IN));
-        assert_eq!(lex.next(), Some(Symbol::IS));
-        assert_eq!(lex.next(), Some(Symbol::LAZY));
+        assert_eq!(lex.next(), Some(Symbol::If));
+        assert_eq!(lex.next(), Some(Symbol::In));
+        assert_eq!(lex.next(), Some(Symbol::Is));
+        assert_eq!(lex.next(), Some(Symbol::Lazy));
         assert_eq!(lex.next(), None);
 
         let mut lex =
             Symbol::lexer("let loop module otherwise record recur reify repeat then until");
-        assert_eq!(lex.next(), Some(Symbol::LET));
-        assert_eq!(lex.next(), Some(Symbol::LOOP));
-        assert_eq!(lex.next(), Some(Symbol::MODULE));
-        assert_eq!(lex.next(), Some(Symbol::OTHERWISE));
+        assert_eq!(lex.next(), Some(Symbol::Let));
+        assert_eq!(lex.next(), Some(Symbol::Loop));
+        assert_eq!(lex.next(), Some(Symbol::Module));
+        assert_eq!(lex.next(), Some(Symbol::Otherwise));
         assert_eq!(lex.next(), Some(Symbol::RECORD));
-        assert_eq!(lex.next(), Some(Symbol::RECUR));
-        assert_eq!(lex.next(), Some(Symbol::REIFY));
+        assert_eq!(lex.next(), Some(Symbol::Recur));
+        assert_eq!(lex.next(), Some(Symbol::Reify));
         assert_eq!(lex.next(), Some(Symbol::REPEAT));
-        assert_eq!(lex.next(), Some(Symbol::THEN));
-        assert_eq!(lex.next(), Some(Symbol::UNTIL));
+        assert_eq!(lex.next(), Some(Symbol::Then));
+        assert_eq!(lex.next(), Some(Symbol::Until));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("when where with");
-        assert_eq!(lex.next(), Some(Symbol::WHEN));
-        assert_eq!(lex.next(), Some(Symbol::WHERE));
-        assert_eq!(lex.next(), Some(Symbol::WITH));
+        assert_eq!(lex.next(), Some(Symbol::When));
+        assert_eq!(lex.next(), Some(Symbol::Where));
+        assert_eq!(lex.next(), Some(Symbol::With));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_ops() {
         let mut lex = Symbol::lexer("&& & @ -> = <- : , >>");
-        assert_eq!(lex.next(), Some(Symbol::AND));
-        assert_eq!(lex.next(), Some(Symbol::ANDB));
-        assert_eq!(lex.next(), Some(Symbol::ARROBA));
-        assert_eq!(lex.next(), Some(Symbol::ARROW));
-        assert_eq!(lex.next(), Some(Symbol::ASSIGN));
-        assert_eq!(lex.next(), Some(Symbol::BACKARROW));
-        assert_eq!(lex.next(), Some(Symbol::COLON));
-        assert_eq!(lex.next(), Some(Symbol::COMMA));
-        assert_eq!(lex.next(), Some(Symbol::COMPOSEFORWARD));
+        assert_eq!(lex.next(), Some(Symbol::And));
+        assert_eq!(lex.next(), Some(Symbol::BitAnd));
+        assert_eq!(lex.next(), Some(Symbol::Arroba));
+        assert_eq!(lex.next(), Some(Symbol::Arrow));
+        assert_eq!(lex.next(), Some(Symbol::Assign));
+        assert_eq!(lex.next(), Some(Symbol::BackArrow));
+        assert_eq!(lex.next(), Some(Symbol::Colon));
+        assert_eq!(lex.next(), Some(Symbol::Comma));
+        assert_eq!(lex.next(), Some(Symbol::ComposeForward));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("<< :: / // $ ... ..< .. . !>");
-        assert_eq!(lex.next(), Some(Symbol::COMPOSEBACKWARD));
-        assert_eq!(lex.next(), Some(Symbol::CONS));
-        assert_eq!(lex.next(), Some(Symbol::DIV));
-        assert_eq!(lex.next(), Some(Symbol::DIVDIV));
-        assert_eq!(lex.next(), Some(Symbol::DOLLAR));
-        assert_eq!(lex.next(), Some(Symbol::DOTDOTDOT));
-        assert_eq!(lex.next(), Some(Symbol::DOTDOTLESS));
-        assert_eq!(lex.next(), Some(Symbol::DOTDOT));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::DOTO));
+        assert_eq!(lex.next(), Some(Symbol::ComposeBackward));
+        assert_eq!(lex.next(), Some(Symbol::Cons));
+        assert_eq!(lex.next(), Some(Symbol::Div));
+        assert_eq!(lex.next(), Some(Symbol::DivDiv));
+        assert_eq!(lex.next(), Some(Symbol::Dollar));
+        assert_eq!(lex.next(), Some(Symbol::DotDotDot));
+        assert_eq!(lex.next(), Some(Symbol::DotDotLess));
+        assert_eq!(lex.next(), Some(Symbol::DotDot));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Doto));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("<! == >= > | \\ <= [ { #{ (");
         assert_eq!(lex.next(), Some(Symbol::DOTOBACK));
-        assert_eq!(lex.next(), Some(Symbol::EQUALS));
-        assert_eq!(lex.next(), Some(Symbol::GE));
-        assert_eq!(lex.next(), Some(Symbol::GT));
-        assert_eq!(lex.next(), Some(Symbol::GUARD));
-        assert_eq!(lex.next(), Some(Symbol::LAMBDA));
-        assert_eq!(lex.next(), Some(Symbol::LE));
-        assert_eq!(lex.next(), Some(Symbol::LBRACKET));
-        assert_eq!(lex.next(), Some(Symbol::LCURLY));
-        assert_eq!(lex.next(), Some(Symbol::HASHCURLY));
-        assert_eq!(lex.next(), Some(Symbol::LPAREN));
+        assert_eq!(lex.next(), Some(Symbol::Eq));
+        assert_eq!(lex.next(), Some(Symbol::Ge));
+        assert_eq!(lex.next(), Some(Symbol::Gt));
+        assert_eq!(lex.next(), Some(Symbol::Guard));
+        assert_eq!(lex.next(), Some(Symbol::Lambda));
+        assert_eq!(lex.next(), Some(Symbol::Le));
+        assert_eq!(lex.next(), Some(Symbol::LeftBracket));
+        assert_eq!(lex.next(), Some(Symbol::LeftCurly));
+        assert_eq!(lex.next(), Some(Symbol::HashCurly));
+        assert_eq!(lex.next(), Some(Symbol::LeftParen));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("< ~ =~ - % * /= || <| |<");
-        assert_eq!(lex.next(), Some(Symbol::LT));
-        assert_eq!(lex.next(), Some(Symbol::MATCH));
-        assert_eq!(lex.next(), Some(Symbol::MATCHES));
-        assert_eq!(lex.next(), Some(Symbol::MINUS));
-        assert_eq!(lex.next(), Some(Symbol::MOD));
-        assert_eq!(lex.next(), Some(Symbol::MULT));
-        assert_eq!(lex.next(), Some(Symbol::NOTEQUALS));
-        assert_eq!(lex.next(), Some(Symbol::OR));
-        assert_eq!(lex.next(), Some(Symbol::PIPELEFT));
-        assert_eq!(lex.next(), Some(Symbol::PIPELEFTFIRSTARG));
+        assert_eq!(lex.next(), Some(Symbol::LessThan));
+        assert_eq!(lex.next(), Some(Symbol::Match));
+        assert_eq!(lex.next(), Some(Symbol::Matches));
+        assert_eq!(lex.next(), Some(Symbol::Minus));
+        assert_eq!(lex.next(), Some(Symbol::Mod));
+        assert_eq!(lex.next(), Some(Symbol::Mult));
+        assert_eq!(lex.next(), Some(Symbol::NotEqual));
+        assert_eq!(lex.next(), Some(Symbol::Or));
+        assert_eq!(lex.next(), Some(Symbol::PipeLeft));
+        assert_eq!(lex.next(), Some(Symbol::PipeLeftArgs));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("|> >| + ++ ^ ? ] } )");
-        assert_eq!(lex.next(), Some(Symbol::PIPERIGHT));
-        assert_eq!(lex.next(), Some(Symbol::PIPERIGHTFIRSTARG));
-        assert_eq!(lex.next(), Some(Symbol::PLUS));
-        assert_eq!(lex.next(), Some(Symbol::PLUSPLUS));
-        assert_eq!(lex.next(), Some(Symbol::POW));
-        assert_eq!(lex.next(), Some(Symbol::QUESTION));
-        assert_eq!(lex.next(), Some(Symbol::RBRACKET));
-        assert_eq!(lex.next(), Some(Symbol::RCURLY));
-        assert_eq!(lex.next(), Some(Symbol::RPAREN));
+        assert_eq!(lex.next(), Some(Symbol::PipeRight));
+        assert_eq!(lex.next(), Some(Symbol::PipeRightFirstArg));
+        assert_eq!(lex.next(), Some(Symbol::Plus));
+        assert_eq!(lex.next(), Some(Symbol::PlusPlus));
+        assert_eq!(lex.next(), Some(Symbol::Pow));
+        assert_eq!(lex.next(), Some(Symbol::Question));
+        assert_eq!(lex.next(), Some(Symbol::RightBracket));
+        assert_eq!(lex.next(), Some(Symbol::RightCurly));
+        assert_eq!(lex.next(), Some(Symbol::RightParen));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_literals() {
         let mut lex = Symbol::lexer("2 + 2");
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("2")));
-        assert_eq!(lex.next(), Some(Symbol::PLUS));
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("2")));
+        assert_eq!(lex.next(), Some(Symbol::Integer("2")));
+        assert_eq!(lex.next(), Some(Symbol::Plus));
+        assert_eq!(lex.next(), Some(Symbol::Integer("2")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("1234567890 123.4567890");
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("1234567890")));
-        assert_eq!(lex.next(), Some(Symbol::FLOAT("123.4567890")));
+        assert_eq!(lex.next(), Some(Symbol::Integer("1234567890")));
+        assert_eq!(lex.next(), Some(Symbol::Float("123.4567890")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("12/34 1/3 2.45E10 3.4e-20");
-        assert_eq!(lex.next(), Some(Symbol::RATIO("12/34")));
-        assert_eq!(lex.next(), Some(Symbol::RATIO("1/3")));
-        assert_eq!(lex.next(), Some(Symbol::FLOAT("2.45E10")));
-        assert_eq!(lex.next(), Some(Symbol::FLOAT("3.4e-20")));
+        assert_eq!(lex.next(), Some(Symbol::Ratio("12/34")));
+        assert_eq!(lex.next(), Some(Symbol::Ratio("1/3")));
+        assert_eq!(lex.next(), Some(Symbol::Float("2.45E10")));
+        assert_eq!(lex.next(), Some(Symbol::Float("3.4e-20")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("-1/4 +1/4 -0.4 +0.4 +32 -32 .333 -.455");
-        assert_eq!(lex.next(), Some(Symbol::RATIO("-1/4")));
-        assert_eq!(lex.next(), Some(Symbol::RATIO("+1/4")));
-        assert_eq!(lex.next(), Some(Symbol::FLOAT("-0.4")));
-        assert_eq!(lex.next(), Some(Symbol::FLOAT("+0.4")));
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("+32")));
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("-32")));
-        assert_eq!(lex.next(), Some(Symbol::FLOAT(".333")));
-        assert_eq!(lex.next(), Some(Symbol::FLOAT("-.455")));
+        assert_eq!(lex.next(), Some(Symbol::Ratio("-1/4")));
+        assert_eq!(lex.next(), Some(Symbol::Ratio("+1/4")));
+        assert_eq!(lex.next(), Some(Symbol::Float("-0.4")));
+        assert_eq!(lex.next(), Some(Symbol::Float("+0.4")));
+        assert_eq!(lex.next(), Some(Symbol::Integer("+32")));
+        assert_eq!(lex.next(), Some(Symbol::Integer("-32")));
+        assert_eq!(lex.next(), Some(Symbol::Float(".333")));
+        assert_eq!(lex.next(), Some(Symbol::Float("-.455")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("2.4M 200N");
-        assert_eq!(lex.next(), Some(Symbol::FLOAT("2.4M")));
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("200N")));
+        assert_eq!(lex.next(), Some(Symbol::Float("2.4M")));
+        assert_eq!(lex.next(), Some(Symbol::Integer("200N")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_ranges() {
         let mut lex = Symbol::lexer("a..b");
-        assert_eq!(lex.next(), Some(Symbol::ID("a")));
-        assert_eq!(lex.next(), Some(Symbol::DOTDOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("b")));
+        assert_eq!(lex.next(), Some(Symbol::Id("a")));
+        assert_eq!(lex.next(), Some(Symbol::DotDot));
+        assert_eq!(lex.next(), Some(Symbol::Id("b")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("1..2");
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("1")));
-        assert_eq!(lex.next(), Some(Symbol::DOTDOT));
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("2")));
+        assert_eq!(lex.next(), Some(Symbol::Integer("1")));
+        assert_eq!(lex.next(), Some(Symbol::DotDot));
+        assert_eq!(lex.next(), Some(Symbol::Integer("2")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("1..<2");
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("1")));
-        assert_eq!(lex.next(), Some(Symbol::DOTDOTLESS));
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("2")));
+        assert_eq!(lex.next(), Some(Symbol::Integer("1")));
+        assert_eq!(lex.next(), Some(Symbol::DotDotLess));
+        assert_eq!(lex.next(), Some(Symbol::Integer("2")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("1...");
-        assert_eq!(lex.next(), Some(Symbol::INTEGER("1")));
-        assert_eq!(lex.next(), Some(Symbol::DOTDOTDOT));
+        assert_eq!(lex.next(), Some(Symbol::Integer("1")));
+        assert_eq!(lex.next(), Some(Symbol::DotDotDot));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("1.4..3.4");
-        assert_eq!(lex.next(), Some(Symbol::FLOAT("1.4")));
-        assert_eq!(lex.next(), Some(Symbol::DOTDOT));
-        assert_eq!(lex.next(), Some(Symbol::FLOAT("3.4")));
+        assert_eq!(lex.next(), Some(Symbol::Float("1.4")));
+        assert_eq!(lex.next(), Some(Symbol::DotDot));
+        assert_eq!(lex.next(), Some(Symbol::Float("3.4")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_indent() {
         let mut lex = Symbol::lexer("  a");
-        assert_eq!(lex.next(), Some(Symbol::ID("a")));
+        assert_eq!(lex.next(), Some(Symbol::Id("a")));
     }
 
     #[test]
     fn test_some_expressions() {
         let mut lex = Symbol::lexer("\"a b c d\" |> .toUpperCase |> .split \" \" |> first");
-        assert_eq!(lex.next(), Some(Symbol::STRING("a b c d")));
-        assert_eq!(lex.next(), Some(Symbol::PIPERIGHT));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("toUpperCase")));
-        assert_eq!(lex.next(), Some(Symbol::PIPERIGHT));
-        assert_eq!(lex.next(), Some(Symbol::DOT));
-        assert_eq!(lex.next(), Some(Symbol::ID("split")));
-        assert_eq!(lex.next(), Some(Symbol::STRING(" ")));
-        assert_eq!(lex.next(), Some(Symbol::PIPERIGHT));
-        assert_eq!(lex.next(), Some(Symbol::ID("first")));
+        assert_eq!(lex.next(), Some(Symbol::String("a b c d")));
+        assert_eq!(lex.next(), Some(Symbol::PipeRight));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("toUpperCase")));
+        assert_eq!(lex.next(), Some(Symbol::PipeRight));
+        assert_eq!(lex.next(), Some(Symbol::Dot));
+        assert_eq!(lex.next(), Some(Symbol::Id("split")));
+        assert_eq!(lex.next(), Some(Symbol::String(" ")));
+        assert_eq!(lex.next(), Some(Symbol::PipeRight));
+        assert_eq!(lex.next(), Some(Symbol::Id("first")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_dates() {
         let mut lex = Symbol::lexer("#2017-02-26");
-        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26")));
+        assert_eq!(lex.next(), Some(Symbol::IsoDate("#2017-02-26")));
         let mut lex = Symbol::lexer("#2017-02-26T23:50");
-        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50")));
+        assert_eq!(lex.next(), Some(Symbol::IsoDate("#2017-02-26T23:50")));
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30");
-        assert_eq!(lex.next(), Some(Symbol::ISODATE("#2017-02-26T23:50:30")));
+        assert_eq!(lex.next(), Some(Symbol::IsoDate("#2017-02-26T23:50:30")));
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120");
         assert_eq!(
             lex.next(),
-            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120"))
+            Some(Symbol::IsoDate("#2017-02-26T23:50:30.120"))
         );
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120Z");
         assert_eq!(
             lex.next(),
-            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120Z"))
+            Some(Symbol::IsoDate("#2017-02-26T23:50:30.120Z"))
         );
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120-3");
         assert_eq!(
             lex.next(),
-            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120-3"))
+            Some(Symbol::IsoDate("#2017-02-26T23:50:30.120-3"))
         );
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120+3");
         assert_eq!(
             lex.next(),
-            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3"))
+            Some(Symbol::IsoDate("#2017-02-26T23:50:30.120+3"))
         );
         let mut lex = Symbol::lexer("#2017-02-26T23:50:30.120+3:30");
         assert_eq!(
             lex.next(),
-            Some(Symbol::ISODATE("#2017-02-26T23:50:30.120+3:30"))
+            Some(Symbol::IsoDate("#2017-02-26T23:50:30.120+3:30"))
         );
     }
 
     #[test]
     fn test_regex() {
         let mut lex = Symbol::lexer("\"aaabbb\" =~ #/(a|b)+/#");
-        assert_eq!(lex.next(), Some(Symbol::STRING("aaabbb")));
-        assert_eq!(lex.next(), Some(Symbol::MATCHES));
-        assert_eq!(lex.next(), Some(Symbol::REGEX("(a|b)+")));
+        assert_eq!(lex.next(), Some(Symbol::String("aaabbb")));
+        assert_eq!(lex.next(), Some(Symbol::Matches));
+        assert_eq!(lex.next(), Some(Symbol::RegExp("(a|b)+")));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("\"aaabbb\" =~ #`(a|b|/)+`#");
-        assert_eq!(lex.next(), Some(Symbol::STRING("aaabbb")));
-        assert_eq!(lex.next(), Some(Symbol::MATCHES));
+        assert_eq!(lex.next(), Some(Symbol::String("aaabbb")));
+        assert_eq!(lex.next(), Some(Symbol::Matches));
 
-        assert_eq!(lex.next(), Some(Symbol::REGEX("(a|b|/)+")));
+        assert_eq!(lex.next(), Some(Symbol::RegExp("(a|b|/)+")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_strings() {
         let mut lex = Symbol::lexer("msj = f\"\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): \"");
-        assert_eq!(lex.next(), Some(Symbol::ID("msj")));
-        assert_eq!(lex.next(), Some(Symbol::ASSIGN));
-        assert_eq!(lex.next(), Some(Symbol::FSTRING("\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): ")));
+        assert_eq!(lex.next(), Some(Symbol::Id("msj")));
+        assert_eq!(lex.next(), Some(Symbol::Assign));
+        assert_eq!(lex.next(), Some(Symbol::FormatString("\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): ")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_chars() {
         let mut lex = Symbol::lexer("'a' 'b' '\\n' '\\u3829'");
-        assert_eq!(lex.next(), Some(Symbol::CHAR("a")));
-        assert_eq!(lex.next(), Some(Symbol::CHAR("b")));
-        assert_eq!(lex.next(), Some(Symbol::CHAR("\\n")));
-        assert_eq!(lex.next(), Some(Symbol::CHAR("\\u3829")));
+        assert_eq!(lex.next(), Some(Symbol::Char("a")));
+        assert_eq!(lex.next(), Some(Symbol::Char("b")));
+        assert_eq!(lex.next(), Some(Symbol::Char("\\n")));
+        assert_eq!(lex.next(), Some(Symbol::Char("\\u3829")));
         assert_eq!(lex.next(), None);
     }
 }

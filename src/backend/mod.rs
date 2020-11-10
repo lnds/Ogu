@@ -59,6 +59,7 @@ pub fn run(params: Params) -> Result<()> {
 fn run_module(path: &PathBuf, _params: &Params) -> Result<()> {
     let mut lexer = Lexer::new(path)?;
     let tokens = lexer.scan()?;
+    println!("TOKENS = {:?}", tokens);
     let mut parser = Parser::new(tokens)?;
     let module = parser.parse(path)?;
     println!("Module = {:?}", module);

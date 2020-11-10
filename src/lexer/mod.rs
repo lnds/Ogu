@@ -10,6 +10,7 @@ use std::io::{self, BufRead, Cursor};
 use std::path::PathBuf;
 
 use crate::lexer::token_stream::TokenStream;
+use crate::lexer::tokens::Symbol::NewLine;
 use crate::lexer::tokens::{
     IndentStack, LineNumber, LineSize, Symbol, SymbolList, Token, TokenList,
 };
@@ -130,12 +131,15 @@ fn scan_line<'a>(
             *paren_level += 1;
         } else if sym.is_close_paren() {
             if *paren_level == 0 {
-                line_symbols.push(Symbol::ERROR);
+                line_symbols.push(Symbol::Error);
             } else {
                 *paren_level -= 1;
             }
         }
         line_symbols.push(sym);
+    }
+    if *paren_level == 0 {
+        line_symbols.push(NewLine)
     }
     line_symbols
         .iter()
@@ -149,7 +153,7 @@ fn scan_indentation<'a>(start_pos: LineSize, indent_stack: &mut IndentStack) -> 
         Some(&pos) => {
             if start_pos > pos {
                 indent_stack.push(start_pos);
-                return vec![Symbol::INDENT];
+                return vec![Symbol::Indent];
             }
             if start_pos < pos {
                 let indent_length = indent_stack.len();
@@ -160,7 +164,7 @@ fn scan_indentation<'a>(start_pos: LineSize, indent_stack: &mut IndentStack) -> 
                         break;
                     }
                 }
-                vec![Symbol::DEDENT; indent_length - indent_stack.len()]
+                vec![Symbol::Dedent; indent_length - indent_stack.len()]
             } else {
                 vec![]
             }
@@ -185,63 +189,63 @@ mod test_lexer {
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("func"),
+                symbol: Symbol::Id("func"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ASSIGN,
+                symbol: Symbol::Assign,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INDENT,
+                symbol: Symbol::Indent,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("this"),
+                symbol: Symbol::Id("this"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::IS,
+                symbol: Symbol::Is,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("a"),
+                symbol: Symbol::Id("a"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("function"),
+                symbol: Symbol::Id("function"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::DEDENT,
+                symbol: Symbol::Dedent,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("end"),
+                symbol: Symbol::Id("end"),
                 line: 3
             })
         );
@@ -258,126 +262,126 @@ mod test_lexer {
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("func"),
+                symbol: Symbol::Id("func"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ASSIGN,
+                symbol: Symbol::Assign,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::LPAREN,
+                symbol: Symbol::LeftParen,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INTEGER("1"),
+                symbol: Symbol::Integer("1"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::COMMA,
+                symbol: Symbol::Comma,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INTEGER("2"),
+                symbol: Symbol::Integer("2"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::COMMA,
+                symbol: Symbol::Comma,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INTEGER("3"),
+                symbol: Symbol::Integer("3"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::COMMA,
+                symbol: Symbol::Comma,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INTEGER("4"),
+                symbol: Symbol::Integer("4"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::RPAREN,
+                symbol: Symbol::RightParen,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INDENT,
+                symbol: Symbol::Indent,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("this"),
+                symbol: Symbol::Id("this"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::IS,
+                symbol: Symbol::Is,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("a"),
+                symbol: Symbol::Id("a"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("function"),
+                symbol: Symbol::Id("function"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::DEDENT,
+                symbol: Symbol::Dedent,
                 line: 4
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("end"),
+                symbol: Symbol::Id("end"),
                 line: 4
             })
         );
@@ -394,140 +398,140 @@ mod test_lexer {
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("func"),
+                symbol: Symbol::Id("func"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ASSIGN,
+                symbol: Symbol::Assign,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::LPAREN,
+                symbol: Symbol::LeftParen,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INTEGER("1"),
+                symbol: Symbol::Integer("1"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::COMMA,
+                symbol: Symbol::Comma,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INTEGER("2"),
+                symbol: Symbol::Integer("2"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::COMMA,
+                symbol: Symbol::Comma,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INTEGER("3"),
+                symbol: Symbol::Integer("3"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::COMMA,
+                symbol: Symbol::Comma,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INTEGER("4"),
+                symbol: Symbol::Integer("4"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::RPAREN,
+                symbol: Symbol::RightParen,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ERROR,
+                symbol: Symbol::Error,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::RPAREN,
+                symbol: Symbol::RightParen,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::INDENT,
+                symbol: Symbol::Indent,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("this"),
+                symbol: Symbol::Id("this"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::IS,
+                symbol: Symbol::Is,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("a"),
+                symbol: Symbol::Id("a"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("function"),
+                symbol: Symbol::Id("function"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::DEDENT,
+                symbol: Symbol::Dedent,
                 line: 4
             })
         );
         assert_eq!(
             iter.next(),
             Some(&Token {
-                symbol: Symbol::ID("end"),
+                symbol: Symbol::Id("end"),
                 line: 4
             })
         );

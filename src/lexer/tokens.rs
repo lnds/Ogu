@@ -196,6 +196,8 @@ pub enum Symbol<'a> {
     TID(&'a str),
     #[regex(r"[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100, callback = extract_slice)]
     ID(&'a str),
+    #[regex(r":[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100, callback = extract_slice)]
+    KEY(&'a str),
     #[regex(r#""([^"]*)""#, priority = 20, callback = extract_string)]
     STRING(&'a str),
     #[regex(r#"f"([^"]*)""#, priority = 20, callback = extract_f_string)]
@@ -208,7 +210,7 @@ pub enum Symbol<'a> {
     RATIO(&'a str),
     #[regex(r"#(\d+)-(\d+)-(\d+)(T(\d+):(\d+)(:(\d+)(\.(\d+))?)?(Z|([+-]\d+(:\d+)?))?)?", callback = extract_slice)]
     ISODATE(&'a str),
-    #[regex(r"#((/[^/]*/)|(\?[^?]*\?))", callback = extract_slice_from_1)]
+    #[regex(r"#((/[^/]*/)|(`[^`]*`))#", callback = extract_regex)]
     REGEX(&'a str),
     #[regex(r#"'(.|\\n|\\r|\\t|\\u[0-9]+)'"#, callback = extract_string)]
     CHAR(&'a str),
@@ -246,6 +248,12 @@ fn extract_slice<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
 fn extract_slice_from_1<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
     Some(&slice[1..])
+}
+
+
+fn extract_regex<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
+    let slice = lex.slice();
+    Some(&slice[2..slice.len()-2])
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -344,6 +352,12 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::DOT));
         assert_eq!(lex.next(), Some(Symbol::ID("question?")));
         assert_eq!(lex.next(), None);
+
+        let mut lex = Symbol::lexer(":id :lost+found");
+        assert_eq!(lex.next(), Some(Symbol::KEY(":id")));
+        assert_eq!(lex.next(), Some(Symbol::KEY(":lost+found")));
+        assert_eq!(lex.next(), None);
+
     }
 
     #[test]
@@ -585,16 +599,17 @@ mod test_tokens {
 
     #[test]
     fn test_regex() {
-        let mut lex = Symbol::lexer("\"aaabbb\" =~ #/(a|b)+/");
+        let mut lex = Symbol::lexer("\"aaabbb\" =~ #/(a|b)+/#");
         assert_eq!(lex.next(), Some(Symbol::STRING("aaabbb")));
         assert_eq!(lex.next(), Some(Symbol::MATCHES));
-        assert_eq!(lex.next(), Some(Symbol::REGEX("/(a|b)+/")));
+        assert_eq!(lex.next(), Some(Symbol::REGEX("(a|b)+")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("\"aaabbb\" =~ #?(a|b|/)+?");
+        let mut lex = Symbol::lexer("\"aaabbb\" =~ #`(a|b|/)+`#");
         assert_eq!(lex.next(), Some(Symbol::STRING("aaabbb")));
         assert_eq!(lex.next(), Some(Symbol::MATCHES));
-        assert_eq!(lex.next(), Some(Symbol::REGEX("?(a|b|/)+?")));
+
+        assert_eq!(lex.next(), Some(Symbol::REGEX("(a|b|/)+")));
         assert_eq!(lex.next(), None);
     }
 

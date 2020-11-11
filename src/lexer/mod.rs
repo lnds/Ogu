@@ -53,38 +53,12 @@ impl<'a> Lexer {
         self.lines = match &self.source {
             LexerSource::File(path) => {
                 let file = File::open(&path)?;
-                let reader = io::BufReader::new(file);
-                reader
-                    .lines()
-                    .enumerate()
-                    .filter_map(|a| match a {
-                        (i, Ok(line)) => {
-                            if String::is_empty(&line) {
-                                None
-                            } else {
-                                Some((i, line))
-                            }
-                        }
-                        _ => None,
-                    })
-                    .collect()
+                let mut reader = io::BufReader::new(file);
+                read_lines(&mut reader)
             }
             LexerSource::Text(text) => {
-                let reader = Cursor::new(text.as_bytes());
-                reader
-                    .lines()
-                    .enumerate()
-                    .filter_map(|a| match a {
-                        (i, Ok(line)) => {
-                            if String::is_empty(&line) {
-                                None
-                            } else {
-                                Some((i, line))
-                            }
-                        }
-                        _ => None,
-                    })
-                    .collect()
+                let mut reader = Cursor::new(text.as_bytes());
+                read_lines(&mut reader)
             }
         };
 
@@ -110,6 +84,23 @@ impl<'a> Lexer {
         }
         tokens
     }
+}
+
+fn read_lines(reader: &mut dyn BufRead) -> LineList {
+    reader
+        .lines()
+        .enumerate()
+        .filter_map(|a| match a {
+            (i, Ok(line)) => {
+                if String::is_empty(&line) {
+                    None
+                } else {
+                    Some((i, line))
+                }
+            }
+            _ => None,
+        })
+        .collect()
 }
 
 fn scan_line<'a>(
@@ -177,7 +168,7 @@ mod test_lexer {
     use crate::lexer::tokens::{Symbol, Token};
     use crate::lexer::Lexer;
     use std::path::PathBuf;
-    use walkdir::WalkDir;
+    use walkdir::{DirEntry, WalkDir};
 
     #[test]
     fn test_scan_indentation() {
@@ -197,6 +188,13 @@ mod test_lexer {
             iter.next(),
             Some(&Token {
                 symbol: Symbol::Assign,
+                line: 1
+            })
+        );
+        assert_eq!(
+            iter.next(),
+            Some(&Token {
+                symbol: Symbol::NewLine,
                 line: 1
             })
         );
@@ -238,6 +236,13 @@ mod test_lexer {
         assert_eq!(
             iter.next(),
             Some(&Token {
+                symbol: Symbol::NewLine,
+                line: 2
+            })
+        );
+        assert_eq!(
+            iter.next(),
+            Some(&Token {
                 symbol: Symbol::Dedent,
                 line: 3
             })
@@ -246,6 +251,13 @@ mod test_lexer {
             iter.next(),
             Some(&Token {
                 symbol: Symbol::Id("end"),
+                line: 3
+            })
+        );
+        assert_eq!(
+            iter.next(),
+            Some(&Token {
+                symbol: Symbol::NewLine,
                 line: 3
             })
         );
@@ -339,6 +351,13 @@ mod test_lexer {
         assert_eq!(
             iter.next(),
             Some(&Token {
+                symbol: Symbol::NewLine,
+                line: 2
+            })
+        );
+        assert_eq!(
+            iter.next(),
+            Some(&Token {
                 symbol: Symbol::Indent,
                 line: 3
             })
@@ -374,6 +393,13 @@ mod test_lexer {
         assert_eq!(
             iter.next(),
             Some(&Token {
+                symbol: Symbol::NewLine,
+                line: 3
+            })
+        );
+        assert_eq!(
+            iter.next(),
+            Some(&Token {
                 symbol: Symbol::Dedent,
                 line: 4
             })
@@ -382,6 +408,13 @@ mod test_lexer {
             iter.next(),
             Some(&Token {
                 symbol: Symbol::Id("end"),
+                line: 4
+            })
+        );
+        assert_eq!(
+            iter.next(),
+            Some(&Token {
+                symbol: Symbol::NewLine,
                 line: 4
             })
         );
@@ -489,6 +522,13 @@ mod test_lexer {
         assert_eq!(
             iter.next(),
             Some(&Token {
+                symbol: Symbol::NewLine,
+                line: 2
+            })
+        );
+        assert_eq!(
+            iter.next(),
+            Some(&Token {
                 symbol: Symbol::Indent,
                 line: 3
             })
@@ -524,6 +564,13 @@ mod test_lexer {
         assert_eq!(
             iter.next(),
             Some(&Token {
+                symbol: Symbol::NewLine,
+                line: 3
+            })
+        );
+        assert_eq!(
+            iter.next(),
+            Some(&Token {
                 symbol: Symbol::Dedent,
                 line: 4
             })
@@ -535,6 +582,13 @@ mod test_lexer {
                 line: 4
             })
         );
+        assert_eq!(
+            iter.next(),
+            Some(&Token {
+                symbol: Symbol::NewLine,
+                line: 4
+            })
+        );
         assert_eq!(iter.next(), None);
     }
 
@@ -542,18 +596,22 @@ mod test_lexer {
     fn scan_test_files() {
         for entry in WalkDir::new("./tests/") {
             let entry = entry.unwrap();
-            if entry.file_type().is_file() {
-                let path = entry.path();
-                let spath = entry.path().display().to_string();
-                if spath.ends_with(".ogu") {
-                    let lex = Lexer::new(&PathBuf::from(path));
-                    assert!(lex.is_ok());
-                    let mut lexer = lex.unwrap();
-                    let stream = lexer.scan();
-                    assert!(stream.is_ok());
-                    let stream = stream.unwrap();
-                    assert!(stream.len() > 0);
-                }
+            scan_test_file(&entry);
+        }
+    }
+
+    fn scan_test_file(entry: &DirEntry) {
+        if entry.file_type().is_file() {
+            let path = entry.path();
+            let spath = entry.path().display().to_string();
+            if spath.ends_with(".ogu") {
+                let lex = Lexer::new(&PathBuf::from(path));
+                assert!(lex.is_ok());
+                let mut lexer = lex.unwrap();
+                let stream = lexer.scan();
+                assert!(stream.is_ok());
+                let stream = stream.unwrap();
+                assert!(stream.len() > 0);
             }
         }
     }

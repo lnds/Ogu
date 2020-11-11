@@ -10,7 +10,7 @@ pub type LineNumber = usize;
 
 pub type IndentStack = Vec<LineSize>;
 
-#[derive(Logos, Debug, Clone, PartialEq)]
+#[derive(Logos, Debug, Clone, Copy, PartialEq)]
 pub enum Symbol<'a> {
     Indent,
     Dedent,
@@ -243,11 +243,6 @@ fn extract_slice<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     Some(slice)
 }
 
-fn extract_slice_from_1<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
-    let slice = lex.slice();
-    Some(&slice[1..])
-}
-
 fn extract_regex<'a>(lex: &mut Lexer<'a, Symbol<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
     Some(&slice[2..slice.len() - 2])
@@ -358,22 +353,22 @@ mod test_tokens {
 
     #[test]
     fn test_keywords() {
-        let mut lex = Symbol::lexer("as class cond  do eager elif else");
+        let mut lex = Symbol::lexer("as case cond do eager elif else");
         assert_eq!(lex.next(), Some(Symbol::As));
-        assert_eq!(lex.next(), Some(Symbol::Class));
+        assert_eq!(lex.next(), Some(Symbol::Case));
         assert_eq!(lex.next(), Some(Symbol::Cond));
         assert_eq!(lex.next(), Some(Symbol::Do));
-        assert_eq!(lex.next(), Some(Symbol::Eafer));
+        assert_eq!(lex.next(), Some(Symbol::Eager));
         assert_eq!(lex.next(), Some(Symbol::Elif));
         assert_eq!(lex.next(), Some(Symbol::Else));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("extends false for from handle if in is lazy");
+        let mut lex = Symbol::lexer("exposing extends false for from if in is lazy");
+        assert_eq!(lex.next(), Some(Symbol::Exposing));
         assert_eq!(lex.next(), Some(Symbol::Extends));
         assert_eq!(lex.next(), Some(Symbol::False));
         assert_eq!(lex.next(), Some(Symbol::For));
         assert_eq!(lex.next(), Some(Symbol::From));
-        assert_eq!(lex.next(), Some(Symbol::HANDLE));
         assert_eq!(lex.next(), Some(Symbol::If));
         assert_eq!(lex.next(), Some(Symbol::In));
         assert_eq!(lex.next(), Some(Symbol::Is));
@@ -381,23 +376,26 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex =
-            Symbol::lexer("let loop module otherwise record recur reify repeat then until");
+            Symbol::lexer("let loop module not of otherwise recur reify return then trait until");
         assert_eq!(lex.next(), Some(Symbol::Let));
         assert_eq!(lex.next(), Some(Symbol::Loop));
         assert_eq!(lex.next(), Some(Symbol::Module));
+        assert_eq!(lex.next(), Some(Symbol::Not));
+        assert_eq!(lex.next(), Some(Symbol::Of));
         assert_eq!(lex.next(), Some(Symbol::Otherwise));
-        assert_eq!(lex.next(), Some(Symbol::RECORD));
         assert_eq!(lex.next(), Some(Symbol::Recur));
         assert_eq!(lex.next(), Some(Symbol::Reify));
-        assert_eq!(lex.next(), Some(Symbol::REPEAT));
+        assert_eq!(lex.next(), Some(Symbol::Return));
         assert_eq!(lex.next(), Some(Symbol::Then));
+        assert_eq!(lex.next(), Some(Symbol::Trait));
         assert_eq!(lex.next(), Some(Symbol::Until));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("when where with");
+        let mut lex = Symbol::lexer("when where with yield");
         assert_eq!(lex.next(), Some(Symbol::When));
         assert_eq!(lex.next(), Some(Symbol::Where));
         assert_eq!(lex.next(), Some(Symbol::With));
+        assert_eq!(lex.next(), Some(Symbol::Yield));
         assert_eq!(lex.next(), None);
     }
 
@@ -429,7 +427,7 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("<! == >= > | \\ <= [ { #{ (");
-        assert_eq!(lex.next(), Some(Symbol::DOTOBACK));
+        assert_eq!(lex.next(), Some(Symbol::DotoBack));
         assert_eq!(lex.next(), Some(Symbol::Eq));
         assert_eq!(lex.next(), Some(Symbol::Ge));
         assert_eq!(lex.next(), Some(Symbol::Gt));

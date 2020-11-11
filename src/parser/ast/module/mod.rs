@@ -70,7 +70,7 @@ fn name_from_parser<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(String, u
             );
         }
 
-        t => {
+        _ => {
             return Err(
                 Error::new(OguError::ParserError(ParseError::TypeIdExpected))
                     .context("Expecting module name"),

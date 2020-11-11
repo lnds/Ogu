@@ -1,6 +1,5 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
-use crate::parser::ParseError::ExpectingSymbol;
 use crate::parser::{ParseError, Parser};
 use anyhow::{Error, Result};
 
@@ -43,7 +42,7 @@ impl<'a> Exposing {
         let mut ids = vec![];
         let mut pos = pos;
         loop {
-            let id = match parser.get_symbol(pos) {
+            match parser.get_symbol(pos) {
                 Some(Symbol::Id(s)) => {
                     ids.push(s.to_string());
                     pos += 1;
@@ -64,7 +63,6 @@ impl<'a> Exposing {
                 pos += 1;
             }
         }
-
         Ok((Exposing::List(ids), pos))
     }
 }

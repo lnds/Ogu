@@ -59,7 +59,7 @@ impl Body {
     fn parse_decl(parser: &Parser, pos: usize) -> Result<Option<(Declaration, usize)>> {
         match parser.get_symbol(pos) {
             None => Ok(None),
-            Some(Symbol::Id(id)) => Declaration::parse_func_or_val(parser, pos),
+            Some(Symbol::Id(_)) => Declaration::parse_func_or_val(parser, pos),
             _ => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingDeclaration,
             ))),
@@ -137,11 +137,10 @@ impl Arg {
     }
 
     fn parse_tuple(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
-        let mut pos = pos + 1;
-        if parser.peek(pos, Symbol::RightParen) {
-            Ok(Some((Arg::Void, pos + 1)))
+        if parser.peek(pos + 1, Symbol::RightParen) {
+            Ok(Some((Arg::Void, pos + 2)))
         } else {
-            Ok(None)
+            todo!()
         }
     }
 }

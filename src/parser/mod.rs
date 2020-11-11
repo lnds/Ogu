@@ -1,10 +1,8 @@
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::{LineNumber, Symbol, Token};
+use crate::lexer::tokens::{Symbol, Token};
 use crate::parser::ast::module::Module;
 use std::path::PathBuf;
 
-use crate::backend::OguError;
-use crate::parser::ParseError::ExpectingSymbol;
 use anyhow::{Error, Result};
 use thiserror::Error;
 

@@ -1,4 +1,4 @@
-use crate::lexer::tokens::{Token, Symbol};
+use crate::lexer::tokens::Token;
 
 #[derive(Debug)]
 pub struct TokenStream<'a> {
@@ -25,6 +25,4 @@ impl<'a> TokenStream<'a> {
     pub fn peek(&'a self, pos: usize) -> Option<Token<'a>> {
         self.tokens.get(pos).cloned()
     }
-
-
 }

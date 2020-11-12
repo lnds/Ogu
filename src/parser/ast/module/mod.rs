@@ -25,7 +25,7 @@ impl<'a> Module {
             (name_from_filename(filename), pos)
         };
         let (exposing, pos) = Exposing::parse(parser, pos)?;
-        let (body, pos) = Body::parse(parser, &pos)?;
+        let body = Body::parse(parser, &pos)?;
         Ok(Module {
             name,
             exposing,
@@ -46,7 +46,7 @@ fn capitalize(s: &str) -> String {
         String::new()
     } else {
         let mut v: Vec<char> = s.chars().collect();
-        v[0] = v[0].to_uppercase().nth(0).unwrap();
+        v[0] = v[0].to_uppercase().next().unwrap();
         v.into_iter().collect()
     }
 }
@@ -61,20 +61,16 @@ fn name_from_parser<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(String, u
         Some(Token {
             symbol: Symbol::Id(s),
             line: l,
-        }) => {
-            return Err(
-                Error::new(OguError::ParserError(ParseError::TypeIdExpected)).context(format!(
-                    "Error at line: {}, module name '{}' must start with upper case",
-                    l, s
-                )),
-            );
-        }
+        }) => Err(
+            Error::new(OguError::ParserError(ParseError::TypeIdExpected)).context(format!(
+                "Error at line: {}, module name '{}' must start with upper case",
+                l, s
+            )),
+        ),
 
-        _ => {
-            return Err(
-                Error::new(OguError::ParserError(ParseError::TypeIdExpected))
-                    .context("Expecting module name"),
-            );
-        }
+        _ => Err(
+            Error::new(OguError::ParserError(ParseError::TypeIdExpected))
+                .context("Expecting module name"),
+        ),
     }
 }

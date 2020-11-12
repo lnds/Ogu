@@ -169,7 +169,7 @@ pub enum Symbol<'a> {
     #[token("<|", priority = 1000)]
     PipeLeft,
     #[token("|<", priority = 1000)]
-    PipeLeftArgs,
+    PipeLeftFirstArg,
     #[token("|>")]
     PipeRight,
     #[token(">|")]

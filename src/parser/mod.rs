@@ -3,7 +3,7 @@ use crate::lexer::tokens::{Symbol, Token};
 use crate::parser::ast::module::Module;
 use std::path::PathBuf;
 
-use anyhow::{Error, Result};
+use anyhow::Result;
 use thiserror::Error;
 
 mod ast;
@@ -26,6 +26,10 @@ pub enum ParseError {
     ExpectingValidArg,
     #[error("Expecting end of indentation")]
     ExpectingIndentationEnd,
+    #[error("Expecting ,")]
+    ExpectingComma,
+    #[error("Expecting a valid arg")]
+    InvalidArg,
 }
 
 pub struct Parser<'a> {

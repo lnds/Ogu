@@ -134,7 +134,7 @@ fn scan_line<'a>(
     }
     line_symbols
         .iter()
-        .map(|s| Token::new(s.clone(), *line_number + 1))
+        .map(|s| Token::new(*s, *line_number + 1))
         .collect::<TokenList<'a>>()
 }
 

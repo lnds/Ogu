@@ -1,14 +1,15 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::Expression;
+use crate::parser::ast::module::body::Arg::TupleArg;
 use crate::parser::{ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Arg {
     Void,
     SimpleArg(String),
-    TupleArg(Vec<String>),
+    TupleArg(Vec<Arg>),
 }
 
 #[derive(Debug)]
@@ -31,7 +32,7 @@ pub type Where = Vec<Equation>;
 #[derive(Debug)]
 pub enum Declaration {
     FuncOrVal(Equation),
-    TypeDecl,
+    // TypeDecl, // TODO
 }
 
 #[derive(Debug)]
@@ -40,12 +41,12 @@ pub struct Body {
 }
 
 impl Body {
-    pub(crate) fn parse(parser: &Parser, pos: &usize) -> Result<(Self, usize)> {
-        let (declarations, pos) = Body::parse_decls(parser, pos)?;
-        Ok((Body { declarations }, pos))
+    pub(crate) fn parse(parser: &Parser, pos: &usize) -> Result<Self> {
+        let declarations = Body::parse_decls(parser, pos)?;
+        Ok(Body { declarations })
     }
 
-    fn parse_decls(parser: &Parser, pos: &usize) -> Result<(Vec<Declaration>, usize)> {
+    fn parse_decls(parser: &Parser, pos: &usize) -> Result<Vec<Declaration>> {
         let mut result = vec![];
         let mut pos = *pos;
         while let Some((decl, new_pos)) = Body::parse_decl(parser, pos)? {
@@ -53,7 +54,7 @@ impl Body {
             result.push(decl);
             pos = new_pos;
         }
-        Ok((result, pos))
+        Ok(result)
     }
 
     fn parse_decl(parser: &Parser, pos: usize) -> Result<Option<(Declaration, usize)>> {
@@ -79,12 +80,8 @@ impl Declaration {
                     pos,
                 )))
             } else {
-                println!("finding args pos = {}", pos);
                 let (args, pos) = Arg::parse(parser, pos)?;
-                println!("found args pos = {}", pos);
-                println!("args {:?}, next-sym = {:?}", args, parser.get_symbol(pos));
                 if parser.peek(pos, Symbol::Assign) {
-                    println!("asign==");
                     let (expr, pos) = Expression::parse(parser, pos + 1)?;
                     Ok(Some((
                         Declaration::FuncOrVal(Equation::Function {
@@ -140,7 +137,37 @@ impl Arg {
         if parser.peek(pos + 1, Symbol::RightParen) {
             Ok(Some((Arg::Void, pos + 2)))
         } else {
-            todo!()
+            let mut args = vec![];
+            let mut pos = pos + 1;
+            match Arg::parse_arg(parser, pos + 1)? {
+                Some((arg, new_pos)) => {
+                    args.push(arg);
+                    pos = new_pos;
+                }
+                None => {
+                    return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
+                        .context("unexpected token");
+                }
+            }
+            while !parser.peek(pos, Symbol::RightParen) {
+                if !parser.peek(pos, Symbol::Comma) {
+                    return Err(Error::new(OguError::ParserError(
+                        ParseError::ExpectingComma,
+                    )))
+                    .context("expecting comma");
+                }
+                match Arg::parse_arg(parser, pos + 1)? {
+                    Some((new_arg, new_pos)) => {
+                        pos = new_pos;
+                        args.push(new_arg.clone())
+                    }
+                    None => {
+                        return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
+                            .context("unexpected token");
+                    }
+                }
+            }
+            Ok(Some((TupleArg(args), pos + 1)))
         }
     }
 }

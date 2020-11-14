@@ -73,7 +73,7 @@ impl Declaration {
         if let (Some(Symbol::Id(id)), pos) = (parser.get_symbol(pos), pos + 1) {
             let name = id.to_string();
             let wheres = None;
-            if parser.peek(pos, Symbol::Eq) {
+            if parser.peek(pos, Symbol::Equal) {
                 let (expr, pos) = Expression::parse(parser, pos + 1)?;
                 Ok(Some((
                     Declaration::FuncOrVal(Equation::Value { name, expr, wheres }),

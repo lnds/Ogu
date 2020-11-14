@@ -28,8 +28,14 @@ pub enum ParseError {
     ExpectingIndentationEnd,
     #[error("Expecting ,")]
     ExpectingComma,
+    #[error("ExpressionExpected")]
+    ExpressionExpected,
     #[error("Expecting a valid arg")]
     InvalidArg,
+    #[error("Expecting a lambda arg")]
+    ExpectingLambdaArg,
+    #[error("Expecting ->")]
+    ExpectingArrow,
 }
 
 pub struct Parser<'a> {

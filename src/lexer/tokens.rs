@@ -22,6 +22,8 @@ pub enum Symbol<'a> {
     Comment,
     #[regex(r"[\n\r]+")]
     NewLine,
+    #[token("alias", priority = 2000)]
+    Alias,
     #[token("as", priority = 2000)]
     As,
     #[token("case", priority = 2000)]
@@ -78,6 +80,8 @@ pub enum Symbol<'a> {
     Then,
     #[token("trait", priority = 2000)]
     Trait,
+    #[token("type", priority = 2000)]
+    Type,
     #[token("until", priority = 2000)]
     Until,
     #[token("when", priority = 2000)]
@@ -131,17 +135,17 @@ pub enum Symbol<'a> {
     #[token("<!", priority = 1000)]
     DotoBack,
     #[token("==", priority = 1000)]
-    Eq,
+    Equal,
     #[token(">=", priority = 1000)]
-    Ge,
+    GreaterOrEqual,
     #[token(">", priority = 1000)]
-    Gt,
+    Greater,
     #[token("|", priority = 1000)]
     Guard,
     #[token("\\", priority = 1000)]
     Lambda,
     #[token("<=", priority = 1000)]
-    Le,
+    LessThanOrEqual,
     #[token("[", priority = 1000)]
     LeftBracket,
     #[token("{", priority = 1000)]
@@ -156,6 +160,8 @@ pub enum Symbol<'a> {
     Match,
     #[token("=~", priority = 1000)]
     Matches,
+    #[token("!~", priority = 1000)]
+    NotMatches,
     #[token("-", priority = 1000)]
     Minus,
     #[token("%", priority = 1000)]
@@ -391,7 +397,8 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Until));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("when where with yield");
+        let mut lex = Symbol::lexer("type when where with yield");
+        assert_eq!(lex.next(), Some(Symbol::Type));
         assert_eq!(lex.next(), Some(Symbol::When));
         assert_eq!(lex.next(), Some(Symbol::Where));
         assert_eq!(lex.next(), Some(Symbol::With));
@@ -428,12 +435,12 @@ mod test_tokens {
 
         let mut lex = Symbol::lexer("<! == >= > | \\ <= [ { #{ (");
         assert_eq!(lex.next(), Some(Symbol::DotoBack));
-        assert_eq!(lex.next(), Some(Symbol::Eq));
-        assert_eq!(lex.next(), Some(Symbol::Ge));
-        assert_eq!(lex.next(), Some(Symbol::Gt));
+        assert_eq!(lex.next(), Some(Symbol::Equal));
+        assert_eq!(lex.next(), Some(Symbol::GreaterOrEqual));
+        assert_eq!(lex.next(), Some(Symbol::Greater));
         assert_eq!(lex.next(), Some(Symbol::Guard));
         assert_eq!(lex.next(), Some(Symbol::Lambda));
-        assert_eq!(lex.next(), Some(Symbol::Le));
+        assert_eq!(lex.next(), Some(Symbol::LessThanOrEqual));
         assert_eq!(lex.next(), Some(Symbol::LeftBracket));
         assert_eq!(lex.next(), Some(Symbol::LeftCurly));
         assert_eq!(lex.next(), Some(Symbol::HashCurly));
@@ -450,7 +457,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::NotEqual));
         assert_eq!(lex.next(), Some(Symbol::Or));
         assert_eq!(lex.next(), Some(Symbol::PipeLeft));
-        assert_eq!(lex.next(), Some(Symbol::PipeLeftArgs));
+        assert_eq!(lex.next(), Some(Symbol::PipeLeftFirstArg));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer("|> >| + ++ ^ ? ] } )");

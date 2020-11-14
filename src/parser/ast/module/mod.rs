@@ -24,8 +24,11 @@ impl<'a> Module {
         } else {
             (name_from_filename(filename), pos)
         };
+        println!("module name = {}, pos= {}", name, pos);
         let (exposing, pos) = Exposing::parse(parser, pos)?;
-        let body = Body::parse(parser, &pos)?;
+        println!("exposing {:#?}, pos = {}", exposing, pos);
+        let pos = parser.skip_nl(pos);
+        let body = Body::parse(parser, pos)?;
         Ok(Module {
             name,
             exposing,

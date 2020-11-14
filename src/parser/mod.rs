@@ -1,5 +1,5 @@
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::{Symbol, Token};
+use crate::lexer::tokens::{LineNumber, Symbol, Token};
 use crate::parser::ast::module::Module;
 use std::path::PathBuf;
 
@@ -71,5 +71,9 @@ impl<'a> Parser<'a> {
             Some(Symbol::NewLine) => self.skip_nl(pos + 1),
             _ => pos,
         }
+    }
+
+    pub fn pos_to_line(&self, pos: usize) -> Option<LineNumber> {
+        self.tokens.peek(pos).map(|t| t.line)
     }
 }

@@ -1,5 +1,6 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
+use crate::lexer::tokens::Symbol::Dedent;
 use crate::parser::ast::expressions::Expression;
 use crate::parser::ast::module::body::Arg::TupleArg;
 use crate::parser::{ParseError, Parser};
@@ -41,14 +42,15 @@ pub struct Body {
 }
 
 impl Body {
-    pub(crate) fn parse(parser: &Parser, pos: &usize) -> Result<Self> {
+    pub(crate) fn parse(parser: &Parser, pos: usize) -> Result<Self> {
         let declarations = Body::parse_decls(parser, pos)?;
         Ok(Body { declarations })
     }
 
-    fn parse_decls(parser: &Parser, pos: &usize) -> Result<Vec<Declaration>> {
+    fn parse_decls(parser: &Parser, pos: usize) -> Result<Vec<Declaration>> {
+        println!("parse decls @ {}", pos);
         let mut result = vec![];
-        let mut pos = *pos;
+        let mut pos = pos;
         while let Some((decl, new_pos)) = Body::parse_decl(parser, pos)? {
             result.push(decl);
             pos = new_pos;
@@ -57,78 +59,102 @@ impl Body {
     }
 
     fn parse_decl(parser: &Parser, pos: usize) -> Result<Option<(Declaration, usize)>> {
+        println!("parse decl @ {}", pos);
         match parser.get_symbol(pos) {
             None => Ok(None),
-            Some(Symbol::Id(_)) => Declaration::parse_func_or_val(parser, pos),
-            _ => Err(Error::new(OguError::ParserError(
+            Some(Symbol::Id(id)) => Declaration::parse_func_or_val(id, parser, pos + 1),
+            sym => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingDeclaration,
             )))
-            .context("Expecting declaration"),
+            .context(format!(
+                "Expecting declaration at {}, @{}, found: {:?}",
+                parser.pos_to_line(pos).unwrap_or(0),
+                pos,
+                sym
+            )),
         }
     }
 }
 
 impl Declaration {
-    fn parse_func_or_val(parser: &Parser, pos: usize) -> Result<Option<(Declaration, usize)>> {
-        if let (Some(Symbol::Id(id)), pos) = (parser.get_symbol(pos), pos + 1) {
-            let name = id.to_string();
-            let wheres = None;
-            if parser.peek(pos, Symbol::Assign) {
-                let pos = parser.skip_nl(pos + 1);
-                let (expr, pos) = Expression::parse(parser, pos)?;
-                Ok(Some((
-                    Declaration::FuncOrVal(Equation::Value { name, expr, wheres }),
-                    pos,
-                )))
-            } else {
-                let (args, pos) = Arg::parse(parser, pos)?;
-                if parser.peek(pos, Symbol::Assign) {
-                    let pos = parser.skip_nl(pos + 1);
-                    let (in_indent, pos) = if parser.peek(pos, Symbol::Indent) {
-                        (true, pos + 1)
-                    } else {
-                        (false, pos)
-                    };
-                    let (expr, pos) = Expression::parse(parser, pos)?;
-                    let pos = parser.skip_nl(pos);
-                    if in_indent {
-                        if !parser.peek(pos, Symbol::Dedent) {
-                            Err(Error::new(OguError::ParserError(
-                                ParseError::ExpectingIndentationEnd,
-                            )))
-                            .context("esperando fin de indentación")
-                        } else {
-                            Ok(Some((
-                                Declaration::FuncOrVal(Equation::Function {
-                                    name,
-                                    args,
-                                    expr,
-                                    wheres,
-                                }),
-                                pos + 1,
-                            )))
-                        }
-                    } else {
-                        Ok(Some((
-                            Declaration::FuncOrVal(Equation::Function {
-                                name,
-                                args,
-                                expr,
-                                wheres,
-                            }),
-                            pos,
-                        )))
-                    }
-                } else {
-                    Err(Error::new(OguError::ParserError(
-                        ParseError::ExpectingAssignation,
-                    )))
-                    .context(format!("expecting = at pos {}", pos))
-                }
-            }
+    fn parse_func_or_val(
+        id: &str,
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<Option<(Declaration, usize)>> {
+        println!("parse_func_or_val @ {}", pos);
+        // here
+        let name = id.to_string();
+        if parser.peek(pos, Symbol::Assign) {
+            Declaration::parse_val(name, parser, pos + 1)
         } else {
-            Ok(None)
+            Declaration::parse_func(name, parser, pos)
         }
+    }
+
+    fn parse_val(
+        name: String,
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<Option<(Declaration, usize)>> {
+        // we already parsed a =
+        let pos = parser.skip_nl(pos);
+        let (expr, pos) = Expression::parse(parser, pos)?;
+        Ok(Some((
+            Declaration::FuncOrVal(Equation::Value {
+                name,
+                expr,
+                wheres: None,
+            }),
+            pos,
+        )))
+    }
+
+    fn parse_func(
+        name: String,
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<Option<(Declaration, usize)>> {
+        let (args, pos) = Arg::parse(parser, pos)?;
+        if parser.peek(pos, Symbol::Assign) {
+            Declaration::parse_func_without_guards(name, args, parser, pos + 1)
+        } else {
+            todo!()
+        }
+    }
+
+    fn parse_func_without_guards(
+        name: String,
+        args: Vec<Arg>,
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<Option<(Declaration, usize)>> {
+        let mut pos = parser.skip_nl(pos);
+        let mut in_indent = false;
+        if parser.peek(pos, Symbol::Indent) {
+            in_indent = true;
+            pos = pos + 1;
+        }
+        let (expr, pos) = Expression::parse(parser, pos)?;
+        let mut pos = parser.skip_nl(pos);
+        if in_indent {
+            if !parser.peek(pos, Symbol::Dedent) {
+                return Err(Error::new(OguError::ParserError(
+                    ParseError::ExpectingIndentationEnd,
+                )))
+                .context("esperando fin de indentación");
+            }
+            pos = pos + 1;
+        }
+        Ok(Some((
+            Declaration::FuncOrVal(Equation::Function {
+                name,
+                args,
+                expr,
+                wheres: None,
+            }),
+            pos,
+        )))
     }
 }
 
@@ -145,6 +171,7 @@ impl Arg {
     }
 
     fn parse_arg(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
+        println!("parse arg @ {}", pos);
         match parser.get_symbol(pos) {
             None => Ok(None),
             Some(Symbol::LeftParen) => Arg::parse_tuple(parser, pos),
@@ -160,39 +187,38 @@ impl Arg {
 
     fn parse_tuple(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
         if parser.peek(pos + 1, Symbol::RightParen) {
-            Ok(Some((Arg::Void, pos + 2)))
-        } else {
-            let mut args = vec![];
-            let mut pos = pos + 1;
+            return Ok(Some((Arg::Void, pos + 2)));
+        }
+        let mut args = vec![];
+        let mut pos = pos + 1;
+        match Arg::parse_arg(parser, pos + 1)? {
+            Some((arg, new_pos)) => {
+                args.push(arg);
+                pos = new_pos;
+            }
+            None => {
+                return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
+                    .context("unexpected token");
+            }
+        }
+        while !parser.peek(pos, Symbol::RightParen) {
+            if !parser.peek(pos, Symbol::Comma) {
+                return Err(Error::new(OguError::ParserError(
+                    ParseError::ExpectingComma,
+                )))
+                .context("expecting comma");
+            }
             match Arg::parse_arg(parser, pos + 1)? {
-                Some((arg, new_pos)) => {
-                    args.push(arg);
+                Some((new_arg, new_pos)) => {
                     pos = new_pos;
+                    args.push(new_arg.clone())
                 }
                 None => {
                     return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
                         .context("unexpected token");
                 }
             }
-            while !parser.peek(pos, Symbol::RightParen) {
-                if !parser.peek(pos, Symbol::Comma) {
-                    return Err(Error::new(OguError::ParserError(
-                        ParseError::ExpectingComma,
-                    )))
-                    .context("expecting comma");
-                }
-                match Arg::parse_arg(parser, pos + 1)? {
-                    Some((new_arg, new_pos)) => {
-                        pos = new_pos;
-                        args.push(new_arg.clone())
-                    }
-                    None => {
-                        return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
-                            .context("unexpected token");
-                    }
-                }
-            }
-            Ok(Some((TupleArg(args), pos + 1)))
         }
+        Ok(Some((TupleArg(args), pos + 1)))
     }
 }

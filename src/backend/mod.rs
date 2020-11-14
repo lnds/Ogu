@@ -1,4 +1,5 @@
 use crate::backend::banner::akarru;
+use crate::lexer::tokens::Symbol;
 use crate::lexer::Lexer;
 use crate::parser::{ParseError, Parser};
 use anyhow::Result;
@@ -30,6 +31,10 @@ pub struct Params {
     #[structopt(short, long)]
     banner: bool,
 
+    /// print TOKENS
+    #[structopt(short, long)]
+    tokens: bool,
+
     /// print AST
     #[structopt(short, long)]
     print: bool,
@@ -56,12 +61,17 @@ pub fn run(params: Params) -> Result<()> {
     Ok(())
 }
 
-fn run_module(path: &PathBuf, _params: &Params) -> Result<()> {
+fn run_module(path: &PathBuf, params: &Params) -> Result<()> {
     let mut lexer = Lexer::new(path)?;
     let tokens = lexer.scan()?;
-    println!("TOKENS = {:?}", tokens);
+    if params.tokens {
+        let syms: Vec<Symbol> = tokens.iter().map(|t| t.symbol).collect();
+        println!("TOKENS = {:?}", syms);
+    }
     let mut parser = Parser::new(tokens)?;
     let module = parser.parse(path)?;
-    println!("Module = {:?}", module);
+    if params.print {
+        println!("AST = {:#?}", module);
+    }
     Ok(())
 }

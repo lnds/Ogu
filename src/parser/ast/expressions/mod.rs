@@ -9,6 +9,9 @@ struct RightAssocExpr<'a>(Symbol<'a>, Box<Expression>, Vec<Expression>);
 #[derive(Debug, Clone)]
 pub enum Expression {
     Error,
+    Identifier(String),
+    Atom(String),
+    StringLiteral(String),
     PipeFuncCall {
         name: Box<Expression>,
         args: Vec<Expression>,
@@ -26,6 +29,10 @@ pub enum Expression {
         args: Vec<Expression>,
     },
     FuncCallWithDollar {
+        name: Box<Expression>,
+        args: Vec<Expression>,
+    },
+    FuncCallExpr {
         name: Box<Expression>,
         args: Vec<Expression>,
     },
@@ -517,8 +524,88 @@ impl Expression {
         Expression::parse_primary_expr
     );
 
-    fn parse_primary_expr(_parser: &Parser, _pos: usize) -> ParseResult {
+    fn parse_primary_expr(parser: &Parser, pos: usize) -> ParseResult {
+        match parser.get_symbol(pos) {
+            Some(Symbol::LeftParen) => Expression::parse_paren_expr(parser, pos),
+            Some(Symbol::LeftBracket) => Expression::parse_list_expr(parser, pos),
+            Some(Symbol::LeftCurly) => Expression::parse_record_expr(parser, pos),
+            Some(Symbol::HashCurly) => Expression::parse_set_expr(parser, pos),
+            Some(Symbol::Lazy) => Expression::parse_lazy_expr(parser, pos),
+            Some(sym) if is_literal(sym) => Expression::parse_literal_expr(parser, pos),
+            Some(Symbol::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
+            _ => Expression::parse_func_call_expr(parser, pos),
+        }
+    }
+
+    fn parse_paren_expr(_parser: &Parser, _pos: usize) -> ParseResult {
         todo!()
+    }
+
+    fn parse_list_expr(_parser: &Parser, _pos: usize) -> ParseResult {
+        todo!()
+    }
+
+    fn parse_record_expr(_parser: &Parser, _pos: usize) -> ParseResult {
+        todo!()
+    }
+
+    fn parse_set_expr(_parser: &Parser, _pos: usize) -> ParseResult {
+        todo!()
+    }
+
+    fn parse_lazy_expr(_parser: &Parser, _pos: usize) -> ParseResult {
+        todo!()
+    }
+
+    fn parse_literal_expr(parser: &Parser, pos: usize) -> ParseResult {
+        match parser.get_symbol(pos) {
+            Some(Symbol::String(str)) => Ok((Expression::StringLiteral(str.to_string()), pos + 1)),
+            _ => todo!(),
+        }
+    }
+
+    fn parse_ctor_expr(_parser: &Parser, _pos: usize) -> ParseResult {
+        todo!()
+    }
+
+    fn parse_func_call_expr(parser: &Parser, pos: usize) -> ParseResult {
+        let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
+        if is_func_call_end_symbol(parser.get_symbol(pos)) {
+            Ok((expr, pos))
+        } else {
+            let (args, pos) = Expression::parse_func_call_args(parser, pos)?;
+            Ok((
+                Expression::FuncCallExpr {
+                    name: Box::new(expr),
+                    args,
+                },
+                pos,
+            ))
+        }
+    }
+
+    fn parse_func_call_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usize)> {
+        let mut args = vec![];
+        let (expr, mut pos) = Expression::parse_prim_expr(parser, pos)?;
+        args.push(expr);
+        while !is_func_call_end_symbol(parser.get_symbol(pos)) {
+            let (expr, new_pos) = Expression::parse_prim_expr(parser, pos)?;
+            args.push(expr);
+            pos = new_pos;
+        }
+        Ok((args, pos))
+    }
+
+    fn parse_prim_expr(parser: &Parser, pos: usize) -> ParseResult {
+        match parser.get_symbol(pos) {
+            Some(Symbol::Id(id)) => Ok((Expression::Identifier(id.to_string()), pos + 1)),
+            Some(Symbol::Key(atom)) => Ok((Expression::Atom(atom.to_string()), pos + 1)),
+            sym if is_func_call_end_symbol(sym) => {
+                Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
+                    .context(format!("invalid symbol: {:?}", sym))
+            }
+            _ => Expression::parse_dollar_func_call_expr(parser, pos),
+        }
     }
 
     fn parse_let(_parser: &Parser, _pos: usize) -> ParseResult {
@@ -621,6 +708,20 @@ fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
         Err(Error::new(OguError::ParserError(
             ParseError::ExpectingIdentifier,
         )))
+    }
+}
+
+fn is_literal(symbol: Symbol) -> bool {
+    match symbol {
+        Symbol::Integer(_) => true,
+        Symbol::Float(_) => true,
+        Symbol::String(_) => true,
+        Symbol::RegExp(_) => true,
+        Symbol::Char(_) => true,
+        Symbol::True => true,
+        Symbol::False => true,
+        Symbol::IsoDate(_) => true,
+        _ => false,
     }
 }
 

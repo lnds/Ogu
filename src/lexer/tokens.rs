@@ -80,6 +80,8 @@ pub enum Symbol<'a> {
     Then,
     #[token("trait", priority = 2000)]
     Trait,
+    #[token("true", priority = 2000)]
+    True,
     #[token("type", priority = 2000)]
     Type,
     #[token("until", priority = 2000)]

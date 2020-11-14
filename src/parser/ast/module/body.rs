@@ -50,7 +50,6 @@ impl Body {
         let mut result = vec![];
         let mut pos = *pos;
         while let Some((decl, new_pos)) = Body::parse_decl(parser, pos)? {
-            println!("found decl: {:?}", decl);
             result.push(decl);
             pos = new_pos;
         }
@@ -63,7 +62,8 @@ impl Body {
             Some(Symbol::Id(_)) => Declaration::parse_func_or_val(parser, pos),
             _ => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingDeclaration,
-            ))),
+            )))
+            .context("Expecting declaration"),
         }
     }
 }
@@ -73,8 +73,9 @@ impl Declaration {
         if let (Some(Symbol::Id(id)), pos) = (parser.get_symbol(pos), pos + 1) {
             let name = id.to_string();
             let wheres = None;
-            if parser.peek(pos, Symbol::Equal) {
-                let (expr, pos) = Expression::parse(parser, pos + 1)?;
+            if parser.peek(pos, Symbol::Assign) {
+                let pos = parser.skip_nl(pos + 1);
+                let (expr, pos) = Expression::parse(parser, pos)?;
                 Ok(Some((
                     Declaration::FuncOrVal(Equation::Value { name, expr, wheres }),
                     pos,
@@ -82,16 +83,42 @@ impl Declaration {
             } else {
                 let (args, pos) = Arg::parse(parser, pos)?;
                 if parser.peek(pos, Symbol::Assign) {
-                    let (expr, pos) = Expression::parse(parser, pos + 1)?;
-                    Ok(Some((
-                        Declaration::FuncOrVal(Equation::Function {
-                            name,
-                            args,
-                            expr,
-                            wheres,
-                        }),
-                        pos,
-                    )))
+                    let pos = parser.skip_nl(pos + 1);
+                    let (in_indent, pos) = if parser.peek(pos, Symbol::Indent) {
+                        (true, pos + 1)
+                    } else {
+                        (false, pos)
+                    };
+                    let (expr, pos) = Expression::parse(parser, pos)?;
+                    let pos = parser.skip_nl(pos);
+                    if in_indent {
+                        if !parser.peek(pos, Symbol::Dedent) {
+                            Err(Error::new(OguError::ParserError(
+                                ParseError::ExpectingIndentationEnd,
+                            )))
+                            .context("esperando fin de indentación")
+                        } else {
+                            Ok(Some((
+                                Declaration::FuncOrVal(Equation::Function {
+                                    name,
+                                    args,
+                                    expr,
+                                    wheres,
+                                }),
+                                pos + 1,
+                            )))
+                        }
+                    } else {
+                        Ok(Some((
+                            Declaration::FuncOrVal(Equation::Function {
+                                name,
+                                args,
+                                expr,
+                                wheres,
+                            }),
+                            pos,
+                        )))
+                    }
                 } else {
                     Err(Error::new(OguError::ParserError(
                         ParseError::ExpectingAssignation,
@@ -110,7 +137,6 @@ impl Arg {
         let mut result = vec![];
         let mut pos = pos;
         while let Some((arg, new_pos)) = Arg::parse_arg(parser, pos)? {
-            println!("found arg: {:?} @{}", arg, new_pos);
             result.push(arg);
             pos = new_pos;
         }
@@ -119,7 +145,6 @@ impl Arg {
     }
 
     fn parse_arg(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
-        println!("parse arg {} {:?}", pos, parser.get_symbol(pos));
         match parser.get_symbol(pos) {
             None => Ok(None),
             Some(Symbol::LeftParen) => Arg::parse_tuple(parser, pos),

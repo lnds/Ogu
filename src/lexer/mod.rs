@@ -82,6 +82,13 @@ impl<'a> Lexer {
             );
             tokens.append(&mut line_tokens);
         }
+        while indent_stack.len() > 1 {
+            tokens.push(Token {
+                symbol: Symbol::Dedent,
+                line: self.lines.len() + 1,
+            });
+            indent_stack.pop();
+        }
         tokens
     }
 }

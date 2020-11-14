@@ -36,6 +36,10 @@ pub enum ParseError {
     ExpectingLambdaArg,
     #[error("Expecting ->")]
     ExpectingArrow,
+    #[error("Expecting (")]
+    ExpectingLeftParenthesis,
+    #[error("Expecting )")]
+    ExpectingRightParenthesis,
 }
 
 pub struct Parser<'a> {

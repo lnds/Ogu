@@ -12,6 +12,8 @@ pub enum Expression {
     Identifier(String),
     Atom(String),
     StringLiteral(String),
+    IntegerLiteral(String),
+    Unit,
     PipeFuncCall {
         name: Box<Expression>,
         args: Vec<Expression>,
@@ -537,8 +539,29 @@ impl Expression {
         }
     }
 
-    fn parse_paren_expr(_parser: &Parser, _pos: usize) -> ParseResult {
-        todo!()
+    fn parse_paren_expr(parser: &Parser, pos: usize) -> ParseResult {
+        if !parser.peek(pos, Symbol::LeftParen) {
+            return Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingLeftParenthesis,
+            )));
+        }
+        match parser.get_symbol(pos + 1) {
+            Some(Symbol::RightParen) => Ok((Expression::Unit, pos + 2)),
+            Some(sym) => {
+                println!("parse_paren_expr sym = {:?}", sym);
+                let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos + 1)?;
+                println!("parse_paren_expr expr = {:?}, pos = {}", expr, pos);
+                if parser.peek(pos, Symbol::RightParen) {
+                    Ok((expr, pos + 1))
+                } else {
+                    todo!()
+                }
+            }
+            None => Err(Error::new(OguError::ParserError(
+                ParseError::ExpressionExpected,
+            )))
+            .context("unexpected eof"),
+        }
     }
 
     fn parse_list_expr(_parser: &Parser, _pos: usize) -> ParseResult {
@@ -560,6 +583,9 @@ impl Expression {
     fn parse_literal_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
             Some(Symbol::String(str)) => Ok((Expression::StringLiteral(str.to_string()), pos + 1)),
+            Some(Symbol::Integer(int)) => {
+                Ok((Expression::IntegerLiteral(int.to_string()), pos + 1))
+            }
             _ => todo!(),
         }
     }
@@ -648,9 +674,12 @@ fn consume_op_args(
     } else {
         let pos = parser.skip_nl(pos + 1);
         let (expr, mut pos) = next_level(parser, pos)?;
+        args.push(expr);
         while parser.peek(pos, op) {
             pos = parser.skip_nl(pos + 1);
-            args.push(expr.clone());
+            let (expr, new_pos) = next_level(parser, pos)?;
+            args.push(expr);
+            pos = new_pos;
         }
         Ok((args, pos))
     }

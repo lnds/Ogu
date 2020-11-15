@@ -127,3 +127,17 @@ pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<
     }
     Ok(pos)
 }
+
+pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
+    let pos = parser.skip_nl(pos);
+    if !parser.peek(pos, Symbol::Indent) {
+        None
+    } else {
+        let pos = parser.skip_nl(pos + 1);
+        if parser.peek(pos, Symbol::Where) {
+            Some(pos)
+        } else {
+            None
+        }
+    }
+}

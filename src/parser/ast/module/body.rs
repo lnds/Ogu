@@ -1,24 +1,12 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
+use crate::parser::ast::expressions::args::{Arg, VecArg};
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, ParseError, Parser};
+use crate::parser::ast::expressions::guards::{parse_guards, Guard};
+use crate::parser::{
+    consume_symbol, look_ahead_where, parse_opt_dedent, parse_opt_indent, ParseError, Parser,
+};
 use anyhow::{Context, Error, Result};
-
-#[derive(Debug, Clone)]
-pub enum Arg {
-    Void,
-    SimpleArg(String),
-    TupleArg(Vec<Arg>),
-}
-
-type VecArg = Vec<Arg>;
-
-#[derive(Debug, Clone)]
-pub struct Guard {
-    pub guard: Option<Box<Expression>>,
-    // otherwise
-    pub value: Box<Expression>,
-}
 
 #[derive(Debug)]
 pub enum Declaration {
@@ -101,13 +89,18 @@ impl Declaration {
     fn parse_func(name: String, parser: &Parser, pos: usize) -> DeclParseResult {
         let (args, pos) = Arg::parse(parser, pos)?;
         if parser.peek(pos, Symbol::Assign) {
-            Declaration::parse_no_guards(name, args, parser, pos + 1)
+            Declaration::parse_func_no_guards(name, args, parser, pos + 1)
         } else {
-            Declaration::parse_guards(name, args, parser, pos)
+            Declaration::parse_func_with_guards(name, args, parser, pos)
         }
     }
 
-    fn parse_no_guards(name: String, args: VecArg, parser: &Parser, pos: usize) -> DeclParseResult {
+    fn parse_func_no_guards(
+        name: String,
+        args: VecArg,
+        parser: &Parser,
+        pos: usize,
+    ) -> DeclParseResult {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
@@ -122,44 +115,17 @@ impl Declaration {
         }
     }
 
-    /*
-       fn args
-          | cond =  expr
-          | cond = expr
-          | otherwise = expr
-
-       fn args
-       | cond =  expr
-       | cond = expr
-       | otherwise = expr
-    */
-    fn parse_guards(name: String, args: VecArg, parser: &Parser, pos: usize) -> DeclParseResult {
-        let (in_indent, mut pos) = parse_opt_indent(parser, pos);
-        let mut guards = vec![];
-        while parser.peek(pos, Symbol::Guard) {
-            let (guard, new_pos) = if parser.peek(pos + 1, Symbol::Otherwise) {
-                (None, pos + 2)
-            } else {
-                let (expr, new_pos) = Expression::parse(parser, pos + 1)?;
-                (Some(Box::new(expr)), new_pos)
-            };
-            if !parser.peek(new_pos, Symbol::Assign) {
-                return Err(Error::new(OguError::ParserError(
-                    ParseError::ExpectingAssignation,
-                )))
-                .context("expecting guard assignation");
-            }
-            let new_pos = parser.skip_nl(new_pos + 1);
-            let (guard_value, new_pos) = Expression::parse(parser, new_pos)?;
-            guards.push(Guard {
-                guard,
-                value: Box::new(guard_value),
-            });
-            pos = parser.skip_nl(new_pos);
-        }
-        let pos = parse_opt_dedent(parser, pos, in_indent)?;
-        let eq = Declaration::FunctionWithGuards(name, args, guards);
-        Ok(Some((eq, pos)))
+    fn parse_func_with_guards(
+        name: String,
+        args: VecArg,
+        parser: &Parser,
+        pos: usize,
+    ) -> DeclParseResult {
+        let (guards, pos) = parse_guards(parser, pos)?;
+        Ok(Some((
+            Declaration::FunctionWithGuards(name, args, guards),
+            pos,
+        )))
     }
 
     fn parse_where(parser: &Parser, pos: usize) -> Result<(Vec<Declaration>, usize)> {
@@ -212,84 +178,6 @@ impl Declaration {
                 pos,
                 sym
             )),
-        }
-    }
-}
-
-impl Arg {
-    fn parse(parser: &Parser, pos: usize) -> Result<(Vec<Arg>, usize)> {
-        let mut result = vec![];
-        let mut pos = pos;
-        while let Some((arg, new_pos)) = Arg::parse_arg(parser, pos)? {
-            result.push(arg);
-            pos = new_pos;
-        }
-        pos = parser.skip_nl(pos);
-        Ok((result, pos))
-    }
-
-    fn parse_arg(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
-        match parser.get_symbol(pos) {
-            None => Ok(None),
-            Some(Symbol::LeftParen) => Arg::parse_tuple(parser, pos),
-            Some(Symbol::Id(id)) => Ok(Some((Arg::SimpleArg(id.to_string()), pos + 1))),
-            Some(Symbol::Assign) => Ok(None),
-            Some(Symbol::NewLine) => Ok(None),
-            s => Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingValidArg,
-            )))
-            .context(format!("{:?} not valid", s)),
-        }
-    }
-
-    fn parse_tuple(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
-        if parser.peek(pos + 1, Symbol::RightParen) {
-            return Ok(Some((Arg::Void, pos + 2)));
-        }
-        let mut args = vec![];
-        let mut pos = pos + 1;
-        match Arg::parse_arg(parser, pos + 1)? {
-            Some((arg, new_pos)) => {
-                args.push(arg);
-                pos = new_pos;
-            }
-            None => {
-                return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
-                    .context("unexpected token");
-            }
-        }
-        while !parser.peek(pos, Symbol::RightParen) {
-            if !parser.peek(pos, Symbol::Comma) {
-                return Err(Error::new(OguError::ParserError(
-                    ParseError::ExpectingComma,
-                )))
-                .context("expecting comma");
-            }
-            match Arg::parse_arg(parser, pos + 1)? {
-                Some((new_arg, new_pos)) => {
-                    pos = new_pos;
-                    args.push(new_arg.clone())
-                }
-                None => {
-                    return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
-                        .context("unexpected token");
-                }
-            }
-        }
-        Ok(Some((Arg::TupleArg(args), pos + 1)))
-    }
-}
-
-pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
-    let pos = parser.skip_nl(pos);
-    if !parser.peek(pos, Symbol::Indent) {
-        None
-    } else {
-        let pos = parser.skip_nl(pos + 1);
-        if parser.peek(pos, Symbol::Where) {
-            Some(pos)
-        } else {
-            None
         }
     }
 }

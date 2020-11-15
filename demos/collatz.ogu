@@ -7,7 +7,8 @@ chain n
 
 
 -- for all starting numbers between 1 and 100, how many chains have a length greater than 15?
-
-num_long_chains = map chain [1..100] |> filter \xs -> (count xs) > 15 |> count
-
-println! num_long_chains
+main () =
+    let
+        num_long_chains = map chain [1..100] |> filter \xs -> (count xs) > 15 |> count
+    in
+        println! num_long_chains

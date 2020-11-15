@@ -1,5 +1,6 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
+use crate::parser::ast::module::body::{parse_opt_dedent, parse_opt_indent, Guard};
 use crate::parser::{ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
@@ -14,6 +15,14 @@ pub enum Expression {
     StringLiteral(String),
     IntegerLiteral(String),
     Unit,
+    EmptyList,
+    ListExpr {
+        exprs: Vec<Expression>,
+    },
+    RangeExpr {
+        start: Vec<Expression>,
+        end: Box<Expression>,
+    },
     PipeFuncCall {
         name: Box<Expression>,
         args: Vec<Expression>,
@@ -134,12 +143,39 @@ pub enum Expression {
         first: Box<Expression>,
         rest: Vec<Expression>,
     },
+    DoExpr(Vec<Expression>),
+    LetExpr(Vec<LetEquation>, Box<Expression>),
 }
 
 #[derive(Debug, Clone)]
 pub enum LambdaArg {
     Simple(String),
     Tupled(Vec<String>),
+}
+
+#[derive(Debug, Clone)]
+pub enum LetArg {
+    Void,
+    SimpleArg(String),
+    TupleArg(Vec<LetArg>),
+}
+
+#[derive(Debug, Clone)]
+pub enum LetEquation {
+    Value {
+        name: String,
+        expr: Expression,
+    },
+    Function {
+        name: String,
+        args: Vec<LetArg>,
+        expr: Expression,
+    },
+    FunctionWithGuards {
+        name: String,
+        args: Vec<LetArg>,
+        guards: Vec<Guard>,
+    },
 }
 
 fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
@@ -321,6 +357,7 @@ impl Expression {
                 ParseError::ExpressionExpected,
             )))
             .context("Expecting an expression but found eof"),
+            Some(Symbol::Do) => Expression::parse_do(parser, pos),
             Some(Symbol::Let) => Expression::parse_let(parser, pos),
             Some(Symbol::For) => Expression::parse_loop(parser, pos),
             Some(Symbol::Loop) => Expression::parse_loop(parser, pos),
@@ -548,9 +585,7 @@ impl Expression {
         match parser.get_symbol(pos + 1) {
             Some(Symbol::RightParen) => Ok((Expression::Unit, pos + 2)),
             Some(sym) => {
-                println!("parse_paren_expr sym = {:?}", sym);
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos + 1)?;
-                println!("parse_paren_expr expr = {:?}, pos = {}", expr, pos);
                 if parser.peek(pos, Symbol::RightParen) {
                     Ok((expr, pos + 1))
                 } else {
@@ -564,8 +599,40 @@ impl Expression {
         }
     }
 
-    fn parse_list_expr(_parser: &Parser, _pos: usize) -> ParseResult {
-        todo!()
+    fn parse_list_expr(parser: &Parser, pos: usize) -> ParseResult {
+        if !parser.peek(pos, Symbol::LeftBracket) {
+            return Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingLeftParenthesis,
+            )));
+        }
+        match parser.get_symbol(pos + 1) {
+            Some(Symbol::RightBracket) => Ok((Expression::EmptyList, pos + 2)),
+            Some(sym) => {
+                let (exprs, pos) = consume_exprs_sep_by(parser, pos + 1, Symbol::Comma)?;
+                if parser.peek(pos, Symbol::RightBracket) {
+                    Ok((Expression::ListExpr { exprs }, pos + 1))
+                } else if parser.peek(pos, Symbol::DotDot) {
+                    let (expr, pos) = Expression::parse(parser, pos + 1)?;
+                    if parser.peek(pos, Symbol::RightBracket) {
+                        println!("RANGE -> {:?} .. {:?}", exprs, expr);
+                        return Ok((
+                            Expression::RangeExpr {
+                                start: exprs,
+                                end: Box::new(expr),
+                            },
+                            pos + 1,
+                        ));
+                    }
+                    todo!()
+                } else {
+                    todo!()
+                }
+            }
+            None => Err(Error::new(OguError::ParserError(
+                ParseError::ExpressionExpected,
+            )))
+            .context("unexpected eof"),
+        }
     }
 
     fn parse_record_expr(_parser: &Parser, _pos: usize) -> ParseResult {
@@ -634,8 +701,118 @@ impl Expression {
         }
     }
 
-    fn parse_let(_parser: &Parser, _pos: usize) -> ParseResult {
-        todo!()
+    fn parse_let(parser: &Parser, pos: usize) -> ParseResult {
+        if !parser.peek(pos, Symbol::Let) {
+            return Err(Error::new(OguError::ParserError(ParseError::ExpectingLet)))
+                .context("expecting let");
+        }
+        let (indent, pos) = parse_opt_indent(parser, pos + 1);
+        let mut equations = vec![];
+        let (equation, pos) = Expression::parse_let_equation(parser, pos)?;
+        equations.push(equation);
+        let mut pos = parser.skip_nl(pos);
+        while !parser.peek(pos, Symbol::Dedent) && !parser.peek(pos, Symbol::In) {
+            let (equation, new_pos) = Expression::parse_let_equation(parser, pos)?;
+            equations.push(equation);
+            pos = parser.skip_nl(new_pos);
+        }
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        let pos = parser.skip_nl(pos);
+        if !parser.peek(pos, Symbol::In) {
+            return Err(Error::new(OguError::ParserError(ParseError::ExpectingIn)))
+                .context("expecting in");
+        }
+        let pos = parser.skip_nl(pos);
+        let (indent, pos) = parse_opt_indent(parser, pos + 1);
+        let (expr, pos) = Expression::parse(parser, pos + 1)?;
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        Ok((Expression::LetExpr(equations, Box::new(expr)), pos))
+    }
+
+    fn parse_let_equation(parser: &Parser, pos: usize) -> Result<(LetEquation, usize)> {
+        if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
+            Expression::parse_let_func_or_val(id, parser, pos)
+        } else {
+            return Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingIdentifier,
+            )));
+        }
+    }
+
+    fn parse_let_func_or_val(
+        id: &str,
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<(LetEquation, usize)> {
+        let name = id.to_string();
+        if parser.peek(pos, Symbol::Assign) {
+            Expression::parse_let_val(name, parser, pos + 1)
+        } else {
+            Expression::parse_let_func(name, parser, pos)
+        }
+    }
+
+    fn parse_let_val(name: String, parser: &Parser, pos: usize) -> Result<(LetEquation, usize)> {
+        // we already parsed a =
+        let pos = parser.skip_nl(pos);
+        let (expr, pos) = Expression::parse(parser, pos)?;
+        Ok((LetEquation::Value { name, expr }, pos))
+    }
+
+    fn parse_let_func(name: String, parser: &Parser, pos: usize) -> Result<(LetEquation, usize)> {
+        let (args, pos) = LetArg::parse(parser, pos)?;
+        if parser.peek(pos, Symbol::Assign) {
+            Expression::parse_let_func_no_guards(name, args, parser, pos + 1)
+        } else {
+            Expression::parse_let_func_guards(name, args, parser, pos)
+        }
+    }
+
+    fn parse_let_func_no_guards(
+        name: String,
+        args: Vec<LetArg>,
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<(LetEquation, usize)> {
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        let (expr, pos) = Expression::parse(parser, pos)?;
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        let eq = LetEquation::Function { name, args, expr };
+        Ok((eq, pos))
+    }
+
+    fn parse_let_func_guards(
+        name: String,
+        args: Vec<LetArg>,
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<(LetEquation, usize)> {
+        let (in_indent, mut pos) = parse_opt_indent(parser, pos);
+        let mut guards = vec![];
+        while parser.peek(pos, Symbol::Guard) {
+            let (guard, new_pos) = if parser.peek(pos + 1, Symbol::Otherwise) {
+                (None, pos + 2)
+            } else {
+                let (expr, new_pos) = Expression::parse(parser, pos + 1)?;
+                (Some(Box::new(expr)), new_pos)
+            };
+            if !parser.peek(new_pos, Symbol::Assign) {
+                return Err(Error::new(OguError::ParserError(
+                    ParseError::ExpectingAssignation,
+                )))
+                .context("expecting guard assignation");
+            }
+            let new_pos = parser.skip_nl(new_pos + 1);
+            let (guard_value, new_pos) = Expression::parse(parser, new_pos)?;
+            guards.push(Guard {
+                guard,
+                value: Box::new(guard_value),
+            });
+            pos = parser.skip_nl(new_pos);
+        }
+        let pos = parse_opt_dedent(parser, pos, in_indent)?;
+        let eq = LetEquation::FunctionWithGuards { name, args, guards };
+        Ok((eq, pos))
     }
 
     fn parse_loop(_parser: &Parser, _pos: usize) -> ParseResult {
@@ -644,6 +821,28 @@ impl Expression {
 
     fn parse_if(_parser: &Parser, _pos: usize) -> ParseResult {
         todo!()
+    }
+
+    fn parse_do(parser: &Parser, pos: usize) -> ParseResult {
+        if !parser.peek(pos, Symbol::Do) {
+            return Err(Error::new(OguError::ParserError(ParseError::ExpectingDo)));
+        }
+        let pos = parser.skip_nl(pos + 1);
+        if !parser.peek(pos, Symbol::Indent) {
+            return Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingIndentation,
+            )));
+        }
+        let mut exprs = vec![];
+        let (expr, mut pos) = Expression::parse(parser, pos + 1)?;
+        exprs.push(expr);
+        while !parser.peek(pos, Symbol::Dedent) {
+            pos = parser.skip_nl(pos);
+            let (expr, new_pos) = Expression::parse(parser, pos)?;
+            pos = new_pos;
+            exprs.push(expr);
+        }
+        Ok((Expression::DoExpr(exprs), pos))
     }
 }
 
@@ -700,11 +899,27 @@ fn parse_right_assoc_expr(
         let mut args = vec![];
         while parser.peek(pos, op) {
             let (expr, new_pos) = next_level(parser, pos + 1)?;
-            pos = new_pos;
             args.push(expr);
+            pos = new_pos;
         }
         build(expr, (args, pos))
     }
+}
+
+fn consume_exprs_sep_by(
+    parser: &Parser,
+    pos: usize,
+    symbol: Symbol,
+) -> Result<(Vec<Expression>, usize)> {
+    let mut result = vec![];
+    let (expr, mut pos) = Expression::parse(parser, pos)?;
+    result.push(expr);
+    while parser.peek(pos, symbol) {
+        let (expr, new_pos) = Expression::parse(parser, pos + 1)?;
+        result.push(expr);
+        pos = new_pos;
+    }
+    Ok((result, pos))
 }
 
 fn consume_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usize)> {
@@ -764,6 +979,7 @@ fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
             | Symbol::Assign
             | Symbol::Dollar
             | Symbol::Comma
+            | Symbol::Cons
             | Symbol::Let
             | Symbol::Do
             | Symbol::Then
@@ -802,5 +1018,69 @@ fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
             | Symbol::Alias => true,
             _ => false,
         },
+    }
+}
+
+impl LetArg {
+    fn parse(parser: &Parser, pos: usize) -> Result<(Vec<LetArg>, usize)> {
+        let mut result = vec![];
+        let mut pos = pos;
+        while let Some((arg, new_pos)) = LetArg::parse_arg(parser, pos)? {
+            result.push(arg);
+            pos = new_pos;
+        }
+        pos = parser.skip_nl(pos);
+        Ok((result, pos))
+    }
+
+    fn parse_arg(parser: &Parser, pos: usize) -> Result<Option<(LetArg, usize)>> {
+        match parser.get_symbol(pos) {
+            None => Ok(None),
+            Some(Symbol::LeftParen) => LetArg::parse_tuple(parser, pos),
+            Some(Symbol::Id(id)) => Ok(Some((LetArg::SimpleArg(id.to_string()), pos + 1))),
+            Some(Symbol::Assign) => Ok(None),
+            Some(Symbol::NewLine) => Ok(None),
+            s => Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingValidArg,
+            )))
+            .context(format!("{:?} not valid", s)),
+        }
+    }
+
+    fn parse_tuple(parser: &Parser, pos: usize) -> Result<Option<(LetArg, usize)>> {
+        if parser.peek(pos + 1, Symbol::RightParen) {
+            return Ok(Some((LetArg::Void, pos + 2)));
+        }
+        let mut args = vec![];
+        let mut pos = pos + 1;
+        match LetArg::parse_arg(parser, pos + 1)? {
+            Some((arg, new_pos)) => {
+                args.push(arg);
+                pos = new_pos;
+            }
+            None => {
+                return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
+                    .context("unexpected token");
+            }
+        }
+        while !parser.peek(pos, Symbol::RightParen) {
+            if !parser.peek(pos, Symbol::Comma) {
+                return Err(Error::new(OguError::ParserError(
+                    ParseError::ExpectingComma,
+                )))
+                .context("expecting comma");
+            }
+            match LetArg::parse_arg(parser, pos + 1)? {
+                Some((new_arg, new_pos)) => {
+                    pos = new_pos;
+                    args.push(new_arg.clone())
+                }
+                None => {
+                    return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
+                        .context("unexpected token");
+                }
+            }
+        }
+        Ok(Some((LetArg::TupleArg(args), pos + 1)))
     }
 }

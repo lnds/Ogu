@@ -15,8 +15,8 @@ type VecArg = Vec<Arg>;
 
 #[derive(Debug, Clone)]
 pub struct Guard {
-    guard: Option<Box<Expression>>, // otherwise
-    value: Box<Expression>,
+    pub guard: Option<Box<Expression>>, // otherwise
+    pub value: Box<Expression>,
 }
 
 pub type Where = Vec<Equation>;
@@ -74,7 +74,7 @@ impl Body {
     }
 
     fn parse_decl(parser: &Parser, pos: usize) -> DeclParseResult {
-        println!("parse decl @ {}", pos);
+        let pos = parser.skip_nl(pos);
         match parser.get_symbol(pos) {
             None => Ok(None),
             Some(Symbol::Id(id)) => Declaration::parse_func_or_val(id, parser, pos + 1),
@@ -92,7 +92,7 @@ impl Body {
 }
 
 impl Declaration {
-    fn parse_func_or_val(id: &str, parser: &Parser, pos: usize) -> DeclParseResult {
+    pub fn parse_func_or_val(id: &str, parser: &Parser, pos: usize) -> DeclParseResult {
         let name = id.to_string();
         if parser.peek(pos, Symbol::Assign) {
             Declaration::parse_val(name, parser, pos + 1)
@@ -149,21 +149,8 @@ impl Declaration {
        | otherwise = expr
     */
     fn parse_guards(name: String, args: VecArg, parser: &Parser, pos: usize) -> DeclParseResult {
-        println!(
-            "parse_guards(name={:?}, args={:?}) pos = {}, sym={:?}",
-            name,
-            args,
-            pos,
-            parser.get_symbol(pos)
-        );
         let (in_indent, mut pos) = parse_opt_indent(parser, pos);
         let mut guards = vec![];
-        println!(
-            "in_indent = {}, pos = {}, sym = {:?}",
-            in_indent,
-            pos,
-            parser.get_symbol(pos)
-        );
         while parser.peek(pos, Symbol::Guard) {
             let (guard, new_pos) = if parser.peek(pos + 1, Symbol::Otherwise) {
                 (None, pos + 2)
@@ -171,12 +158,6 @@ impl Declaration {
                 let (expr, new_pos) = Expression::parse(parser, pos + 1)?;
                 (Some(Box::new(expr)), new_pos)
             };
-            println!(
-                "guard = {:?}, new_pos = {}, sym = {:?}",
-                guard,
-                new_pos,
-                parser.get_symbol(new_pos)
-            );
             if !parser.peek(new_pos, Symbol::Assign) {
                 return Err(Error::new(OguError::ParserError(
                     ParseError::ExpectingAssignation,
@@ -266,7 +247,7 @@ impl Arg {
     }
 }
 
-fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
+pub fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
     let pos = parser.skip_nl(pos);
     if parser.peek(pos, Symbol::Indent) {
         (true, pos + 1)
@@ -275,7 +256,7 @@ fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
     }
 }
 
-fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
+pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
         if !parser.peek(pos, Symbol::Dedent) {

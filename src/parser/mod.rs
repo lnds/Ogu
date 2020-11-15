@@ -24,6 +24,8 @@ pub enum ParseError {
     ExpectingAssignation,
     #[error("Expecting valid arg")]
     ExpectingValidArg,
+    #[error("Expecting indentation")]
+    ExpectingIndentation,
     #[error("Expecting end of indentation")]
     ExpectingIndentationEnd,
     #[error("Expecting ,")]
@@ -40,6 +42,12 @@ pub enum ParseError {
     ExpectingLeftParenthesis,
     #[error("Expecting )")]
     ExpectingRightParenthesis,
+    #[error("Expecting do")]
+    ExpectingDo,
+    #[error("Expecting let")]
+    ExpectingLet,
+    #[error("Expecting in")]
+    ExpectingIn,
 }
 
 pub struct Parser<'a> {

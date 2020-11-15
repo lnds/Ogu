@@ -4,10 +4,10 @@ use crate::parser::ast::module::Module;
 use std::path::PathBuf;
 
 use crate::backend::OguError;
-use anyhow::{Error, Result};
+use anyhow::{Context, Error, Result};
 use thiserror::Error;
 
-mod ast;
+pub mod ast;
 
 #[derive(Error, Debug)]
 pub enum ParseError {
@@ -95,7 +95,7 @@ impl<'a> Parser<'a> {
     }
 }
 
-fn consume_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usize> {
+pub fn consume_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usize> {
     if !parser.peek(pos, symbol) {
         Err(Error::new(OguError::ParserError(
             ParseError::ExpectingSymbol(symbol.to_string()),
@@ -103,4 +103,27 @@ fn consume_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usize> 
     } else {
         Ok(pos + 1)
     }
+}
+
+pub fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
+    let pos = parser.skip_nl(pos);
+    if parser.peek(pos, Symbol::Indent) {
+        (true, pos + 1)
+    } else {
+        (false, pos)
+    }
+}
+
+pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
+    let mut pos = parser.skip_nl(pos);
+    if in_indent {
+        if !parser.peek(pos, Symbol::Dedent) {
+            return Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingIndentationEnd,
+            )))
+            .context("esperando fin de indentación");
+        }
+        pos += 1;
+    }
+    Ok(pos)
 }

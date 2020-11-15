@@ -1,7 +1,7 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
-use crate::parser::ast::expressions::Expression;
-use crate::parser::{consume_symbol, ParseError, Parser};
+use crate::parser::ast::expressions::expression::Expression;
+use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
 #[derive(Debug, Clone)]
@@ -278,29 +278,6 @@ impl Arg {
         }
         Ok(Some((Arg::TupleArg(args), pos + 1)))
     }
-}
-
-pub fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
-    let pos = parser.skip_nl(pos);
-    if parser.peek(pos, Symbol::Indent) {
-        (true, pos + 1)
-    } else {
-        (false, pos)
-    }
-}
-
-pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
-    let mut pos = parser.skip_nl(pos);
-    if in_indent {
-        if !parser.peek(pos, Symbol::Dedent) {
-            return Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingIndentationEnd,
-            )))
-            .context("esperando fin de indentación");
-        }
-        pos += 1;
-    }
-    Ok(pos)
 }
 
 pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {

@@ -1,7 +1,6 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
-use crate::parser::ast::expressions::args::{Arg, VecArg};
-use crate::parser::ast::expressions::guards::{parse_guards, Guard};
+use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::{
     consume_args, consume_exprs_sep_by, consume_ids_sep_by, is_func_call_end_symbol, is_literal,
     left_assoc_expr_to_expr, parse_left_assoc_expr, parse_right_assoc_expr,
@@ -86,14 +85,7 @@ pub type ParseResult = Result<(Expression, usize)>;
 #[derive(Debug, Clone)]
 pub enum LambdaArg {
     Simple(String),
-    Tupled(Vec<String>),
-}
-
-#[derive(Debug, Clone)]
-pub enum Equation {
-    Value(String, Expression),
-    Function(String, Vec<Arg>, Expression),
-    FunctionWithGuards(String, Vec<Arg>, Vec<Guard>),
+    Tuple(Vec<String>),
 }
 
 impl Expression {
@@ -202,7 +194,7 @@ impl Expression {
                         ParseError::ExpectingIdentifier,
                     )))
                 } else {
-                    Ok((LambdaArg::Tupled(ids), pos))
+                    Ok((LambdaArg::Tuple(ids), pos))
                 }
             }
             Some(Symbol::Id(id)) => Ok((LambdaArg::Simple(id.to_string()), pos + 1)),
@@ -501,62 +493,7 @@ impl Expression {
     }
 
     fn parse_let_equation(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
-            Expression::parse_let_func_or_val(id, parser, pos)
-        } else {
-            Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingIdentifier,
-            )))
-        }
-    }
-
-    fn parse_let_func_or_val(id: &str, parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        let name = id.to_string();
-        if parser.peek(pos, Symbol::Assign) {
-            Expression::parse_let_val(name, parser, pos + 1)
-        } else {
-            Expression::parse_let_func(name, parser, pos)
-        }
-    }
-
-    fn parse_let_val(name: String, parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        // we already parsed a =
-        let pos = parser.skip_nl(pos);
-        let (expr, pos) = Expression::parse(parser, pos)?;
-        Ok((Equation::Value(name, expr), pos))
-    }
-
-    fn parse_let_func(name: String, parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        let (args, pos) = Arg::parse(parser, pos)?;
-        if parser.peek(pos, Symbol::Assign) {
-            Expression::parse_let_func_no_guards(name, args, parser, pos + 1)
-        } else {
-            Expression::parse_let_func_guards(name, args, parser, pos)
-        }
-    }
-
-    fn parse_let_func_no_guards(
-        name: String,
-        args: VecArg,
-        parser: &Parser,
-        pos: usize,
-    ) -> Result<(Equation, usize)> {
-        let (indent, pos) = parse_opt_indent(parser, pos);
-        let (expr, pos) = Expression::parse(parser, pos)?;
-        let pos = parse_opt_dedent(parser, pos, indent)?;
-        let eq = Equation::Function(name, args, expr);
-        Ok((eq, pos))
-    }
-
-    fn parse_let_func_guards(
-        name: String,
-        args: VecArg,
-        parser: &Parser,
-        pos: usize,
-    ) -> Result<(Equation, usize)> {
-        let (guards, pos) = parse_guards(parser, pos)?;
-        let eq = Equation::FunctionWithGuards(name, args, guards);
-        Ok((eq, pos))
+        Equation::parse(parser, pos)
     }
 
     fn parse_loop(_parser: &Parser, _pos: usize) -> ParseResult {

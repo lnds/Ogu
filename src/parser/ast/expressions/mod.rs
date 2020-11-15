@@ -1,6 +1,7 @@
 #[macro_use]
 pub mod expression;
 pub mod args;
+pub mod equations;
 pub mod guards;
 
 use crate::backend::OguError;

@@ -17,133 +17,38 @@ pub enum Expression {
     DateLiteral(String),
     Unit,
     EmptyList,
-    ListExpr {
-        exprs: Vec<Expression>,
-    },
-    RangeExpr {
-        start: Vec<Expression>,
-        end: Box<Expression>,
-    },
-    PipeFuncCall {
-        name: Box<Expression>,
-        args: Vec<Expression>,
-    },
-    PipeFirstArgFuncCall {
-        name: Box<Expression>,
-        args: Vec<Expression>,
-    },
-    PipeBackFuncCall {
-        name: Box<Expression>,
-        args: Vec<Expression>,
-    },
-    PipeBackFirstArgFuncCall {
-        name: Box<Expression>,
-        args: Vec<Expression>,
-    },
-    FuncCallWithDollar {
-        name: Box<Expression>,
-        args: Vec<Expression>,
-    },
-    FuncCallExpr {
-        name: Box<Expression>,
-        args: Vec<Expression>,
-    },
-    LambdaExpr {
-        args: Vec<LambdaArg>,
-        expr: Box<Expression>,
-    },
-    MatchesExpr {
-        left: Box<Expression>,
-        right: Box<Expression>,
-    },
-    NoMatchesExpr {
-        left: Box<Expression>,
-        right: Box<Expression>,
-    },
-    ReMatchExpr {
-        left: Box<Expression>,
-        right: Box<Expression>,
-    },
-    ConsExpr {
-        head: Box<Expression>,
-        tail: Vec<Expression>,
-    },
-    PowExpr {
-        base: Box<Expression>,
-        exponents: Vec<Expression>,
-    },
-    DotoCall {
-        name: Box<Expression>,
-        args: Vec<Expression>,
-    },
-    DotoBackCall {
-        name: Box<Expression>,
-        args: Vec<Expression>,
-    },
-    OrExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    AndExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    LeExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    LtExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    GeExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    GtExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    EqExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    NeExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    AddExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    SubExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    MulExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    DivExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    IntDivExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    ModExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    ComposeFwdExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
-    ComposeBckExpr {
-        first: Box<Expression>,
-        rest: Vec<Expression>,
-    },
+    ListExpr(Vec<Expression>),
+    RangeExpr(Vec<Expression>, Box<Expression>),
+    PipeFuncCall(Box<Expression>, Vec<Expression>),
+    PipeFirstArgFuncCall(Box<Expression>, Vec<Expression>),
+    PipeBackFuncCall(Box<Expression>, Vec<Expression>),
+    PipeBackFirstArgFuncCall(Box<Expression>, Vec<Expression>),
+    FuncCallWithDollar(Box<Expression>, Vec<Expression>),
+    FuncCallExpr(Box<Expression>, Vec<Expression>),
+    LambdaExpr(Vec<LambdaArg>, Box<Expression>),
+    MatchesExpr(Box<Expression>, Box<Expression>),
+    NoMatchesExpr(Box<Expression>, Box<Expression>),
+    ReMatchExpr(Box<Expression>, Box<Expression>),
+    ConsExpr(Box<Expression>, Vec<Expression>),
+    PowExpr(Box<Expression>, Vec<Expression>),
+    DotoCall(Box<Expression>, Vec<Expression>),
+    DotoBackCall(Box<Expression>, Vec<Expression>),
+    OrExpr(Box<Expression>, Vec<Expression>),
+    AndExpr(Box<Expression>, Vec<Expression>),
+    LeExpr(Box<Expression>, Vec<Expression>),
+    LtExpr(Box<Expression>, Vec<Expression>),
+    GeExpr(Box<Expression>, Vec<Expression>),
+    GtExpr(Box<Expression>, Vec<Expression>),
+    EqExpr(Box<Expression>, Vec<Expression>),
+    NeExpr(Box<Expression>, Vec<Expression>),
+    AddExpr(Box<Expression>, Vec<Expression>),
+    SubExpr(Box<Expression>, Vec<Expression>),
+    MulExpr(Box<Expression>, Vec<Expression>),
+    DivExpr(Box<Expression>, Vec<Expression>),
+    IntDivExpr(Box<Expression>, Vec<Expression>),
+    ModExpr(Box<Expression>, Vec<Expression>),
+    ComposeFwdExpr(Box<Expression>, Vec<Expression>),
+    ComposeBckExpr(Box<Expression>, Vec<Expression>),
     DoExpr(Vec<Expression>),
     LetExpr(Vec<LetEquation>, Box<Expression>),
 }
@@ -182,76 +87,28 @@ pub enum LetEquation {
 fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
     let LeftAssocExpr(sym, name, args) = la_expr;
     match sym {
-        Symbol::PipeRight => Expression::PipeFuncCall { name, args },
-        Symbol::PipeRightFirstArg => Expression::PipeFirstArgFuncCall { name, args },
-        Symbol::PipeLeft => Expression::PipeBackFuncCall { name, args },
-        Symbol::PipeLeftFirstArg => Expression::PipeBackFirstArgFuncCall { name, args },
-        Symbol::Doto => Expression::DotoCall { name, args },
-        Symbol::DotoBack => Expression::DotoBackCall { name, args },
-        Symbol::Or => Expression::OrExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::And => Expression::AndExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::LessThan => Expression::LtExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::LessThanOrEqual => Expression::LeExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::Greater => Expression::GtExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::GreaterOrEqual => Expression::GeExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::Equal => Expression::EqExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::NotEqual => Expression::NeExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::Plus => Expression::AddExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::Minus => Expression::SubExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::Mult => Expression::MulExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::Div => Expression::DivExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::DivDiv => Expression::IntDivExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::Mod => Expression::ModExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::ComposeForward => Expression::ComposeFwdExpr {
-            first: name,
-            rest: args,
-        },
-        Symbol::ComposeBackward => Expression::ComposeBckExpr {
-            first: name,
-            rest: args,
-        },
+        Symbol::PipeRight => Expression::PipeFuncCall(name, args),
+        Symbol::PipeRightFirstArg => Expression::PipeFirstArgFuncCall(name, args),
+        Symbol::PipeLeft => Expression::PipeBackFuncCall(name, args),
+        Symbol::PipeLeftFirstArg => Expression::PipeBackFirstArgFuncCall(name, args),
+        Symbol::Doto => Expression::DotoCall(name, args),
+        Symbol::DotoBack => Expression::DotoBackCall(name, args),
+        Symbol::Or => Expression::OrExpr(name, args),
+        Symbol::And => Expression::AndExpr(name, args),
+        Symbol::LessThan => Expression::LtExpr(name, args),
+        Symbol::LessThanOrEqual => Expression::LeExpr(name, args),
+        Symbol::Greater => Expression::GtExpr(name, args),
+        Symbol::GreaterOrEqual => Expression::GeExpr(name, args),
+        Symbol::Equal => Expression::EqExpr(name, args),
+        Symbol::NotEqual => Expression::NeExpr(name, args),
+        Symbol::Plus => Expression::AddExpr(name, args),
+        Symbol::Minus => Expression::SubExpr(name, args),
+        Symbol::Mult => Expression::MulExpr(name, args),
+        Symbol::Div => Expression::DivExpr(name, args),
+        Symbol::DivDiv => Expression::IntDivExpr(name, args),
+        Symbol::Mod => Expression::ModExpr(name, args),
+        Symbol::ComposeForward => Expression::ComposeFwdExpr(name, args),
+        Symbol::ComposeBackward => Expression::ComposeBckExpr(name, args),
         _ => Expression::Error,
     }
 }
@@ -259,14 +116,8 @@ fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
 fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Expression {
     let RightAssocExpr(sym, name, args) = ra_expr;
     match sym {
-        Symbol::Cons => Expression::ConsExpr {
-            head: name,
-            tail: args,
-        },
-        Symbol::Pow => Expression::PowExpr {
-            base: name,
-            exponents: args,
-        },
+        Symbol::Cons => Expression::ConsExpr(name, args),
+        Symbol::Pow => Expression::PowExpr(name, args),
         _ => Expression::Error,
     }
 }
@@ -340,13 +191,7 @@ impl Expression {
         let (expr, pos) = Expression::parse_expr(parser, pos)?;
         if parser.peek(pos, Symbol::Dollar) {
             let (args, pos) = consume_args(parser, pos)?;
-            Ok((
-                Expression::FuncCallWithDollar {
-                    name: Box::new(expr),
-                    args: args,
-                },
-                pos,
-            ))
+            Ok((Expression::FuncCallWithDollar(Box::new(expr), args), pos))
         } else {
             Ok((expr, pos))
         }
@@ -381,13 +226,7 @@ impl Expression {
             } else {
                 let pos = parser.skip_nl(pos + 1); // skip arrow
                 let (expr, pos) = Expression::parse_expr(parser, pos)?;
-                Ok((
-                    Expression::LambdaExpr {
-                        args,
-                        expr: Box::new(expr),
-                    },
-                    pos,
-                ))
+                Ok((Expression::LambdaExpr(args, Box::new(expr)), pos))
             }
         }
     }
@@ -479,10 +318,7 @@ impl Expression {
             let pos = parser.skip_nl(pos + 1);
             let (right, pos) = Expression::parse_nomatch_expr(parser, pos)?;
             Ok((
-                Expression::MatchesExpr {
-                    left: Box::new(left),
-                    right: Box::new(right),
-                },
+                Expression::MatchesExpr(Box::new(left), Box::new(right)),
                 pos,
             ))
         }
@@ -496,10 +332,7 @@ impl Expression {
             let pos = parser.skip_nl(pos + 1);
             let (right, pos) = Expression::parse_rematch_expr(parser, pos)?;
             Ok((
-                Expression::NoMatchesExpr {
-                    left: Box::new(left),
-                    right: Box::new(right),
-                },
+                Expression::NoMatchesExpr(Box::new(left), Box::new(right)),
                 pos,
             ))
         }
@@ -513,10 +346,7 @@ impl Expression {
             let pos = parser.skip_nl(pos + 1);
             let (right, pos) = Expression::parse_cons_expr(parser, pos)?;
             Ok((
-                Expression::ReMatchExpr {
-                    left: Box::new(left),
-                    right: Box::new(right),
-                },
+                Expression::ReMatchExpr(Box::new(left), Box::new(right)),
                 pos,
             ))
         }
@@ -611,18 +441,12 @@ impl Expression {
             Some(sym) => {
                 let (exprs, pos) = consume_exprs_sep_by(parser, pos + 1, Symbol::Comma)?;
                 if parser.peek(pos, Symbol::RightBracket) {
-                    Ok((Expression::ListExpr { exprs }, pos + 1))
+                    Ok((Expression::ListExpr(exprs), pos + 1))
                 } else if parser.peek(pos, Symbol::DotDot) {
                     let (expr, pos) = Expression::parse(parser, pos + 1)?;
                     if parser.peek(pos, Symbol::RightBracket) {
                         println!("RANGE -> {:?} .. {:?}", exprs, expr);
-                        return Ok((
-                            Expression::RangeExpr {
-                                start: exprs,
-                                end: Box::new(expr),
-                            },
-                            pos + 1,
-                        ));
+                        return Ok((Expression::RangeExpr(exprs, Box::new(expr)), pos + 1));
                     }
                     todo!()
                 } else {
@@ -669,13 +493,7 @@ impl Expression {
             Ok((expr, pos))
         } else {
             let (args, pos) = Expression::parse_func_call_args(parser, pos)?;
-            Ok((
-                Expression::FuncCallExpr {
-                    name: Box::new(expr),
-                    args,
-                },
-                pos,
-            ))
+            Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
         }
     }
 

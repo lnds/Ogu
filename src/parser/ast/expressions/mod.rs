@@ -5,7 +5,7 @@ use crate::parser::{ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
 struct LeftAssocExpr<'a>(Symbol<'a>, Box<Expression>, Vec<Expression>);
-struct RightAssocExpr<'a>(Symbol<'a>, Box<Expression>, Vec<Expression>);
+struct RightAssocExpr<'a>(Symbol<'a>, Box<Expression>, Box<Expression>);
 
 #[derive(Debug, Clone)]
 pub enum Expression {
@@ -29,8 +29,8 @@ pub enum Expression {
     MatchesExpr(Box<Expression>, Box<Expression>),
     NoMatchesExpr(Box<Expression>, Box<Expression>),
     ReMatchExpr(Box<Expression>, Box<Expression>),
-    ConsExpr(Box<Expression>, Vec<Expression>),
-    PowExpr(Box<Expression>, Vec<Expression>),
+    ConsExpr(Box<Expression>, Box<Expression>),
+    PowExpr(Box<Expression>, Box<Expression>),
     DotoCall(Box<Expression>, Vec<Expression>),
     DotoBackCall(Box<Expression>, Vec<Expression>),
     OrExpr(Box<Expression>, Vec<Expression>),
@@ -114,10 +114,10 @@ fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
 }
 
 fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Expression {
-    let RightAssocExpr(sym, name, args) = ra_expr;
+    let RightAssocExpr(sym, left, right) = ra_expr;
     match sym {
-        Symbol::Cons => Expression::ConsExpr(name, args),
-        Symbol::Pow => Expression::PowExpr(name, args),
+        Symbol::Cons => Expression::ConsExpr(left, right),
+        Symbol::Pow => Expression::PowExpr(left, right),
         _ => Expression::Error,
     }
 }
@@ -138,9 +138,9 @@ macro_rules! parse_left_assoc {
 macro_rules! parse_right_assoc {
     ($func_name:ident, $op:expr, $next_level: expr) => {
         fn $func_name(parser: &Parser, pos: usize) -> ParseResult {
-            parse_right_assoc_expr(parser, pos, $op, $next_level, |name, (args, pos)| {
-                let ra_expr = RightAssocExpr($op, Box::new(name), args);
-                Ok((right_assoc_expr_to_expr(ra_expr), pos))
+            parse_right_assoc_expr(parser, pos, $op, $next_level, |base_expr, expr| {
+                let ra_expr = RightAssocExpr($op, Box::new(base_expr), Box::new(expr));
+                right_assoc_expr_to_expr(ra_expr)
             })
         }
     };
@@ -709,20 +709,29 @@ fn parse_right_assoc_expr(
     pos: usize,
     op: Symbol,
     next_level: fn(&Parser, usize) -> ParseResult,
-    build: fn(Expression, (Vec<Expression>, usize)) -> ParseResult,
-) -> Result<(Expression, usize)> {
+    build: fn(Expression, Expression) -> Expression,
+) -> ParseResult {
     let (expr, pos) = next_level(parser, pos)?;
     if !parser.peek(pos, op) {
         Ok((expr, pos))
     } else {
-        let mut pos = pos;
-        let mut args = vec![];
-        while parser.peek(pos, op) {
-            let (expr, new_pos) = next_level(parser, pos + 1)?;
-            args.push(expr);
-            pos = new_pos;
-        }
-        build(expr, (args, pos))
+        consume_right_args(parser, pos, op, next_level, expr, build)
+    }
+}
+
+fn consume_right_args(
+    parser: &Parser,
+    pos: usize,
+    op: Symbol,
+    next_level: fn(&Parser, usize) -> ParseResult,
+    base_expr: Expression,
+    build: fn(Expression, Expression) -> Expression,
+) -> ParseResult {
+    if !parser.peek(pos, op) {
+        Ok((base_expr, pos))
+    } else {
+        let (expr, pos) = parse_right_assoc_expr(parser, pos + 1, op, next_level, build)?;
+        consume_right_args(parser, pos, op, next_level, build(base_expr, expr), build)
     }
 }
 

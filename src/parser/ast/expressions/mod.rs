@@ -4,7 +4,8 @@ use crate::parser::ast::module::body::{parse_opt_dedent, parse_opt_indent, Guard
 use crate::parser::{ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
-struct LeftAssocExpr<'a>(Symbol<'a>, Box<Expression>, Vec<Expression>);
+struct LeftAssocExpr<'a>(Symbol<'a>, Box<Expression>, Box<Expression>);
+
 struct RightAssocExpr<'a>(Symbol<'a>, Box<Expression>, Box<Expression>);
 
 #[derive(Debug, Clone)]
@@ -19,10 +20,10 @@ pub enum Expression {
     EmptyList,
     ListExpr(Vec<Expression>),
     RangeExpr(Vec<Expression>, Box<Expression>),
-    PipeFuncCall(Box<Expression>, Vec<Expression>),
-    PipeFirstArgFuncCall(Box<Expression>, Vec<Expression>),
-    PipeBackFuncCall(Box<Expression>, Vec<Expression>),
-    PipeBackFirstArgFuncCall(Box<Expression>, Vec<Expression>),
+    PipeFuncCall(Box<Expression>, Box<Expression>),
+    PipeFirstArgFuncCall(Box<Expression>, Box<Expression>),
+    PipeBackFuncCall(Box<Expression>, Box<Expression>),
+    PipeBackFirstArgFuncCall(Box<Expression>, Box<Expression>),
     FuncCallWithDollar(Box<Expression>, Vec<Expression>),
     FuncCallExpr(Box<Expression>, Vec<Expression>),
     LambdaExpr(Vec<LambdaArg>, Box<Expression>),
@@ -31,24 +32,24 @@ pub enum Expression {
     ReMatchExpr(Box<Expression>, Box<Expression>),
     ConsExpr(Box<Expression>, Box<Expression>),
     PowExpr(Box<Expression>, Box<Expression>),
-    DotoCall(Box<Expression>, Vec<Expression>),
-    DotoBackCall(Box<Expression>, Vec<Expression>),
-    OrExpr(Box<Expression>, Vec<Expression>),
-    AndExpr(Box<Expression>, Vec<Expression>),
-    LeExpr(Box<Expression>, Vec<Expression>),
-    LtExpr(Box<Expression>, Vec<Expression>),
-    GeExpr(Box<Expression>, Vec<Expression>),
-    GtExpr(Box<Expression>, Vec<Expression>),
-    EqExpr(Box<Expression>, Vec<Expression>),
-    NeExpr(Box<Expression>, Vec<Expression>),
-    AddExpr(Box<Expression>, Vec<Expression>),
-    SubExpr(Box<Expression>, Vec<Expression>),
-    MulExpr(Box<Expression>, Vec<Expression>),
-    DivExpr(Box<Expression>, Vec<Expression>),
-    IntDivExpr(Box<Expression>, Vec<Expression>),
-    ModExpr(Box<Expression>, Vec<Expression>),
-    ComposeFwdExpr(Box<Expression>, Vec<Expression>),
-    ComposeBckExpr(Box<Expression>, Vec<Expression>),
+    DotoCall(Box<Expression>, Box<Expression>),
+    DotoBackCall(Box<Expression>, Box<Expression>),
+    OrExpr(Box<Expression>, Box<Expression>),
+    AndExpr(Box<Expression>, Box<Expression>),
+    LeExpr(Box<Expression>, Box<Expression>),
+    LtExpr(Box<Expression>, Box<Expression>),
+    GeExpr(Box<Expression>, Box<Expression>),
+    GtExpr(Box<Expression>, Box<Expression>),
+    EqExpr(Box<Expression>, Box<Expression>),
+    NeExpr(Box<Expression>, Box<Expression>),
+    AddExpr(Box<Expression>, Box<Expression>),
+    SubExpr(Box<Expression>, Box<Expression>),
+    MulExpr(Box<Expression>, Box<Expression>),
+    DivExpr(Box<Expression>, Box<Expression>),
+    IntDivExpr(Box<Expression>, Box<Expression>),
+    ModExpr(Box<Expression>, Box<Expression>),
+    ComposeFwdExpr(Box<Expression>, Box<Expression>),
+    ComposeBckExpr(Box<Expression>, Box<Expression>),
     DoExpr(Vec<Expression>),
     LetExpr(Vec<LetEquation>, Box<Expression>),
 }
@@ -85,31 +86,31 @@ pub enum LetEquation {
 }
 
 fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
-    let LeftAssocExpr(sym, name, args) = la_expr;
+    let LeftAssocExpr(sym, left, right) = la_expr;
     match sym {
-        Symbol::PipeRight => Expression::PipeFuncCall(name, args),
-        Symbol::PipeRightFirstArg => Expression::PipeFirstArgFuncCall(name, args),
-        Symbol::PipeLeft => Expression::PipeBackFuncCall(name, args),
-        Symbol::PipeLeftFirstArg => Expression::PipeBackFirstArgFuncCall(name, args),
-        Symbol::Doto => Expression::DotoCall(name, args),
-        Symbol::DotoBack => Expression::DotoBackCall(name, args),
-        Symbol::Or => Expression::OrExpr(name, args),
-        Symbol::And => Expression::AndExpr(name, args),
-        Symbol::LessThan => Expression::LtExpr(name, args),
-        Symbol::LessThanOrEqual => Expression::LeExpr(name, args),
-        Symbol::Greater => Expression::GtExpr(name, args),
-        Symbol::GreaterOrEqual => Expression::GeExpr(name, args),
-        Symbol::Equal => Expression::EqExpr(name, args),
-        Symbol::NotEqual => Expression::NeExpr(name, args),
-        Symbol::Plus => Expression::AddExpr(name, args),
-        Symbol::Minus => Expression::SubExpr(name, args),
-        Symbol::Mult => Expression::MulExpr(name, args),
-        Symbol::Div => Expression::DivExpr(name, args),
-        Symbol::DivDiv => Expression::IntDivExpr(name, args),
-        Symbol::Mod => Expression::ModExpr(name, args),
-        Symbol::ComposeForward => Expression::ComposeFwdExpr(name, args),
-        Symbol::ComposeBackward => Expression::ComposeBckExpr(name, args),
-        _ => Expression::Error,
+        Symbol::PipeRight => Expression::PipeFuncCall(left, right),
+        Symbol::PipeRightFirstArg => Expression::PipeFirstArgFuncCall(left, right),
+        Symbol::PipeLeft => Expression::PipeBackFuncCall(left, right),
+        Symbol::PipeLeftFirstArg => Expression::PipeBackFirstArgFuncCall(left, right),
+        Symbol::Doto => Expression::DotoCall(left, right),
+        Symbol::DotoBack => Expression::DotoBackCall(left, right),
+        Symbol::Or => Expression::OrExpr(left, right),
+        Symbol::And => Expression::AndExpr(left, right),
+        Symbol::LessThan => Expression::LtExpr(left, right),
+        Symbol::LessThanOrEqual => Expression::LeExpr(left, right),
+        Symbol::Greater => Expression::GtExpr(left, right),
+        Symbol::GreaterOrEqual => Expression::GeExpr(left, right),
+        Symbol::Equal => Expression::EqExpr(left, right),
+        Symbol::NotEqual => Expression::NeExpr(left, right),
+        Symbol::Plus => Expression::AddExpr(left, right),
+        Symbol::Minus => Expression::SubExpr(left, right),
+        Symbol::Mult => Expression::MulExpr(left, right),
+        Symbol::Div => Expression::DivExpr(left, right),
+        Symbol::DivDiv => Expression::IntDivExpr(left, right),
+        Symbol::Mod => Expression::ModExpr(left, right),
+        Symbol::ComposeForward => Expression::ComposeFwdExpr(left, right),
+        Symbol::ComposeBackward => Expression::ComposeBckExpr(left, right),
+        _ => todo!(),
     }
 }
 
@@ -127,9 +128,9 @@ type ParseResult = Result<(Expression, usize)>;
 macro_rules! parse_left_assoc {
     ($func_name:ident, $op:expr, $next_level: expr) => {
         fn $func_name(parser: &Parser, pos: usize) -> ParseResult {
-            parse_left_assoc_expr(parser, pos, $op, $next_level, |name, (args, pos)| {
-                let la_expr = LeftAssocExpr($op, Box::new(name), args);
-                Ok((left_assoc_expr_to_expr(la_expr), pos))
+            parse_left_assoc_expr(parser, pos, $op, $next_level, |left, right| {
+                let la_expr = LeftAssocExpr($op, Box::new(left), Box::new(right));
+                left_assoc_expr_to_expr(la_expr)
             })
         }
     };
@@ -666,18 +667,35 @@ impl Expression {
     }
 }
 
+// 1 + 2 + 3 => (1 + 2) + 3
 fn parse_left_assoc_expr(
     parser: &Parser,
     pos: usize,
     op: Symbol,
     next_level: fn(&Parser, usize) -> ParseResult,
-    build: fn(Expression, (Vec<Expression>, usize)) -> ParseResult,
+    build: fn(Expression, Expression) -> Expression,
 ) -> Result<(Expression, usize)> {
     let (expr, pos) = next_level(parser, pos)?;
     if !parser.peek(pos, op) {
         Ok((expr, pos))
     } else {
-        build(expr, consume_op_args(parser, pos, op, next_level)?)
+        consume_left_args(parser, pos, op, next_level, expr, build)
+    }
+}
+
+fn consume_left_args(
+    parser: &Parser,
+    pos: usize,
+    op: Symbol,
+    next_level: fn(&Parser, usize) -> ParseResult,
+    left_expr: Expression,
+    build: fn(Expression, Expression) -> Expression,
+) -> ParseResult {
+    if !parser.peek(pos, op) {
+        Ok((left_expr, pos))
+    } else {
+        let (expr, pos) = next_level(parser, parser.skip_nl(pos + 1))?;
+        consume_left_args(parser, pos, op, next_level, build(left_expr, expr), build)
     }
 }
 
@@ -704,6 +722,7 @@ fn consume_op_args(
     }
 }
 
+// 1 ^ 2 ^ 3 => 1 ^ (2 ^ 3)
 fn parse_right_assoc_expr(
     parser: &Parser,
     pos: usize,

@@ -132,7 +132,7 @@ impl Expression {
     fn parse_dollar_func_call_expr(parser: &Parser, pos: usize) -> ParseResult {
         let (expr, pos) = Expression::parse_expr(parser, pos)?;
         if parser.peek(pos, Symbol::Dollar) {
-            let (args, pos) = consume_args(parser, pos)?;
+            let (args, pos) = consume_args(parser, pos + 1)?;
             Ok((Expression::FuncCallWithDollar(Box::new(expr), args), pos))
         } else {
             Ok((expr, pos))
@@ -156,7 +156,7 @@ impl Expression {
         }
     }
 
-    fn parse_lambda_expr(parser: &Parser, pos: usize) -> ParseResult {
+    pub fn parse_lambda_expr(parser: &Parser, pos: usize) -> ParseResult {
         if !parser.peek(pos, Symbol::Lambda) {
             Expression::parse_logical_expr(parser, pos)
         } else {
@@ -362,6 +362,12 @@ impl Expression {
                 if parser.peek(pos, Symbol::RightParen) {
                     Ok((expr, pos + 1))
                 } else {
+                    println!(
+                        "expr = {:?} @={}, next={:?}",
+                        expr,
+                        pos,
+                        parser.get_symbol(pos)
+                    );
                     todo!()
                 }
             }
@@ -457,8 +463,12 @@ impl Expression {
             Some(Symbol::Id(id)) => Ok((Expression::Identifier(id.to_string()), pos + 1)),
             Some(Symbol::Key(atom)) => Ok((Expression::Atom(atom.to_string()), pos + 1)),
             sym if is_func_call_end_symbol(sym) => {
-                Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
-                    .context(format!("invalid symbol: {:?}", sym))
+                Err(Error::new(OguError::ParserError(ParseError::InvalidArg))).context(format!(
+                    "invalid symbol: {:?} @{:?}:{}",
+                    sym,
+                    parser.pos_to_line(pos),
+                    pos
+                ))
             }
             _ => Expression::parse_dollar_func_call_expr(parser, pos),
         }
@@ -505,24 +515,20 @@ impl Expression {
     }
 
     fn parse_do(parser: &Parser, pos: usize) -> ParseResult {
-        if !parser.peek(pos, Symbol::Do) {
-            return Err(Error::new(OguError::ParserError(ParseError::ExpectingDo)));
-        }
-        let pos = parser.skip_nl(pos + 1);
-        if !parser.peek(pos, Symbol::Indent) {
-            return Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingIndentation,
-            )));
-        }
+        let pos = consume_symbol(parser, pos, Symbol::Do)?;
+        let pos = parser.skip_nl(pos);
+        let pos = consume_symbol(parser, pos, Symbol::Indent)?;
         let mut exprs = vec![];
-        let (expr, mut pos) = Expression::parse(parser, pos + 1)?;
+        let pos = parser.skip_nl(pos);
+        let (expr, pos) = Expression::parse(parser, pos)?;
+        let mut pos = parser.skip_nl(pos);
         exprs.push(expr);
         while !parser.peek(pos, Symbol::Dedent) {
-            pos = parser.skip_nl(pos);
             let (expr, new_pos) = Expression::parse(parser, pos)?;
-            pos = new_pos;
+            pos = parser.skip_nl(new_pos);
             exprs.push(expr);
         }
+        let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
         Ok((Expression::DoExpr(exprs), pos))
     }
 }

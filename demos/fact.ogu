@@ -14,14 +14,14 @@ funny a 1 = 4 * a + 2
 funny a b = 4 * a +  2 * b
 
 
-println! $ funny 0 0
-println! $ funny 0 1
-println! $ funny 1 0
-println! $ funny 2 2
+main () =
+    do
+        println! $ funny 0 0
+        println! $ funny 0 1
+        println! $ funny 1 0
+        println! $ funny 2 2
 
 
-println! $ test 4
+        println! $ test 4
 
-println! $ test 3 4
-
-
+        println! $ test 3 4

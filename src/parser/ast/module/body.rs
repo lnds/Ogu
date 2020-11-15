@@ -1,20 +1,20 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
-use crate::parser::ast::expressions::args::{Arg, VecArg};
+use crate::parser::ast::expressions::args::Arg;
+use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::guards::{parse_guards, Guard};
-use crate::parser::{
-    consume_symbol, look_ahead_where, parse_opt_dedent, parse_opt_indent, ParseError, Parser,
-};
+use crate::parser::ast::expressions::guards::Guard;
+use crate::parser::{consume_symbol, look_ahead_where, ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
 #[derive(Debug)]
 pub enum Declaration {
     Value(String, Expression),
-    ValueWithWhere(String, Expression, Vec<Declaration>),
+    ValueWithWhere(String, Expression, Vec<Equation>),
     Function(String, Vec<Arg>, Expression),
-    FunctionWithWhere(String, Vec<Arg>, Expression, Vec<Declaration>),
+    FunctionWithWhere(String, Vec<Arg>, Expression, Vec<Equation>),
     FunctionWithGuards(String, Vec<Arg>, Vec<Guard>),
+    FunctionWithGuardsAndWhere(String, Vec<Arg>, Vec<Guard>, Vec<Equation>),
     // TypeDecl, // TODO
 }
 
@@ -47,7 +47,7 @@ impl Body {
         let pos = parser.skip_nl(pos);
         match parser.get_symbol(pos) {
             None => Ok(None),
-            Some(Symbol::Id(id)) => Declaration::parse_func_or_val(id, parser, pos + 1),
+            Some(Symbol::Id(_)) => Declaration::parse_func_or_val(parser, pos),
             sym => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingDeclaration,
             )))
@@ -62,73 +62,49 @@ impl Body {
 }
 
 impl Declaration {
-    pub fn parse_func_or_val(id: &str, parser: &Parser, pos: usize) -> DeclParseResult {
-        let name = id.to_string();
-        if parser.peek(pos, Symbol::Assign) {
-            Declaration::parse_val(name, parser, pos + 1)
-        } else {
-            Declaration::parse_func(name, parser, pos)
+    pub fn parse_func_or_val(parser: &Parser, pos: usize) -> DeclParseResult {
+        let (eq, pos) = Equation::parse(parser, pos)?;
+        match eq {
+            Equation::Value(name, expr) => {
+                if let Some(where_pos) = look_ahead_where(parser, pos) {
+                    let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+                    Ok(Some((
+                        Declaration::ValueWithWhere(name, expr, where_decl),
+                        pos,
+                    )))
+                } else {
+                    Ok(Some((Declaration::Value(name, expr), pos)))
+                }
+            }
+            Equation::Function(name, args, expr) => {
+                if let Some(where_pos) = look_ahead_where(parser, pos) {
+                    let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+                    Ok(Some((
+                        Declaration::FunctionWithWhere(name, args, expr, where_decl),
+                        pos,
+                    )))
+                } else {
+                    Ok(Some((Declaration::Function(name, args, expr), pos)))
+                }
+            }
+            Equation::FunctionWithGuards(name, args, guards) => {
+                if let Some(where_pos) = look_ahead_where(parser, pos) {
+                    let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+                    Ok(Some((
+                        Declaration::FunctionWithGuardsAndWhere(name, args, guards, where_decl),
+                        pos,
+                    )))
+                } else {
+                    Ok(Some((
+                        Declaration::FunctionWithGuards(name, args, guards),
+                        pos,
+                    )))
+                }
+            }
         }
     }
 
-    fn parse_val(name: String, parser: &Parser, pos: usize) -> DeclParseResult {
-        // we already parsed a =
-        let pos = parser.skip_nl(pos);
-        let (expr, pos) = Expression::parse(parser, pos)?;
-        if let Some(where_pos) = look_ahead_where(parser, pos) {
-            let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
-            Ok(Some((
-                Declaration::ValueWithWhere(name, expr, where_decl),
-                pos,
-            )))
-        } else {
-            Ok(Some((Declaration::Value(name, expr), pos)))
-        }
-    }
-
-    fn parse_func(name: String, parser: &Parser, pos: usize) -> DeclParseResult {
-        let (args, pos) = Arg::parse(parser, pos)?;
-        if parser.peek(pos, Symbol::Assign) {
-            Declaration::parse_func_no_guards(name, args, parser, pos + 1)
-        } else {
-            Declaration::parse_func_with_guards(name, args, parser, pos)
-        }
-    }
-
-    fn parse_func_no_guards(
-        name: String,
-        args: VecArg,
-        parser: &Parser,
-        pos: usize,
-    ) -> DeclParseResult {
-        let (indent, pos) = parse_opt_indent(parser, pos);
-        let (expr, pos) = Expression::parse(parser, pos)?;
-        let pos = parse_opt_dedent(parser, pos, indent)?;
-        if let Some(where_pos) = look_ahead_where(parser, pos) {
-            let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
-            Ok(Some((
-                Declaration::FunctionWithWhere(name, args, expr, where_decl),
-                pos,
-            )))
-        } else {
-            Ok(Some((Declaration::Function(name, args, expr), pos)))
-        }
-    }
-
-    fn parse_func_with_guards(
-        name: String,
-        args: VecArg,
-        parser: &Parser,
-        pos: usize,
-    ) -> DeclParseResult {
-        let (guards, pos) = parse_guards(parser, pos)?;
-        Ok(Some((
-            Declaration::FunctionWithGuards(name, args, guards),
-            pos,
-        )))
-    }
-
-    fn parse_where(parser: &Parser, pos: usize) -> Result<(Vec<Declaration>, usize)> {
+    fn parse_where(parser: &Parser, pos: usize) -> Result<(Vec<Equation>, usize)> {
         if !parser.peek(pos, Symbol::Where) {
             return Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingWhere,
@@ -140,44 +116,10 @@ impl Declaration {
             todo!()
         } else {
             // allows a single inline decl
-            println!("expecting decl..");
-            let (decl, pos) = Declaration::parse_where_func_or_val(parser, pos)?;
-            println!(
-                "parsed decl {:?} @ {} next_sym = {:?}",
-                decl,
-                pos,
-                parser.get_symbol(pos)
-            );
-
+            let (eq, pos) = Equation::parse(parser, pos)?;
             let pos = parser.skip_nl(pos);
             let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
-            Ok((vec![decl], pos))
-        }
-    }
-
-    fn parse_where_func_or_val(parser: &Parser, pos: usize) -> Result<(Declaration, usize)> {
-        match parser.get_symbol(pos) {
-            None => Err(Error::new(OguError::ParserError(ParseError::EofUnexpected))),
-            Some(Symbol::Id(id)) => match Declaration::parse_func_or_val(id, parser, pos + 1)? {
-                None => Err(Error::new(OguError::ParserError(
-                    ParseError::ExpectingDeclaration,
-                )))
-                .context(format!(
-                    "Expecting declaration at {}, @{}",
-                    parser.pos_to_line(pos).unwrap_or(0),
-                    pos
-                )),
-                Some(result) => Ok(result),
-            },
-            sym => Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingDeclaration,
-            )))
-            .context(format!(
-                "Expecting declaration at {}, @{}, found: {:?}",
-                parser.pos_to_line(pos).unwrap_or(0),
-                pos,
-                sym
-            )),
+            Ok((vec![eq], pos))
         }
     }
 }

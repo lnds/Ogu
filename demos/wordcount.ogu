@@ -12,4 +12,3 @@ main (x :: xs) =
         in
           println! "file" x "words: " (rdr |> line-seq |> map count-words |> sum)
 
-main **args**

@@ -1,5 +1,6 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
+use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::{ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
@@ -8,6 +9,7 @@ pub enum Arg {
     Void,
     SimpleArg(String),
     TupleArg(Vec<Arg>),
+    ExprArg(Box<Expression>),
 }
 
 pub type VecArg = Vec<Arg>;
@@ -31,10 +33,10 @@ impl Arg {
             Some(Symbol::Id(id)) => Ok(Some((Arg::SimpleArg(id.to_string()), pos + 1))),
             Some(Symbol::Assign) => Ok(None),
             Some(Symbol::NewLine) => Ok(None),
-            s => Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingValidArg,
-            )))
-            .context(format!("{:?} not valid", s)),
+            _ => {
+                let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
+                Ok(Some((Arg::ExprArg(Box::new(expr)), pos)))
+            }
         }
     }
 

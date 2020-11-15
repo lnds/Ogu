@@ -6,5 +6,6 @@ prime-factors f n
   | factor-of? f n = lazy f :: prime-factors f (n / f)
   | otherwise = prime-factors (f + 1) n
 
-prime-factors 2 600851475143 |> last |> println!
+main () =
+    prime-factors 2 600851475143 |> last |> println!
 

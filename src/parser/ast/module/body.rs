@@ -1,7 +1,7 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::Expression;
-use crate::parser::{ParseError, Parser};
+use crate::parser::{consume_symbol, ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
 #[derive(Debug, Clone)]
@@ -15,36 +15,18 @@ type VecArg = Vec<Arg>;
 
 #[derive(Debug, Clone)]
 pub struct Guard {
-    pub guard: Option<Box<Expression>>, // otherwise
+    pub guard: Option<Box<Expression>>,
+    // otherwise
     pub value: Box<Expression>,
-}
-
-pub type Where = Vec<Equation>;
-
-#[derive(Debug)]
-pub enum Equation {
-    Value {
-        name: String,
-        expr: Expression,
-        wheres: Option<Where>,
-    },
-    Function {
-        name: String,
-        args: Vec<Arg>,
-        expr: Expression,
-        wheres: Option<Where>,
-    },
-    FunctionWithGuards {
-        name: String,
-        args: Vec<Arg>,
-        guards: Vec<Guard>,
-        wheres: Option<Where>,
-    },
 }
 
 #[derive(Debug)]
 pub enum Declaration {
-    FuncOrVal(Equation),
+    Value(String, Expression),
+    ValueWithWhere(String, Expression, Vec<Declaration>),
+    Function(String, Vec<Arg>, Expression),
+    FunctionWithWhere(String, Vec<Arg>, Expression, Vec<Declaration>),
+    FunctionWithGuards(String, Vec<Arg>, Vec<Guard>),
     // TypeDecl, // TODO
 }
 
@@ -105,14 +87,15 @@ impl Declaration {
         // we already parsed a =
         let pos = parser.skip_nl(pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
-        Ok(Some((
-            Declaration::FuncOrVal(Equation::Value {
-                name,
-                expr,
-                wheres: None,
-            }),
-            pos,
-        )))
+        if let Some(where_pos) = look_ahead_where(parser, pos) {
+            let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+            Ok(Some((
+                Declaration::ValueWithWhere(name, expr, where_decl),
+                pos,
+            )))
+        } else {
+            Ok(Some((Declaration::Value(name, expr), pos)))
+        }
     }
 
     fn parse_func(name: String, parser: &Parser, pos: usize) -> DeclParseResult {
@@ -128,13 +111,15 @@ impl Declaration {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
-        let eq = Equation::Function {
-            name,
-            args,
-            expr,
-            wheres: None,
-        };
-        Ok(Some((Declaration::FuncOrVal(eq), pos)))
+        if let Some(where_pos) = look_ahead_where(parser, pos) {
+            let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+            Ok(Some((
+                Declaration::FunctionWithWhere(name, args, expr, where_decl),
+                pos,
+            )))
+        } else {
+            Ok(Some((Declaration::Function(name, args, expr), pos)))
+        }
     }
 
     /*
@@ -173,13 +158,61 @@ impl Declaration {
             pos = parser.skip_nl(new_pos);
         }
         let pos = parse_opt_dedent(parser, pos, in_indent)?;
-        let eq = Equation::FunctionWithGuards {
-            name,
-            args,
-            guards,
-            wheres: None,
-        };
-        Ok(Some((Declaration::FuncOrVal(eq), pos)))
+        let eq = Declaration::FunctionWithGuards(name, args, guards);
+        Ok(Some((eq, pos)))
+    }
+
+    fn parse_where(parser: &Parser, pos: usize) -> Result<(Vec<Declaration>, usize)> {
+        if !parser.peek(pos, Symbol::Where) {
+            return Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingWhere,
+            )))
+            .context("expecting where");
+        }
+        let pos = parser.skip_nl(pos + 1);
+        if parser.peek(pos, Symbol::Indent) {
+            todo!()
+        } else {
+            // allows a single inline decl
+            println!("expecting decl..");
+            let (decl, pos) = Declaration::parse_where_func_or_val(parser, pos)?;
+            println!(
+                "parsed decl {:?} @ {} next_sym = {:?}",
+                decl,
+                pos,
+                parser.get_symbol(pos)
+            );
+
+            let pos = parser.skip_nl(pos);
+            let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+            Ok((vec![decl], pos))
+        }
+    }
+
+    fn parse_where_func_or_val(parser: &Parser, pos: usize) -> Result<(Declaration, usize)> {
+        match parser.get_symbol(pos) {
+            None => Err(Error::new(OguError::ParserError(ParseError::EofUnexpected))),
+            Some(Symbol::Id(id)) => match Declaration::parse_func_or_val(id, parser, pos + 1)? {
+                None => Err(Error::new(OguError::ParserError(
+                    ParseError::ExpectingDeclaration,
+                )))
+                .context(format!(
+                    "Expecting declaration at {}, @{}",
+                    parser.pos_to_line(pos).unwrap_or(0),
+                    pos
+                )),
+                Some(result) => Ok(result),
+            },
+            sym => Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingDeclaration,
+            )))
+            .context(format!(
+                "Expecting declaration at {}, @{}, found: {:?}",
+                parser.pos_to_line(pos).unwrap_or(0),
+                pos,
+                sym
+            )),
+        }
     }
 }
 
@@ -268,4 +301,18 @@ pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<
         pos += 1;
     }
     Ok(pos)
+}
+
+pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
+    let pos = parser.skip_nl(pos);
+    if !parser.peek(pos, Symbol::Indent) {
+        None
+    } else {
+        let pos = parser.skip_nl(pos + 1);
+        if parser.peek(pos, Symbol::Where) {
+            Some(pos)
+        } else {
+            None
+        }
+    }
 }

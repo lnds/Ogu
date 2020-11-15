@@ -1,7 +1,7 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::module::body::{parse_opt_dedent, parse_opt_indent, Guard};
-use crate::parser::{ParseError, Parser};
+use crate::parser::{consume_symbol, ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
 struct LeftAssocExpr<'a>(Symbol<'a>, Box<Expression>, Box<Expression>);
@@ -18,6 +18,7 @@ pub enum Expression {
     DateLiteral(String),
     Unit,
     EmptyList,
+    LazyExpr(Box<Expression>),
     ListExpr(Vec<Expression>),
     RangeExpr(Vec<Expression>, Box<Expression>),
     PipeFuncCall(Box<Expression>, Box<Expression>),
@@ -468,8 +469,10 @@ impl Expression {
         todo!()
     }
 
-    fn parse_lazy_expr(_parser: &Parser, _pos: usize) -> ParseResult {
-        todo!()
+    fn parse_lazy_expr(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Lazy)?;
+        let (expr, pos) = Expression::parse(parser, pos)?;
+        Ok((Expression::LazyExpr(Box::new(expr)), pos))
     }
 
     fn parse_literal_expr(parser: &Parser, pos: usize) -> ParseResult {

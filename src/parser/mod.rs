@@ -3,7 +3,8 @@ use crate::lexer::tokens::{LineNumber, Symbol, Token};
 use crate::parser::ast::module::Module;
 use std::path::PathBuf;
 
-use anyhow::Result;
+use crate::backend::OguError;
+use anyhow::{Error, Result};
 use thiserror::Error;
 
 mod ast;
@@ -48,6 +49,10 @@ pub enum ParseError {
     ExpectingLet,
     #[error("Expecting in")]
     ExpectingIn,
+    #[error("Expecting where")]
+    ExpectingWhere,
+    #[error("EOF unexpected")]
+    EofUnexpected,
 }
 
 pub struct Parser<'a> {
@@ -87,5 +92,15 @@ impl<'a> Parser<'a> {
 
     pub fn pos_to_line(&self, pos: usize) -> Option<LineNumber> {
         self.tokens.peek(pos).map(|t| t.line)
+    }
+}
+
+fn consume_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usize> {
+    if !parser.peek(pos, symbol) {
+        Err(Error::new(OguError::ParserError(
+            ParseError::ExpectingSymbol(symbol.to_string()),
+        )))
+    } else {
+        Ok(pos + 1)
     }
 }

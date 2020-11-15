@@ -1,3 +1,4 @@
+#[macro_use]
 pub mod expression;
 
 use crate::backend::OguError;
@@ -190,5 +191,43 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Trait
                 | Symbol::Alias
         ),
+    }
+}
+
+pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
+    let LeftAssocExpr(sym, left, right) = la_expr;
+    match sym {
+        Symbol::PipeRight => Expression::PipeFuncCall(left, right),
+        Symbol::PipeRightFirstArg => Expression::PipeFirstArgFuncCall(left, right),
+        Symbol::PipeLeft => Expression::PipeBackFuncCall(left, right),
+        Symbol::PipeLeftFirstArg => Expression::PipeBackFirstArgFuncCall(left, right),
+        Symbol::Doto => Expression::DotoCall(left, right),
+        Symbol::DotoBack => Expression::DotoBackCall(left, right),
+        Symbol::Or => Expression::OrExpr(left, right),
+        Symbol::And => Expression::AndExpr(left, right),
+        Symbol::LessThan => Expression::LtExpr(left, right),
+        Symbol::LessThanOrEqual => Expression::LeExpr(left, right),
+        Symbol::Greater => Expression::GtExpr(left, right),
+        Symbol::GreaterOrEqual => Expression::GeExpr(left, right),
+        Symbol::Equal => Expression::EqExpr(left, right),
+        Symbol::NotEqual => Expression::NeExpr(left, right),
+        Symbol::Plus => Expression::AddExpr(left, right),
+        Symbol::Minus => Expression::SubExpr(left, right),
+        Symbol::Mult => Expression::MulExpr(left, right),
+        Symbol::Div => Expression::DivExpr(left, right),
+        Symbol::DivDiv => Expression::IntDivExpr(left, right),
+        Symbol::Mod => Expression::ModExpr(left, right),
+        Symbol::ComposeForward => Expression::ComposeFwdExpr(left, right),
+        Symbol::ComposeBackward => Expression::ComposeBckExpr(left, right),
+        _ => todo!(),
+    }
+}
+
+pub fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Expression {
+    let RightAssocExpr(sym, left, right) = ra_expr;
+    match sym {
+        Symbol::Cons => Expression::ConsExpr(left, right),
+        Symbol::Pow => Expression::PowExpr(left, right),
+        _ => Expression::Error,
     }
 }

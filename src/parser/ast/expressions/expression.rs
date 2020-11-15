@@ -2,11 +2,36 @@ use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::{
     consume_args, consume_exprs_sep_by, consume_ids_sep_by, is_func_call_end_symbol, is_literal,
-    parse_left_assoc_expr, parse_right_assoc_expr, LeftAssocExpr, RightAssocExpr,
+    left_assoc_expr_to_expr, parse_left_assoc_expr, parse_right_assoc_expr,
+    right_assoc_expr_to_expr, LeftAssocExpr, RightAssocExpr,
 };
 use crate::parser::ast::module::body::Guard;
 use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, ParseError, Parser};
 use anyhow::{Context, Error, Result};
+
+#[macro_export]
+macro_rules! parse_left_assoc {
+    ($func_name:ident, $op:expr, $next_level: expr) => {
+        fn $func_name(parser: &Parser, pos: usize) -> ParseResult {
+            parse_left_assoc_expr(parser, pos, $op, $next_level, |left, right| {
+                let la_expr = LeftAssocExpr($op, Box::new(left), Box::new(right));
+                left_assoc_expr_to_expr(la_expr)
+            })
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! parse_right_assoc {
+    ($func_name:ident, $op:expr, $next_level: expr) => {
+        fn $func_name(parser: &Parser, pos: usize) -> ParseResult {
+            parse_right_assoc_expr(parser, pos, $op, $next_level, |base_expr, expr| {
+                let ra_expr = RightAssocExpr($op, Box::new(base_expr), Box::new(expr));
+                right_assoc_expr_to_expr(ra_expr)
+            })
+        }
+    };
+}
 
 #[derive(Debug, Clone)]
 pub enum Expression {
@@ -86,66 +111,6 @@ pub enum LetEquation {
         args: Vec<LetArg>,
         guards: Vec<Guard>,
     },
-}
-
-pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
-    let LeftAssocExpr(sym, left, right) = la_expr;
-    match sym {
-        Symbol::PipeRight => Expression::PipeFuncCall(left, right),
-        Symbol::PipeRightFirstArg => Expression::PipeFirstArgFuncCall(left, right),
-        Symbol::PipeLeft => Expression::PipeBackFuncCall(left, right),
-        Symbol::PipeLeftFirstArg => Expression::PipeBackFirstArgFuncCall(left, right),
-        Symbol::Doto => Expression::DotoCall(left, right),
-        Symbol::DotoBack => Expression::DotoBackCall(left, right),
-        Symbol::Or => Expression::OrExpr(left, right),
-        Symbol::And => Expression::AndExpr(left, right),
-        Symbol::LessThan => Expression::LtExpr(left, right),
-        Symbol::LessThanOrEqual => Expression::LeExpr(left, right),
-        Symbol::Greater => Expression::GtExpr(left, right),
-        Symbol::GreaterOrEqual => Expression::GeExpr(left, right),
-        Symbol::Equal => Expression::EqExpr(left, right),
-        Symbol::NotEqual => Expression::NeExpr(left, right),
-        Symbol::Plus => Expression::AddExpr(left, right),
-        Symbol::Minus => Expression::SubExpr(left, right),
-        Symbol::Mult => Expression::MulExpr(left, right),
-        Symbol::Div => Expression::DivExpr(left, right),
-        Symbol::DivDiv => Expression::IntDivExpr(left, right),
-        Symbol::Mod => Expression::ModExpr(left, right),
-        Symbol::ComposeForward => Expression::ComposeFwdExpr(left, right),
-        Symbol::ComposeBackward => Expression::ComposeBckExpr(left, right),
-        _ => todo!(),
-    }
-}
-
-fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Expression {
-    let RightAssocExpr(sym, left, right) = ra_expr;
-    match sym {
-        Symbol::Cons => Expression::ConsExpr(left, right),
-        Symbol::Pow => Expression::PowExpr(left, right),
-        _ => Expression::Error,
-    }
-}
-
-macro_rules! parse_left_assoc {
-    ($func_name:ident, $op:expr, $next_level: expr) => {
-        fn $func_name(parser: &Parser, pos: usize) -> ParseResult {
-            parse_left_assoc_expr(parser, pos, $op, $next_level, |left, right| {
-                let la_expr = LeftAssocExpr($op, Box::new(left), Box::new(right));
-                left_assoc_expr_to_expr(la_expr)
-            })
-        }
-    };
-}
-
-macro_rules! parse_right_assoc {
-    ($func_name:ident, $op:expr, $next_level: expr) => {
-        fn $func_name(parser: &Parser, pos: usize) -> ParseResult {
-            parse_right_assoc_expr(parser, pos, $op, $next_level, |base_expr, expr| {
-                let ra_expr = RightAssocExpr($op, Box::new(base_expr), Box::new(expr));
-                right_assoc_expr_to_expr(ra_expr)
-            })
-        }
-    };
 }
 
 impl Expression {

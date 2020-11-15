@@ -14,6 +14,7 @@ pub enum Expression {
     Atom(String),
     StringLiteral(String),
     IntegerLiteral(String),
+    DateLiteral(String),
     Unit,
     EmptyList,
     ListExpr {
@@ -653,6 +654,7 @@ impl Expression {
             Some(Symbol::Integer(int)) => {
                 Ok((Expression::IntegerLiteral(int.to_string()), pos + 1))
             }
+            Some(Symbol::IsoDate(date)) => Ok((Expression::DateLiteral(date.to_string()), pos + 1)),
             _ => todo!(),
         }
     }

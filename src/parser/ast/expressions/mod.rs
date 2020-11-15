@@ -416,7 +416,7 @@ impl Expression {
         }
         match parser.get_symbol(pos + 1) {
             Some(Symbol::RightParen) => Ok((Expression::Unit, pos + 2)),
-            Some(sym) => {
+            Some(_) => {
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos + 1)?;
                 if parser.peek(pos, Symbol::RightParen) {
                     Ok((expr, pos + 1))
@@ -439,14 +439,13 @@ impl Expression {
         }
         match parser.get_symbol(pos + 1) {
             Some(Symbol::RightBracket) => Ok((Expression::EmptyList, pos + 2)),
-            Some(sym) => {
+            Some(_) => {
                 let (exprs, pos) = consume_exprs_sep_by(parser, pos + 1, Symbol::Comma)?;
                 if parser.peek(pos, Symbol::RightBracket) {
                     Ok((Expression::ListExpr(exprs), pos + 1))
                 } else if parser.peek(pos, Symbol::DotDot) {
                     let (expr, pos) = Expression::parse(parser, pos + 1)?;
                     if parser.peek(pos, Symbol::RightBracket) {
-                        println!("RANGE -> {:?} .. {:?}", exprs, expr);
                         return Ok((Expression::RangeExpr(exprs, Box::new(expr)), pos + 1));
                     }
                     todo!()
@@ -554,9 +553,9 @@ impl Expression {
         if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
             Expression::parse_let_func_or_val(id, parser, pos)
         } else {
-            return Err(Error::new(OguError::ParserError(
+            Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingIdentifier,
-            )));
+            )))
         }
     }
 
@@ -699,29 +698,6 @@ fn consume_left_args(
     }
 }
 
-fn consume_op_args(
-    parser: &Parser,
-    pos: usize,
-    op: Symbol,
-    next_level: fn(&Parser, usize) -> ParseResult,
-) -> Result<(Vec<Expression>, usize)> {
-    let mut args = vec![];
-    if !parser.peek(pos, op) {
-        Ok((args, pos))
-    } else {
-        let pos = parser.skip_nl(pos + 1);
-        let (expr, mut pos) = next_level(parser, pos)?;
-        args.push(expr);
-        while parser.peek(pos, op) {
-            pos = parser.skip_nl(pos + 1);
-            let (expr, new_pos) = next_level(parser, pos)?;
-            args.push(expr);
-            pos = new_pos;
-        }
-        Ok((args, pos))
-    }
-}
-
 // 1 ^ 2 ^ 3 => 1 ^ (2 ^ 3)
 fn parse_right_assoc_expr(
     parser: &Parser,
@@ -820,52 +796,52 @@ fn is_literal(symbol: Symbol) -> bool {
 fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
     match symbol {
         None => true,
-        Some(sym) => match sym {
+        Some(sym) => matches!(
+            sym,
             Symbol::NewLine
-            | Symbol::Indent
-            | Symbol::Dedent
-            | Symbol::Assign
-            | Symbol::Dollar
-            | Symbol::Comma
-            | Symbol::Cons
-            | Symbol::Let
-            | Symbol::Do
-            | Symbol::Then
-            | Symbol::Else
-            | Symbol::Elif
-            | Symbol::RightParen
-            | Symbol::In
-            | Symbol::RightBracket
-            | Symbol::RightCurly
-            | Symbol::Where
-            | Symbol::PipeLeft
-            | Symbol::PipeLeftFirstArg
-            | Symbol::PipeRight
-            | Symbol::PipeRightFirstArg
-            | Symbol::ComposeForward
-            | Symbol::ComposeBackward
-            | Symbol::Plus
-            | Symbol::PlusPlus
-            | Symbol::Mult
-            | Symbol::Minus
-            | Symbol::Div
-            | Symbol::DivDiv
-            | Symbol::Mod
-            | Symbol::And
-            | Symbol::BitAnd
-            | Symbol::Or
-            | Symbol::Not
-            | Symbol::Equal
-            | Symbol::NotEqual
-            | Symbol::GreaterOrEqual
-            | Symbol::Greater
-            | Symbol::LessThan
-            | Symbol::LessThanOrEqual
-            | Symbol::Type
-            | Symbol::Trait
-            | Symbol::Alias => true,
-            _ => false,
-        },
+                | Symbol::Indent
+                | Symbol::Dedent
+                | Symbol::Assign
+                | Symbol::Dollar
+                | Symbol::Comma
+                | Symbol::Cons
+                | Symbol::Let
+                | Symbol::Do
+                | Symbol::Then
+                | Symbol::Else
+                | Symbol::Elif
+                | Symbol::RightParen
+                | Symbol::In
+                | Symbol::RightBracket
+                | Symbol::RightCurly
+                | Symbol::Where
+                | Symbol::PipeLeft
+                | Symbol::PipeLeftFirstArg
+                | Symbol::PipeRight
+                | Symbol::PipeRightFirstArg
+                | Symbol::ComposeForward
+                | Symbol::ComposeBackward
+                | Symbol::Plus
+                | Symbol::PlusPlus
+                | Symbol::Mult
+                | Symbol::Minus
+                | Symbol::Div
+                | Symbol::DivDiv
+                | Symbol::Mod
+                | Symbol::And
+                | Symbol::BitAnd
+                | Symbol::Or
+                | Symbol::Not
+                | Symbol::Equal
+                | Symbol::NotEqual
+                | Symbol::GreaterOrEqual
+                | Symbol::Greater
+                | Symbol::LessThan
+                | Symbol::LessThanOrEqual
+                | Symbol::Type
+                | Symbol::Trait
+                | Symbol::Alias
+        ),
     }
 }
 

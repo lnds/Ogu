@@ -265,7 +265,7 @@ pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<
             )))
             .context("esperando fin de indentación");
         }
-        pos = pos + 1;
+        pos += 1;
     }
     Ok(pos)
 }

@@ -100,6 +100,11 @@ pub fn consume_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usi
         Err(Error::new(OguError::ParserError(
             ParseError::ExpectingSymbol(symbol.to_string()),
         )))
+        .context(format!(
+            "expecting: {:?} @ {}",
+            symbol,
+            parser.pos_to_line(pos).unwrap_or(0)
+        ))
     } else {
         Ok(pos + 1)
     }

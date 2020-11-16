@@ -1,8 +1,7 @@
-use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::{parse_opt_dedent, parse_opt_indent, ParseError, Parser};
-use anyhow::{Context, Error, Result};
+use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, Parser};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub struct Guard {
@@ -23,14 +22,10 @@ pub fn parse_guards(parser: &Parser, pos: usize) -> Result<(GuardVec, usize)> {
             let (expr, new_pos) = Expression::parse(parser, pos + 1)?;
             (Some(Box::new(expr)), new_pos)
         };
-        if !parser.peek(new_pos, Symbol::Assign) {
-            return Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingAssignation,
-            )))
-            .context("expecting guard assignation");
-        }
-        let new_pos = parser.skip_nl(new_pos + 1);
+        let new_pos = consume_symbol(parser, new_pos, Symbol::Assign)?;
+        let new_pos = parser.skip_nl(new_pos);
         let (guard_value, new_pos) = Expression::parse(parser, new_pos)?;
+
         guards.push(Guard {
             guard,
             value: Box::new(guard_value),

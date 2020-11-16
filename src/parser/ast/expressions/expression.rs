@@ -41,6 +41,7 @@ pub enum Expression {
     StringLiteral(String),
     IntegerLiteral(String),
     DateLiteral(String),
+    FormatString(String),
     Unit,
     EmptyList,
     LazyExpr(Box<Expression>),
@@ -78,6 +79,12 @@ pub enum Expression {
     ComposeBckExpr(Box<Expression>, Box<Expression>),
     DoExpr(Vec<Expression>),
     LetExpr(Vec<Equation>, Box<Expression>),
+    IfExpr(
+        Box<Expression>,
+        Box<Expression>,
+        Vec<(Expression, Expression)>,
+        Box<Expression>,
+    ),
 }
 
 pub type ParseResult = Result<(Expression, usize)>;
@@ -428,6 +435,9 @@ impl Expression {
                 Ok((Expression::IntegerLiteral(int.to_string()), pos + 1))
             }
             Some(Symbol::IsoDate(date)) => Ok((Expression::DateLiteral(date.to_string()), pos + 1)),
+            Some(Symbol::FormatString(f_str)) => {
+                Ok((Expression::FormatString(f_str.to_string()), pos + 1))
+            }
             _ => todo!(),
         }
     }
@@ -510,8 +520,41 @@ impl Expression {
         todo!()
     }
 
-    fn parse_if(_parser: &Parser, _pos: usize) -> ParseResult {
-        todo!()
+    fn parse_if(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::If)?;
+        let (cond, pos) = Expression::parse(parser, pos)?;
+        let pos = consume_symbol(parser, pos, Symbol::Then)?;
+        let pos = parser.skip_nl(pos);
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        let (then_expr, pos) = Expression::parse(parser, pos)?;
+        let pos = parser.skip_nl(pos);
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        let mut pos = parser.skip_nl(pos);
+        let mut elif_part = vec![];
+        while parser.peek(pos, Symbol::Elif) {
+            let (cond, new_pos) = Expression::parse(parser, pos + 1)?;
+            pos = consume_symbol(parser, new_pos, Symbol::Then)?;
+            pos = parser.skip_nl(pos);
+            let (indent, new_pos) = parse_opt_indent(parser, pos);
+            let (then_expr, new_pos) = Expression::parse(parser, new_pos)?;
+            pos = parser.skip_nl(new_pos);
+            pos = parse_opt_dedent(parser, pos, indent)?;
+            elif_part.push((cond, then_expr));
+        }
+        let pos = consume_symbol(parser, pos, Symbol::Else)?;
+        let pos = parser.skip_nl(pos);
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        let (else_expr, pos) = Expression::parse(parser, pos)?;
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        Ok((
+            Expression::IfExpr(
+                Box::new(cond),
+                Box::new(then_expr),
+                elif_part,
+                Box::new(else_expr),
+            ),
+            pos,
+        ))
     }
 
     fn parse_do(parser: &Parser, pos: usize) -> ParseResult {

@@ -132,17 +132,15 @@ pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
 }
 
 pub fn is_literal(symbol: Symbol) -> bool {
-    match symbol {
-        Symbol::Integer(_) => true,
-        Symbol::Float(_) => true,
-        Symbol::String(_) => true,
-        Symbol::RegExp(_) => true,
-        Symbol::Char(_) => true,
-        Symbol::True => true,
-        Symbol::False => true,
-        Symbol::IsoDate(_) => true,
-        _ => false,
-    }
+    matches!(symbol, Symbol::Integer(_)
+        |Symbol::Float(_)
+        |Symbol::String(_)
+        |Symbol::FormatString(_) 
+        |Symbol::RegExp(_)
+        |Symbol::Char(_)
+        |Symbol::True
+        |Symbol::False
+        |Symbol::IsoDate(_))
 }
 
 pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {

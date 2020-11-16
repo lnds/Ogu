@@ -10,4 +10,5 @@ lcm a b
 
 divisors n = reduce lcm 1 [2..n]
 
-divisors 20 |> println!
+main () =
+    divisors 20 |> println!

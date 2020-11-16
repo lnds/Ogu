@@ -16,7 +16,7 @@ pub enum Equation {
 impl Equation {
     pub fn parse(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
         if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
-            Equation::parse_func_or_val(id, parser, pos)
+            Equation::parse_func_or_val(id, parser, pos + 1)
         } else {
             Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingIdentifier,
@@ -25,7 +25,6 @@ impl Equation {
     }
 
     pub fn parse_back_arrow_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        println!("parse <- eq");
         Equation::parse_value_assign(parser, pos, Symbol::BackArrow)
     }
 

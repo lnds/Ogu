@@ -1,4 +1,4 @@
-primes = 2 :: filter (prime-factors >> length >> (== 1)) [3,5..]
+primes = 2 :: filter (prime-factors >> length >> (== 1)) [3,5...]
 
 prime-factors n = factor n primes
   where
@@ -7,4 +7,5 @@ prime-factors n = factor n primes
       | n % p == 0 = p :: factor (n // p) (p::ps)
       | otherwise = factor n ps
 
-println! (primes @ 10000)
+main () =
+    println! (primes @ 10000)

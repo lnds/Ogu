@@ -30,12 +30,15 @@ impl Arg {
         match parser.get_symbol(pos) {
             None => Ok(None),
             Some(Symbol::LeftParen) => Arg::parse_tuple(parser, pos),
-            Some(Symbol::Id(id)) => Ok(Some((Arg::SimpleArg(id.to_string()), pos + 1))),
             Some(Symbol::Assign) => Ok(None),
             Some(Symbol::NewLine) => Ok(None),
             _ => {
                 let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
-                Ok(Some((Arg::ExprArg(Box::new(expr)), pos)))
+                if let Expression::Identifier(id) = expr {
+                    Ok(Some((Arg::SimpleArg(id), pos)))
+                } else {
+                    Ok(Some((Arg::ExprArg(Box::new(expr)), pos)))
+                }
             }
         }
     }

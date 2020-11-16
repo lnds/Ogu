@@ -2,8 +2,8 @@ use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::{
-    consume_args, consume_exprs_sep_by, consume_ids_sep_by, is_func_call_end_symbol, is_literal,
-    left_assoc_expr_to_expr, parse_left_assoc_expr, parse_right_assoc_expr,
+    consume_args, consume_exprs_sep_by, consume_ids_sep_by, is_basic_op, is_func_call_end_symbol,
+    is_literal, left_assoc_expr_to_expr, parse_left_assoc_expr, parse_right_assoc_expr,
     right_assoc_expr_to_expr, LeftAssocExpr, RightAssocExpr,
 };
 use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, ParseError, Parser};
@@ -49,6 +49,7 @@ pub enum Expression {
     ListByComprehension(Vec<Expression>, Vec<Equation>),
     RangeExpr(Vec<Expression>, Box<Expression>),
     RangeOpenExpr(Vec<Expression>, Box<Expression>),
+    RangeInfExpr(Vec<Expression>), // [exprs...]
     PipeFuncCall(Box<Expression>, Box<Expression>),
     PipeFirstArgFuncCall(Box<Expression>, Box<Expression>),
     PipeBackFuncCall(Box<Expression>, Box<Expression>),
@@ -61,8 +62,25 @@ pub enum Expression {
     ReMatchExpr(Box<Expression>, Box<Expression>),
     ConsExpr(Box<Expression>, Box<Expression>),
     PowExpr(Box<Expression>, Box<Expression>),
+    IndexExpr(Box<Expression>, Box<Expression>),
     DotoCall(Box<Expression>, Box<Expression>),
     DotoBackCall(Box<Expression>, Box<Expression>),
+    UnaryCons(Option<Box<Expression>>),
+    UnaryAdd(Option<Box<Expression>>),
+    UnaryConcat(Option<Box<Expression>>),
+    UnarySub(Option<Box<Expression>>),
+    UnaryMul(Option<Box<Expression>>),
+    UnaryPow(Option<Box<Expression>>),
+    UnaryMod(Option<Box<Expression>>),
+    UnaryAnd(Option<Box<Expression>>),
+    UnaryOr(Option<Box<Expression>>),
+    UnaryNot(Option<Box<Expression>>),
+    UnaryEq(Option<Box<Expression>>),
+    UnaryNotEq(Option<Box<Expression>>),
+    UnaryGt(Option<Box<Expression>>),
+    UnaryGe(Option<Box<Expression>>),
+    UnaryLt(Option<Box<Expression>>),
+    UnaryLe(Option<Box<Expression>>),
     OrExpr(Box<Expression>, Box<Expression>),
     AndExpr(Box<Expression>, Box<Expression>),
     LeExpr(Box<Expression>, Box<Expression>),
@@ -79,6 +97,7 @@ pub enum Expression {
     ModExpr(Box<Expression>, Box<Expression>),
     ComposeFwdExpr(Box<Expression>, Box<Expression>),
     ComposeBckExpr(Box<Expression>, Box<Expression>),
+    OpFunc(Box<Symbol<'static>>),
     DoExpr(Vec<Expression>),
     RecurExpr(Vec<Expression>),
     LetExpr(Vec<Equation>, Box<Expression>),
@@ -345,8 +364,18 @@ impl Expression {
     parse_left_assoc!(
         parse_compose_bck_expr,
         Symbol::ComposeBackward,
-        Expression::parse_primary_expr
+        Expression::parse_postfix_expr
     );
+
+    fn parse_postfix_expr(parser: &Parser, pos: usize) -> ParseResult {
+        let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
+        if parser.peek(pos, Symbol::Arroba) {
+            let (index, pos) = Expression::parse_logical_expr(parser, pos + 1)?;
+            Ok((Expression::IndexExpr(Box::new(expr), Box::new(index)), pos))
+        } else {
+            Ok((expr, pos))
+        }
+    }
 
     fn parse_primary_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
@@ -362,24 +391,45 @@ impl Expression {
     }
 
     fn parse_paren_expr(parser: &Parser, pos: usize) -> ParseResult {
-        if !parser.peek(pos, Symbol::LeftParen) {
-            return Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingLeftParenthesis,
-            )));
-        }
-        match parser.get_symbol(pos + 1) {
-            Some(Symbol::RightParen) => Ok((Expression::Unit, pos + 2)),
+        let pos = consume_symbol(parser, pos, Symbol::LeftParen)?;
+        match parser.get_symbol(pos) {
+            Some(Symbol::RightParen) => Ok((Expression::Unit, pos + 1)),
+            Some(op) if is_basic_op(op) => {
+                let (opt_expr, pos) = if parser.peek(pos + 1, Symbol::RightParen) {
+                    (None, pos)
+                } else {
+                    let (expr, pos) = Expression::parse_lambda_expr(parser, pos + 1)?;
+                    (Some(Box::new(expr)), pos)
+                };
+                let pos = consume_symbol(parser, pos, Symbol::RightParen)?;
+                match op {
+                    Symbol::Cons => Ok((Expression::UnaryCons(opt_expr), pos)),
+                    Symbol::Plus => Ok((Expression::UnaryAdd(opt_expr), pos)),
+                    Symbol::PlusPlus => Ok((Expression::UnaryConcat(opt_expr), pos)),
+                    Symbol::Minus => Ok((Expression::UnarySub(opt_expr), pos)),
+                    Symbol::Mult => Ok((Expression::UnaryMul(opt_expr), pos)),
+                    Symbol::Pow => Ok((Expression::UnaryPow(opt_expr), pos)),
+                    Symbol::Mod => Ok((Expression::UnaryMod(opt_expr), pos)),
+                    Symbol::And => Ok((Expression::UnaryAnd(opt_expr), pos)),
+                    Symbol::Or => Ok((Expression::UnaryOr(opt_expr), pos)),
+                    Symbol::Not => Ok((Expression::UnaryNot(opt_expr), pos)),
+                    Symbol::Equal => Ok((Expression::UnaryEq(opt_expr), pos)),
+                    Symbol::NotEqual => Ok((Expression::UnaryNotEq(opt_expr), pos)),
+                    Symbol::Greater => Ok((Expression::UnaryGt(opt_expr), pos)),
+                    Symbol::GreaterOrEqual => Ok((Expression::UnaryGe(opt_expr), pos)),
+                    Symbol::LessThan => Ok((Expression::UnaryLt(opt_expr), pos)),
+                    Symbol::LessThanOrEqual => Ok((Expression::UnaryLe(opt_expr), pos)),
+                    sym => Err(Error::new(OguError::ParserError(
+                        ParseError::ExpectingOperator,
+                    )))
+                    .context(format!("expecting an operator, found {:?}", sym)),
+                }
+            }
             Some(_) => {
-                let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos + 1)?;
+                let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
                 if parser.peek(pos, Symbol::RightParen) {
                     Ok((expr, pos + 1))
                 } else {
-                    println!(
-                        "expr = {:?} @={}, next={:?}",
-                        expr,
-                        pos,
-                        parser.get_symbol(pos)
-                    );
                     todo!()
                 }
             }
@@ -391,16 +441,16 @@ impl Expression {
     }
 
     fn parse_list_expr(parser: &Parser, pos: usize) -> ParseResult {
-        println!("parse list expr");
         let pos = consume_symbol(parser, pos, Symbol::LeftBracket)?;
         match parser.get_symbol(pos) {
             Some(Symbol::RightBracket) => Ok((Expression::EmptyList, pos + 1)),
             Some(_) => {
-                println!("looking for comma separated exprs..");
                 let (exprs, pos) = consume_exprs_sep_by(parser, pos, Symbol::Comma)?;
-                println!("exprs = {:?}", exprs);
                 if parser.peek(pos, Symbol::RightBracket) {
                     Ok((Expression::ListExpr(exprs), pos + 1))
+                } else if parser.peek(pos, Symbol::DotDotDot) {
+                    let pos = consume_symbol(parser, pos + 1, Symbol::RightBracket)?;
+                    Ok((Expression::RangeInfExpr(exprs), pos))
                 } else if parser.peek(pos, Symbol::DotDot) {
                     let (expr, pos) = Expression::parse(parser, pos + 1)?;
                     if parser.peek(pos, Symbol::RightBracket) {
@@ -426,7 +476,6 @@ impl Expression {
                     pos = consume_symbol(parser, pos, Symbol::RightBracket)?;
                     Ok((Expression::ListByComprehension(exprs, eqs), pos))
                 } else {
-                    println!("");
                     todo!()
                 }
             }
@@ -508,11 +557,8 @@ impl Expression {
     }
 
     fn parse_let(parser: &Parser, pos: usize) -> ParseResult {
-        if !parser.peek(pos, Symbol::Let) {
-            return Err(Error::new(OguError::ParserError(ParseError::ExpectingLet)))
-                .context("expecting let");
-        }
-        let (indent, pos) = parse_opt_indent(parser, pos + 1);
+        let pos = consume_symbol(parser, pos, Symbol::Let)?;
+        let (indent, pos) = parse_opt_indent(parser, pos);
         let mut equations = vec![];
         let (equation, pos) = Expression::parse_let_equation(parser, pos)?;
         equations.push(equation);
@@ -524,13 +570,10 @@ impl Expression {
         }
         let pos = parse_opt_dedent(parser, pos, indent)?;
         let pos = parser.skip_nl(pos);
-        if !parser.peek(pos, Symbol::In) {
-            return Err(Error::new(OguError::ParserError(ParseError::ExpectingIn)))
-                .context("expecting in");
-        }
+        let pos = consume_symbol(parser, pos, Symbol::In)?;
         let pos = parser.skip_nl(pos);
-        let (indent, pos) = parse_opt_indent(parser, pos + 1);
-        let (expr, pos) = Expression::parse(parser, pos + 1)?;
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        let (expr, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
         Ok((Expression::LetExpr(equations, Box::new(expr)), pos))
     }

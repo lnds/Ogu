@@ -7,5 +7,6 @@ sum-n-square n = reduce add <| (map (\x -> x * x) [1..n])
 
 dif-squares n = (square-sum n) - (sum-n-square n)
 
-dif-squares 100 |> println!
+main () =
+    dif-squares 100 |> println!
 

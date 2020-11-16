@@ -98,8 +98,6 @@ pub enum Symbol<'a> {
     Yield,
     #[token("&&", priority = 1000)]
     And,
-    #[token("&", priority = 1000)]
-    BitAnd,
     #[token("@", priority = 1000)]
     Arroba,
     #[token("->", priority = 1000)]

@@ -53,6 +53,8 @@ pub enum ParseError {
     ExpectingWhere,
     #[error("EOF unexpected")]
     EofUnexpected,
+    #[error("Expecting operator")]
+    ExpectingOperator,
 }
 
 pub struct Parser<'a> {

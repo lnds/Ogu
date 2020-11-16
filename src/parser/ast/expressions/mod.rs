@@ -84,10 +84,8 @@ pub fn consume_exprs_sep_by(
     symbol: Symbol,
 ) -> Result<(Vec<Expression>, usize)> {
     let mut result = vec![];
-    println!("consume expr sep by {:?}", symbol);
     let (expr, mut pos) = Expression::parse(parser, pos)?;
     result.push(expr);
-    println!("result = {:?}", result);
     while parser.peek(pos, symbol) {
         let (expr, new_pos) = Expression::parse(parser, pos + 1)?;
         result.push(expr);
@@ -145,12 +143,37 @@ pub fn is_literal(symbol: Symbol) -> bool {
         |Symbol::IsoDate(_))
 }
 
+pub fn is_basic_op(symbol: Symbol) -> bool {
+    matches!(
+        symbol,
+        Symbol::Cons
+            | Symbol::Plus
+            | Symbol::PlusPlus
+            | Symbol::Mult
+            | Symbol::Div
+            | Symbol::DivDiv
+            | Symbol::Minus
+            | Symbol::Mod
+            | Symbol::Pow
+            | Symbol::And
+            | Symbol::Or
+            | Symbol::Equal
+            | Symbol::NotEqual
+            | Symbol::Not
+            | Symbol::LessThan
+            | Symbol::LessThanOrEqual
+            | Symbol::Greater
+            | Symbol::GreaterOrEqual
+    )
+}
+
 pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
     match symbol {
         None => true,
         Some(sym) => matches!(
             sym,
             Symbol::NewLine
+                | Symbol::Arroba
                 | Symbol::Indent
                 | Symbol::Dedent
                 | Symbol::Assign
@@ -181,7 +204,6 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::DivDiv
                 | Symbol::Mod
                 | Symbol::And
-                | Symbol::BitAnd
                 | Symbol::Or
                 | Symbol::Not
                 | Symbol::Equal

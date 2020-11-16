@@ -4,7 +4,9 @@ use crate::parser::ast::expressions::args::Arg;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::Guard;
-use crate::parser::{consume_symbol, look_ahead_where, ParseError, Parser};
+use crate::parser::{
+    consume_symbol, look_ahead_where, parse_opt_dedent, parse_opt_indent, ParseError, Parser,
+};
 use anyhow::{Context, Error, Result};
 
 #[derive(Debug)]
@@ -105,21 +107,15 @@ impl Declaration {
     }
 
     fn parse_where(parser: &Parser, pos: usize) -> Result<(Vec<Equation>, usize)> {
-        if !parser.peek(pos, Symbol::Where) {
-            return Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingWhere,
-            )))
-            .context("expecting where");
-        }
+        let pos = consume_symbol(parser, pos, Symbol::Where)?;
         let pos = parser.skip_nl(pos + 1);
-        if parser.peek(pos, Symbol::Indent) {
-            todo!()
-        } else {
-            // allows a single inline decl
-            let (eq, pos) = Equation::parse(parser, pos)?;
-            let pos = parser.skip_nl(pos);
-            let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
-            Ok((vec![eq], pos))
-        }
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        // allows a single inline decl
+        let (eq, pos) = Equation::parse(parser, pos)?;
+        if indent {}
+        let pos = parser.skip_nl(pos);
+        let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        Ok((vec![eq], pos))
     }
 }

@@ -46,7 +46,9 @@ pub enum Expression {
     EmptyList,
     LazyExpr(Box<Expression>),
     ListExpr(Vec<Expression>),
+    ListByComprehension(Vec<Expression>, Vec<Equation>),
     RangeExpr(Vec<Expression>, Box<Expression>),
+    RangeOpenExpr(Vec<Expression>, Box<Expression>),
     PipeFuncCall(Box<Expression>, Box<Expression>),
     PipeFirstArgFuncCall(Box<Expression>, Box<Expression>),
     PipeBackFuncCall(Box<Expression>, Box<Expression>),
@@ -78,6 +80,7 @@ pub enum Expression {
     ComposeFwdExpr(Box<Expression>, Box<Expression>),
     ComposeBckExpr(Box<Expression>, Box<Expression>),
     DoExpr(Vec<Expression>),
+    RecurExpr(Vec<Expression>),
     LetExpr(Vec<Equation>, Box<Expression>),
     IfExpr(
         Box<Expression>,
@@ -85,6 +88,7 @@ pub enum Expression {
         Vec<(Expression, Expression)>,
         Box<Expression>,
     ),
+    LoopExpr(Option<Vec<Equation>>, Box<Expression>),
 }
 
 pub type ParseResult = Result<(Expression, usize)>;
@@ -159,6 +163,7 @@ impl Expression {
             Some(Symbol::Until) => Expression::parse_loop(parser, pos),
             Some(Symbol::While) => Expression::parse_loop(parser, pos),
             Some(Symbol::If) => Expression::parse_if(parser, pos),
+            Some(Symbol::Recur) => Expression::parse_recur(parser, pos),
             _ => Expression::parse_lambda_expr(parser, pos),
         }
     }
@@ -386,15 +391,14 @@ impl Expression {
     }
 
     fn parse_list_expr(parser: &Parser, pos: usize) -> ParseResult {
-        if !parser.peek(pos, Symbol::LeftBracket) {
-            return Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingLeftParenthesis,
-            )));
-        }
-        match parser.get_symbol(pos + 1) {
-            Some(Symbol::RightBracket) => Ok((Expression::EmptyList, pos + 2)),
+        println!("parse list expr");
+        let pos = consume_symbol(parser, pos, Symbol::LeftBracket)?;
+        match parser.get_symbol(pos) {
+            Some(Symbol::RightBracket) => Ok((Expression::EmptyList, pos + 1)),
             Some(_) => {
-                let (exprs, pos) = consume_exprs_sep_by(parser, pos + 1, Symbol::Comma)?;
+                println!("looking for comma separated exprs..");
+                let (exprs, pos) = consume_exprs_sep_by(parser, pos, Symbol::Comma)?;
+                println!("exprs = {:?}", exprs);
                 if parser.peek(pos, Symbol::RightBracket) {
                     Ok((Expression::ListExpr(exprs), pos + 1))
                 } else if parser.peek(pos, Symbol::DotDot) {
@@ -403,7 +407,26 @@ impl Expression {
                         return Ok((Expression::RangeExpr(exprs, Box::new(expr)), pos + 1));
                     }
                     todo!()
+                } else if parser.peek(pos, Symbol::DotDotLess) {
+                    let (expr, pos) = Expression::parse(parser, pos + 1)?;
+                    if parser.peek(pos, Symbol::RightBracket) {
+                        return Ok((Expression::RangeOpenExpr(exprs, Box::new(expr)), pos + 1));
+                    }
+                    todo!()
+                } else if parser.peek(pos, Symbol::Guard) {
+                    let pos = consume_symbol(parser, pos, Symbol::Guard)?;
+                    let (eq, mut pos) = Equation::parse_back_arrow_eq(parser, pos)?;
+                    let mut eqs = vec![];
+                    eqs.push(eq);
+                    while parser.peek(pos, Symbol::Comma) {
+                        let (eq, new_pos) = Equation::parse_back_arrow_eq(parser, pos + 1)?;
+                        eqs.push(eq);
+                        pos = new_pos;
+                    }
+                    pos = consume_symbol(parser, pos, Symbol::RightBracket)?;
+                    Ok((Expression::ListByComprehension(exprs, eqs), pos))
                 } else {
+                    println!("");
                     todo!()
                 }
             }
@@ -516,8 +539,53 @@ impl Expression {
         Equation::parse(parser, pos)
     }
 
-    fn parse_loop(_parser: &Parser, _pos: usize) -> ParseResult {
-        todo!()
+    fn parse_loop(parser: &Parser, pos: usize) -> ParseResult {
+        let (for_part, pos) = if parser.peek(pos, Symbol::For) {
+            let (eqs, pos) = Expression::parse_for(parser, pos)?;
+            (Some(eqs), pos)
+        } else {
+            (None, pos)
+        };
+        let pos = parser.skip_nl(pos);
+        let pos = consume_symbol(parser, pos, Symbol::Loop)?;
+        let pos = parser.skip_nl(pos);
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        let (loop_body, pos) = Expression::parse(parser, pos)?;
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        Ok((Expression::LoopExpr(for_part, Box::new(loop_body)), pos))
+    }
+
+    fn parse_for(parser: &Parser, pos: usize) -> Result<(Vec<Equation>, usize)> {
+        let pos = consume_symbol(parser, pos, Symbol::For)?;
+        let pos = parser.skip_nl(pos);
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        let mut eqs = vec![];
+        let (eq, mut pos) = Equation::parse_value(parser, pos)?;
+        eqs.push(eq);
+        while parser.peek(pos, Symbol::NewLine) || parser.peek(pos, Symbol::Comma) {
+            pos = parser.skip_nl(pos + 1);
+            if parser.peek(pos, Symbol::Loop) {
+                break;
+            }
+            let (eq, new_pos) = Equation::parse_value(parser, pos)?;
+            eqs.push(eq);
+            pos = new_pos;
+        }
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        Ok((eqs, pos))
+    }
+
+    fn parse_recur(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Recur)?;
+        let (expr, mut pos) = Expression::parse(parser, pos)?;
+        let mut exprs = vec![];
+        exprs.push(expr);
+        while !is_func_call_end_symbol(parser.get_symbol(pos)) {
+            let (expr, new_pos) = Expression::parse(parser, pos)?;
+            exprs.push(expr);
+            pos = new_pos;
+        }
+        Ok((Expression::RecurExpr(exprs), pos))
     }
 
     fn parse_if(parser: &Parser, pos: usize) -> ParseResult {

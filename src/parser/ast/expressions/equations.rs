@@ -3,7 +3,7 @@ use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::args::{Arg, VecArg};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::{parse_guards, Guard};
-use crate::parser::{parse_opt_dedent, parse_opt_indent, ParseError, Parser};
+use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, ParseError, Parser};
 use anyhow::{Error, Result};
 
 #[derive(Debug, Clone)]
@@ -17,6 +17,30 @@ impl Equation {
     pub fn parse(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
         if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
             Equation::parse_func_or_val(id, parser, pos)
+        } else {
+            Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingIdentifier,
+            )))
+        }
+    }
+
+    pub fn parse_back_arrow_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+        println!("parse <- eq");
+        Equation::parse_value_assign(parser, pos, Symbol::BackArrow)
+    }
+
+    pub fn parse_value(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+        Equation::parse_value_assign(parser, pos, Symbol::Assign)
+    }
+
+    fn parse_value_assign(
+        parser: &Parser,
+        pos: usize,
+        symbol: Symbol,
+    ) -> Result<(Equation, usize)> {
+        if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
+            let pos = consume_symbol(parser, pos + 1, symbol)?;
+            Equation::parse_val(id.to_string(), parser, pos)
         } else {
             Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingIdentifier,

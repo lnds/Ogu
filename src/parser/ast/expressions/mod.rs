@@ -84,8 +84,10 @@ pub fn consume_exprs_sep_by(
     symbol: Symbol,
 ) -> Result<(Vec<Expression>, usize)> {
     let mut result = vec![];
+    println!("consume expr sep by {:?}", symbol);
     let (expr, mut pos) = Expression::parse(parser, pos)?;
     result.push(expr);
+    println!("result = {:?}", result);
     while parser.peek(pos, symbol) {
         let (expr, new_pos) = Expression::parse(parser, pos + 1)?;
         result.push(expr);
@@ -184,6 +186,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Not
                 | Symbol::Equal
                 | Symbol::NotEqual
+                | Symbol::Guard
                 | Symbol::GreaterOrEqual
                 | Symbol::Greater
                 | Symbol::LessThan

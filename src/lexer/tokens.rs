@@ -231,8 +231,8 @@ impl<'a> Symbol<'a> {
 }
 
 impl<'a> Display for Symbol<'a> {
-    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        todo!()
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        write!(f, "{:?}", self)
     }
 }
 

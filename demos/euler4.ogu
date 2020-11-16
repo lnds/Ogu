@@ -10,3 +10,4 @@ palindrome? n = n == rev n
 main () =
     [x * y | x <- [100..<1000], y <- [100..<1000]] |> filter palindrome? |> apply max |> println!
 
+

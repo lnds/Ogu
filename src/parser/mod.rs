@@ -101,9 +101,10 @@ pub fn consume_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usi
             ParseError::ExpectingSymbol(symbol.to_string()),
         )))
         .context(format!(
-            "expecting: {:?} @ {}",
+            "expecting: {:?} @ {}, found = {:?}",
             symbol,
-            parser.pos_to_line(pos).unwrap_or(0)
+            parser.pos_to_line(pos).unwrap_or(0),
+            parser.get_symbol(pos)
         ))
     } else {
         Ok(pos + 1)
@@ -126,7 +127,10 @@ pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<
             return Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingIndentationEnd,
             )))
-            .context("esperando fin de indentación");
+            .context(format!(
+                "expecting indentation ends, found {:?}",
+                parser.get_symbol(pos)
+            ));
         }
         pos += 1;
     }

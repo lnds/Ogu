@@ -135,6 +135,7 @@ pub fn is_literal(symbol: Symbol) -> bool {
     matches!(symbol, Symbol::Integer(_)
         |Symbol::Float(_)
         |Symbol::String(_)
+        |Symbol::LargeString(_)
         |Symbol::FormatString(_) 
         |Symbol::RegExp(_)
         |Symbol::Char(_)

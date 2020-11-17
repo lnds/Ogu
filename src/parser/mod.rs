@@ -59,11 +59,15 @@ pub enum ParseError {
 
 pub struct Parser<'a> {
     tokens: TokenStream<'a>,
+    large_strings: Vec<String>,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(tokens: TokenStream) -> Result<Parser> {
-        Ok(Parser { tokens })
+    pub fn new(tokens: TokenStream<'a>, large_strings: Vec<String>) -> Result<Parser<'a>> {
+        Ok(Parser {
+            tokens,
+            large_strings,
+        })
     }
 
     pub fn parse(&mut self, filename: &PathBuf) -> Result<Module> {
@@ -94,6 +98,14 @@ impl<'a> Parser<'a> {
 
     pub fn pos_to_line(&self, pos: usize) -> Option<LineNumber> {
         self.tokens.peek(pos).map(|t| t.line)
+    }
+
+    pub fn get_large_string(&self, index: usize) -> Option<String> {
+        self.large_strings.get(index).cloned()
+    }
+
+    pub fn set_large_strings(&mut self, strs: Vec<String>) {
+        self.large_strings = strs;
     }
 }
 

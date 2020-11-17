@@ -39,6 +39,8 @@ pub enum Expression {
     Identifier(String),
     Atom(String),
     StringLiteral(String),
+    LargeStringLiteral(Option<String>),
+    CharLiteral(String),
     IntegerLiteral(String),
     DateLiteral(String),
     FormatString(String),
@@ -502,6 +504,13 @@ impl Expression {
 
     fn parse_literal_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
+            Some(Symbol::LargeString(index)) => {
+                println!("Large String {:?}", parser.get_large_string(index));
+                Ok((
+                    Expression::LargeStringLiteral(parser.get_large_string(index)),
+                    pos + 1,
+                ))
+            }
             Some(Symbol::String(str)) => Ok((Expression::StringLiteral(str.to_string()), pos + 1)),
             Some(Symbol::Integer(int)) => {
                 Ok((Expression::IntegerLiteral(int.to_string()), pos + 1))
@@ -510,7 +519,11 @@ impl Expression {
             Some(Symbol::FormatString(f_str)) => {
                 Ok((Expression::FormatString(f_str.to_string()), pos + 1))
             }
-            _ => todo!(),
+            Some(Symbol::Char(chr)) => Ok((Expression::CharLiteral(chr.to_string()), pos + 1)),
+            sym => {
+                println!("parse literal sym = {:?}", sym);
+                todo!()
+            }
         }
     }
 

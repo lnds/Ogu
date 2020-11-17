@@ -14,6 +14,7 @@ pub type IndentStack = Vec<LineSize>;
 pub enum Symbol<'a> {
     Indent,
     Dedent,
+    LargeString(usize),
     #[error]
     Error,
     #[regex(r"[ \t]", logos::skip)]

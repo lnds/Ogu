@@ -63,12 +63,12 @@ pub fn run(params: Params) -> Result<()> {
 
 fn run_module(path: &PathBuf, params: &Params) -> Result<()> {
     let mut lexer = Lexer::new(path)?;
-    let tokens = lexer.scan()?;
+    let (tokens, large_strings) = lexer.scan()?;
     if params.tokens {
         let syms: Vec<Symbol> = tokens.iter().map(|t| t.symbol).collect();
         println!("TOKENS = {:?}", syms);
     }
-    let mut parser = Parser::new(tokens)?;
+    let mut parser = Parser::new(tokens, large_strings)?;
     let module = parser.parse(path)?;
     if params.print {
         println!("AST = {:#?}", module);

@@ -49,7 +49,7 @@ impl<'a> Lexer {
         }
     }
 
-    pub fn scan(&'a mut self) -> Result<TokenStream<'a>> {
+    pub fn scan(&'a mut self) -> Result<(TokenStream<'a>, Vec<String>)> {
         self.lines = match &self.source {
             LexerSource::File(path) => {
                 let file = File::open(&path)?;
@@ -65,20 +65,24 @@ impl<'a> Lexer {
         self.scan_lines()
     }
 
-    fn scan_lines(&'a mut self) -> Result<TokenStream<'a>> {
-        let tokens = self.map_lines();
-        Ok(TokenStream::new(tokens))
+    fn scan_lines(&'a mut self) -> Result<(TokenStream<'a>, Vec<String>)> {
+        let mut large_strings = vec![];
+        let tokens = self.map_lines(&mut large_strings);
+        Ok((TokenStream::new(tokens), large_strings))
     }
 
-    fn map_lines(&'a mut self) -> TokenList<'a> {
+    fn map_lines(&'a mut self, mut large_strings: &mut Vec<String>) -> TokenList<'a> {
         let mut tokens = vec![];
         let mut indent_stack = vec![0];
+        let mut large_string = String::new();
         for (line_number, text) in self.lines.iter() {
             let mut line_tokens = scan_line(
                 &text[..],
                 &line_number,
                 &mut self.paren_level,
+                &mut large_string,
                 &mut indent_stack,
+                &mut large_strings,
             );
             tokens.append(&mut line_tokens);
         }
@@ -114,7 +118,9 @@ fn scan_line<'a>(
     text: &'a str,
     line_number: &LineNumber,
     paren_level: &mut LineSize,
+    large_string: &mut String,
     mut indent_stack: &mut IndentStack,
+    large_strings: &mut Vec<String>,
 ) -> TokenList<'a> {
     let line_len = text.len();
     let text = text.trim_start();
@@ -123,7 +129,30 @@ fn scan_line<'a>(
     if *paren_level == 0 {
         line_symbols = scan_indentation(indentation, &mut indent_stack);
     }
-    let lexer = Symbol::lexer(text);
+
+    let (text, rest) = match text.find("\"\"\"") {
+        Some(pos) => text.split_at(pos),
+        None => (text, ""),
+    };
+    let mut in_string = large_string.len() > 0;
+    let lexer = if in_string {
+        large_string.push_str(text);
+        if rest.contains("\"\"\"") {
+            large_strings.push(large_string.clone());
+            line_symbols.push(Symbol::LargeString(large_strings.len() - 1));
+            large_string.clear();
+            Symbol::lexer(&rest[3..])
+        } else {
+            Symbol::lexer(rest)
+        }
+    } else {
+        if rest.len() > 0 {
+            large_string.clone_from(&rest[3..].to_string());
+            in_string = true;
+        }
+        Symbol::lexer(text)
+    };
+
     for sym in lexer {
         if sym.is_open_paren() {
             *paren_level += 1;
@@ -136,7 +165,7 @@ fn scan_line<'a>(
         }
         line_symbols.push(sym);
     }
-    if *paren_level == 0 {
+    if *paren_level == 0 && !in_string {
         line_symbols.push(NewLine)
     }
     line_symbols

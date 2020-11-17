@@ -1,6 +1,6 @@
-module toque-y-fama
+module ToqueFama
 
-ingresar! tam = prompt! #"Ingresa una secuencia de ${tam} dígitos distintos (o escribe salir):"
+ingresar! tam = prompt! f"Ingresa una secuencia de ${tam} dígitos distintos (o escribe salir):"
 
 famas num xs = zip num xs |> filter \x -> first x == second x |> count
 
@@ -12,40 +12,43 @@ toques! num xs =
 validar n xs = if (length num) == n then num else []
     where num = xs |> filter is-digit?  |> map to-digit  |> uniq
 
-tam = 5
-sec = shuffle [0 .. 9] |> take tam
-
-println! $ fmt "Bienvenido a Toque y Fama.\n" ++
-"==========================\n\n" ++
-"En este juego debes tratar de adivinar una secuencia de ${tam} dígitos generadas por el programa.\n" ++
-"Para esto ingresas ${tam} dígitos distintos con el fin de adivinar la secuencia.\n" ++
-"Si has adivinado correctamente la posición de un dígito se produce una Fama.\n" ++
-"Si has adivinado uno de los dígitos de la secuencia, pero en una posición distinta se trata de un Toque.\n\n" ++
-"Ejemplo: Si la secuencia es : [8, 0, 6, 1, 3] e ingresas  40863, entonces en pantalla aparecerá:\n" ++
-"tu ingresaste [4, 0, 8, 6, 3]\n" ++
-"resultado: 2 Toques 2 Famas\n\n\n"
-
-
-for intentos = 1, accion = ingresar tam loop
-    if accion == "salir" || empty? accion then
-      println! "\ngracias por jugar, adios."
-    else
-      let num = validar tam accion
-      in
-        if empty? num then
+main () =
+    let
+        tam = 5
+        sec = shuffle [0 .. 9] |> take tam
+    in
         do
-           println! "error!\n"
-           recur intentos = inc intentos, accion = ingresar tam
-        else
-        do
-           println! "tu ingresaste " num "(es " sec ")"
-           let t = toques num sec,
-               f = famas num sec
-           in
-           do
-             println! "resultado: "  (t - t)  " Toques "  f  "Famas"
-             if f == tam then
-               println! #"Ganaste! Acertaste al intento ${intentos}! La secuencia era ${sec}"
-             else
-               recur intentos = inc intentos, accion = ingresar tam
+            println! $ fmt "Bienvenido a Toque y Fama.\n" ++
+            "==========================\n\n" ++
+            "En este juego debes tratar de adivinar una secuencia de ${tam} dígitos generadas por el programa.\n" ++
+            "Para esto ingresas ${tam} dígitos distintos con el fin de adivinar la secuencia.\n" ++
+            "Si has adivinado correctamente la posición de un dígito se produce una Fama.\n" ++
+            "Si has adivinado uno de los dígitos de la secuencia, pero en una posición distinta se trata de un Toque.\n\n" ++
+            "Ejemplo: Si la secuencia es : [8, 0, 6, 1, 3] e ingresas  40863, entonces en pantalla aparecerá:\n" ++
+            "tu ingresaste [4, 0, 8, 6, 3]\n" ++
+            "resultado: 2 Toques 2 Famas\n\n\n"
+
+
+            for intentos = 1, accion = ingresar tam loop
+                if accion == "salir" || empty? accion then
+                  println! "\ngracias por jugar, adios."
+                else
+                  let num = validar tam accion
+                  in
+                    if empty? num then
+                    do
+                       println! "error!\n"
+                       recur intentos = inc intentos, accion = ingresar tam
+                    else
+                    do
+                       println! "tu ingresaste " num "(es " sec ")"
+                       let t = toques num sec,
+                           f = famas num sec
+                       in
+                       do
+                         println! "resultado: "  (t - t)  " Toques "  f  "Famas"
+                         if f == tam then
+                           println! #"Ganaste! Acertaste al intento ${intentos}! La secuencia era ${sec}"
+                         else
+                           recur intentos = inc intentos, accion = ingresar tam
 

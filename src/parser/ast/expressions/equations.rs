@@ -4,7 +4,7 @@ use crate::parser::ast::expressions::args::{Arg, VecArg};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::{parse_guards, Guard};
 use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, ParseError, Parser};
-use anyhow::{Error, Result};
+use anyhow::{Context, Error, Result};
 
 #[derive(Debug, Clone)]
 pub enum Equation {
@@ -21,6 +21,10 @@ impl Equation {
             Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingIdentifier,
             )))
+            .context(format!(
+                "Expecting id, but found: {:?}",
+                parser.get_symbol(pos)
+            ))
         }
     }
 
@@ -44,6 +48,10 @@ impl Equation {
             Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingIdentifier,
             )))
+            .context(format!(
+                "Expecting identifier but found: {:?}",
+                parser.get_symbol(pos)
+            ))
         }
     }
 

@@ -8,7 +8,7 @@ use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::expression::{Expression, ParseResult};
 use crate::parser::{ParseError, Parser};
-use anyhow::{Error, Result};
+use anyhow::{Context, Error, Result};
 
 pub struct LeftAssocExpr<'a>(Symbol<'a>, Box<Expression>, Box<Expression>);
 
@@ -128,6 +128,10 @@ pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
         Err(Error::new(OguError::ParserError(
             ParseError::ExpectingIdentifier,
         )))
+        .context(format!(
+            "expecting id, but found: {:?}",
+            parser.get_symbol(pos)
+        ))
     }
 }
 

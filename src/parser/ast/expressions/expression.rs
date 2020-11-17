@@ -198,6 +198,7 @@ impl Expression {
                 Err(Error::new(OguError::ParserError(
                     ParseError::ExpectingArrow,
                 )))
+                .context("expecting ->")
             } else {
                 let pos = parser.skip_nl(pos + 1); // skip arrow
                 let (expr, pos) = Expression::parse_expr(parser, pos)?;
@@ -226,6 +227,7 @@ impl Expression {
                     Err(Error::new(OguError::ParserError(
                         ParseError::ExpectingIdentifier,
                     )))
+                    .context("expecting )")
                 } else {
                     Ok((LambdaArg::Tuple(ids), pos))
                 }
@@ -233,7 +235,8 @@ impl Expression {
             Some(Symbol::Id(id)) => Ok((LambdaArg::Simple(id.to_string()), pos + 1)),
             _ => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingLambdaArg,
-            ))),
+            )))
+            .context("expecting args"),
         }
     }
 

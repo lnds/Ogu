@@ -137,16 +137,7 @@ pub fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
 pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
-        if !parser.peek(pos, Symbol::Dedent) {
-            return Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingIndentationEnd,
-            )))
-            .context(format!(
-                "expecting indentation ends, found {:?}",
-                parser.get_symbol(pos)
-            ));
-        }
-        pos += 1;
+        pos = consume_symbol(parser, pos, Symbol::Dedent)?;
     }
     Ok(pos)
 }

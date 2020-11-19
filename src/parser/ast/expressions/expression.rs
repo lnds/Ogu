@@ -37,6 +37,7 @@ macro_rules! parse_right_assoc {
 pub enum Expression {
     Error,
     Identifier(String),
+    TypeIdentifier(String),
     Atom(String),
     StringLiteral(String),
     LargeStringLiteral(Option<String>),
@@ -46,7 +47,6 @@ pub enum Expression {
     FormatString(String),
     Unit,
     EmptyList,
-    CtorNoArgs(String),
     LazyExpr(Box<Expression>),
     ListExpr(Vec<Expression>),
     ListByComprehension(
@@ -59,6 +59,7 @@ pub enum Expression {
     RangeOpenExpr(Vec<Expression>, Box<Expression>),
     RangeInfExpr(Vec<Expression>), // [exprs...]
     DictExpr(Vec<(Expression, Expression)>),
+    TypedFuncCall(String, Vec<Expression>, Vec<Expression>),
     PipeFuncCall(Box<Expression>, Box<Expression>),
     PipeFirstArgFuncCall(Box<Expression>, Box<Expression>),
     PipeBackFuncCall(Box<Expression>, Box<Expression>),
@@ -131,19 +132,15 @@ pub enum LambdaArg {
 
 impl Expression {
     pub fn parse(parser: &Parser, pos: usize) -> ParseResult {
-        let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+        let (expr, mut pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
         if parser.peek(pos, Symbol::SemiColon) {
             let mut exprs = vec![expr];
-            let mut pos = pos;
-            loop {
+            while parser.peek(pos, Symbol::SemiColon) {
                 pos = consume_symbol(parser, pos, Symbol::SemiColon)?;
                 pos = parser.skip_nl(pos);
                 let (expr, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                pos = parser.skip_nl(new_pos);
                 exprs.push(expr);
-                pos = new_pos;
-                if !parser.peek(pos, Symbol::SemiColon) {
-                    break;
-                }
             }
             Ok((Expression::DoExpr(exprs), pos))
         } else {
@@ -602,9 +599,34 @@ impl Expression {
     }
 
     fn parse_ctor_expr(parser: &Parser, pos: usize) -> ParseResult {
-        println!("ctor_expr {}=>{:?}", pos, parser.get_symbol(pos));
         match parser.get_symbol(pos) {
-            Some(Symbol::TypeId(tid)) => Ok((Expression::CtorNoArgs(tid.to_string()), pos + 1)),
+            Some(Symbol::TypeId(tid)) => {
+                let type_id = tid.to_string();
+                let mut pos = consume_symbol(parser, pos, Symbol::TypeId(tid))?;
+                let mut q_ids = vec![];
+                if parser.peek(pos, Symbol::Dot) {
+                    while parser.peek(pos, Symbol::Dot) {
+                        pos = consume_symbol(parser, pos, Symbol::Dot)?;
+                        match parser.get_symbol(pos) {
+                            Some(Symbol::Id(id)) => {
+                                q_ids.push(Expression::Identifier(id.to_string()))
+                            }
+                            Some(Symbol::TypeId(tid)) => {
+                                q_ids.push(Expression::TypeIdentifier(tid.to_string()))
+                            }
+                            _ => break,
+                        }
+                        pos += 1;
+                    }
+                }
+                let mut args = vec![];
+                while !is_func_call_end_symbol(parser.get_symbol(pos)) {
+                    let (expr, new_pos) = Expression::parse(parser, pos)?;
+                    args.push(expr);
+                    pos = new_pos;
+                }
+                Ok((Expression::TypedFuncCall(type_id, q_ids, args), pos))
+            }
             _ => todo!(),
         }
     }

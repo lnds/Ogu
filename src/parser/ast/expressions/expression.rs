@@ -46,6 +46,7 @@ pub enum Expression {
     FormatString(String),
     Unit,
     EmptyList,
+    CtorNoArgs(String),
     LazyExpr(Box<Expression>),
     ListExpr(Vec<Expression>),
     ListByComprehension(
@@ -57,6 +58,7 @@ pub enum Expression {
     RangeExpr(Vec<Expression>, Box<Expression>),
     RangeOpenExpr(Vec<Expression>, Box<Expression>),
     RangeInfExpr(Vec<Expression>), // [exprs...]
+    DictExpr(Vec<(Expression, Expression)>),
     PipeFuncCall(Box<Expression>, Box<Expression>),
     PipeFirstArgFuncCall(Box<Expression>, Box<Expression>),
     PipeBackFuncCall(Box<Expression>, Box<Expression>),
@@ -97,6 +99,7 @@ pub enum Expression {
     EqExpr(Box<Expression>, Box<Expression>),
     NeExpr(Box<Expression>, Box<Expression>),
     AddExpr(Box<Expression>, Box<Expression>),
+    ConcatExpr(Box<Expression>, Box<Expression>),
     SubExpr(Box<Expression>, Box<Expression>),
     MulExpr(Box<Expression>, Box<Expression>),
     DivExpr(Box<Expression>, Box<Expression>),
@@ -128,7 +131,24 @@ pub enum LambdaArg {
 
 impl Expression {
     pub fn parse(parser: &Parser, pos: usize) -> ParseResult {
-        Expression::parse_pipe_func_call_expr(parser, pos)
+        let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+        if parser.peek(pos, Symbol::SemiColon) {
+            let mut exprs = vec![expr];
+            let mut pos = pos;
+            loop {
+                pos = consume_symbol(parser, pos, Symbol::SemiColon)?;
+                pos = parser.skip_nl(pos);
+                let (expr, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                exprs.push(expr);
+                pos = new_pos;
+                if !parser.peek(pos, Symbol::SemiColon) {
+                    break;
+                }
+            }
+            Ok((Expression::DoExpr(exprs), pos))
+        } else {
+            Ok((expr, pos))
+        }
     }
 
     parse_left_assoc!(
@@ -393,7 +413,7 @@ impl Expression {
             Some(Symbol::LeftParen) => Expression::parse_paren_expr(parser, pos),
             Some(Symbol::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Symbol::LeftCurly) => Expression::parse_record_expr(parser, pos),
-            Some(Symbol::HashCurly) => Expression::parse_set_expr(parser, pos),
+            Some(Symbol::HashCurly) => Expression::parse_dict_expr(parser, pos),
             Some(Symbol::Lazy) => Expression::parse_lazy_expr(parser, pos),
             Some(sym) if is_literal(sym) => Expression::parse_literal_expr(parser, pos),
             Some(Symbol::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
@@ -535,8 +555,22 @@ impl Expression {
         todo!()
     }
 
-    fn parse_set_expr(_parser: &Parser, _pos: usize) -> ParseResult {
-        todo!()
+    fn parse_dict_expr(parser: &Parser, pos: usize) -> ParseResult {
+        let mut pos = consume_symbol(parser, pos, Symbol::HashCurly)?;
+        let mut pairs = vec![];
+        while !parser.peek(pos, Symbol::RightCurly) {
+            let (key, new_pos) = Expression::parse_primary_expr(parser, pos)?;
+            pos = consume_symbol(parser, new_pos, Symbol::FatArrow)?;
+            let (val, new_pos) = Expression::parse_primary_expr(parser, pos)?;
+            if parser.peek(new_pos, Symbol::Comma) {
+                pos = consume_symbol(parser, new_pos, Symbol::Comma)?;
+            } else {
+                pos = new_pos;
+            }
+            pairs.push((key, val));
+        }
+        pos = consume_symbol(parser, pos, Symbol::RightCurly)?;
+        Ok((Expression::DictExpr(pairs), pos))
     }
 
     fn parse_lazy_expr(parser: &Parser, pos: usize) -> ParseResult {
@@ -567,8 +601,12 @@ impl Expression {
         }
     }
 
-    fn parse_ctor_expr(_parser: &Parser, _pos: usize) -> ParseResult {
-        todo!()
+    fn parse_ctor_expr(parser: &Parser, pos: usize) -> ParseResult {
+        println!("ctor_expr {}=>{:?}", pos, parser.get_symbol(pos));
+        match parser.get_symbol(pos) {
+            Some(Symbol::TypeId(tid)) => Ok((Expression::CtorNoArgs(tid.to_string()), pos + 1)),
+            _ => todo!(),
+        }
     }
 
     fn parse_func_call_expr(parser: &Parser, pos: usize) -> ParseResult {
@@ -632,7 +670,10 @@ impl Expression {
     }
 
     fn parse_let_equation(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        Equation::parse(parser, pos, true)
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        let (eq, pos) = Equation::parse(parser, pos, true)?;
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        Ok((eq, pos))
     }
 
     fn parse_loop(parser: &Parser, pos: usize) -> ParseResult {

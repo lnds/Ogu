@@ -175,6 +175,7 @@ pub fn is_basic_op(symbol: Symbol) -> bool {
 pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
     match symbol {
         None => true,
+        Some(Symbol::Error) => true,
         Some(sym) => matches!(
             sym,
             Symbol::NewLine
@@ -185,6 +186,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Dollar
                 | Symbol::Comma
                 | Symbol::Cons
+                | Symbol::FatArrow
                 | Symbol::Let
                 | Symbol::Do
                 | Symbol::Then
@@ -221,6 +223,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Type
                 | Symbol::Trait
                 | Symbol::Alias
+                | Symbol::SemiColon
         ),
     }
 }
@@ -243,6 +246,7 @@ pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
         Symbol::Equal => Expression::EqExpr(left, right),
         Symbol::NotEqual => Expression::NeExpr(left, right),
         Symbol::Plus => Expression::AddExpr(left, right),
+        Symbol::PlusPlus => Expression::ConcatExpr(left, right),
         Symbol::Minus => Expression::SubExpr(left, right),
         Symbol::Mult => Expression::MulExpr(left, right),
         Symbol::Div => Expression::DivExpr(left, right),
@@ -250,7 +254,10 @@ pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
         Symbol::Mod => Expression::ModExpr(left, right),
         Symbol::ComposeForward => Expression::ComposeFwdExpr(left, right),
         Symbol::ComposeBackward => Expression::ComposeBckExpr(left, right),
-        _ => todo!(),
+        sym => {
+            println!("TODO {:?}", sym);
+            todo!()
+        }
     }
 }
 

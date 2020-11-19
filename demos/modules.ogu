@@ -1,4 +1,5 @@
 module Demo
 
-println! $ Date.today
-println! $ String.upper "hola"
+main () =
+    println! $ Date.today ;
+    println! $ upper "hola"

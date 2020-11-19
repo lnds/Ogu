@@ -1,7 +1,7 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::{ParseError, Parser};
+use crate::parser::{consume_symbol, ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
 #[derive(Debug, Clone)]
@@ -47,9 +47,9 @@ impl Arg {
         if parser.peek(pos + 1, Symbol::RightParen) {
             return Ok(Some((Arg::Void, pos + 2)));
         }
+        let mut pos = consume_symbol(parser, pos, Symbol::LeftParen)?;
         let mut args = vec![];
-        let mut pos = pos + 1;
-        match Arg::parse_arg(parser, pos + 1)? {
+        match Arg::parse_arg(parser, pos)? {
             Some((arg, new_pos)) => {
                 args.push(arg);
                 pos = new_pos;

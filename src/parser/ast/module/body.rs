@@ -118,11 +118,19 @@ impl Declaration {
         let pos = parser.skip_nl(pos + 1);
         let (indent, pos) = parse_opt_indent(parser, pos);
         // allows a single inline decl
-        let (eq, pos) = Equation::parse(parser, pos, false)?;
-        if indent {}
+        let (eq, mut pos) = Equation::parse(parser, pos, false)?;
+        let mut eqs = vec![eq];
+        if indent {
+            while !parser.peek(pos, Symbol::Dedent) {
+                pos = parser.skip_nl(pos);
+                let (eq, new_pos) = Equation::parse(parser, pos, false)?;
+                eqs.push(eq);
+                pos = parser.skip_nl(new_pos);
+            }
+        }
         let pos = parser.skip_nl(pos);
         let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
-        Ok((vec![eq], pos))
+        Ok((eqs, pos))
     }
 }

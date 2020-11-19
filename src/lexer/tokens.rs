@@ -1,5 +1,5 @@
 use crate::lexer::tokens::Symbol::{
-    LeftBracket, LeftCurly, LeftParen, RightBracket, RightCurly, RightParen,
+    HashCurly, LeftBracket, LeftCurly, LeftParen, RightBracket, RightCurly, RightParen,
 };
 use logos::{Lexer, Logos};
 use std::fmt::Display;
@@ -109,6 +109,8 @@ pub enum Symbol<'a> {
     BackArrow,
     #[token(":", priority = 1000)]
     Colon,
+    #[token(";", priority = 1000)]
+    SemiColon,
     #[token(",", priority = 1000)]
     Comma,
     #[token(">>", priority = 1000)]
@@ -135,6 +137,8 @@ pub enum Symbol<'a> {
     Doto,
     #[token("<!", priority = 1000)]
     DotoBack,
+    #[token("=>", priority = 1000)]
+    FatArrow,
     #[token("==", priority = 1000)]
     Equal,
     #[token(">=", priority = 1000)]
@@ -221,7 +225,7 @@ pub enum Symbol<'a> {
 
 impl<'a> Symbol<'a> {
     pub fn is_open_paren(&self) -> bool {
-        *self == LeftParen || *self == LeftBracket || *self == LeftCurly
+        *self == LeftParen || *self == LeftBracket || *self == LeftCurly || *self == HashCurly
     }
 
     pub fn is_close_paren(&self) -> bool {

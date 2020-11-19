@@ -176,45 +176,31 @@ Si tienes un vector puedes acceder al elemento i-esimo del siguiente modo:
     
 # Mapas
     
-Los mapas se escriben entre {}:
+Los mapas se escriben entre `#{}`:
     
-    {"nombre" "Pedro", "edad" 15}
+    #{"nombre" => "Pedro", "edad" => "15"}
     
-Existen keywords, que empiezan con : y son utiles para operar con mapa:
-
-    {:nombre "Pedro", :edad 15}
        
     
 Si tienes un mapa, puedes acceder a sus elementos como una función
     
-    mapa = {"nombre" "Pedro", "edad" 15}
+    mapa = #{"nombre" => "Pedro", "edad" =>  "15"}
     
     edad-de-pedro = mapa "edad"
     
-Con un keyword podemos hacer:
-    
-    mapa =  {:nombre  "Pedro", :edad  15}
-                  
-    edad-de-pedro = mapa :edad
-    
-o
- 
-    edad-de-pedro = :edad mapa
-    
-    
 Un mapa vacio se designa así
    
-    {}
+    #{}
     
 # Conjuntos
          
 Un conjunto se designa asi:
      
-     #{elemento1, elemento2}
+     ${elemento1, elemento2}
      
 Un conjunto vacio se designa así:
 
-    #{}
+    ${}
 
 
 # Funciones

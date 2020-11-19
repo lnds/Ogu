@@ -1,2 +1,4 @@
 suma = [0..999] |> filter (i % 3 == 0 || i % 5 == 0) |> sum
-println! "la suma es" suma
+
+main () =
+    println! "la suma es" suma

@@ -1,6 +1,6 @@
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, Parser};
+use crate::parser::{consume_symbol, parse_opt_indent, parse_opt_where_or_dedent, Parser};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
@@ -21,7 +21,7 @@ pub fn parse_guards(parser: &Parser, pos: usize) -> Result<(GuardVec, usize)> {
         guards.push(guard);
         pos = parser.skip_nl(new_pos);
     }
-    let pos = parse_opt_dedent(parser, pos, in_indent)?;
+    let pos = parse_opt_where_or_dedent(parser, pos, in_indent)?;
     Ok((guards, pos))
 }
 

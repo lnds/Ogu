@@ -65,7 +65,7 @@ impl Body {
 
 impl Declaration {
     pub fn parse_func_or_val(parser: &Parser, pos: usize) -> DeclParseResult {
-        let (eq, pos) = Equation::parse(parser, pos)?;
+        let (eq, pos) = Equation::parse(parser, pos, false)?;
         match eq {
             Equation::Value(name, expr) => {
                 if let Some(where_pos) = look_ahead_where(parser, pos) {
@@ -103,6 +103,13 @@ impl Declaration {
                     )))
                 }
             }
+            _ => Err(Error::new(OguError::ParserError(
+                ParseError::InvalidDeclaration,
+            )))
+            .context(format!(
+                "Invalid declaration @{}",
+                parser.pos_to_line(pos).unwrap_or(0)
+            )),
         }
     }
 
@@ -111,7 +118,7 @@ impl Declaration {
         let pos = parser.skip_nl(pos + 1);
         let (indent, pos) = parse_opt_indent(parser, pos);
         // allows a single inline decl
-        let (eq, pos) = Equation::parse(parser, pos)?;
+        let (eq, pos) = Equation::parse(parser, pos, false)?;
         if indent {}
         let pos = parser.skip_nl(pos);
         let pos = consume_symbol(parser, pos, Symbol::Dedent)?;

@@ -48,7 +48,12 @@ pub enum Expression {
     EmptyList,
     LazyExpr(Box<Expression>),
     ListExpr(Vec<Expression>),
-    ListByComprehension(Vec<Expression>, Vec<Equation>),
+    ListByComprehension(
+        Vec<Expression>,
+        Vec<Equation>,
+        Vec<Expression>,
+        Vec<Equation>,
+    ),
     RangeExpr(Vec<Expression>, Box<Expression>),
     RangeOpenExpr(Vec<Expression>, Box<Expression>),
     RangeInfExpr(Vec<Expression>), // [exprs...]
@@ -99,6 +104,7 @@ pub enum Expression {
     ModExpr(Box<Expression>, Box<Expression>),
     ComposeFwdExpr(Box<Expression>, Box<Expression>),
     ComposeBckExpr(Box<Expression>, Box<Expression>),
+    TupleExpr(Vec<Expression>),
     OpFunc(Box<Symbol<'static>>),
     DoExpr(Vec<Expression>),
     RecurExpr(Vec<Expression>),
@@ -382,7 +388,7 @@ impl Expression {
         }
     }
 
-    fn parse_primary_expr(parser: &Parser, pos: usize) -> ParseResult {
+    pub fn parse_primary_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
             Some(Symbol::LeftParen) => Expression::parse_paren_expr(parser, pos),
             Some(Symbol::LeftBracket) => Expression::parse_list_expr(parser, pos),
@@ -434,6 +440,18 @@ impl Expression {
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
                 if parser.peek(pos, Symbol::RightParen) {
                     Ok((expr, pos + 1))
+                } else if parser.peek(pos, Symbol::Comma) {
+                    let mut exprs = vec![expr];
+                    let mut pos = pos;
+                    while parser.peek(pos, Symbol::Comma) {
+                        pos = consume_symbol(parser, pos, Symbol::Comma)?;
+                        pos = parser.skip_nl(pos);
+                        let (expr, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                        pos = new_pos;
+                        exprs.push(expr);
+                    }
+                    pos = consume_symbol(parser, pos, Symbol::RightParen)?;
+                    Ok((Expression::TupleExpr(exprs), pos))
                 } else {
                     todo!()
                 }
@@ -472,14 +490,36 @@ impl Expression {
                     let pos = consume_symbol(parser, pos, Symbol::Guard)?;
                     let (eq, mut pos) = Equation::parse_back_arrow_eq(parser, pos)?;
                     let mut eqs = vec![];
+                    let mut guards = vec![];
+                    let mut lets = vec![];
                     eqs.push(eq);
                     while parser.peek(pos, Symbol::Comma) {
-                        let (eq, new_pos) = Equation::parse_back_arrow_eq(parser, pos + 1)?;
-                        eqs.push(eq);
-                        pos = new_pos;
+                        pos = consume_symbol(parser, pos, Symbol::Comma)?;
+                        match Equation::parse_back_arrow_eq(parser, pos) {
+                            Ok((eq, new_pos)) => {
+                                eqs.push(eq);
+                                pos = new_pos;
+                            }
+                            Err(_) => {
+                                if parser.peek(pos, Symbol::Let) {
+                                    pos = consume_symbol(parser, pos, Symbol::Let)?;
+                                    let (eq, new_pos) = Equation::parse_value(parser, pos)?;
+                                    lets.push(eq);
+                                    pos = new_pos;
+                                } else {
+                                    let (expr, new_pos) =
+                                        Expression::parse_logical_expr(parser, pos)?;
+                                    guards.push(expr);
+                                    pos = new_pos;
+                                }
+                            }
+                        }
                     }
                     pos = consume_symbol(parser, pos, Symbol::RightBracket)?;
-                    Ok((Expression::ListByComprehension(exprs, eqs), pos))
+                    Ok((
+                        Expression::ListByComprehension(exprs, eqs, guards, lets),
+                        pos,
+                    ))
                 } else {
                     todo!()
                 }
@@ -507,13 +547,10 @@ impl Expression {
 
     fn parse_literal_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
-            Some(Symbol::LargeString(index)) => {
-                println!("Large String {:?}", parser.get_large_string(index));
-                Ok((
-                    Expression::LargeStringLiteral(parser.get_large_string(index)),
-                    pos + 1,
-                ))
-            }
+            Some(Symbol::LargeString(index)) => Ok((
+                Expression::LargeStringLiteral(parser.get_large_string(index)),
+                pos + 1,
+            )),
             Some(Symbol::String(str)) => Ok((Expression::StringLiteral(str.to_string()), pos + 1)),
             Some(Symbol::Integer(int)) => {
                 Ok((Expression::IntegerLiteral(int.to_string()), pos + 1))
@@ -595,7 +632,7 @@ impl Expression {
     }
 
     fn parse_let_equation(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        Equation::parse(parser, pos)
+        Equation::parse(parser, pos, true)
     }
 
     fn parse_loop(parser: &Parser, pos: usize) -> ParseResult {

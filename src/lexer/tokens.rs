@@ -409,9 +409,8 @@ mod test_tokens {
 
     #[test]
     fn test_ops() {
-        let mut lex = Symbol::lexer("&& & @ -> = <- : , >>");
+        let mut lex = Symbol::lexer("&&  @ -> = <- : , >>");
         assert_eq!(lex.next(), Some(Symbol::And));
-        assert_eq!(lex.next(), Some(Symbol::BitAnd));
         assert_eq!(lex.next(), Some(Symbol::Arroba));
         assert_eq!(lex.next(), Some(Symbol::Arrow));
         assert_eq!(lex.next(), Some(Symbol::Assign));

@@ -211,7 +211,7 @@ mod test_lexer {
         let mut lexer = Lexer::from("func =\n  this is a function\nend");
         let stream_result = lexer.scan();
         assert!(stream_result.is_ok());
-        let stream = stream_result.unwrap();
+        let (stream, _) = stream_result.unwrap();
         let mut iter = stream.iter();
         assert_eq!(
             iter.next(),
@@ -305,7 +305,7 @@ mod test_lexer {
         let mut lexer = Lexer::from("func = (1, \n  2, 3, 4)\n  this is a function\nend");
         let stream_result = lexer.scan();
         assert!(stream_result.is_ok());
-        let stream = stream_result.unwrap();
+        let (stream, _) = stream_result.unwrap();
         let mut iter = stream.iter();
         assert_eq!(
             iter.next(),
@@ -462,7 +462,7 @@ mod test_lexer {
         let mut lexer = Lexer::from("func = (1, \n  2, 3, 4))\n  this is a function\nend");
         let stream_result = lexer.scan();
         assert!(stream_result.is_ok());
-        let stream = stream_result.unwrap();
+        let (stream, _) = stream_result.unwrap();
         let mut iter = stream.iter();
         assert_eq!(
             iter.next(),
@@ -646,7 +646,7 @@ mod test_lexer {
                 let mut lexer = lex.unwrap();
                 let stream = lexer.scan();
                 assert!(stream.is_ok());
-                let stream = stream.unwrap();
+                let (stream, _) = stream.unwrap();
                 assert!(stream.len() > 0);
             }
         }
@@ -665,7 +665,7 @@ mod test_lexer {
                     let mut lexer = lex.unwrap();
                     let stream = lexer.scan();
                     assert!(stream.is_ok());
-                    let stream = stream.unwrap();
+                    let (stream, _) = stream.unwrap();
                     assert!(stream.len() > 0);
                 }
             }

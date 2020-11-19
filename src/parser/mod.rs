@@ -55,6 +55,8 @@ pub enum ParseError {
     EofUnexpected,
     #[error("Expecting operator")]
     ExpectingOperator,
+    #[error("Invalid declaration")]
+    InvalidDeclaration,
 }
 
 pub struct Parser<'a> {

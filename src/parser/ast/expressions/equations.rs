@@ -9,22 +9,33 @@ use anyhow::{Context, Error, Result};
 #[derive(Debug, Clone)]
 pub enum Equation {
     Value(String, Expression),
+    LValue(Expression, Expression),
+    LValueWithGuards(Expression, Vec<Guard>),
     Function(String, Vec<Arg>, Expression),
     FunctionWithGuards(String, Vec<Arg>, Vec<Guard>),
 }
 
 impl Equation {
-    pub fn parse(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+    pub fn parse(parser: &Parser, pos: usize, inner: bool) -> Result<(Equation, usize)> {
         if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
         } else {
-            Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingIdentifier,
-            )))
-            .context(format!(
-                "Expecting id, but found: {:?}",
-                parser.get_symbol(pos)
-            ))
+            if inner {
+                let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
+                if parser.peek(pos, Symbol::Assign) {
+                    Equation::parse_lval_no_guards(expr, parser, pos + 1)
+                } else {
+                    Equation::parse_lval_guards(expr, parser, pos)
+                }
+            } else {
+                Err(Error::new(OguError::ParserError(
+                    ParseError::ExpectingIdentifier,
+                )))
+                .context(format!(
+                    "Expecting id, but found: {:?}",
+                    parser.get_symbol(pos)
+                ))
+            }
         }
     }
 
@@ -49,8 +60,10 @@ impl Equation {
                 ParseError::ExpectingIdentifier,
             )))
             .context(format!(
-                "Expecting identifier but found: {:?}",
-                parser.get_symbol(pos)
+                "Expecting identifier but found: {:?} @{};{}",
+                parser.get_symbol(pos),
+                parser.pos_to_line(pos).unwrap_or(0),
+                pos
             ))
         }
     }
@@ -80,6 +93,18 @@ impl Equation {
         }
     }
 
+    fn parse_lval_no_guards(
+        expr_left: Expression,
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<(Equation, usize)> {
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        let (expr_val, pos) = Expression::parse(parser, pos)?;
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        let eq = Equation::LValue(expr_left, expr_val);
+        Ok((eq, pos))
+    }
+
     fn parse_func_no_guards(
         name: String,
         args: VecArg,
@@ -101,6 +126,16 @@ impl Equation {
     ) -> Result<(Equation, usize)> {
         let (guards, pos) = parse_guards(parser, pos)?;
         let eq = Equation::FunctionWithGuards(name, args, guards);
+        Ok((eq, pos))
+    }
+
+    fn parse_lval_guards(
+        left_expr: Expression,
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<(Equation, usize)> {
+        let (guards, pos) = parse_guards(parser, pos)?;
+        let eq = Equation::LValueWithGuards(left_expr, guards);
         Ok((eq, pos))
     }
 }

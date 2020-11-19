@@ -1,6 +1,6 @@
-"aaabbb" =~ #/(a|b)+/
+test "aaabbb" =~ #/(a|b)+/# = true
 
-"basas" !~ #/(a|b)+/
+test "basas" !~ #/(a|b)+/# = true
 
 
 

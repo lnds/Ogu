@@ -144,16 +144,37 @@ pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<
     Ok(pos)
 }
 
+pub fn parse_opt_where_or_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
+    let mut pos = parser.skip_nl(pos);
+    if in_indent {
+        if parser.peek(pos, Symbol::Dedent) {
+            pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        } else if !parser.peek(pos, Symbol::Where) {
+            return Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingWhere,
+            )))
+            .context(format!(
+                "Expecting where @{} ({})",
+                parser.pos_to_line(pos).unwrap_or(0),
+                pos
+            ));
+        }
+    }
+    Ok(pos)
+}
+
 pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
     let pos = parser.skip_nl(pos);
-    if !parser.peek(pos, Symbol::Indent) {
-        None
-    } else {
+    if parser.peek(pos, Symbol::Where) {
+        Some(pos)
+    } else if parser.peek(pos, Symbol::Indent) {
         let pos = parser.skip_nl(pos + 1);
         if parser.peek(pos, Symbol::Where) {
             Some(pos)
         } else {
             None
         }
+    } else {
+        None
     }
 }

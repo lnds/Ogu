@@ -66,10 +66,15 @@ impl Body {
 impl Declaration {
     pub fn parse_func_or_val(parser: &Parser, pos: usize) -> DeclParseResult {
         let (eq, pos) = Equation::parse(parser, pos, false)?;
+        let (opt_where, pos) = if let Some(where_pos) = look_ahead_where(parser, pos) {
+            let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+            (Some(where_decl), pos)
+        } else {
+            (None, pos)
+        };
         match eq {
             Equation::Value(name, expr) => {
-                if let Some(where_pos) = look_ahead_where(parser, pos) {
-                    let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+                if let Some(where_decl) = opt_where {
                     Ok(Some((
                         Declaration::ValueWithWhere(name, expr, where_decl),
                         pos,
@@ -79,8 +84,7 @@ impl Declaration {
                 }
             }
             Equation::Function(name, args, expr) => {
-                if let Some(where_pos) = look_ahead_where(parser, pos) {
-                    let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+                if let Some(where_decl) = opt_where {
                     Ok(Some((
                         Declaration::FunctionWithWhere(name, args, expr, where_decl),
                         pos,
@@ -90,8 +94,7 @@ impl Declaration {
                 }
             }
             Equation::FunctionWithGuards(name, args, guards) => {
-                if let Some(where_pos) = look_ahead_where(parser, pos) {
-                    let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+                if let Some(where_decl) = opt_where {
                     Ok(Some((
                         Declaration::FunctionWithGuardsAndWhere(name, args, guards, where_decl),
                         pos,

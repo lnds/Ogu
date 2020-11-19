@@ -3,7 +3,10 @@ use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::args::{Arg, VecArg};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::{parse_guards, Guard};
-use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, ParseError, Parser};
+use crate::parser::{
+    consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent, ParseError,
+    Parser,
+};
 use anyhow::{Context, Error, Result};
 
 #[derive(Debug, Clone)]
@@ -113,7 +116,7 @@ impl Equation {
     ) -> Result<(Equation, usize)> {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
-        let pos = parse_opt_dedent(parser, pos, indent)?;
+        let pos = parse_opt_where_or_dedent(parser, pos, indent)?;
         let eq = Equation::Function(name, args, expr);
         Ok((eq, pos))
     }

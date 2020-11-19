@@ -63,6 +63,7 @@ pub fn run(params: Params) -> Result<()> {
 
 fn run_module(path: &PathBuf, params: &Params) -> Result<()> {
     let mut lexer = Lexer::new(path)?;
+    println!("parsing {:?}", path);
     let (tokens, large_strings) = lexer.scan()?;
     if params.tokens {
         let syms: Vec<Symbol> = tokens.iter().map(|t| t.symbol).collect();

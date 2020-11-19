@@ -87,8 +87,6 @@ pub enum Symbol<'a> {
     Type,
     #[token("until", priority = 2000)]
     Until,
-    #[token("when", priority = 2000)]
-    When,
     #[token("where", priority = 2000)]
     Where,
     #[token("while", priority = 2000)]
@@ -400,9 +398,8 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Until));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("type when where with yield");
+        let mut lex = Symbol::lexer("type where with yield");
         assert_eq!(lex.next(), Some(Symbol::Type));
-        assert_eq!(lex.next(), Some(Symbol::When));
         assert_eq!(lex.next(), Some(Symbol::Where));
         assert_eq!(lex.next(), Some(Symbol::With));
         assert_eq!(lex.next(), Some(Symbol::Yield));

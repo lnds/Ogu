@@ -1,7 +1,6 @@
-from ogu.turtle import *
+import Ogu.Turtle exposing (..)
 
 draw-fib! turtle depth =
-   do
      move-forward! turtle 30
      if depth > 2 then
      do

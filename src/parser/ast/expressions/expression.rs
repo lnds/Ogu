@@ -40,6 +40,12 @@ pub enum RecurValue {
 }
 
 #[derive(Debug, Clone)]
+pub enum LoopCond {
+    WhileExpr(Box<Expression>),
+    UntilExpr(Box<Expression>),
+}
+
+#[derive(Debug, Clone)]
 pub enum Expression {
     Error,
     Identifier(String),
@@ -54,6 +60,7 @@ pub enum Expression {
     FormatString(String),
     Unit,
     EmptyList,
+    NotExpr(Box<Expression>),
     LazyExpr(Box<Expression>),
     ListExpr(Vec<Expression>),
     ListByComprehension(
@@ -127,7 +134,13 @@ pub enum Expression {
         Vec<(Expression, Expression)>,
         Box<Expression>,
     ),
-    LoopExpr(Option<Vec<Equation>>, Box<Expression>),
+
+    LoopExpr(
+        Option<Vec<Equation>>,
+        Option<LoopCond>,
+        Box<Expression>,
+        Option<Box<Expression>>,
+    ),
 }
 
 pub type ParseResult = Result<(Expression, usize)>;
@@ -212,8 +225,6 @@ impl Expression {
             Some(Symbol::Let) => Expression::parse_let(parser, pos),
             Some(Symbol::For) => Expression::parse_loop(parser, pos),
             Some(Symbol::Loop) => Expression::parse_loop(parser, pos),
-            Some(Symbol::Until) => Expression::parse_loop(parser, pos),
-            Some(Symbol::While) => Expression::parse_loop(parser, pos),
             Some(Symbol::If) => Expression::parse_if(parser, pos),
             Some(Symbol::Recur) => Expression::parse_recur(parser, pos),
             _ => Expression::parse_lambda_expr(parser, pos),
@@ -419,6 +430,7 @@ impl Expression {
             Some(Symbol::LeftCurly) => Expression::parse_record_expr(parser, pos),
             Some(Symbol::HashCurly) => Expression::parse_dict_expr(parser, pos),
             Some(Symbol::Lazy) => Expression::parse_lazy_expr(parser, pos),
+            Some(Symbol::Not) => Expression::parse_not_expr(parser, pos),
             Some(sym) if is_literal(sym) => Expression::parse_literal_expr(parser, pos),
             Some(Symbol::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
             _ => Expression::parse_func_call_expr(parser, pos),
@@ -583,6 +595,12 @@ impl Expression {
         Ok((Expression::LazyExpr(Box::new(expr)), pos))
     }
 
+    fn parse_not_expr(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Not)?;
+        let (expr, pos) = Expression::parse(parser, pos)?;
+        Ok((Expression::NotExpr(Box::new(expr)), pos))
+    }
+
     fn parse_literal_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
             Some(Symbol::LargeString(index)) => Ok((
@@ -716,6 +734,16 @@ impl Expression {
         } else {
             (None, pos)
         };
+        let pos = parser.skip_nl(pos);
+        let (opt_while_or_until_part, pos) = if parser.peek(pos, Symbol::While) {
+            let (while_part, pos) = Expression::parse_while(parser, pos)?;
+            (Some(while_part), pos)
+        } else if parser.peek(pos, Symbol::Until) {
+            let (until_part, pos) = Expression::parse_until(parser, pos)?;
+            (Some(until_part), pos)
+        } else {
+            (None, pos)
+        };
 
         let pos = parser.skip_nl(pos);
         let pos = consume_symbol(parser, pos, Symbol::Loop)?;
@@ -723,19 +751,42 @@ impl Expression {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (loop_body, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
-        Ok((Expression::LoopExpr(for_part, Box::new(loop_body)), pos))
+        if parser.peek(pos, Symbol::Return) {
+            let pos = consume_symbol(parser, pos, Symbol::Return)?;
+            let pos = parser.skip_nl(pos);
+            let (indent, pos) = parse_opt_indent(parser, pos);
+            let (expr, pos) = Expression::parse(parser, pos)?;
+            let pos = parse_opt_dedent(parser, pos, indent)?;
+            Ok((
+                Expression::LoopExpr(
+                    for_part,
+                    opt_while_or_until_part,
+                    Box::new(loop_body),
+                    Some(Box::new(expr)),
+                ),
+                pos,
+            ))
+        } else {
+            Ok((
+                Expression::LoopExpr(for_part, opt_while_or_until_part, Box::new(loop_body), None),
+                pos,
+            ))
+        }
     }
 
     fn parse_for(parser: &Parser, pos: usize) -> Result<(Vec<Equation>, usize)> {
         let pos = consume_symbol(parser, pos, Symbol::For)?;
-        let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
         let mut eqs = vec![];
         let (eq, mut pos) = Equation::parse_value(parser, pos)?;
         eqs.push(eq);
         while parser.peek(pos, Symbol::NewLine) || parser.peek(pos, Symbol::Comma) {
             pos = parser.skip_nl(pos + 1);
-            if parser.peek(pos, Symbol::Loop) {
+            if parser.peek(pos, Symbol::Loop)
+                || parser.peek(pos, Symbol::While)
+                || parser.peek(pos, Symbol::Until)
+                || parser.peek(pos, Symbol::Dedent)
+            {
                 break;
             }
             let (eq, new_pos) = Equation::parse_value(parser, pos)?;
@@ -746,18 +797,37 @@ impl Expression {
         Ok((eqs, pos))
     }
 
+    fn parse_while(parser: &Parser, pos: usize) -> Result<(LoopCond, usize)> {
+        let pos = consume_symbol(parser, pos, Symbol::While)?;
+        let (expr, pos) = Expression::parse_logical_expr(parser, pos)?;
+        Ok((LoopCond::WhileExpr(Box::new(expr)), pos))
+    }
+
+    fn parse_until(parser: &Parser, pos: usize) -> Result<(LoopCond, usize)> {
+        let pos = consume_symbol(parser, pos, Symbol::Until)?;
+        let (expr, pos) = Expression::parse_logical_expr(parser, pos)?;
+        Ok((LoopCond::UntilExpr(Box::new(expr)), pos))
+    }
+
     fn parse_recur(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Symbol::Recur)?;
+        let pos = parser.skip_nl(pos);
+        let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr, mut pos) = Expression::parse_recur_expr(parser, pos)?;
+        pos = parser.skip_nl(pos);
         let mut exprs = vec![];
         exprs.push(expr);
         while parser.peek(pos, Symbol::Comma) {
             pos = consume_symbol(parser, pos, Symbol::Comma)?;
             pos = parser.skip_nl(pos);
-            let (expr, new_pos) = Expression::parse_recur_expr(parser, pos)?;
+            let (in_indent, new_pos) = parse_opt_indent(parser, pos);
+            let (expr, new_pos) = Expression::parse_recur_expr(parser, new_pos)?;
+            pos = parser.skip_nl(new_pos);
+            pos = parse_opt_dedent(parser, pos, in_indent)?;
+            pos = parser.skip_nl(pos);
             exprs.push(expr);
-            pos = new_pos;
         }
+        pos = parse_opt_dedent(parser, pos, indent)?;
         Ok((Expression::RecurExpr(exprs), pos))
     }
 

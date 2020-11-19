@@ -195,11 +195,14 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Then
                 | Symbol::Else
                 | Symbol::Elif
+                | Symbol::Return
                 | Symbol::RightParen
                 | Symbol::In
                 | Symbol::RightBracket
                 | Symbol::RightCurly
                 | Symbol::Where
+                | Symbol::While
+                | Symbol::Until
                 | Symbol::PipeLeft
                 | Symbol::PipeLeftFirstArg
                 | Symbol::PipeRight

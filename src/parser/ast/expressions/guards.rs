@@ -1,6 +1,8 @@
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::{consume_symbol, parse_opt_indent, parse_opt_where_or_dedent, Parser};
+use crate::parser::{
+    consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent, Parser,
+};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
@@ -15,12 +17,21 @@ pub fn parse_guards(parser: &Parser, pos: usize) -> Result<(GuardVec, usize)> {
     let (in_indent, pos) = parse_opt_indent(parser, pos);
     let (guard, mut pos) = parse_guard(parser, pos)?;
     let mut guards = vec![guard];
-
+    let mut inner_indent = false;
+    if parser.peek(pos, Symbol::Indent) && parser.peek(pos + 1, Symbol::Guard) {
+        pos = consume_symbol(parser, pos, Symbol::Indent)?;
+        inner_indent = true;
+    }
     while parser.peek(pos, Symbol::Guard) {
         let (guard, new_pos) = parse_guard(parser, pos)?;
         guards.push(guard);
         pos = parser.skip_nl(new_pos);
     }
+    if inner_indent {
+        pos = parse_opt_dedent(parser, pos, inner_indent)?;
+    }
+    // println!("GUARDS = {:#?}", guards);
+    // println!("IN INDENT = {} => {:?}", in_indent, parser.get_symbol(pos));
     let pos = parse_opt_where_or_dedent(parser, pos, in_indent)?;
     Ok((guards, pos))
 }

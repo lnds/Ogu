@@ -32,6 +32,7 @@ impl Arg {
             Some(Symbol::LeftParen) => Arg::parse_tuple(parser, pos),
             Some(Symbol::Assign) => Ok(None),
             Some(Symbol::NewLine) => Ok(None),
+            Some(Symbol::Guard) => Ok(None),
             _ => {
                 let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
                 if let Expression::Identifier(id) = expr {

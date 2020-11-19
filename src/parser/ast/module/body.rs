@@ -66,8 +66,19 @@ impl Body {
 impl Declaration {
     pub fn parse_func_or_val(parser: &Parser, pos: usize) -> DeclParseResult {
         let (eq, pos) = Equation::parse(parser, pos, false)?;
+        //println!("EQ = {:?}", eq);
         let (opt_where, pos) = if let Some(where_pos) = look_ahead_where(parser, pos) {
             let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+            /*
+            println!(
+                "parse func or val after WHERE({:?}) = @{} {:?} , @{} {:?}",
+                where_decl,
+                where_pos,
+                parser.get_symbol(pos),
+                pos + 1,
+                parser.get_symbol(pos + 1)
+            );
+             */
             (Some(where_decl), pos)
         } else {
             (None, pos)
@@ -121,19 +132,20 @@ impl Declaration {
         let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
         // allows a single inline decl
-        let (eq, mut pos) = Equation::parse(parser, pos, false)?;
+        let (eq, mut pos) = Equation::parse(parser, pos, true)?;
         let mut eqs = vec![eq];
         if indent {
             while !parser.peek(pos, Symbol::Dedent) {
                 pos = parser.skip_nl(pos);
-                let (eq, new_pos) = Equation::parse(parser, pos, false)?;
+                let (eq, new_pos) = Equation::parse(parser, pos, true)?;
                 eqs.push(eq);
                 pos = parser.skip_nl(new_pos);
             }
         }
-        let pos = parser.skip_nl(pos);
-        let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
-        let pos = parse_opt_dedent(parser, pos, indent)?;
+        let mut pos = parse_opt_dedent(parser, pos, indent)?;
+        while parser.peek(pos, Symbol::Dedent) {
+            pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        }
         Ok((eqs, pos))
     }
 }

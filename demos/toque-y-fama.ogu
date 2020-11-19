@@ -1,13 +1,13 @@
 module ToqueFama
 
+
 ingresar! tam = prompt! f"Ingresa una secuencia de ${tam} dígitos distintos (o escribe salir):"
 
 famas num xs = zip num xs |> filter \x -> first x == second x |> count
 
 toques! num xs =
-    do
-      println "toques nun = " num " xs = " xs
-      return num |> filter \x -> xs contains x |> count
+  println "toques nun = " num " xs = " xs;
+  num |> filter \x -> xs contains x |> count
 
 validar n xs = if (length num) == n then num else []
     where num = xs |> filter is-digit?  |> map to-digit  |> uniq
@@ -36,19 +36,16 @@ main () =
                   let num = validar tam accion
                   in
                     if empty? num then
-                    do
-                       println! "error!\n"
-                       recur intentos = inc intentos, accion = ingresar tam
+                       println! "error!\n";
+                       recur let intentos = inc intentos, let accion = ingresar tam
                     else
-                    do
-                       println! "tu ingresaste " num "(es " sec ")"
-                       let t = toques num sec,
+                       println! "tu ingresaste " num "(es " sec ")";
+                       let t = toques num sec
                            f = famas num sec
                        in
-                       do
-                         println! "resultado: "  (t - t)  " Toques "  f  "Famas"
+                         println! "resultado: "  (t - t)  " Toques "  f  "Famas";
                          if f == tam then
-                           println! #"Ganaste! Acertaste al intento ${intentos}! La secuencia era ${sec}"
+                           println! f"Ganaste! Acertaste al intento ${intentos}! La secuencia era ${sec}"
                          else
-                           recur intentos = inc intentos, accion = ingresar tam
+                           recur let intentos = inc intentos, let accion = ingresar tam
 

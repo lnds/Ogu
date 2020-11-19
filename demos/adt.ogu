@@ -24,4 +24,5 @@ tree = Node (Leaf 10)
                             (Leaf 80)
                             (Leaf 50)))
 
-println! $  tmax tree
+main () =
+    println! $  tmax tree

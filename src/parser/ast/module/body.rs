@@ -118,7 +118,7 @@ impl Declaration {
 
     fn parse_where(parser: &Parser, pos: usize) -> Result<(Vec<Equation>, usize)> {
         let pos = consume_symbol(parser, pos, Symbol::Where)?;
-        let pos = parser.skip_nl(pos + 1);
+        let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
         // allows a single inline decl
         let (eq, mut pos) = Equation::parse(parser, pos, false)?;

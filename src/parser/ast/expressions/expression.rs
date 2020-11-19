@@ -34,6 +34,12 @@ macro_rules! parse_right_assoc {
 }
 
 #[derive(Debug, Clone)]
+pub enum RecurValue {
+    Value(Expression),
+    Var(String, Expression),
+}
+
+#[derive(Debug, Clone)]
 pub enum Expression {
     Error,
     Identifier(String),
@@ -59,7 +65,8 @@ pub enum Expression {
     ),
     RangeExpr(Vec<Expression>, Box<Expression>),
     RangeOpenExpr(Vec<Expression>, Box<Expression>),
-    RangeInfExpr(Vec<Expression>), // [exprs...]
+    RangeInfExpr(Vec<Expression>),
+    // [exprs...]
     DictExpr(Vec<(Expression, Expression)>),
     TypedFuncCall(String, Vec<Expression>, Vec<Expression>),
     PipeFuncCall(Box<Expression>, Box<Expression>),
@@ -113,7 +120,7 @@ pub enum Expression {
     TupleExpr(Vec<Expression>),
     OpFunc(Box<Symbol<'static>>),
     DoExpr(Vec<Expression>),
-    RecurExpr(Vec<Expression>),
+    RecurExpr(Vec<RecurValue>),
     LetExpr(Vec<Equation>, Box<Expression>),
     IfExpr(
         Box<Expression>,
@@ -708,10 +715,12 @@ impl Expression {
     fn parse_loop(parser: &Parser, pos: usize) -> ParseResult {
         let (for_part, pos) = if parser.peek(pos, Symbol::For) {
             let (eqs, pos) = Expression::parse_for(parser, pos)?;
+            println!("FOR PART {:?}", eqs);
             (Some(eqs), pos)
         } else {
             (None, pos)
         };
+
         let pos = parser.skip_nl(pos);
         let pos = consume_symbol(parser, pos, Symbol::Loop)?;
         let pos = parser.skip_nl(pos);
@@ -731,6 +740,7 @@ impl Expression {
         while parser.peek(pos, Symbol::NewLine) || parser.peek(pos, Symbol::Comma) {
             pos = parser.skip_nl(pos + 1);
             if parser.peek(pos, Symbol::Loop) {
+                println!("LOOP!!!");
                 break;
             }
             let (eq, new_pos) = Equation::parse_value(parser, pos)?;
@@ -743,15 +753,40 @@ impl Expression {
 
     fn parse_recur(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Symbol::Recur)?;
-        let (expr, mut pos) = Expression::parse(parser, pos)?;
+        let (expr, mut pos) = Expression::parse_recur_expr(parser, pos)?;
         let mut exprs = vec![];
         exprs.push(expr);
-        while !is_func_call_end_symbol(parser.get_symbol(pos)) {
-            let (expr, new_pos) = Expression::parse(parser, pos)?;
+        while parser.peek(pos, Symbol::Comma) {
+            pos = consume_symbol(parser, pos, Symbol::Comma)?;
+            pos = parser.skip_nl(pos);
+            let (expr, new_pos) = Expression::parse_recur_expr(parser, pos)?;
             exprs.push(expr);
             pos = new_pos;
         }
         Ok((Expression::RecurExpr(exprs), pos))
+    }
+
+    fn parse_recur_expr(parser: &Parser, pos: usize) -> Result<(RecurValue, usize)> {
+        if parser.peek(pos, Symbol::Let) {
+            let pos = consume_symbol(parser, pos, Symbol::Let)?;
+            match parser.get_symbol(pos) {
+                Some(Symbol::Id(id)) => {
+                    let pos = consume_symbol(parser, pos + 1, Symbol::Assign)?;
+                    let (expr, pos) = Expression::parse(parser, pos)?;
+                    Ok((RecurValue::Var(id.to_string(), expr), pos))
+                }
+                _ => {
+                    Err(Error::new(OguError::ParserError(ParseError::InvalidArg))).context(format!(
+                        "unexpected recur expression: {:?} @ {}",
+                        parser.get_symbol(pos),
+                        pos
+                    ))
+                }
+            }
+        } else {
+            let (expr, pos) = Expression::parse(parser, pos)?;
+            Ok((RecurValue::Value(expr), pos))
+        }
     }
 
     fn parse_if(parser: &Parser, pos: usize) -> ParseResult {

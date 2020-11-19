@@ -22,23 +22,22 @@ impl Equation {
     pub fn parse(parser: &Parser, pos: usize, inner: bool) -> Result<(Equation, usize)> {
         if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
-        } else {
-            if inner {
-                let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
-                if parser.peek(pos, Symbol::Assign) {
-                    Equation::parse_lval_no_guards(expr, parser, pos + 1)
-                } else {
-                    Equation::parse_lval_guards(expr, parser, pos)
-                }
+        } else if inner {
+            let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
+            if parser.peek(pos, Symbol::Assign) {
+                Equation::parse_lval_no_guards(expr, parser, pos + 1)
             } else {
-                Err(Error::new(OguError::ParserError(
-                    ParseError::ExpectingIdentifier,
-                )))
-                .context(format!(
-                    "Expecting id, but found: {:?}",
-                    parser.get_symbol(pos)
-                ))
+                Equation::parse_lval_guards(expr, parser, pos)
             }
+        } else {
+            Err(Error::new(OguError::ParserError(
+                ParseError::ExpectingIdentifier,
+            )))
+            .context(format!(
+                "Expecting id, but found: {:?} at {}",
+                parser.get_symbol(pos),
+                parser.pos_to_line(pos).unwrap_or(0)
+            ))
         }
     }
 

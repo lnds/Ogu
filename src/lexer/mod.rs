@@ -134,7 +134,7 @@ fn scan_line<'a>(
         Some(pos) => text.split_at(pos),
         None => (text, ""),
     };
-    let mut in_string = large_string.len() > 0;
+    let mut in_string = !large_string.is_empty();
     let lexer = if in_string {
         large_string.push_str(text);
         if rest.contains("\"\"\"") {
@@ -146,7 +146,7 @@ fn scan_line<'a>(
             Symbol::lexer(rest)
         }
     } else {
-        if rest.len() > 0 {
+        if !rest.is_empty() {
             large_string.clone_from(&rest[3..].to_string());
             in_string = true;
         }

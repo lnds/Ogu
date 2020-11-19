@@ -129,8 +129,10 @@ pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
             ParseError::ExpectingIdentifier,
         )))
         .context(format!(
-            "expecting id, but found: {:?}",
-            parser.get_symbol(pos)
+            "expecting id, but found: {:?} at {} ({})",
+            parser.get_symbol(pos),
+            parser.pos_to_line(pos).unwrap_or(0),
+            pos
         ))
     }
 }
@@ -188,6 +190,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Cons
                 | Symbol::FatArrow
                 | Symbol::Let
+                | Symbol::Loop
                 | Symbol::Do
                 | Symbol::Then
                 | Symbol::Else

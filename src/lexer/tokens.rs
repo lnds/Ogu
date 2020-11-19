@@ -201,10 +201,8 @@ pub enum Symbol<'a> {
     RightParen,
     #[regex(r"[A-Z][_a-zA-Z0-9]*", priority = 110, callback = extract_slice)]
     TypeId(&'a str),
-    #[regex(r"[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100, callback = extract_slice)]
+    #[regex(r"[:]?[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[:!\?']*", priority = 100, callback = extract_slice)]
     Id(&'a str),
-    #[regex(r":[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100, callback = extract_slice)]
-    Key(&'a str),
     #[regex(r#""([^"]*)""#, priority = 20, callback = extract_string)]
     String(&'a str),
     #[regex(r#"f"([^"]*)""#, priority = 20, callback = extract_f_string)]
@@ -357,8 +355,8 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer(":id :lost+found");
-        assert_eq!(lex.next(), Some(Symbol::Key(":id")));
-        assert_eq!(lex.next(), Some(Symbol::Key(":lost+found")));
+        assert_eq!(lex.next(), Some(Symbol::Id(":id")));
+        assert_eq!(lex.next(), Some(Symbol::Id(":lost+found")));
         assert_eq!(lex.next(), None);
     }
 

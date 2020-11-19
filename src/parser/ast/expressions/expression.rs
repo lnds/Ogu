@@ -44,7 +44,6 @@ pub enum Expression {
     Error,
     Identifier(String),
     TypeIdentifier(String),
-    Atom(String),
     StringLiteral(String),
     LargeStringLiteral(Option<String>),
     RegexpLiteral(String),
@@ -670,7 +669,6 @@ impl Expression {
     fn parse_prim_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
             Some(Symbol::Id(id)) => Ok((Expression::Identifier(id.to_string()), pos + 1)),
-            Some(Symbol::Key(atom)) => Ok((Expression::Atom(atom.to_string()), pos + 1)),
             sym if is_func_call_end_symbol(sym) => {
                 Err(Error::new(OguError::ParserError(ParseError::InvalidArg))).context(format!(
                     "invalid symbol: {:?} @{:?}:{}",
@@ -715,7 +713,6 @@ impl Expression {
     fn parse_loop(parser: &Parser, pos: usize) -> ParseResult {
         let (for_part, pos) = if parser.peek(pos, Symbol::For) {
             let (eqs, pos) = Expression::parse_for(parser, pos)?;
-            println!("FOR PART {:?}", eqs);
             (Some(eqs), pos)
         } else {
             (None, pos)
@@ -740,7 +737,6 @@ impl Expression {
         while parser.peek(pos, Symbol::NewLine) || parser.peek(pos, Symbol::Comma) {
             pos = parser.skip_nl(pos + 1);
             if parser.peek(pos, Symbol::Loop) {
-                println!("LOOP!!!");
                 break;
             }
             let (eq, new_pos) = Equation::parse_value(parser, pos)?;

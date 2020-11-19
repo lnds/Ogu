@@ -224,7 +224,8 @@ impl Expression {
         if !parser.peek(pos, Symbol::Lambda) {
             Expression::parse_logical_expr(parser, pos)
         } else {
-            let (args, pos) = Expression::parse_lambda_args(parser, pos + 1)?;
+            let pos = consume_symbol(parser, pos, Symbol::Lambda)?;
+            let (args, pos) = Expression::parse_lambda_args(parser, pos)?;
             if !parser.peek(pos, Symbol::Arrow) {
                 Err(Error::new(OguError::ParserError(
                     ParseError::ExpectingArrow,
@@ -253,21 +254,19 @@ impl Expression {
     fn parse_lambda_arg(parser: &Parser, pos: usize) -> Result<(LambdaArg, usize)> {
         match parser.get_symbol(pos) {
             Some(Symbol::LeftParen) => {
-                let (ids, pos) = consume_ids_sep_by(parser, pos, Symbol::Comma)?;
-                if !parser.peek(pos, Symbol::RightParen) {
-                    Err(Error::new(OguError::ParserError(
-                        ParseError::ExpectingIdentifier,
-                    )))
-                    .context("expecting )")
-                } else {
-                    Ok((LambdaArg::Tuple(ids), pos))
-                }
+                let (ids, pos) = consume_ids_sep_by(parser, pos + 1, Symbol::Comma)?;
+                let pos = consume_symbol(parser, pos, Symbol::RightParen)?;
+                Ok((LambdaArg::Tuple(ids), pos))
             }
             Some(Symbol::Id(id)) => Ok((LambdaArg::Simple(id.to_string()), pos + 1)),
-            _ => Err(Error::new(OguError::ParserError(
+            sym => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingLambdaArg,
             )))
-            .context("expecting args"),
+            .context(format!(
+                "expecting arg, found: {:?} @{}",
+                sym,
+                parser.pos_to_line(pos).unwrap_or(0)
+            )),
         }
     }
 

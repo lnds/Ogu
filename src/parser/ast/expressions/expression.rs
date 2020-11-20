@@ -54,7 +54,6 @@ pub enum Expression {
     LargeStringLiteral(Option<String>),
     RegexpLiteral(String),
     CharLiteral(String),
-    BoolLiteral(bool),
     IntegerLiteral(String),
     DateLiteral(String),
     FormatString(String),
@@ -619,8 +618,6 @@ impl Expression {
             Some(Symbol::RegExp(expr)) => {
                 Ok((Expression::RegexpLiteral(expr.to_string()), pos + 1))
             }
-            Some(Symbol::True) => Ok((Expression::BoolLiteral(true), pos + 1)),
-            Some(Symbol::False) => Ok((Expression::BoolLiteral(false), pos + 1)),
             sym => {
                 println!("parse literal sym = {:?}", sym);
                 todo!()

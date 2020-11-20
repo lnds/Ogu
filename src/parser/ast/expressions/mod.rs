@@ -145,8 +145,6 @@ pub fn is_literal(symbol: Symbol) -> bool {
         |Symbol::FormatString(_) 
         |Symbol::RegExp(_)
         |Symbol::Char(_)
-        |Symbol::True
-        |Symbol::False
         |Symbol::IsoDate(_))
 }
 

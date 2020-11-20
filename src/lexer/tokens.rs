@@ -31,6 +31,8 @@ pub enum Symbol<'a> {
     Case,
     #[token("cond", priority = 2000)]
     Cond,
+    #[token("deriving", priority = 2000)]
+    Deriving,
     #[token("do", priority = 2000)]
     Do,
     #[token("eager", priority = 2000)]
@@ -43,8 +45,6 @@ pub enum Symbol<'a> {
     Exposing,
     #[token("extends", priority = 2000)]
     Extends,
-    #[token("false", priority = 2000)]
-    False,
     #[token("for", priority = 2000)]
     For,
     #[token("from", priority = 2000)]
@@ -81,8 +81,6 @@ pub enum Symbol<'a> {
     Then,
     #[token("trait", priority = 2000)]
     Trait,
-    #[token("true", priority = 2000)]
-    True,
     #[token("type", priority = 2000)]
     Type,
     #[token("until", priority = 2000)]
@@ -360,20 +358,20 @@ mod test_tokens {
 
     #[test]
     fn test_keywords() {
-        let mut lex = Symbol::lexer("as case cond do eager elif else");
+        let mut lex = Symbol::lexer("as case cond do deriving eager elif else");
         assert_eq!(lex.next(), Some(Symbol::As));
         assert_eq!(lex.next(), Some(Symbol::Case));
         assert_eq!(lex.next(), Some(Symbol::Cond));
         assert_eq!(lex.next(), Some(Symbol::Do));
+        assert_eq!(lex.next(), Some(Symbol::Deriving));
         assert_eq!(lex.next(), Some(Symbol::Eager));
         assert_eq!(lex.next(), Some(Symbol::Elif));
         assert_eq!(lex.next(), Some(Symbol::Else));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("exposing extends false for from if in is lazy");
+        let mut lex = Symbol::lexer("exposing extends for from if in is lazy");
         assert_eq!(lex.next(), Some(Symbol::Exposing));
         assert_eq!(lex.next(), Some(Symbol::Extends));
-        assert_eq!(lex.next(), Some(Symbol::False));
         assert_eq!(lex.next(), Some(Symbol::For));
         assert_eq!(lex.next(), Some(Symbol::From));
         assert_eq!(lex.next(), Some(Symbol::If));

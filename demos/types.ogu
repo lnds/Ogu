@@ -1,11 +1,39 @@
+type Day =  Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
+    deriving (Eq, Ord, Show, Read)
+
+alias String = [Char]
+
+alias PhoneBook = [(String, String)]
+
+alias Tuple = (String, Int)
+
+alias IntMap v = Map Int v
+
+type Either a b = Left a | Right b deriving (Eq, Ord, Show)
+
+type Point = Point Float Float deriving (Show)
+
+type Shape = Circle Point Float
+           | Rectangle Point Point
+
+type alias Record = {name: String, age: Int}
+
+surface : Shape -> Float
+
+surface (Circle _ r) = pi * r ^ 2
+
+surface (Rectangle (Point x1 y1) (Point x2 y2)) = (abs $ x2 - x1) * (abs $ y2 - y1)
+
 trait Vehicle where
     move! : Vehicle -> ()
 
 type Car = Car {company: String, model: String, year: Number}
+    deriving (Show)
     extends Vehicle where
         move! this = do println! "moving car " company model year
 
 type Plane = Plane {company: String, series: String, year: Number}
+
    extends Vehicle where
         move! this = println! "flying plane " company series year
 
@@ -16,6 +44,22 @@ type Ship = Ship {name: String}
         move! this
             | this.name == "Titanic" do println! name "sink"
             | otherwise do println! "sail"
+
+trait Eq where
+    (==) : Eq -> Eq -> Bool
+    (/=) : Eq -> Eq -> Bool
+    x == y = not (x /= y)
+    x /= y = not (x == y)
+
+
+type TrafficLight = Red | Yello | Green
+
+
+extends TrafficLight with Eq where
+    Red == Red = True
+    Green == Green = True
+    Yellow == Yellow = True
+    _ == _ = False
 
 mustang56 = Car {company = "Ford", model = "Mustang", year = 1956}
 

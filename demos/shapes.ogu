@@ -16,7 +16,7 @@ trait Origin where
 
      get-y : Origin -> Number
 
-type Circle = Circle (x : Number, y: Number, radius : Number)
+type Circle = Circle {x : Number, y: Number, radius : Number}
 
   extends Shape where
 
@@ -36,7 +36,7 @@ type Circle = Circle (x : Number, y: Number, radius : Number)
       get-y self = y
 
 
-class Rectangle (x: Number,  y: Number, width: Number, height: Number)
+type Rectangle = Rectangle {x: Number,  y: Number, width: Number, height: Number}
 
 
 extends Rectangle with Shape where
@@ -59,7 +59,7 @@ show-area! : Shape -> ()
 show-area! shape do println! "el area es " (area shape) " y es de tipo " (typeof shape )
 
 
-cir = Circle(10, 10, 10)
+cir = Circle{10, 10, 10}
 rec = Rectangle(0,0, 100, 50)
 
 draw! cir

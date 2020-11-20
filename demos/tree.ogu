@@ -1,6 +1,6 @@
 
-type Tree = Leaf {value:Number}
-          | Node {value:Number, left:Tree, right:Tree}
+type Tree = Leaf {value : Number}
+          | Node {value : Number, left : Tree, right : Tree}
 
 trait Max where
     t-max : Max -> Number
@@ -25,6 +25,7 @@ arbol = Node
                    }
     }
 
-t-max arbol |> println "El valor maximo del arbol  es: "
+main () =
+    t-max arbol |> println "El valor maximo del arbol  es: ";
 
-t-sum arbol |> println "La suma del arbol  es: "
+    t-sum arbol |> println "La suma del arbol  es: "

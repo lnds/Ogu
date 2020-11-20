@@ -180,3 +180,31 @@ pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
         None
     }
 }
+
+pub fn consume_type_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+    match parser.get_symbol(pos) {
+        Some(Symbol::TypeId(type_id)) => Ok((type_id.to_string(), pos + 1)),
+        sym => Err(Error::new(OguError::ParserError(
+            ParseError::ExpectingTypeIdentifier,
+        )))
+        .context(format!(
+            "Expecting type id found: {:?} @{}",
+            sym,
+            parser.pos_to_line(pos).unwrap_or(0)
+        )),
+    }
+}
+
+pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+    match parser.get_symbol(pos) {
+        Some(Symbol::Id(id)) => Ok((id.to_string(), pos + 1)),
+        sym => Err(Error::new(OguError::ParserError(
+            ParseError::ExpectingIdentifier,
+        )))
+        .context(format!(
+            "Expecting id found: {:?} @{}",
+            sym,
+            parser.pos_to_line(pos).unwrap_or(0)
+        )),
+    }
+}

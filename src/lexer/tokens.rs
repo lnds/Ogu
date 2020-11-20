@@ -197,7 +197,7 @@ pub enum Symbol<'a> {
     RightParen,
     #[regex(r"[A-Z][_a-zA-Z0-9]*", priority = 110, callback = extract_slice)]
     TypeId(&'a str),
-    #[regex(r"[:]?[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[:!\?']*", priority = 100, callback = extract_slice)]
+    #[regex(r"[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100, callback = extract_slice)]
     Id(&'a str),
     #[regex(r#""([^"]*)""#, priority = 20, callback = extract_string)]
     String(&'a str),

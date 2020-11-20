@@ -44,6 +44,7 @@ pub enum Declaration {
     FunctionWithGuardsAndWhere(String, Vec<Arg>, Vec<Guard>, Vec<Equation>),
     TypeDecl(String, Option<Vec<String>>, Vec<AlgebraicType>),
     TraitDecl(String, Vec<FuncPrototype>),
+    ExtensionDecl(String, String, Vec<Declaration>),
 }
 
 type DeclVec = Vec<Declaration>;
@@ -78,6 +79,7 @@ impl Body {
             Some(Symbol::Id(_)) => Declaration::parse_func_or_val(parser, pos),
             Some(Symbol::Type) => Declaration::parse_type_decl(parser, pos),
             Some(Symbol::Trait) => Declaration::parse_trait_decl(parser, pos),
+            Some(Symbol::Extends) => Declaration::parse_extends(parser, pos),
             sym => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingDeclaration,
             )))
@@ -95,7 +97,10 @@ impl Declaration {
     pub fn parse_func_or_val(parser: &Parser, pos: usize) -> DeclParseResult {
         let (eq, pos) = Equation::parse(parser, pos, false)?;
         let (opt_where, pos) = if let Some(where_pos) = look_ahead_where(parser, pos) {
-            let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
+            let (where_decl, mut pos) = Declaration::parse_where(parser, where_pos)?;
+            if parser.peek(pos, Symbol::Dedent) {
+                pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+            }
             (Some(where_decl), pos)
         } else {
             (None, pos)
@@ -146,11 +151,8 @@ impl Declaration {
 
     fn parse_where(parser: &Parser, pos: usize) -> Result<(Vec<Equation>, usize)> {
         let pos = consume_symbol(parser, pos, Symbol::Where)?;
-        let pos = parser.skip_nl(pos);
-        let (indent, pos) = parse_opt_indent(parser, pos);
-        // allows a single inline decl
-        let (eq, mut pos) = Equation::parse(parser, pos, true)?;
-        let mut eqs = vec![eq];
+        let (indent, mut pos) = parse_opt_indent(parser, pos);
+        let mut eqs = vec![];
         if indent {
             while !parser.peek(pos, Symbol::Dedent) {
                 pos = parser.skip_nl(pos);
@@ -158,11 +160,12 @@ impl Declaration {
                 eqs.push(eq);
                 pos = parser.skip_nl(new_pos);
             }
+        } else {
+            let (eq, new_pos) = Equation::parse(parser, pos, true)?;
+            eqs.push(eq);
+            pos = new_pos;
         }
-        let mut pos = parse_opt_dedent(parser, pos, indent)?;
-        while parser.peek(pos, Symbol::Dedent) {
-            pos = consume_symbol(parser, pos, Symbol::Dedent)?;
-        }
+        let pos = parse_opt_dedent(parser, pos, indent)?;
         Ok((eqs, pos))
     }
 }
@@ -265,7 +268,7 @@ impl Declaration {
     fn parse_trait_decl(parser: &Parser, pos: usize) -> DeclParseResult {
         let pos = consume_symbol(parser, pos, Symbol::Trait)?;
         let (tid, pos) = consume_type_id(parser, pos)?;
-        let pos = parser.skip_nl(pos);
+        let (in_indent, pos) = parse_opt_indent(parser, pos);
         let pos = consume_symbol(parser, pos, Symbol::Where)?;
         let pos = parser.skip_nl(pos);
         let mut pos = consume_symbol(parser, pos, Symbol::Indent)?;
@@ -277,6 +280,8 @@ impl Declaration {
         }
         let pos = parser.skip_nl(pos);
         let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        let pos = parse_opt_dedent(parser, pos, in_indent)?;
+
         Ok(Some((Declaration::TraitDecl(tid, trait_decls), pos)))
     }
 
@@ -284,7 +289,6 @@ impl Declaration {
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Symbol::Colon)?;
         let (types, pos) = Declaration::parse_func_types(parser, pos)?;
-        println!("func prototype = ({},{:?})", func_id, types);
         Ok((FuncPrototype(func_id, types), pos))
     }
 
@@ -317,6 +321,33 @@ impl Declaration {
             )))
             .context(format!("Expecting a type or a param, found: {:?}", sym)),
         }
+    }
+}
+
+impl Declaration {
+    fn parse_extends(parser: &Parser, pos: usize) -> DeclParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Extends)?;
+        let (type_id, pos) = consume_type_id(parser, pos)?;
+        let pos = consume_symbol(parser, pos, Symbol::With)?;
+        let (trait_id, pos) = consume_type_id(parser, pos)?;
+        let (in_indent, pos) = parse_opt_indent(parser, pos);
+        let pos = consume_symbol(parser, pos, Symbol::Where)?;
+        let pos = parser.skip_nl(pos);
+        let mut pos = consume_symbol(parser, pos, Symbol::Indent)?;
+        let mut decls = vec![];
+        while let Some((decl, new_pos)) = Declaration::parse_func_or_val(parser, pos)? {
+            decls.push(decl);
+            pos = new_pos;
+            if parser.peek(pos, Symbol::Dedent) {
+                break;
+            }
+        }
+        let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        let pos = parse_opt_dedent(parser, pos, in_indent)?;
+        Ok(Some((
+            Declaration::ExtensionDecl(type_id, trait_id, decls),
+            pos,
+        )))
     }
 }
 

@@ -2,9 +2,9 @@ use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::{
-    consume_args, consume_exprs_sep_by, consume_ids_sep_by, is_basic_op, is_func_call_end_symbol,
-    is_literal, left_assoc_expr_to_expr, parse_left_assoc_expr, parse_right_assoc_expr,
-    right_assoc_expr_to_expr, LeftAssocExpr, RightAssocExpr,
+    consume_args, consume_exprs_sep_by, consume_id, consume_ids_sep_by, is_basic_op,
+    is_func_call_end_symbol, is_literal, left_assoc_expr_to_expr, parse_left_assoc_expr,
+    parse_right_assoc_expr, right_assoc_expr_to_expr, LeftAssocExpr, RightAssocExpr,
 };
 use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, ParseError, Parser};
 use anyhow::{Context, Error, Result};
@@ -49,6 +49,7 @@ pub enum LoopCond {
 pub enum Expression {
     Error,
     Identifier(String),
+    QualifedIdentifier(String, Vec<String>),
     TypeIdentifier(String),
     StringLiteral(String),
     LargeStringLiteral(Option<String>),
@@ -73,6 +74,7 @@ pub enum Expression {
     RangeInfExpr(Vec<Expression>),
     // [exprs...]
     DictExpr(Vec<(Expression, Expression)>),
+    RecordExpr(Vec<(String, Expression)>),
     TypedFuncCall(String, Vec<Expression>, Vec<Expression>),
     PipeFuncCall(Box<Expression>, Box<Expression>),
     PipeFirstArgFuncCall(Box<Expression>, Box<Expression>),
@@ -566,8 +568,22 @@ impl Expression {
         }
     }
 
-    fn parse_record_expr(_parser: &Parser, _pos: usize) -> ParseResult {
-        todo!()
+    fn parse_record_expr(parser: &Parser, pos: usize) -> ParseResult {
+        let mut pos = consume_symbol(parser, pos, Symbol::LeftCurly)?;
+        let mut pairs = vec![];
+        while !parser.peek(pos, Symbol::RightCurly) {
+            let (field, new_pos) = consume_id(parser, pos)?;
+            pos = consume_symbol(parser, new_pos, Symbol::Assign)?;
+            let (val, new_pos) = Expression::parse(parser, pos)?;
+            if parser.peek(new_pos, Symbol::Comma) {
+                pos = consume_symbol(parser, new_pos, Symbol::Comma)?;
+            } else {
+                pos = new_pos;
+            }
+            pairs.push((field, val));
+        }
+        pos = consume_symbol(parser, pos, Symbol::RightCurly)?;
+        Ok((Expression::RecordExpr(pairs), pos))
     }
 
     fn parse_dict_expr(parser: &Parser, pos: usize) -> ParseResult {
@@ -575,6 +591,7 @@ impl Expression {
         let mut pairs = vec![];
         while !parser.peek(pos, Symbol::RightCurly) {
             let (key, new_pos) = Expression::parse_primary_expr(parser, pos)?;
+
             pos = consume_symbol(parser, new_pos, Symbol::FatArrow)?;
             let (val, new_pos) = Expression::parse_primary_expr(parser, pos)?;
             if parser.peek(new_pos, Symbol::Comma) {
@@ -682,7 +699,21 @@ impl Expression {
 
     fn parse_prim_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
-            Some(Symbol::Id(id)) => Ok((Expression::Identifier(id.to_string()), pos + 1)),
+            Some(Symbol::Id(_)) => {
+                let (id, mut pos) = consume_id(parser, pos)?;
+                let mut fields = vec![];
+                while parser.peek(pos, Symbol::Dot) {
+                    pos = consume_symbol(parser, pos, Symbol::Dot)?;
+                    let (id, new_pos) = consume_id(parser, pos)?;
+                    fields.push(id);
+                    pos = new_pos;
+                }
+                if fields.is_empty() {
+                    Ok((Expression::Identifier(id), pos))
+                } else {
+                    Ok((Expression::QualifedIdentifier(id, fields), pos))
+                }
+            }
             sym if is_func_call_end_symbol(sym) => {
                 Err(Error::new(OguError::ParserError(ParseError::InvalidArg))).context(format!(
                     "invalid symbol: {:?} @{:?}:{}",

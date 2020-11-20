@@ -1,18 +1,18 @@
 main () =
-    let person = #{:first-name => "Eduardo Alberto",
-               :last-name => "Diaz Cortes",
-               :email => None,
-               :pass => None}
-        datos = [#{:problem => "euler1", :val => 233168},
-                 #{:problem => "euler2", :val => 4613732},
-                 #{:problem => "euler3", :val => 6857},
-                 #{:problem => "euler4", :val => 906609},
-                 #{:problem => "euler5", :val => 232792560},
-                 #{:problem => "euler6", :val => 25164150},
-                 #{:problem => "euler7", :val => 104743},
-                 #{:problem => "euler8", :val => 23514624000},
-                 #{:problem => "euler9", :val => 31875000},
-                 #{:problem => "euler10", :val => 142913828922}]
+    let person = #{"first-name" => "Eduardo Alberto",
+               "last-name" => "Diaz Cortes",
+               Email => None,
+               Pass => None}
+        datos = [#{Problem => "euler1", Val => 233168},
+                 #{Problem => "euler2", Val => 4613732},
+                 #{Problem => "euler3", Val => 6857},
+                 #{Problem => "euler4", Val => 906609},
+                 #{Problem => "euler5", Val => 232792560},
+                 #{Problem => "euler6", Val => 25164150},
+                 #{Problem => "euler7", Val => 104743},
+                 #{Problem => "euler8", Val => 23514624000},
+                 #{Problem => "euler9", Val => 31875000},
+                 #{Problem => "euler10", Val => 142913828922}]
      in
-         println! $ :email person;
-         datos |> map :val |> sum |> println! "suma es: "
+         println! $ Mail person;
+         datos |> map Val |> sum |> println! "suma es: "

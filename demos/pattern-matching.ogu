@@ -20,7 +20,7 @@ test-frst () =
     println! $ frst (1, 2, 3)
 
 
-tuple = (:a, :b, :c)
+tuple = (a, b, c)
 
 test-tuple () =
     println! $ frst tuple

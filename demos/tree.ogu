@@ -2,7 +2,8 @@
 type Tree = Leaf {value : Number}
           | Node {value : Number, left : Tree, right : Tree}
 
-trait Max where
+trait Max
+where
     t-max : Max -> Number
 
 extends Leaf with Max where
@@ -12,18 +13,20 @@ extends Leaf with Max where
 extends Node with Max where
 
     t-max node = max ml mr mn
-       where ml = node.left |> t-max
-             mr = node.right |> t-max
-             mn = node.value
+       where
+         ml = node.left |> t-max
+         mr = node.right |> t-max
+         mn = node.value
 
-arbol = Node
-    { value = 30
-    , left = Leaf { value = 70 }
-    , right = Node { value = 15
-                   , left = Node { value = 42, left = Leaf {54}, right = Leaf{66} }
-                   , right = Node { 25, Leaf {89}, Leaf {72} }
-                   }
-    }
+
+arbol = Node { value = 30
+             , left = Leaf { value = 70 }
+             , right = Node { value = 15
+                            , left = Node { value = 42, left = Leaf {value = 54 }, right = Leaf { value = 66 } }
+                            , right = Node { value = 25, left = Leaf {value = 89}, right = Leaf {value = 72} }
+                            }
+
+             }
 
 main () =
     t-max arbol |> println "El valor maximo del arbol  es: ";

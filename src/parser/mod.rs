@@ -57,6 +57,8 @@ pub enum ParseError {
     ExpectingOperator,
     #[error("Invalid declaration")]
     InvalidDeclaration,
+    #[error("Expecting ttype identifier")]
+    ExpectingTypeIdentifier,
 }
 
 pub struct Parser<'a> {

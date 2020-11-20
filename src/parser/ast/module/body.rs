@@ -9,7 +9,20 @@ use crate::parser::{
 };
 use anyhow::{Context, Error, Result};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+pub enum AlgebraicElement {
+    Type(String),
+    Param(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum AlgebraicType {
+    Simple(String),
+    Complex(String, Vec<AlgebraicElement>),
+    Record(String, Vec<(String, AlgebraicElement)>),
+}
+
+#[derive(Debug, Clone)]
 pub enum Declaration {
     Value(String, Expression),
     ValueWithWhere(String, Expression, Vec<Equation>),
@@ -17,7 +30,7 @@ pub enum Declaration {
     FunctionWithWhere(String, Vec<Arg>, Expression, Vec<Equation>),
     FunctionWithGuards(String, Vec<Arg>, Vec<Guard>),
     FunctionWithGuardsAndWhere(String, Vec<Arg>, Vec<Guard>, Vec<Equation>),
-    // TypeDecl, // TODO
+    TypeDecl(String, Option<Vec<String>>, Vec<AlgebraicType>),
 }
 
 type DeclVec = Vec<Declaration>;
@@ -50,6 +63,7 @@ impl Body {
         match parser.get_symbol(pos) {
             None => Ok(None),
             Some(Symbol::Id(_)) => Declaration::parse_func_or_val(parser, pos),
+            Some(Symbol::Type) => Declaration::parse_type_decl(parser, pos),
             sym => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingDeclaration,
             )))
@@ -66,19 +80,8 @@ impl Body {
 impl Declaration {
     pub fn parse_func_or_val(parser: &Parser, pos: usize) -> DeclParseResult {
         let (eq, pos) = Equation::parse(parser, pos, false)?;
-        //println!("EQ = {:?}", eq);
         let (opt_where, pos) = if let Some(where_pos) = look_ahead_where(parser, pos) {
             let (where_decl, pos) = Declaration::parse_where(parser, where_pos)?;
-            /*
-            println!(
-                "parse func or val after WHERE({:?}) = @{} {:?} , @{} {:?}",
-                where_decl,
-                where_pos,
-                parser.get_symbol(pos),
-                pos + 1,
-                parser.get_symbol(pos + 1)
-            );
-             */
             (Some(where_decl), pos)
         } else {
             (None, pos)
@@ -147,5 +150,114 @@ impl Declaration {
             pos = consume_symbol(parser, pos, Symbol::Dedent)?;
         }
         Ok((eqs, pos))
+    }
+}
+
+impl Declaration {
+    fn parse_type_decl(parser: &Parser, pos: usize) -> DeclParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Type)?;
+        if parser.peek(pos, Symbol::Alias) {
+            todo!()
+        }
+
+        let (type_id, pos) = consume_type_id(parser, pos)?;
+        println!(
+            "type id = {} @ {} pos => {:?}",
+            type_id,
+            pos,
+            parser.get_symbol(pos),
+        );
+        let (type_args, pos) = if parser.peek(pos, Symbol::Assign) {
+            (None, pos)
+        } else {
+            let (args, pos) = Declaration::parse_type_args(parser, pos)?;
+            (Some(args), pos)
+        };
+        let pos = consume_symbol(parser, pos, Symbol::Assign)?;
+        let (type_decl, pos) = Declaration::parse_algebraic_type(parser, pos)?;
+        let mut algebraic_elements = vec![type_decl];
+        let pos = parser.skip_nl(pos);
+        let (in_indent, mut pos) = parse_opt_indent(parser, pos);
+        while parser.peek(pos, Symbol::Guard) {
+            let new_pos = consume_symbol(parser, pos, Symbol::Guard)?;
+            let (type_decl, new_pos) = Declaration::parse_algebraic_type(parser, new_pos)?;
+            algebraic_elements.push(type_decl);
+            pos = new_pos
+        }
+        println!("=> {} {:?} {:?}", type_id, type_args, algebraic_elements);
+        let pos = parse_opt_dedent(parser, pos, in_indent)?;
+        Ok(Some((
+            Declaration::TypeDecl(type_id, type_args, algebraic_elements),
+            pos,
+        )))
+    }
+
+    fn parse_algebraic_type(parser: &Parser, pos: usize) -> Result<(AlgebraicType, usize)> {
+        let (type_id, pos) = consume_type_id(parser, pos)?;
+        if parser.peek(pos, Symbol::LeftCurly) {
+            println!("record!");
+            todo!()
+        } else {
+            let mut params = vec![];
+            let mut pos = pos;
+            while let Some((alg_elem, new_pos)) = consume_alg_type_param(parser, pos)? {
+                params.push(alg_elem);
+                pos = new_pos;
+            }
+            if params.is_empty() {
+                Ok((AlgebraicType::Simple(type_id), pos))
+            } else {
+                Ok((AlgebraicType::Complex(type_id, params), pos))
+            }
+        }
+    }
+
+    fn parse_type_args(parser: &Parser, pos: usize) -> Result<(Vec<String>, usize)> {
+        let (id, mut pos) = consume_id(parser, pos)?;
+        let mut args = vec![id];
+        while !parser.peek(pos, Symbol::Assign) {
+            let (id, new_pos) = consume_id(parser, pos)?;
+            pos = new_pos;
+            args.push(id);
+        }
+        Ok((args, pos))
+    }
+}
+
+fn consume_alg_type_param(
+    parser: &Parser,
+    pos: usize,
+) -> Result<Option<(AlgebraicElement, usize)>> {
+    match parser.get_symbol(pos) {
+        Some(Symbol::TypeId(type_id)) => {
+            Ok(Some((AlgebraicElement::Type(type_id.to_string()), pos + 1)))
+        }
+        Some(Symbol::Id(id)) => Ok(Some((AlgebraicElement::Param(id.to_string()), pos + 1))),
+        Some(Symbol::NewLine) => Ok(None),
+        Some(Symbol::Indent) => Ok(None),
+        Some(Symbol::Dedent) => Ok(None),
+        Some(Symbol::Guard) => Ok(None),
+        sym => Err(Error::new(OguError::ParserError(
+            ParseError::ExpectingTypeIdentifier,
+        )))
+        .context(format!("Expecting a type or a param, found: {:?}", sym)),
+    }
+}
+
+fn consume_type_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+    match parser.get_symbol(pos) {
+        Some(Symbol::TypeId(type_id)) => Ok((type_id.to_string(), pos + 1)),
+        _ => Err(Error::new(OguError::ParserError(
+            ParseError::ExpectingTypeIdentifier,
+        ))),
+    }
+}
+
+fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+    match parser.get_symbol(pos) {
+        Some(Symbol::Id(id)) => Ok((id.to_string(), pos + 1)),
+        _ => Err(Error::new(OguError::ParserError(
+            ParseError::ExpectingIdentifier,
+        ))),
     }
 }

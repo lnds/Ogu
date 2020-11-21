@@ -6,8 +6,9 @@ add1Times2 = add1 >> times2
 
 times2Add1 = add1 << times2
 
-println! $ add1Times2 10 -- 22
+main () = do
+    println! $ add1Times2 10 -- 22
 
-println! $ times2Add1 10 -- 21
+    println! $ times2Add1 10 -- 21
 
-[add1Times2 10, times2Add1 10]
+    [add1Times2 10, times2Add1 10]

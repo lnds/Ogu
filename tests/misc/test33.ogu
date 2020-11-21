@@ -1,7 +1,8 @@
 -- regexp
 
-println! "abcxyz" =~ #/abc(.*)/
+main () = do
+    println! "abcxyz" =~ #/abc(.*)/#
 
-println! "abcxyz" !~ #/abc(.*)/
+    println! "abcxyz" !~ #/abc(.*)/#
 
-"abcxyz" ~ #/abc(.*)/
+    "abcxyz" ~ #/abc(.*)/#

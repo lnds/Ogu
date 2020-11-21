@@ -139,12 +139,7 @@ pub enum Expression {
     LetExpr(Vec<Equation>, Box<Expression>),
     CondExpr(Vec<(Option<Expression>, Expression)>),
     CaseExpr(Box<Expression>, Vec<(Option<Expression>, Expression)>),
-    IfExpr(
-        Box<Expression>,
-        Box<Expression>,
-        Vec<(Expression, Expression)>,
-        Box<Expression>,
-    ),
+    IfExpr(Box<Expression>, Box<Expression>, Box<Expression>),
 
     LoopExpr(
         Option<Vec<Equation>>,
@@ -994,7 +989,11 @@ impl Expression {
     }
 
     fn parse_if(parser: &Parser, pos: usize) -> ParseResult {
-        let pos = consume_symbol(parser, pos, Symbol::If)?;
+        Expression::parse_inner_if(parser, pos, Symbol::If)
+    }
+
+    fn parse_inner_if(parser: &Parser, pos: usize, if_symbol: Symbol) -> ParseResult {
+        let pos = consume_symbol(parser, pos, if_symbol)?;
         let (cond, pos) = Expression::parse(parser, pos)?;
         let pos = consume_symbol(parser, pos, Symbol::Then)?;
         let pos = parser.skip_nl(pos);
@@ -1003,31 +1002,23 @@ impl Expression {
         let pos = parser.skip_nl(pos);
         let pos = parse_opt_dedent(parser, pos, indent)?;
         let mut pos = parser.skip_nl(pos);
-        let mut elif_part = vec![];
-        while parser.peek(pos, Symbol::Elif) {
-            let (cond, new_pos) = Expression::parse(parser, pos + 1)?;
-            pos = consume_symbol(parser, new_pos, Symbol::Then)?;
-            pos = parser.skip_nl(pos);
-            let (indent, new_pos) = parse_opt_indent(parser, pos);
-            let (then_expr, new_pos) = Expression::parse(parser, new_pos)?;
-            pos = parser.skip_nl(new_pos);
-            pos = parse_opt_dedent(parser, pos, indent)?;
-            elif_part.push((cond, then_expr));
+        if parser.peek(pos, Symbol::Else) {
+            let pos = consume_symbol(parser, pos, Symbol::Else)?;
+            let pos = parser.skip_nl(pos);
+            let (indent, pos) = parse_opt_indent(parser, pos);
+            let (else_expr, pos) = Expression::parse(parser, pos)?;
+            let pos = parse_opt_dedent(parser, pos, indent)?;
+            Ok((
+                Expression::IfExpr(Box::new(cond), Box::new(then_expr), Box::new(else_expr)),
+                pos,
+            ))
+        } else {
+            let (elif_expr, pos) = Expression::parse_inner_if(parser, pos, Symbol::Elif)?;
+            Ok((
+                Expression::IfExpr(Box::new(cond), Box::new(then_expr), Box::new(elif_expr)),
+                pos,
+            ))
         }
-        let pos = consume_symbol(parser, pos, Symbol::Else)?;
-        let pos = parser.skip_nl(pos);
-        let (indent, pos) = parse_opt_indent(parser, pos);
-        let (else_expr, pos) = Expression::parse(parser, pos)?;
-        let pos = parse_opt_dedent(parser, pos, indent)?;
-        Ok((
-            Expression::IfExpr(
-                Box::new(cond),
-                Box::new(then_expr),
-                elif_part,
-                Box::new(else_expr),
-            ),
-            pos,
-        ))
     }
 
     fn parse_do(parser: &Parser, pos: usize) -> ParseResult {

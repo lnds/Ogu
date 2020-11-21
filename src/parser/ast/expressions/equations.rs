@@ -25,7 +25,7 @@ impl Equation {
         if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
         } else if inner {
-            let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
+            let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
             if parser.peek(pos, Symbol::Assign) {
                 Equation::parse_lval_no_guards(expr, parser, pos + 1)
             } else {
@@ -43,6 +43,9 @@ impl Equation {
         }
     }
 
+    pub fn parse_back_arrow_or_assign_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+        Equation::parse_value_assign2(parser, pos, Symbol::BackArrow, Symbol::Assign)
+    }
     pub fn parse_back_arrow_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
         Equation::parse_value_assign(parser, pos, Symbol::BackArrow)
     }
@@ -59,11 +62,37 @@ impl Equation {
         if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
             let pos = consume_symbol(parser, pos + 1, symbol)?;
             Equation::parse_val(id.to_string(), parser, pos)
+        } else {
+            let (l_expr, pos) = Expression::parse_primary_expr(parser, pos)?;
+            let pos = consume_symbol(parser, pos, symbol)?;
+            let (expr, pos) = Expression::parse(parser, pos)?;
+            Ok((Equation::LValue(l_expr, expr), pos))
+        }
+    }
+
+    fn parse_value_assign2(
+        parser: &Parser,
+        pos: usize,
+        symbol1: Symbol,
+        symbol2: Symbol,
+    ) -> Result<(Equation, usize)> {
+        if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
+            let pos = pos + 1;
+            let pos = if parser.peek(pos, symbol1) {
+                consume_symbol(parser, pos, symbol1)?
+            } else {
+                consume_symbol(parser, pos, symbol2)?
+            };
+            Equation::parse_val(id.to_string(), parser, pos)
         } else if parser.peek(pos, Symbol::LeftParen) {
             let pos = consume_symbol(parser, pos, Symbol::LeftParen)?;
             let (ids, pos) = consume_ids_sep_by(parser, pos, Symbol::Comma)?;
             let pos = consume_symbol(parser, pos, Symbol::RightParen)?;
-            let pos = consume_symbol(parser, pos, symbol)?;
+            let pos = if parser.peek(pos, symbol1) {
+                consume_symbol(parser, pos, symbol1)?
+            } else {
+                consume_symbol(parser, pos, symbol2)?
+            };
             let (expr, pos) = Expression::parse(parser, pos)?;
             Ok((Equation::TupleValue(ids, expr), pos))
         } else {

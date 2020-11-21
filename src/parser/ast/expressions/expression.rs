@@ -65,6 +65,7 @@ pub enum Expression {
     EmptyList,
     NotExpr(Box<Expression>),
     LazyExpr(Box<Expression>),
+    YieldExpr(Box<Expression>),
     ReifyExpr(String, Vec<Equation>),
     ListExpr(Vec<Expression>),
     ListByComprehension(
@@ -459,6 +460,7 @@ impl Expression {
             Some(Symbol::LeftCurly) => Expression::parse_record_expr(parser, pos),
             Some(Symbol::HashCurly) => Expression::parse_dict_expr(parser, pos),
             Some(Symbol::Lazy) => Expression::parse_lazy_expr(parser, pos),
+            Some(Symbol::Yield) => Expression::parse_yield_expr(parser, pos),
             Some(Symbol::Not) => Expression::parse_not_expr(parser, pos),
             Some(sym) if is_literal(sym) => Expression::parse_literal_expr(parser, pos),
             Some(Symbol::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
@@ -640,6 +642,12 @@ impl Expression {
         Ok((Expression::LazyExpr(Box::new(expr)), pos))
     }
 
+    fn parse_yield_expr(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Yield)?;
+        let (expr, pos) = Expression::parse(parser, pos)?;
+        Ok((Expression::LazyExpr(Box::new(expr)), pos))
+    }
+
     fn parse_not_expr(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Symbol::Not)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
@@ -810,7 +818,6 @@ impl Expression {
         } else {
             (None, pos)
         };
-
         let pos = parser.skip_nl(pos);
         let pos = consume_symbol(parser, pos, Symbol::Loop)?;
         let pos = parser.skip_nl(pos);
@@ -844,7 +851,7 @@ impl Expression {
         let pos = consume_symbol(parser, pos, Symbol::For)?;
         let (indent, pos) = parse_opt_indent(parser, pos);
         let mut eqs = vec![];
-        let (eq, mut pos) = Equation::parse_value(parser, pos)?;
+        let (eq, mut pos) = Equation::parse_back_arrow_or_assign_eq(parser, pos)?;
         eqs.push(eq);
         while parser.peek(pos, Symbol::NewLine) || parser.peek(pos, Symbol::Comma) {
             pos = parser.skip_nl(pos + 1);
@@ -855,7 +862,7 @@ impl Expression {
             {
                 break;
             }
-            let (eq, new_pos) = Equation::parse_value(parser, pos)?;
+            let (eq, new_pos) = Equation::parse_back_arrow_or_assign_eq(parser, pos)?;
             eqs.push(eq);
             pos = new_pos;
         }

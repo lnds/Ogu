@@ -1,7 +1,7 @@
+main () = do
+    for x <- [-1, 0, 1], y <- [1, 2, 3]
+    loop
+       println! $ x * y
 
-for x in [-1, 0, 1], y in [1, 2, 3]
-loop
-   println! $ x * y
-
-for (x, y) in map  list [1, 2, 3] [1, 2, 3] yield x * y
+    for (x, y) <- map  list [1, 2, 3] [1, 2, 3] loop yield x * y
 

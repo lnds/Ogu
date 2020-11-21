@@ -9,4 +9,4 @@ strIMC peso altura =
 where imc = peso / altura ^ 2
 
 
-strIMC 70.0 1.50
+test = strIMC 70.0 1.50

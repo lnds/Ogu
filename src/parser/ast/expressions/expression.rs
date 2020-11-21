@@ -136,6 +136,7 @@ pub enum Expression {
     RepeatExpr(Vec<RecurValue>),
     RecurExpr(Vec<Expression>),
     LetExpr(Vec<Equation>, Box<Expression>),
+    CondExpr(Vec<(Option<Expression>, Expression)>),
     IfExpr(
         Box<Expression>,
         Box<Expression>,
@@ -229,6 +230,7 @@ impl Expression {
                 ParseError::ExpressionExpected,
             )))
             .context("Expecting an expression but found eof"),
+            Some(Symbol::Cond) => Expression::parse_cond(parser, pos),
             Some(Symbol::Do) => Expression::parse_do(parser, pos),
             Some(Symbol::Let) => Expression::parse_let(parser, pos),
             Some(Symbol::For) => Expression::parse_loop(parser, pos),
@@ -239,6 +241,27 @@ impl Expression {
             Some(Symbol::Reify) => Expression::parse_reify(parser, pos),
             _ => Expression::parse_lambda_expr(parser, pos),
         }
+    }
+
+    pub fn parse_cond(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Cond)?;
+        let pos = parser.skip_nl(pos);
+        let mut pos = consume_symbol(parser, pos, Symbol::Indent)?;
+        let mut conds = vec![];
+        while !parser.peek(pos, Symbol::Dedent) {
+            let (cond, new_pos) = if parser.peek(pos, Symbol::Otherwise) {
+                (None, consume_symbol(parser, pos, Symbol::Otherwise)?)
+            } else {
+                let (c, p) = Expression::parse_logical_expr(parser, pos)?;
+                (Some(c), p)
+            };
+            pos = consume_symbol(parser, new_pos, Symbol::Arrow)?;
+            let (value, new_pos) = Expression::parse(parser, pos)?;
+            pos = parser.skip_nl(new_pos);
+            conds.push((cond, value));
+        }
+        let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        Ok((Expression::CondExpr(conds), pos))
     }
 
     pub fn parse_reify(parser: &Parser, pos: usize) -> ParseResult {

@@ -180,11 +180,13 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
             sym,
             Symbol::NewLine
                 | Symbol::Arroba
+                | Symbol::Arrow
                 | Symbol::Indent
                 | Symbol::Dedent
                 | Symbol::Assign
                 | Symbol::Dollar
                 | Symbol::Comma
+                | Symbol::Cond
                 | Symbol::Dot
                 | Symbol::DotDot
                 | Symbol::DotDotDot
@@ -241,6 +243,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Derive
                 | Symbol::Extends
                 | Symbol::Reify
+                | Symbol::Otherwise
         ),
     }
 }

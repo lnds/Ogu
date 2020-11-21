@@ -229,6 +229,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Alias
                 | Symbol::SemiColon
                 | Symbol::Colon
+                | Symbol::Reify
         ),
     }
 }

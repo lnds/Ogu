@@ -45,6 +45,7 @@ pub enum Declaration {
     TypeDecl(String, Option<Vec<String>>, Vec<AlgebraicType>),
     TraitDecl(String, Vec<FuncPrototype>),
     ExtensionDecl(String, String, Vec<Declaration>),
+    FunctionPrototype(FuncPrototype),
 }
 
 type DeclVec = Vec<Declaration>;
@@ -76,6 +77,10 @@ impl Body {
         let pos = parser.skip_nl(pos);
         match parser.get_symbol(pos) {
             None => Ok(None),
+            Some(Symbol::Id(_)) if parser.peek(pos + 1, Symbol::Colon) => {
+                let (proto, pos) = Declaration::parse_func_prototype(parser, pos)?;
+                Ok(Some((Declaration::FunctionPrototype(proto), pos)))
+            }
             Some(Symbol::Id(_)) => Declaration::parse_func_or_val(parser, pos),
             Some(Symbol::Type) => Declaration::parse_type_decl(parser, pos),
             Some(Symbol::Trait) => Declaration::parse_trait_decl(parser, pos),

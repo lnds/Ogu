@@ -6,7 +6,9 @@ use crate::parser::ast::expressions::{
     is_func_call_end_symbol, is_literal, left_assoc_expr_to_expr, parse_left_assoc_expr,
     parse_right_assoc_expr, right_assoc_expr_to_expr, LeftAssocExpr, RightAssocExpr,
 };
-use crate::parser::{consume_symbol, parse_opt_dedent, parse_opt_indent, ParseError, Parser};
+use crate::parser::{
+    consume_symbol, consume_type_id, parse_opt_dedent, parse_opt_indent, ParseError, Parser,
+};
 use anyhow::{Context, Error, Result};
 
 #[macro_export]
@@ -56,12 +58,14 @@ pub enum Expression {
     RegexpLiteral(String),
     CharLiteral(String),
     IntegerLiteral(String),
+    FloatLiteral(String),
     DateLiteral(String),
     FormatString(String),
     Unit,
     EmptyList,
     NotExpr(Box<Expression>),
     LazyExpr(Box<Expression>),
+    ReifyExpr(String, Vec<Equation>),
     ListExpr(Vec<Expression>),
     ListByComprehension(
         Vec<Expression>,
@@ -228,8 +232,29 @@ impl Expression {
             Some(Symbol::Loop) => Expression::parse_loop(parser, pos),
             Some(Symbol::If) => Expression::parse_if(parser, pos),
             Some(Symbol::Recur) => Expression::parse_recur(parser, pos),
+            Some(Symbol::Reify) => Expression::parse_reify(parser, pos),
             _ => Expression::parse_lambda_expr(parser, pos),
         }
+    }
+
+    pub fn parse_reify(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Reify)?;
+        let (type_id, pos) = consume_type_id(parser, pos)?;
+        let (indent, pos) = parse_opt_indent(parser, pos);
+        let pos = consume_symbol(parser, pos, Symbol::Where)?;
+        let pos = parser.skip_nl(pos);
+        let pos = consume_symbol(parser, pos, Symbol::Indent)?;
+        let (eq, mut pos) = Equation::parse(parser, pos, true)?;
+        let mut eqs = vec![eq];
+        pos = parser.skip_nl(pos);
+        while !parser.peek(pos, Symbol::Dedent) {
+            let (eq, new_pos) = Equation::parse(parser, pos, true)?;
+            eqs.push(eq);
+            pos = parser.skip_nl(new_pos);
+        }
+        let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        let pos = parse_opt_dedent(parser, pos, indent)?;
+        Ok((Expression::ReifyExpr(type_id, eqs), pos))
     }
 
     pub fn parse_lambda_expr(parser: &Parser, pos: usize) -> ParseResult {
@@ -626,6 +651,9 @@ impl Expression {
             Some(Symbol::String(str)) => Ok((Expression::StringLiteral(str.to_string()), pos + 1)),
             Some(Symbol::Integer(int)) => {
                 Ok((Expression::IntegerLiteral(int.to_string()), pos + 1))
+            }
+            Some(Symbol::Float(float)) => {
+                Ok((Expression::FloatLiteral(float.to_string()), pos + 1))
             }
             Some(Symbol::IsoDate(date)) => Ok((Expression::DateLiteral(date.to_string()), pos + 1)),
             Some(Symbol::FormatString(f_str)) => {

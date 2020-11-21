@@ -28,4 +28,5 @@ coupon item discount =
     reify Fruit where
       subtotal _ = (1.0 - discoount) * (subtotal item)
 
-[Orange{quantity=10}, Banana{quantity=15}, coupon Grape{10}] |> map subtotal |> sum |> println!
+main () =
+    [Orange{quantity = 10}, Banana{quantity = 15}, coupon Grape{quantity = 10}] |> map subtotal |> sum |> println!

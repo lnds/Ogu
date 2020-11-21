@@ -31,8 +31,8 @@ pub enum Symbol<'a> {
     Case,
     #[token("cond", priority = 2000)]
     Cond,
-    #[token("deriving", priority = 2000)]
-    Deriving,
+    #[token("derive", priority = 2000)]
+    Derive,
     #[token("do", priority = 2000)]
     Do,
     #[token("eager", priority = 2000)]
@@ -363,7 +363,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Case));
         assert_eq!(lex.next(), Some(Symbol::Cond));
         assert_eq!(lex.next(), Some(Symbol::Do));
-        assert_eq!(lex.next(), Some(Symbol::Deriving));
+        assert_eq!(lex.next(), Some(Symbol::Derive));
         assert_eq!(lex.next(), Some(Symbol::Eager));
         assert_eq!(lex.next(), Some(Symbol::Elif));
         assert_eq!(lex.next(), Some(Symbol::Else));

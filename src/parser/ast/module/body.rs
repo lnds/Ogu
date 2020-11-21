@@ -35,6 +35,12 @@ pub enum AlgebraicType {
 }
 
 #[derive(Debug, Clone)]
+pub enum Derivation {
+    ListOfTraits(Vec<String>),
+    Trait(String, Vec<Equation>),
+}
+
+#[derive(Debug, Clone)]
 pub enum Declaration {
     Value(String, Expression),
     ValueWithWhere(String, Expression, Vec<Equation>),
@@ -42,7 +48,12 @@ pub enum Declaration {
     FunctionWithWhere(String, Vec<Arg>, Expression, Vec<Equation>),
     FunctionWithGuards(String, Vec<Arg>, Vec<Guard>),
     FunctionWithGuardsAndWhere(String, Vec<Arg>, Vec<Guard>, Vec<Equation>),
-    TypeDecl(String, Option<Vec<String>>, Vec<AlgebraicType>),
+    TypeDecl(
+        String,
+        Option<Vec<String>>,
+        Vec<AlgebraicType>,
+        Option<Vec<Derivation>>,
+    ),
     TraitDecl(String, Vec<FuncPrototype>),
     ExtensionDecl(String, String, Vec<Declaration>),
     FunctionPrototype(FuncPrototype),
@@ -200,11 +211,59 @@ impl Declaration {
             algebraic_elements.push(type_decl);
             pos = new_pos
         }
+        let mut derivations = vec![];
+        while parser.peek(pos, Symbol::Derive) {
+            let (derivation, new_pos) = Declaration::parse_derivation(parser, pos)?;
+            pos = parser.skip_nl(new_pos);
+            derivations.push(derivation);
+        }
         let pos = parse_opt_dedent(parser, pos, in_indent)?;
-        Ok(Some((
-            Declaration::TypeDecl(type_id, type_args, algebraic_elements),
-            pos,
-        )))
+        if derivations.is_empty() {
+            Ok(Some((
+                Declaration::TypeDecl(type_id, type_args, algebraic_elements, None),
+                pos,
+            )))
+        } else {
+            Ok(Some((
+                Declaration::TypeDecl(type_id, type_args, algebraic_elements, Some(derivations)),
+                pos,
+            )))
+        }
+    }
+
+    fn parse_derivation(parser: &Parser, pos: usize) -> Result<(Derivation, usize)> {
+        let pos = consume_symbol(parser, pos, Symbol::Derive)?;
+        if parser.peek(pos, Symbol::LeftParen) {
+            let mut pos = consume_symbol(parser, pos, Symbol::LeftParen)?;
+            let mut traits = vec![];
+            while !parser.peek(pos, Symbol::RightParen) {
+                let (trait_id, new_pos) = consume_type_id(parser, pos)?;
+                traits.push(trait_id);
+                if parser.peek(new_pos, Symbol::Comma) {
+                    pos = consume_symbol(parser, new_pos, Symbol::Comma)?;
+                } else {
+                    pos = new_pos;
+                }
+            }
+            pos = consume_symbol(parser, pos, Symbol::RightParen)?;
+            Ok((Derivation::ListOfTraits(traits), pos))
+        } else {
+            let (trait_id, pos) = consume_type_id(parser, pos)?;
+            let pos = parser.skip_nl(pos);
+            let pos = consume_symbol(parser, pos, Symbol::Where)?;
+            let pos = parser.skip_nl(pos);
+            let pos = consume_symbol(parser, pos, Symbol::Indent)?;
+            let (eq, mut pos) = Equation::parse(parser, pos, false)?;
+            let mut eqs = vec![eq];
+            pos = parser.skip_nl(pos);
+            while !parser.peek(pos, Symbol::Dedent) {
+                let (eq, new_pos) = Equation::parse(parser, pos, false)?;
+                pos = parser.skip_nl(new_pos);
+                eqs.push(eq);
+            }
+            let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+            Ok((Derivation::Trait(trait_id, eqs), pos))
+        }
     }
 
     fn parse_algebraic_type(parser: &Parser, pos: usize) -> Result<(AlgebraicType, usize)> {

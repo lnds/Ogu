@@ -86,12 +86,18 @@ impl<'a> Lexer {
             );
             tokens.append(&mut line_tokens);
         }
-        while indent_stack.len() > 1 {
-            tokens.push(Token {
-                symbol: Symbol::Dedent,
-                line: self.lines.len() + 1,
-            });
-            indent_stack.pop();
+        if !indent_stack.is_empty() {
+            let line_num = self.lines.len() + 1;
+            while let Some(&p) = indent_stack.last() {
+                if p == 0usize {
+                    break;
+                }
+                indent_stack.pop();
+                tokens.push(Token {
+                    symbol: Symbol::Dedent,
+                    line: line_num,
+                });
+            }
         }
         tokens
     }
@@ -185,11 +191,10 @@ fn scan_indentation<'a>(start_pos: LineSize, indent_stack: &mut IndentStack) -> 
             if start_pos < pos {
                 let indent_length = indent_stack.len();
                 while let Some(&p) = indent_stack.last() {
-                    if start_pos < p && p > 0 {
-                        indent_stack.pop();
-                    } else {
+                    if start_pos >= p || p == 0 {
                         break;
                     }
+                    indent_stack.pop();
                 }
                 vec![Symbol::Dedent; indent_length - indent_stack.len()]
             } else {

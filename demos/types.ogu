@@ -1,15 +1,15 @@
 type Day =  Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
-    deriving (Eq, Ord, Show, Read)
+    derive (Eq, Ord, Show, Read)
 
-alias String = [Char]
+type alias String = [Char]
 
-alias PhoneBook = [(String, String)]
+type alias PhoneBook = [(String, String)]
 
 alias Tuple = (String, Int)
 
 alias IntMap v = Map Int v
 
-type Either a b = Left a | Right b deriving (Eq, Ord, Show)
+type Either a b = Left a | Right b derive (Eq, Ord, Show)
 
 type Point = Point Float Float deriving (Show)
 
@@ -28,18 +28,18 @@ trait Vehicle where
     move! : Vehicle -> ()
 
 type Car = Car {company: String, model: String, year: Number}
-    deriving (Show)
-    extends Vehicle where
+    derive (Show)
+    derive Vehicle where
         move! this = do println! "moving car " company model year
 
 type Plane = Plane {company: String, series: String, year: Number}
 
-   extends Vehicle where
+   derive Vehicle where
         move! this = println! "flying plane " company series year
 
 type Ship = Ship {name: String}
 
-    extends Vehicle where
+    derive Vehicle where
 
         move! this
             | this.name == "Titanic" do println! name "sink"
@@ -52,7 +52,7 @@ trait Eq where
     x /= y = not (x == y)
 
 
-type TrafficLight = Red | Yello | Green
+type TrafficLight = Red | Yellow | Green
 
 
 extends TrafficLight with Eq where

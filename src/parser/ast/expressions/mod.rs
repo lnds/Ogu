@@ -207,6 +207,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::PipeRightFirstArg
                 | Symbol::ComposeForward
                 | Symbol::ComposeBackward
+                | Symbol::Pow
                 | Symbol::Plus
                 | Symbol::PlusPlus
                 | Symbol::Mult
@@ -229,6 +230,8 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Alias
                 | Symbol::SemiColon
                 | Symbol::Colon
+                | Symbol::Derive
+                | Symbol::Extends
                 | Symbol::Reify
         ),
     }

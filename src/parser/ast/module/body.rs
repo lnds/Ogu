@@ -13,7 +13,8 @@ use anyhow::{Context, Error, Result};
 #[derive(Debug, Clone)]
 pub enum FuncType {
     Void,
-    Type(String),
+    Simple(String),
+    Complex(String, Vec<AlgebraicElement>),
     Param(String),
     Chain(Box<FuncType>, Box<FuncType>),
 }
@@ -404,7 +405,20 @@ impl Declaration {
 
     fn parse_func_type(parser: &Parser, pos: usize) -> Result<(FuncType, usize)> {
         match parser.get_symbol(pos) {
-            Some(Symbol::TypeId(tid)) => Ok((FuncType::Type(tid.to_string()), pos + 1)),
+            Some(Symbol::TypeId(_)) => {
+                let (type_id, pos) = consume_type_id(parser, pos)?;
+                let mut params = vec![];
+                let mut pos = pos;
+                while let Some((alg_elem, new_pos)) = consume_alg_type_param(parser, pos)? {
+                    params.push(alg_elem);
+                    pos = new_pos;
+                }
+                if params.is_empty() {
+                    Ok((FuncType::Simple(type_id), pos))
+                } else {
+                    Ok((FuncType::Complex(type_id, params), pos))
+                }
+            }
             Some(Symbol::Id(id)) => Ok((FuncType::Param(id.to_string()), pos + 1)),
             Some(Symbol::LeftParen) if parser.peek(pos + 1, Symbol::RightParen) => {
                 Ok((FuncType::Void, pos + 2))
@@ -509,6 +523,7 @@ fn consume_alg_type_param(
             Ok(Some((AlgebraicElement::Type(type_id.to_string()), pos + 1)))
         }
         Some(Symbol::Id(id)) => Ok(Some((AlgebraicElement::Param(id.to_string()), pos + 1))),
+        Some(Symbol::Arrow) => Ok(None),
         Some(Symbol::NewLine) => Ok(None),
         Some(Symbol::Indent) => Ok(None),
         Some(Symbol::Dedent) => Ok(None),

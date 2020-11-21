@@ -185,6 +185,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Assign
                 | Symbol::Dollar
                 | Symbol::Comma
+                | Symbol::Dot
                 | Symbol::Cons
                 | Symbol::FatArrow
                 | Symbol::Let

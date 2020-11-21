@@ -13,7 +13,7 @@ impl Import {
         let mut pos = pos;
         while let Some((import, new_pos)) = Import::parse_import(parser, pos)? {
             imports.push(import);
-            pos = new_pos;
+            pos = parser.skip_nl(new_pos);
         }
         if imports.is_empty() {
             Ok((None, pos))

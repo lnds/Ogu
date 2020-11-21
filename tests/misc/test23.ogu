@@ -2,14 +2,15 @@
 mult-tuple (x, y, z) = x * y * z
 
 
-variadic (x, y, params...) =
+variadic (x, y, params) =
   do
     println! $ x * y
     println! "rest = " params
 
-variadic (10, 20)
+main () = do
+    variadic (10, 20)
 
-variadic (10, 20, 30)
+    variadic (10, 20, 30)
 
-mult-tuple (10, 20, 10)
+    mult-tuple (10, 20, 10)
 

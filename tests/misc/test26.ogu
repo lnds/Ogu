@@ -9,32 +9,30 @@ where
 
     show! : Draw -> ()
 
-class Circle(x,  y, radius)
+type Circle = Circle {x: Float,  y: Float, radius: Float}
 
-   extends Shape
-   where
+   derive Shape where
 
        area self = pi * (radius ^ 2)
 
        move! self x y =
             println! "move to " x y
 
-   extends Draw
-   where
+   derive Draw where
         show! this = println! "this circle is at " this.x "," this.y " with radius = " this.radius
 
 
-class Rectangle(x, y, width, height)
+type Rectangle = Rectangle {x: Float, y: Float, width: Float, height: Float}
 
 extends Rectangle with Shape
 
     where
-        area self = (.width self) * (.height self)
+        area self = (self.width) * (self.height)
 
 
-class Triangle(b, h)
+type Triangle = Triangle {b: Float, h: Float}
 
-    extends Shape
+    derive Shape
     where
         area self = self.b * self.h
 
@@ -50,6 +48,7 @@ cir = Circle(10, 10, 10)
 rec = Rectangle(0,0, 100, 50)
 tri = Triangle(10, 20)
 
-println! cir.x cir.y cir.radius
+main () = do
+    println! cir.x cir.y cir.radius
 
-[test-area cir, test-area rec, test-area tri]
+    [test-area cir, test-area rec, test-area tri]

@@ -1,28 +1,25 @@
 
+main () = do
+    println "i\t j"
+    for i = 1, j = i + 1
+    while i < 10 loop
+       println! i "\t" j;
+       repeat inc i, i + 1
 
-println "i\t j"
-for i = 1, j = i + 1
-    while i < 10
+
+    println "i\t j"
+    for i = 1, j = i + 1
+    while i < 10 loop
+        println i "\t" j;
+        repeat inc i, inc j
+
+
+    for i = 1, j = i + 1
+    while i < 10 loop
+        println i "\t"  j;
+        repeat  let i = inc i, let  j = i + 1
+
+    for i = 1, salida = 0
     loop
-        println! i "\t" j
-        recur inc i, i + 1
-
-
-println "i\t j"
-for i = 1, j = i + 1
-    while i < 10
-    loop
-        println i "\t" j
-        recur inc i, inc j
-
-
-for i = 1, j = i + 1
-    while i < 10
-    loop
-        println i "\t"  j
-        recur  i = inc i, j = i + 1
-
-for i = 1, salida = 0
-loop
-   if i == 10 then salida
-   else recur with i' = inc i, salida = i' * 2
+       if i == 10 then salida
+       else repeat let i' = inc i, let salida = i' * 2

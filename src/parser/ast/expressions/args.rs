@@ -65,7 +65,10 @@ impl Arg {
                 return Err(Error::new(OguError::ParserError(
                     ParseError::ExpectingComma,
                 )))
-                .context("expecting comma");
+                .context(format!(
+                    "expecting comma at {}",
+                    parser.pos_to_line(pos).unwrap_or(0)
+                ));
             }
             match Arg::parse_arg(parser, pos + 1)? {
                 Some((new_arg, new_pos)) => {
@@ -73,8 +76,9 @@ impl Arg {
                     args.push(new_arg.clone())
                 }
                 None => {
-                    return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
-                        .context("unexpected token");
+                    return Err(Error::new(OguError::ParserError(ParseError::InvalidArg))).context(
+                        format!("unexpected token @{}", parser.pos_to_line(pos).unwrap_or(0)),
+                    );
                 }
             }
         }

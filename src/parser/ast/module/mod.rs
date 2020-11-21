@@ -3,7 +3,7 @@ pub mod exposing;
 pub mod imports;
 
 use crate::lexer::tokens::Symbol;
-use crate::parser::{consume_qualified_type_id, Parser};
+use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use std::path::PathBuf;
 
 use crate::parser::ast::module::body::Body;
@@ -29,11 +29,13 @@ pub struct Module {
 impl<'a> Module {
     pub fn parse(parser: &'a Parser<'a>, filename: &PathBuf, pos: usize) -> Result<Self> {
         let (name, pos) = if parser.peek(pos, Symbol::Module) {
-            name_from_parser(parser, pos + 1)?
+            name_from_parser(parser, pos)?
         } else {
             (name_from_filename(filename), pos)
         };
+        let pos = parser.skip_nl(pos);
         let (exposing, pos) = Exposing::parse(parser, pos)?;
+        let pos = parser.skip_nl(pos);
         let (imports, pos) = Import::parse(parser, pos)?;
         let pos = parser.skip_nl(pos);
         let body = Body::parse(parser, pos)?;
@@ -63,7 +65,8 @@ fn capitalize(s: &str) -> String {
     }
 }
 
-fn name_from_parser<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(ModuleName, usize)> {
+fn name_from_parser(parser: &Parser, pos: usize) -> Result<(ModuleName, usize)> {
+    let pos = consume_symbol(parser, pos, Symbol::Module)?;
     let (t_id, names, pos) = consume_qualified_type_id(parser, pos)?;
     if names.is_empty() {
         Ok((ModuleName::Simple(t_id), pos))

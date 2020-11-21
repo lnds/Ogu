@@ -1,9 +1,9 @@
 module Demo
 
-from [:clj] clojure.string import upper-case
+import Clojure.String exposing (upper-case)
+import Java.Util exposing (Date, GregorianCalendar)
 
-from [:jvm] java.util import Date, GregorianCalendar
+main () = do
+    println! $ new Date()
 
-println! $ new Date()
-
-(upper "hola") == (upper-case "hola")
+    (upper "hola") == (upper-case "hola")

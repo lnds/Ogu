@@ -206,6 +206,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::RightBracket
                 | Symbol::RightCurly
                 | Symbol::Where
+                | Symbol::With
                 | Symbol::While
                 | Symbol::Until
                 | Symbol::PipeLeft

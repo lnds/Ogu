@@ -11,7 +11,7 @@ alias IntMap v = Map Int v
 
 type Either a b = Left a | Right b derive (Eq, Ord, Show)
 
-type Point = Point Float Float deriving (Show)
+type Point = Point Float Float derive (Show)
 
 type Shape = Circle Point Float
            | Rectangle Point Point
@@ -30,7 +30,8 @@ trait Vehicle where
 type Car = Car {company: String, model: String, year: Number}
     derive (Show)
     derive Vehicle where
-        move! this = do println! "moving car " company model year
+        move! this = do
+            println! "moving car " company model year
 
 type Plane = Plane {company: String, series: String, year: Number}
 
@@ -42,24 +43,23 @@ type Ship = Ship {name: String}
     derive Vehicle where
 
         move! this
-            | this.name == "Titanic" do println! name "sink"
-            | otherwise do println! "sail"
+            | this.name == "Titanic" = println! name "sink"
+            | otherwise = println! "sail"
 
 trait Eq where
-    (==) : Eq -> Eq -> Bool
-    (/=) : Eq -> Eq -> Bool
-    x == y = not (x /= y)
-    x /= y = not (x == y)
+    eq : Eq -> Eq -> Bool
+    ne : Eq -> Eq -> Bool
 
 
 type TrafficLight = Red | Yellow | Green
 
 
 extends TrafficLight with Eq where
-    Red == Red = True
-    Green == Green = True
-    Yellow == Yellow = True
-    _ == _ = False
+    eq Red  Red = True
+    eq Green Green = True
+    eq Yellow Yellow = True
+    eq _  _ = False
+    ne x y = not (eq x y)
 
 mustang56 = Car {company = "Ford", model = "Mustang", year = 1956}
 
@@ -69,7 +69,7 @@ show-model! : Plane -> ()
 show-model! p = println! p.series  p.company
 
 show-model! : Car -> ()
-show-model car do println! car.model car.company
+show-model car = println! car.model car.company
 
 show! : Plane -> ()
 show! plane = println! "plane " (show-model! plane)
@@ -80,16 +80,17 @@ show! car = println!   "car " (show-model! car)
 titanic = Ship ("Titanic")
 queen = Ship ("Queen Mary")
 
-show! mustang56
-show! boeing747
+main () =
+    show! mustang56;
+    show! boeing747;
 
-show-model! mustang56
-show-model! boeing747
+    show-model! mustang56;
+    show-model! boeing747;
 
-move! mustang56
+    move! mustang56;
 
-move! boeing747
+    move! boeing747;
 
-move! titanic
+    move! titanic;
 
-move! queen
+    move! queen

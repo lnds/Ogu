@@ -28,16 +28,27 @@ pub enum AlgebraicElement {
 }
 
 #[derive(Debug, Clone)]
+pub struct RecordElement(String, AlgebraicElement);
+
+#[derive(Debug, Clone)]
 pub enum AlgebraicType {
     Simple(String),
     Complex(String, Vec<AlgebraicElement>),
-    Record(String, Vec<(String, AlgebraicElement)>),
+    Record(String, Vec<RecordElement>),
 }
 
 #[derive(Debug, Clone)]
 pub enum Derivation {
     ListOfTraits(Vec<String>),
     Trait(String, Vec<Equation>),
+}
+
+#[derive(Debug, Clone)]
+pub enum BaseType {
+    Tuple(Vec<BaseType>),
+    Array(Vec<BaseType>),
+    SimpleRecord(Vec<RecordElement>),
+    Algebraic(AlgebraicType),
 }
 
 #[derive(Debug, Clone)]
@@ -54,6 +65,7 @@ pub enum Declaration {
         Vec<AlgebraicType>,
         Option<Vec<Derivation>>,
     ),
+    TypeAlias(String, Option<Vec<String>>, BaseType),
     TraitDecl(String, Vec<FuncPrototype>),
     ExtensionDecl(String, String, Vec<Declaration>),
     FunctionPrototype(FuncPrototype),
@@ -94,6 +106,7 @@ impl Body {
             }
             Some(Symbol::Id(_)) => Declaration::parse_func_or_val(parser, pos),
             Some(Symbol::Type) => Declaration::parse_type_decl(parser, pos),
+            Some(Symbol::Alias) => Declaration::parse_type_alias_decl(parser, pos),
             Some(Symbol::Trait) => Declaration::parse_trait_decl(parser, pos),
             Some(Symbol::Extends) => Declaration::parse_extends(parser, pos),
             sym => Err(Error::new(OguError::ParserError(
@@ -111,7 +124,7 @@ impl Body {
 
 impl Declaration {
     pub fn parse_func_or_val(parser: &Parser, pos: usize) -> DeclParseResult {
-        let (eq, pos) = Equation::parse(parser, pos, false)?;
+        let (eq, pos) = Equation::parse(parser, pos, true)?;
         let (opt_where, pos) = if let Some(where_pos) = look_ahead_where(parser, pos) {
             let (where_decl, mut pos) = Declaration::parse_where(parser, where_pos)?;
             if parser.peek(pos, Symbol::Dedent) {
@@ -190,7 +203,7 @@ impl Declaration {
     fn parse_type_decl(parser: &Parser, pos: usize) -> DeclParseResult {
         let pos = consume_symbol(parser, pos, Symbol::Type)?;
         if parser.peek(pos, Symbol::Alias) {
-            todo!()
+            return Declaration::parse_type_alias_decl(parser, pos);
         }
 
         let (type_id, pos) = consume_type_id(parser, pos)?;
@@ -212,11 +225,14 @@ impl Declaration {
             pos = new_pos
         }
         let mut derivations = vec![];
+        let (inner_indent, mut pos) = parse_opt_indent(parser, pos);
         while parser.peek(pos, Symbol::Derive) {
             let (derivation, new_pos) = Declaration::parse_derivation(parser, pos)?;
             pos = parser.skip_nl(new_pos);
             derivations.push(derivation);
         }
+        let pos = parse_opt_dedent(parser, pos, inner_indent)?;
+
         let pos = parse_opt_dedent(parser, pos, in_indent)?;
         if derivations.is_empty() {
             Ok(Some((
@@ -229,6 +245,23 @@ impl Declaration {
                 pos,
             )))
         }
+    }
+
+    pub fn parse_type_alias_decl(parser: &Parser, pos: usize) -> DeclParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Alias)?;
+        let (type_id, pos) = consume_type_id(parser, pos)?;
+        let (type_args, pos) = if parser.peek(pos, Symbol::Assign) {
+            (None, pos)
+        } else {
+            let (args, pos) = Declaration::parse_type_args(parser, pos)?;
+            (Some(args), pos)
+        };
+        let pos = consume_symbol(parser, pos, Symbol::Assign)?;
+        let (base_type, pos) = Declaration::parse_base_type(parser, pos)?;
+        Ok(Some((
+            Declaration::TypeAlias(type_id, type_args, base_type),
+            pos,
+        )))
     }
 
     fn parse_derivation(parser: &Parser, pos: usize) -> Result<(Derivation, usize)> {
@@ -290,6 +323,11 @@ impl Declaration {
         pos: usize,
         type_id: String,
     ) -> Result<(AlgebraicType, usize)> {
+        let (members, pos) = Declaration::parse_record_members(parser, pos)?;
+        Ok((AlgebraicType::Record(type_id, members), pos))
+    }
+
+    fn parse_record_members(parser: &Parser, pos: usize) -> Result<(Vec<RecordElement>, usize)> {
         let pos = consume_symbol(parser, pos, Symbol::LeftCurly)?;
         let (in_indent, pos) = parse_opt_indent(parser, pos);
         let (member, mut pos) = Declaration::parse_record_member(parser, pos)?;
@@ -303,17 +341,14 @@ impl Declaration {
         }
         let pos = parse_opt_dedent(parser, pos, in_indent)?;
         let pos = consume_symbol(parser, pos, Symbol::RightCurly)?;
-        Ok((AlgebraicType::Record(type_id, members), pos))
+        Ok((members, pos))
     }
 
-    fn parse_record_member(
-        parser: &Parser,
-        pos: usize,
-    ) -> Result<((String, AlgebraicElement), usize)> {
+    fn parse_record_member(parser: &Parser, pos: usize) -> Result<(RecordElement, usize)> {
         let (id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Symbol::Colon)?;
         let (tid, pos) = consume_type_id(parser, pos)?;
-        Ok(((id, AlgebraicElement::Type(tid)), pos))
+        Ok((RecordElement(id, AlgebraicElement::Type(tid)), pos))
     }
 
     fn parse_type_args(parser: &Parser, pos: usize) -> Result<(Vec<String>, usize)> {
@@ -415,6 +450,56 @@ impl Declaration {
     }
 }
 
+impl Declaration {
+    fn parse_base_type(parser: &Parser, pos: usize) -> Result<(BaseType, usize)> {
+        match parser.get_symbol(pos) {
+            Some(Symbol::LeftParen) => Declaration::parse_tuple(parser, pos),
+            Some(Symbol::LeftCurly) => Declaration::parse_simple_record(parser, pos),
+            Some(Symbol::LeftBracket) => Declaration::parse_array(parser, pos),
+            _ => {
+                let (alg, pos) = Declaration::parse_algebraic_type(parser, pos)?;
+                Ok((BaseType::Algebraic(alg), pos))
+            }
+        }
+    }
+
+    fn parse_simple_record(parser: &Parser, pos: usize) -> Result<(BaseType, usize)> {
+        let (rec, pos) = Declaration::parse_record_members(parser, pos)?;
+        Ok((BaseType::SimpleRecord(rec), pos))
+    }
+
+    fn parse_tuple(parser: &Parser, pos: usize) -> Result<(BaseType, usize)> {
+        let (types, pos) =
+            Declaration::parse_seq(parser, pos, Symbol::LeftParen, Symbol::RightParen)?;
+        Ok((BaseType::Tuple(types), pos))
+    }
+
+    fn parse_array(parser: &Parser, pos: usize) -> Result<(BaseType, usize)> {
+        let (types, pos) =
+            Declaration::parse_seq(parser, pos, Symbol::LeftBracket, Symbol::RightBracket)?;
+        Ok((BaseType::Array(types), pos))
+    }
+
+    fn parse_seq(
+        parser: &Parser,
+        pos: usize,
+        start: Symbol,
+        end: Symbol,
+    ) -> Result<(Vec<BaseType>, usize)> {
+        let pos = consume_symbol(parser, pos, start)?;
+        let (ty, mut pos) = Declaration::parse_base_type(parser, pos)?;
+        let mut types = vec![ty];
+        while parser.peek(pos, Symbol::Comma) {
+            pos = consume_symbol(parser, pos, Symbol::Comma)?;
+            let (ty, new_pos) = Declaration::parse_base_type(parser, pos)?;
+            types.push(ty);
+            pos = new_pos;
+        }
+        let pos = consume_symbol(parser, pos, end)?;
+        Ok((types, pos))
+    }
+}
+
 fn consume_alg_type_param(
     parser: &Parser,
     pos: usize,
@@ -428,9 +513,17 @@ fn consume_alg_type_param(
         Some(Symbol::Indent) => Ok(None),
         Some(Symbol::Dedent) => Ok(None),
         Some(Symbol::Guard) => Ok(None),
+        Some(Symbol::RightBracket) => Ok(None),
+        Some(Symbol::RightParen) => Ok(None),
+        Some(Symbol::Comma) => Ok(None),
+        Some(Symbol::Derive) => Ok(None),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::ExpectingTypeIdentifier,
         )))
-        .context(format!("Expecting a type or a param, found: {:?}", sym)),
+        .context(format!(
+            "Expecting a type or a param, found: {:?} @ {}",
+            sym,
+            parser.pos_to_line(pos).unwrap_or(0)
+        )),
     }
 }

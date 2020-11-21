@@ -1,23 +1,22 @@
 
-greet! = greet "you"
+greet0! = greet "you"
 
-greet! name
-    | name == "world " do println! "hello world"
-    | otherwise do println! "hello " name
+greet1! name
+    | name == "world " = println! "hello world"
+    | otherwise = println! "hello " name
 
-greet name1 name2 = println! "hello " name1 " & " name2
-
-
-greet!
-
-greet! "world"
-
-greet! "Mampato"
-
-greet! "Mampato" "Rena"
+greet2! name1 name2 = println! "hello " name1 " & " name2
 
 
-greet2! name rest... = println! $ str "hola " name ", " (join ", " rest)
+main () = do
 
+    greet0!
 
-greet2! "Mampato" "Ogu" "Rena" "Xse"
+    greet1! "world"
+
+    greet1! "Mampato"
+
+    greet2! "Mampato" "Rena"
+
+main () =
+    greet2! "Mampato" "Ogu" "Rena" "Xse"

@@ -9,4 +9,4 @@ public = (inner) + 100
 
 priv check a b = (publica a) * (interna b)
 
-check (inner) (public)
+main = check (inner) (public)

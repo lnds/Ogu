@@ -3,7 +3,7 @@ rev num =
     for reversed = 0, n = num
     loop
         if zero? n then reversed
-        else recur (reversed * 10 + n % 10), (n // 10)
+        else repeat (reversed * 10 + n % 10), (n // 10)
 
 palindrome? n = n == rev n
 

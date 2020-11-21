@@ -1,6 +1,7 @@
 use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::args::{Arg, VecArg};
+use crate::parser::ast::expressions::consume_ids_sep_by;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::{parse_guards, Guard};
 use crate::parser::{
@@ -12,6 +13,7 @@ use anyhow::{Context, Error, Result};
 #[derive(Debug, Clone)]
 pub enum Equation {
     Value(String, Expression),
+    TupleValue(Vec<String>, Expression),
     LValue(Expression, Expression),
     LValueWithGuards(Expression, Vec<Guard>),
     Function(String, Vec<Arg>, Expression),
@@ -23,7 +25,7 @@ impl Equation {
         if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
         } else if inner {
-            let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
+            let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
             if parser.peek(pos, Symbol::Assign) {
                 Equation::parse_lval_no_guards(expr, parser, pos + 1)
             } else {
@@ -57,6 +59,13 @@ impl Equation {
         if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
             let pos = consume_symbol(parser, pos + 1, symbol)?;
             Equation::parse_val(id.to_string(), parser, pos)
+        } else if parser.peek(pos, Symbol::LeftParen) {
+            let pos = consume_symbol(parser, pos, Symbol::LeftParen)?;
+            let (ids, pos) = consume_ids_sep_by(parser, pos, Symbol::Comma)?;
+            let pos = consume_symbol(parser, pos, Symbol::RightParen)?;
+            let pos = consume_symbol(parser, pos, symbol)?;
+            let (expr, pos) = Expression::parse(parser, pos)?;
+            Ok((Equation::TupleValue(ids, expr), pos))
         } else {
             Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingIdentifier,

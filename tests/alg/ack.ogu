@@ -13,4 +13,5 @@ siracusa n
   | otherwise = recur (n * 3 + 1)
 
 
-(ackermann 2 3) + (siracusa 11)
+main () =
+    (ackermann 2 3) + (siracusa 11)

@@ -5,7 +5,7 @@ fun a = fun 10 a
 
 fun a b = a + b
 
-(fun) + (fun 10) + (fun 10 10)
+main = (fun) + (fun 10) + (fun 10 10)
 
 
 

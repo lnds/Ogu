@@ -22,7 +22,7 @@ matrix = [[ 8, 2,22,97,38,15, 0,40, 0,75, 4, 5, 7,78,52,12,50,77,91, 8],
 
 get_elem mat row col =
       if row >= 0 && row < 20 && col >= 0 && col < 20 then
-        nth (nth mat row) col
+        (mat @ row)  @col
       else
         0
 
@@ -40,9 +40,10 @@ get_down_left matrix row col =
 get_down_right matrix row col =
     reduce $ (*) map (\x -> get_elem matrix (x + row) (col + x)) (range 4)
 
-values = [[get_right matrix r c,
-               get_down matrix r c,
-               get_down_left matrix r c,
-               get_down_right matrix r c] | r <- (range 20), c <- (range 20)]
-in
-     reduce max (flatten values)
+euler11 () =
+    let values = [[get_right matrix r c,
+                   get_down matrix r c,
+                   get_down_left matrix r c,
+                   get_down_right matrix r c] | r <- (range 20), c <- (range 20)]
+    in
+         reduce max (flatten values)

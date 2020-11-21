@@ -73,6 +73,8 @@ pub enum Symbol<'a> {
     Otherwise,
     #[token("recur", priority = 2000)]
     Recur,
+    #[token("repeat", priority = 2000)]
+    Repeat,
     #[token("reify", priority = 2000)]
     Reify,
     #[token("return", priority = 2000)]
@@ -380,14 +382,16 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Lazy));
         assert_eq!(lex.next(), None);
 
-        let mut lex =
-            Symbol::lexer("let loop module not of otherwise recur reify return then trait until");
+        let mut lex = Symbol::lexer(
+            "let loop module not of otherwise repeat recur reify return then trait until",
+        );
         assert_eq!(lex.next(), Some(Symbol::Let));
         assert_eq!(lex.next(), Some(Symbol::Loop));
         assert_eq!(lex.next(), Some(Symbol::Module));
         assert_eq!(lex.next(), Some(Symbol::Not));
         assert_eq!(lex.next(), Some(Symbol::Of));
         assert_eq!(lex.next(), Some(Symbol::Otherwise));
+        assert_eq!(lex.next(), Some(Symbol::Repeat));
         assert_eq!(lex.next(), Some(Symbol::Recur));
         assert_eq!(lex.next(), Some(Symbol::Reify));
         assert_eq!(lex.next(), Some(Symbol::Return));

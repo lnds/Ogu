@@ -1,15 +1,15 @@
 
 
-let d = [{:problem "euler1", :value 233168},
-            {:problem "euler2", :value 4613732},
-              {:problem "euler3", :value 6857},
-              {:problem "euler4", :value 906609},
-              {:problem "euler5", :value 232792560},
-              {:problem "euler6", :value 25164150},
-              {:problem "euler7", :value 104743},
-              {:problem "euler8", :value 23514624000},
-              {:problem "euler9", :value 31875000},
-              {:problem "euler10", :value 142913828922}]
-
-d |> map :value |> sum
+main () =
+    let d = [#{Problem => "euler1", Value => 233168},
+             #{Problem => "euler2", Value => 4613732},
+             #{Problem => "euler3", Value => 6857},
+             #{Problem => "euler4", Value => 906609},
+             #{Problem => "euler5", Value => 232792560},
+             #{Problem => "euler6", Value => 25164150},
+             #{Problem => "euler7", Value => 104743},
+             #{Problem => "euler8", Value => 23514624000},
+             #{Problem => "euler9", Value => 31875000},
+             #{Problem => "euler10", Value => 142913828922}]
+    in   d |> map Value |> sum
 

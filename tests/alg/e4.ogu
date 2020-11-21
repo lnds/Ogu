@@ -4,8 +4,9 @@ rev num =
         if zero? n then
             reversed
         else
-            recur reversed = reversed * 10 + n % 10, n = int (n / 10)
+            repeat let reversed = reversed * 10 + n % 10, let n = int (n / 10)
 
 palindrome? n = n == rev n
 
-[x * y | x <- [100 ..< 1000], y <- [100 ..< 1000] ] |> filter palindrome? |> apply max
+euler4 () =
+    [x * y | x <- [100 ..< 1000], y <- [100 ..< 1000] ] |> filter palindrome? |> apply max

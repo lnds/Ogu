@@ -21,7 +21,7 @@ solicitar-jugada! jugada =
      else
        do
          println! "opción incorrecta"
-         recur let opcion = solicitar-opcion mensaje
+         repeat let opcion = solicitar-opcion mensaje
   where
     solicitar-opcion mensaje = first <| char-array <| trim <| upper <| prompt! mensaje
     mensaje | jugada == 'I' = "\nJugada? ('R':Retirarse, 'D':Doblar, 'O':Otra carta, 'M': Mantener cartas) --> "
@@ -78,8 +78,8 @@ jugar-mano! baraja-revuelta apuesta pozo =
                     for nueva-baraja = baraja, nueva-mano-croupier = mano-croupier
                     while (valor-mano? mano-croupier) < 17
                     loop
-                       recur let nueva-mano-croupier = (head nueva-baraja) :: nueva-mano-croupier,
-                             let nueva-baraja = tail baraja
+                       repeat let nueva-mano-croupier = (head nueva-baraja) :: nueva-mano-croupier,
+                              let nueva-baraja = tail baraja
                     return
                         jugar-mano! nueva-jugada mano-jugador nueva-mano-croupier nueva-baraja
 
@@ -90,7 +90,7 @@ jugar-mano! baraja-revuelta apuesta pozo =
                         nueva-mano-croupier = mano-croupier
                     while (valor-mano? mano-croupier) < 17
                     loop
-                        recur
+                        repeat
                             let nuevamano-croupier = (head nueva-baraja) :: nueva-mano-croupier,
                             let nueva-baraja = tail nueva-baraja
                     return
@@ -130,7 +130,7 @@ solicitar-apuesta pozo apuesta-minima =
 
     msj = f"\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): "
     ask! m = prompt! m >| to-int -1
-    read-int! m = for value = ask! m while value < 0 loop  recur let value = ask! m return value
+    read-int! m = for value = ask! m while value < 0 loop  repeat let value = ask! m return value
 
 -- Programa principal
 

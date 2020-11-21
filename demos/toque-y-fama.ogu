@@ -37,7 +37,7 @@ main () =
                   in
                     if empty? num then
                        println! "error!\n";
-                       recur let intentos = inc intentos, let accion = ingresar tam
+                       repeat let intentos = inc intentos, let accion = ingresar tam
                     else
                        println! "tu ingresaste " num "(es " sec ")";
                        let t = toques num sec
@@ -47,5 +47,5 @@ main () =
                          if f == tam then
                            println! f"Ganaste! Acertaste al intento ${intentos}! La secuencia era ${sec}"
                          else
-                           recur let intentos = inc intentos, let accion = ingresar tam
+                           repeat let intentos = inc intentos, let accion = ingresar tam
 

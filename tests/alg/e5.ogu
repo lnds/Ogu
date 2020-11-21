@@ -2,7 +2,7 @@
 gcd x y =
     for a = x, b = y loop
         if zero? b then a
-        else recur b, a % b
+        else repeat b, a % b
 
 lcm a b
    | (zero? a) = 0
@@ -11,4 +11,5 @@ lcm a b
 
 divisors n = reduce lcm 1 [2..n]
 
-divisors 20
+main () =
+    divisors 20

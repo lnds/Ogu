@@ -102,6 +102,7 @@ pub enum Expression {
     UnaryMul(Option<Box<Expression>>),
     UnaryPow(Option<Box<Expression>>),
     UnaryMod(Option<Box<Expression>>),
+    UnaryDiv(Option<Box<Expression>>),
     UnaryAnd(Option<Box<Expression>>),
     UnaryOr(Option<Box<Expression>>),
     UnaryNot(Option<Box<Expression>>),
@@ -131,7 +132,8 @@ pub enum Expression {
     TupleExpr(Vec<Expression>),
     OpFunc(Box<Symbol<'static>>),
     DoExpr(Vec<Expression>),
-    RecurExpr(Vec<RecurValue>),
+    RepeatExpr(Vec<RecurValue>),
+    RecurExpr(Vec<Expression>),
     LetExpr(Vec<Equation>, Box<Expression>),
     IfExpr(
         Box<Expression>,
@@ -231,6 +233,7 @@ impl Expression {
             Some(Symbol::For) => Expression::parse_loop(parser, pos),
             Some(Symbol::Loop) => Expression::parse_loop(parser, pos),
             Some(Symbol::If) => Expression::parse_if(parser, pos),
+            Some(Symbol::Repeat) => Expression::parse_repeat(parser, pos),
             Some(Symbol::Recur) => Expression::parse_recur(parser, pos),
             Some(Symbol::Reify) => Expression::parse_reify(parser, pos),
             _ => Expression::parse_lambda_expr(parser, pos),
@@ -469,7 +472,7 @@ impl Expression {
             Some(Symbol::RightParen) => Ok((Expression::Unit, pos + 1)),
             Some(op) if is_basic_op(op) => {
                 let (opt_expr, pos) = if parser.peek(pos + 1, Symbol::RightParen) {
-                    (None, pos)
+                    (None, pos + 1)
                 } else {
                     let (expr, pos) = Expression::parse_lambda_expr(parser, pos + 1)?;
                     (Some(Box::new(expr)), pos)
@@ -482,6 +485,7 @@ impl Expression {
                     Symbol::Minus => Ok((Expression::UnarySub(opt_expr), pos)),
                     Symbol::Mult => Ok((Expression::UnaryMul(opt_expr), pos)),
                     Symbol::Pow => Ok((Expression::UnaryPow(opt_expr), pos)),
+                    Symbol::Div => Ok((Expression::UnaryDiv(opt_expr), pos)),
                     Symbol::Mod => Ok((Expression::UnaryMod(opt_expr), pos)),
                     Symbol::And => Ok((Expression::UnaryAnd(opt_expr), pos)),
                     Symbol::Or => Ok((Expression::UnaryOr(opt_expr), pos)),
@@ -703,6 +707,12 @@ impl Expression {
         }
     }
 
+    pub fn parse_recur(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Recur)?;
+        let (args, pos) = Expression::parse_func_call_args(parser, pos)?;
+        Ok((Expression::RecurExpr(args), pos))
+    }
+
     fn parse_func_call_expr(parser: &Parser, pos: usize) -> ParseResult {
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
         if is_func_call_end_symbol(parser.get_symbol(pos)) {
@@ -865,8 +875,8 @@ impl Expression {
         Ok((LoopCond::UntilExpr(Box::new(expr)), pos))
     }
 
-    fn parse_recur(parser: &Parser, pos: usize) -> ParseResult {
-        let pos = consume_symbol(parser, pos, Symbol::Recur)?;
+    fn parse_repeat(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Repeat)?;
         let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr, mut pos) = Expression::parse_recur_expr(parser, pos)?;
@@ -884,7 +894,7 @@ impl Expression {
             exprs.push(expr);
         }
         pos = parse_opt_dedent(parser, pos, indent)?;
-        Ok((Expression::RecurExpr(exprs), pos))
+        Ok((Expression::RepeatExpr(exprs), pos))
     }
 
     fn parse_recur_expr(parser: &Parser, pos: usize) -> Result<(RecurValue, usize)> {

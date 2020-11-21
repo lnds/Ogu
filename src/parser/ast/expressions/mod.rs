@@ -199,6 +199,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Else
                 | Symbol::Elif
                 | Symbol::Return
+                | Symbol::Recur
                 | Symbol::RightParen
                 | Symbol::In
                 | Symbol::RightBracket

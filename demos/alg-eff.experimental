@@ -1,0 +1,34 @@
+
+effect    ask : () -> a
+
+hal () =
+    handle
+        "Hello " ++ ask () ++ ". How are you doing" ++ ask () ++ "?"
+    with
+        | ask () -> yield "Dave"
+        | return x -> x
+
+
+effect    error : () -> t
+
+handler herr
+    | error () -> 0
+    | return x -> x
+
+
+effect NonDet
+where
+   flip : () -> Bool
+   fail : () -> ()
+
+handler hnondet
+    | return x -> [x]
+    | fail () -> []
+    | flip () -> append (yield True) (yield False)
+
+test () =
+    handle
+      handle
+        if flip () then 7 else error () + 1
+      with herr
+    with hnondet

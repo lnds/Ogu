@@ -9,6 +9,7 @@ compara a b c = if a > b || a > c then a else b
 
 aornotb a b = a || not b
 
-(compara' 30 20 10) == (compara 30 20 10)
+main () =
+    (compara' 30 20 10) == (compara 30 20 10)
 
 

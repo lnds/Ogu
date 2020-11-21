@@ -79,6 +79,7 @@ pub enum Expression {
     RangeInfExpr(Vec<Expression>),
     // [exprs...]
     DictExpr(Vec<(Expression, Expression)>),
+    SetExpr(Vec<Expression>),
     RecordExpr(Vec<(String, Expression)>),
     TypedFuncCall(String, Vec<Expression>, Vec<Expression>),
     PipeFuncCall(Box<Expression>, Box<Expression>),
@@ -482,6 +483,7 @@ impl Expression {
             Some(Symbol::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Symbol::LeftCurly) => Expression::parse_record_expr(parser, pos),
             Some(Symbol::HashCurly) => Expression::parse_dict_expr(parser, pos),
+            Some(Symbol::DollarCurly) => Expression::parse_set_expr(parser, pos),
             Some(Symbol::Lazy) => Expression::parse_lazy_expr(parser, pos),
             Some(Symbol::Yield) => Expression::parse_yield_expr(parser, pos),
             Some(Symbol::Not) => Expression::parse_not_expr(parser, pos),
@@ -657,6 +659,22 @@ impl Expression {
         }
         pos = consume_symbol(parser, pos, Symbol::RightCurly)?;
         Ok((Expression::DictExpr(pairs), pos))
+    }
+
+    fn parse_set_expr(parser: &Parser, pos: usize) -> ParseResult {
+        let mut pos = consume_symbol(parser, pos, Symbol::DollarCurly)?;
+        let mut elems = vec![];
+        while !parser.peek(pos, Symbol::RightCurly) {
+            let (val, new_pos) = Expression::parse_primary_expr(parser, pos)?;
+            if parser.peek(new_pos, Symbol::Comma) {
+                pos = consume_symbol(parser, new_pos, Symbol::Comma)?;
+            } else {
+                pos = new_pos;
+            }
+            elems.push(val);
+        }
+        pos = consume_symbol(parser, pos, Symbol::RightCurly)?;
+        Ok((Expression::SetExpr(elems), pos))
     }
 
     fn parse_lazy_expr(parser: &Parser, pos: usize) -> ParseResult {

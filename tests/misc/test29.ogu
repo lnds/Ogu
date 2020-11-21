@@ -1,17 +1,19 @@
 
 v = [100, 2, 3, 4, 5]
 
-s = #{:a, :b, :c}
+s = ${A, B, C}
 
-println! (v 0)
+demo () = do
+    println! (v @ 0)
 
-println! (s :a)
+    println! (s A)
 
-println! (:a s)
+    println! (A s)
 
 date = #2017-02-26
 timestamp = #2017-02-26T04:03:30
 
-println! [.getYear date, (:a s), (v 0), (s :a)]
+main () = do
+    println! [date.getYear, (A s), (v 0), (s A)]
 
-[.getYear date, (:a s), (v 0), (s :a)]
+    [date.getYear, (A s), (v 0), (s A)]

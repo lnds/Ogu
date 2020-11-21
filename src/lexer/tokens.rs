@@ -350,15 +350,15 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Id("question?")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer(":id :lost+found");
-        assert_eq!(lex.next(), Some(Symbol::Id(":id")));
-        assert_eq!(lex.next(), Some(Symbol::Id(":lost+found")));
+        let mut lex = Symbol::lexer("id lost+found");
+        assert_eq!(lex.next(), Some(Symbol::Id("id")));
+        assert_eq!(lex.next(), Some(Symbol::Id("lost+found")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_keywords() {
-        let mut lex = Symbol::lexer("as case cond do deriving eager elif else");
+        let mut lex = Symbol::lexer("as case cond do derive eager elif else");
         assert_eq!(lex.next(), Some(Symbol::As));
         assert_eq!(lex.next(), Some(Symbol::Case));
         assert_eq!(lex.next(), Some(Symbol::Cond));

@@ -201,7 +201,7 @@ pub enum Symbol<'a> {
     RightParen,
     #[regex(r"[A-Z][_a-zA-Z0-9]*", priority = 110, callback = extract_slice)]
     TypeId(&'a str),
-    #[regex(r"[_a-zA-Z\-\+\*\$<>=][_a-zA-Z0-9\-\+\*\$<>=]*[!\?']*", priority = 100, callback = extract_slice)]
+    #[regex(r"[_a-zA-Z\-\+\*\$][_a-zA-Z0-9\-\+\*\$]*[!\?']*", priority = 100, callback = extract_slice)]
     Id(&'a str),
     #[regex(r#""([^"]*)""#, priority = 20, callback = extract_string)]
     String(&'a str),
@@ -344,12 +344,12 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Id("**weird-id**")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("Type.**weird-id**.<name>.$value.bang!.question?");
+        let mut lex = Symbol::lexer("Type.**weird-id**.name.$value.bang!.question?");
         assert_eq!(lex.next(), Some(Symbol::TypeId("Type")));
         assert_eq!(lex.next(), Some(Symbol::Dot));
         assert_eq!(lex.next(), Some(Symbol::Id("**weird-id**")));
         assert_eq!(lex.next(), Some(Symbol::Dot));
-        assert_eq!(lex.next(), Some(Symbol::Id("<name>")));
+        assert_eq!(lex.next(), Some(Symbol::Id("name")));
         assert_eq!(lex.next(), Some(Symbol::Dot));
         assert_eq!(lex.next(), Some(Symbol::Id("$value")));
         assert_eq!(lex.next(), Some(Symbol::Dot));

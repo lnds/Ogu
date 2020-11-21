@@ -1,6 +1,6 @@
 n = 10
 
-println "n is = " n
+test = println! "n is = " n
 
 f g h i j k = g (h i j k)
 
@@ -8,14 +8,14 @@ g v = v * 10
 
 f h a b c  = a * b * c
 
-println! $ f g h 1 2 3
+test = do
+    println! $ f g h 1 2 3
+    println! $ f g h  1 + 2  3 + 4 5 + 6
 
-println! $ f g h  1 + 2  3 + 4 5 + 6
+    println! $ f g h n n n
 
-println! $ f g h n n n
+    p 123
 
-p 123
+    q 123
 
-q 123
-
-n
+    n

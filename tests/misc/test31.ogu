@@ -1,6 +1,6 @@
-type Banana = Banana {quantity}
-type Grape = Grape  {quantity}
-type Orange = Orange {quantity}
+type Banana = Banana {quantity: Float}
+type Grape = Grape  {quantity:Float}
+type Orange = Orange {quantity : Float}
 
 trait Fruit
 where
@@ -10,21 +10,22 @@ where
 
 extends Banana with Fruit
 where
-    subtotal item = 158 * (.quantity item)
+    subtotal item = 158 * (item.quantity)
 
 extends Grape with Fruit
 
 where
-   subtotal item = 178 * (.quantity item)
+   subtotal item = 178 * item.quantity
 
 
 extends Orange with Fruit where
 
-    subtotal item = 98 * (.quantity item)
+    subtotal item = 98 * (item.quantity)
 
 
 coupon item = reify Fruit
               where
                      subtotal _ = 0.75 * (subtotal item)
 
-[Orange{10}, Banana{15}, coupon Grape{10}]  |> map subtotal |> sum
+main () =
+    [Orange{quantity = 10}, Banana{quantity = 15}, coupon Grape{quantity = 10}]  |> map subtotal |> sum

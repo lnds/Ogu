@@ -3,10 +3,9 @@ divide a b =
  do
    println! "dividir " a " en " b
    let result = try! a / b
-   in
-       case result of
-         Exception result -> println! "something wrong happened"
-         Success value -> println! "result is " value
+   in case result of
+     Exception result -> println! "something wrong happened"
+     Success value -> println! "result is " value
 
 main () = do
 

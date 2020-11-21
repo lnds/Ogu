@@ -138,6 +138,7 @@ pub enum Expression {
     RecurExpr(Vec<Expression>),
     LetExpr(Vec<Equation>, Box<Expression>),
     CondExpr(Vec<(Option<Expression>, Expression)>),
+    CaseExpr(Box<Expression>, Vec<(Option<Expression>, Expression)>),
     IfExpr(
         Box<Expression>,
         Box<Expression>,
@@ -232,6 +233,7 @@ impl Expression {
             )))
             .context("Expecting an expression but found eof"),
             Some(Symbol::Cond) => Expression::parse_cond(parser, pos),
+            Some(Symbol::Case) => Expression::parse_case(parser, pos),
             Some(Symbol::Do) => Expression::parse_do(parser, pos),
             Some(Symbol::Let) => Expression::parse_let(parser, pos),
             Some(Symbol::For) => Expression::parse_loop(parser, pos),
@@ -263,6 +265,29 @@ impl Expression {
         }
         let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
         Ok((Expression::CondExpr(conds), pos))
+    }
+
+    pub fn parse_case(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Case)?;
+        let (match_expr, pos) = Expression::parse_logical_expr(parser, pos)?;
+        let pos = consume_symbol(parser, pos, Symbol::Of)?;
+        let pos = parser.skip_nl(pos);
+        let mut pos = consume_symbol(parser, pos, Symbol::Indent)?;
+        let mut matches = vec![];
+        while !parser.peek(pos, Symbol::Dedent) {
+            let (cond, new_pos) = if parser.peek(pos, Symbol::Otherwise) {
+                (None, consume_symbol(parser, pos, Symbol::Otherwise)?)
+            } else {
+                let (c, p) = Expression::parse_logical_expr(parser, pos)?;
+                (Some(c), p)
+            };
+            pos = consume_symbol(parser, new_pos, Symbol::Arrow)?;
+            let (value, new_pos) = Expression::parse(parser, pos)?;
+            pos = parser.skip_nl(new_pos);
+            matches.push((cond, value));
+        }
+        let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        Ok((Expression::CaseExpr(Box::new(match_expr), matches), pos))
     }
 
     pub fn parse_reify(parser: &Parser, pos: usize) -> ParseResult {

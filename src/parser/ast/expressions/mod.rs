@@ -188,6 +188,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::DollarCurly
                 | Symbol::Comma
                 | Symbol::Cond
+                | Symbol::Case
                 | Symbol::Dot
                 | Symbol::DotDot
                 | Symbol::DotDotDot
@@ -201,6 +202,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Then
                 | Symbol::Else
                 | Symbol::Elif
+                | Symbol::Of
                 | Symbol::Return
                 | Symbol::Recur
                 | Symbol::Yield

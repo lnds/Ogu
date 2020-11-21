@@ -1,7 +1,7 @@
 import Ogu.Turtle exposing (..)
 
 draw-fib! turtle depth =
-     move-forward! turtle 30
+     move-forward! turtle 30;
      if depth > 2 then
      do
        turn-left! turtle 15
@@ -13,4 +13,5 @@ draw-fib! turtle depth =
      else
        move-back! turtle 30
 
-create-turtle! 400 400 !> pen-up! !> go-to! 0 -100 !> pen-down!  !> draw-fib! 10 !> show!
+main () =
+    create-turtle! 400 400 !> pen-up! !> go-to! 0 -100 !> pen-down!  !> draw-fib! 10 !> show!

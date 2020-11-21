@@ -504,15 +504,21 @@ Si quisieramos retornar el valor del nombre el tipo sería así:
     
     hello! name = do 
       println! "hello" name
-      return name
+      name
     
-La keyword `return` retorna la Monad (IO _) y debe ser la última expresión en un bloque do.
-
 El bloque `do` permite agrupar varias expresiones y se usa normalmente en el contexto de una función con efectos laterales.
 
 El bloque do debe ir seguido de una o más expresiones indentadas.
 
-No es obligatorio el return, sólo si se quiere retornar un monad IO.
+La expresión final es el valor del bloque `Do`
+
+Se pueden encadenar varias expresiones usando `;`:
+
+    hello! name = 
+        println! "hello " ++ name;
+        name
+        
+Y así no usar el `do`
 
 # Recursividad
 
@@ -542,7 +548,7 @@ Existe una construcción **similar** a la implementada en Clojure para implement
         if zero? n then
           reversed
        else
-         recur reversed = reversed * 10 + n % 10, n = n // 10
+         recur let reversed = reversed * 10 + n % 10, let  n = n // 10
 
 (*) El operador // es la división entera
 Esto en realidad implementa una función recursiva, así que no hay side effects y las variables siguen
@@ -556,7 +562,7 @@ Las variables se pueden omitir en el recur:
         if zero? n then
           reversed
         else
-          recur reversed * 10 + n % 10, n = n // 10
+          recur reversed * 10 + n % 10,  n // 10
 
 Esto es lo mismo que:
 
@@ -579,7 +585,7 @@ Hay varias diferencias con el loop de Clojure:
     calculo n = 
       for i = 1, salida = 0 loop
         if i == n then salida
-        else repeat i' = inc i, salida = i' * 2
+        else repeat let i' = inc i, let salida = i' * 2
         
     calculo 10
     -- resultado es 20, si usaramos i en vez de i' el resultado seria 18
@@ -625,6 +631,7 @@ Otra forma de escribirla es así:
                 xs = tail l
             while not (empty xs)
             loop
+            recur
                 cmin = min cmin x
                 cmax = max cmax x
                 x = head xs

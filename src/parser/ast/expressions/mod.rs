@@ -186,6 +186,10 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Dollar
                 | Symbol::Comma
                 | Symbol::Dot
+                | Symbol::DotDot
+                | Symbol::DotDotDot
+                | Symbol::Doto
+                | Symbol::DotoBack
                 | Symbol::Cons
                 | Symbol::FatArrow
                 | Symbol::Let

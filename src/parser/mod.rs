@@ -195,6 +195,20 @@ pub fn consume_type_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     }
 }
 
+pub fn consume_qualified_type_id(
+    parser: &Parser,
+    pos: usize,
+) -> Result<(String, Vec<String>, usize)> {
+    let (t_id, mut pos) = consume_type_id(parser, pos)?;
+    let mut names = vec![];
+    while parser.peek(pos, Symbol::Dot) {
+        pos = consume_symbol(parser, pos, Symbol::Dot)?;
+        let (t_id, new_pos) = consume_type_id(parser, pos)?;
+        names.push(t_id);
+        pos = new_pos;
+    }
+    Ok((t_id, names, pos))
+}
 pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_symbol(pos) {
         Some(Symbol::Id(id)) => Ok((id.to_string(), pos + 1)),

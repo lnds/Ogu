@@ -3,7 +3,7 @@ use crate::lexer::tokens::Symbol;
 use crate::parser::{consume_symbol, ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Exposing {
     All,
     List(Vec<String>),

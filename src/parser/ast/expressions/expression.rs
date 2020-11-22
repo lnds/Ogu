@@ -839,13 +839,23 @@ impl Expression {
         let pos = consume_symbol(parser, pos, Symbol::Let)?;
         let (indent, pos) = parse_opt_indent(parser, pos);
         let mut equations = vec![];
-        let (equation, pos) = Expression::parse_let_equation(parser, pos)?;
+        let (equation, mut pos) = Expression::parse_let_equation(parser, pos)?;
         equations.push(equation);
-        let mut pos = parser.skip_nl(pos);
+        if parser.peek(pos, Symbol::Comma) {
+            pos = consume_symbol(parser, pos, Symbol::Comma)?;
+            pos = parser.skip_nl(pos);
+        } else {
+            pos = parser.skip_nl(pos);
+        }
         while !parser.peek(pos, Symbol::Dedent) && !parser.peek(pos, Symbol::In) {
             let (equation, new_pos) = Expression::parse_let_equation(parser, pos)?;
             equations.push(equation);
-            pos = parser.skip_nl(new_pos);
+            if parser.peek(new_pos, Symbol::Comma) {
+                pos = consume_symbol(parser, new_pos, Symbol::Comma)?;
+                pos = parser.skip_nl(pos);
+            } else {
+                pos = parser.skip_nl(new_pos);
+            }
         }
         let pos = parse_opt_dedent(parser, pos, indent)?;
         let pos = parser.skip_nl(pos);

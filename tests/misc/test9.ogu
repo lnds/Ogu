@@ -2,5 +2,5 @@
 
 even = [2 * x | x <- [1 .. 100] ]
 
-even >| sum
+test = even >| sum
 

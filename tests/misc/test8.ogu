@@ -5,4 +5,4 @@ factorial n
     | n == 1 = 1
     | otherwise = n *' (factorial (dec n))
 
-factorial 24
+test = factorial 24

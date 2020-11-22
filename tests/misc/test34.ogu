@@ -1,0 +1,22 @@
+-- algebraic data types
+
+type Tree value node = Empty | Leaf value | Node Tree Tree
+
+
+tmax Empty = None
+
+tmax (Leaf value) = Some value
+
+tmax (Node left right) =
+    let
+        ml = tmax left,
+        mr = tmax right
+    in
+        if ml > mr then
+            ml
+        else
+            mr
+
+test = let tree = (Node (Leaf 10) (Node (Node (Leaf 4) (Node (Leaf 10) (Leaf 32))) (Node (Leaf 80) (Leaf 50))))
+in
+tmax tree

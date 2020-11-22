@@ -210,20 +210,22 @@ impl Declaration {
         let (type_id, pos) = consume_type_id(parser, pos)?;
         let (type_args, pos) = if parser.peek(pos, Symbol::Assign) {
             (None, pos)
+        } else if parser.peek(pos, Symbol::NewLine) {
+            (None, pos)
         } else {
             let (args, pos) = Declaration::parse_type_args(parser, pos)?;
             (Some(args), pos)
         };
+        let (top_indent, pos) = parse_opt_indent(parser, pos);
         let pos = consume_symbol(parser, pos, Symbol::Assign)?;
         let (type_decl, pos) = Declaration::parse_algebraic_type(parser, pos)?;
         let mut algebraic_elements = vec![type_decl];
-        let pos = parser.skip_nl(pos);
         let (in_indent, mut pos) = parse_opt_indent(parser, pos);
         while parser.peek(pos, Symbol::Guard) {
             let new_pos = consume_symbol(parser, pos, Symbol::Guard)?;
             let (type_decl, new_pos) = Declaration::parse_algebraic_type(parser, new_pos)?;
+            pos = parser.skip_nl(new_pos);
             algebraic_elements.push(type_decl);
-            pos = new_pos
         }
         let mut derivations = vec![];
         let (inner_indent, mut pos) = parse_opt_indent(parser, pos);
@@ -235,6 +237,8 @@ impl Declaration {
         let pos = parse_opt_dedent(parser, pos, inner_indent)?;
 
         let pos = parse_opt_dedent(parser, pos, in_indent)?;
+        let pos = parse_opt_dedent(parser, pos, top_indent)?;
+
         if derivations.is_empty() {
             Ok(Some((
                 Declaration::TypeDecl(type_id, type_args, algebraic_elements, None),

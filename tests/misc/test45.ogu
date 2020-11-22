@@ -1,8 +1,9 @@
 
-f = \a b c... -> reduce (+) (a + b) c
+f = \a b c -> reduce (+) (a + b) c
 
-println f 1 2 3
+main () = do
+    println f 1 2 3
 
-println f 1 2 3 4
+    println f 1 2 3 4
 
-f 1 2 3 4
+    f 1 2 3 4

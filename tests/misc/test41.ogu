@@ -1,28 +1,29 @@
-module snake
+module Snake
 
-from [:jvm] java.awt import Color, Dimension
-from [:jvm] javax.swing import JPanel, JFrame, Timer, JOptionPane
-from [:jvm] java.awt.event import ActionListener, KeyListener
+import Java.Awt exposing (Color, Dimension)
+import Javax.Swing exposing (JPanel, JFrame, Timer, JOptionPane)
+import Java.Awt.Event exposing (ActionListener, KeyListener)
 
-from [:jvm] java.awt.event.KeyEvent import VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN
+import Java.Awt.Event.KeyEvent exposing (VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN)
 
-def ref-set a b = a + b
+ref-set a b = a + b
 
-let apple = 0
+apple = 0
 
-let move = 0
+move = 0
 
-let snake = 0
+snake = 0
 
-def alter a b = b
-def alter a b c = c
+alter a b = b
+alter a b c = c
 
-def create-apple = 1
+create-apple = 1
 
-sync
+main () = do
+    sync
     if 0 < apple then
-       ref-set apple (create-apple)
-       alter snake move :grow
+       ref-set apple (create-apple);
+       alter snake move Grow
     else
 	    alter snake move
     nil

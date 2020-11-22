@@ -1,4 +1,4 @@
-from ogu.turtle import *
+import Ogu.Turtle exposing (..)
 
 fib turtle depth =
   do
@@ -13,4 +13,3 @@ fib turtle depth =
     left turtle 15
     back turtle 30
 
-nil

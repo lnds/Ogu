@@ -277,8 +277,10 @@ impl Expression {
                 (Some(c), p)
             };
             pos = consume_symbol(parser, new_pos, Symbol::Arrow)?;
-            let (value, new_pos) = Expression::parse(parser, pos)?;
-            pos = parser.skip_nl(new_pos);
+            let (in_indent, new_pos) = parse_opt_indent(parser, pos);
+            let (value, new_pos) = Expression::parse(parser, new_pos)?;
+            pos = parse_opt_dedent(parser, new_pos, in_indent)?;
+            pos = parser.skip_nl(pos);
             matches.push((cond, value));
         }
         let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
@@ -1001,7 +1003,7 @@ impl Expression {
         let (then_expr, pos) = Expression::parse(parser, pos)?;
         let pos = parser.skip_nl(pos);
         let pos = parse_opt_dedent(parser, pos, indent)?;
-        let mut pos = parser.skip_nl(pos);
+        let pos = parser.skip_nl(pos);
         if parser.peek(pos, Symbol::Else) {
             let pos = consume_symbol(parser, pos, Symbol::Else)?;
             let pos = parser.skip_nl(pos);

@@ -1,9 +1,10 @@
 
 
-head-overlaps-body? {(head :: body) :body} = member? head body
+head-overlaps-body? ${(head :: body) body} = member? head body
 
-println! head-overlaps-body? {:body [:a, :b, :c, :a, :b, :c]}
+main () = do
+    println! head-overlaps-body? ${Body [A, B, C, A, B, C]}
 
-println! head-overlaps-body? {:body [:a, :b, :c, :d, :e]}
+    println! head-overlaps-body? ${Body [A, B, C, D, E]}
 
-head-overlaps-body? {:body [:a, :b, :c, :d, :e]}
+    head-overlaps-body? ${Body [A, B, C, D, E]}

@@ -1,28 +1,24 @@
 
-data Tree = Leaf(value) | Node(value, left, right)
+type Tree value left right = Leaf value | Node value left right
 
-dispatch t-max with type
+t-max (Leaf Leaf value) = value
 
-def t-max Leaf ? leaf = .value leaf
+t-max (Node value left right) = max ml mr mn
+  where
+    ml = left  |> t-max
+    mr = right |> t-max
+    mn = value
 
-def t-max Node ? node = max ml mr mn
- where ml = .left node |> t-max
-	 mr = .right node |> t-max
-	 mn = .value node
+t-sum Leaf value = value
 
-dispatch t-sum with type
+t-sum Node value left right = [t-sum left, t-sum right, value] |> sum
 
-def t-sum Leaf ? leaf = .value leaf
-
-def t-sum Node ? node = [t-sum node.left, t-sum node.right, node.value] |> sum
-
-let arbol = Node(30, Leaf(70),
-			     Node(15,
-			     	Node(42, Leaf(54), Leaf(66)),
-			     	Node(25, Leaf(89), Leaf(72))))
-
-t-max arbol |> println "El valor maximo del arbol  es: "
-
-t-sum arbol |> println "La suma del arbol  es: "
-
-t-sum arbol
+main () =
+    let arbol = (Node 30 (Leaf 70)
+			     (Node 15
+			     	(Node 42 (Leaf 54) (Leaf 66))
+			     	(Node 25 (Leaf 89) (Leaf 72))))
+    in
+        t-max arbol |> println "El valor maximo del arbol  es: ";
+        t-sum arbol |> println "La suma del arbol  es: ";
+        t-sum arbol

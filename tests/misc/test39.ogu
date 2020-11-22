@@ -1,9 +1,9 @@
 -- algebraic data types
 
-Tree = Empty | Leaf value | Node left right
+type Tree value right = Empty | Leaf value | Node left right
 
 tmax Leaf value = value
 
 tree = Leaf 10
 
-tmax tree
+test = tmax tree

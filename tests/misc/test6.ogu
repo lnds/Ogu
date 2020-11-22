@@ -6,5 +6,5 @@ multiplicar x y = x * y
 
 doblar = curry multiplicar 2
 
-doblar 4
+test = doblar 4
 

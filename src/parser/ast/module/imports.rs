@@ -5,7 +5,7 @@ use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub struct Import(ModuleName, Option<Exposing>);
+pub struct Import(ModuleName, Option<ModuleName>, Option<Exposing>);
 
 impl Import {
     pub fn parse(parser: &Parser, pos: usize) -> Result<(Option<Vec<Import>>, usize)> {
@@ -27,14 +27,26 @@ impl Import {
             Ok(None)
         } else {
             let pos = consume_symbol(parser, pos, Symbol::Import)?;
-            let (tid, names, pos) = consume_qualified_type_id(parser, pos)?;
-            let mod_name = if names.is_empty() {
-                ModuleName::Simple(tid)
+            let (mod_name, pos) = Self::parse_module_name(parser, pos)?;
+
+            let (alias, pos) = if parser.peek(pos, Symbol::As) {
+                let pos = consume_symbol(parser, pos, Symbol::As)?;
+                let (m, pos) = Self::parse_module_name(parser, pos)?;
+                (Some(m), pos)
             } else {
-                ModuleName::Qualified(tid, names)
+                (None, pos)
             };
             let (exposing, pos) = Exposing::parse(parser, pos)?;
-            Ok(Some((Import(mod_name, exposing), pos)))
+            Ok(Some((Import(mod_name, alias, exposing), pos)))
+        }
+    }
+
+    fn parse_module_name(parser: &Parser, pos: usize) -> Result<(ModuleName, usize)> {
+        let (tid, names, pos) = consume_qualified_type_id(parser, pos)?;
+        if names.is_empty() {
+            Ok((ModuleName::Simple(tid), pos))
+        } else {
+            Ok((ModuleName::Qualified(tid, names), pos))
         }
     }
 }

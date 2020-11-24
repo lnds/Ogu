@@ -57,8 +57,10 @@ pub enum ParseError {
     ExpectingOperator,
     #[error("Invalid declaration")]
     InvalidDeclaration,
-    #[error("Expecting ttype identifier")]
+    #[error("Expecting type identifier")]
     ExpectingTypeIdentifier,
+    #[error("Expecting string")]
+    ExpectingString,
 }
 
 pub struct Parser<'a> {
@@ -178,6 +180,20 @@ pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
         }
     } else {
         None
+    }
+}
+
+pub fn consume_string(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+    match parser.get_symbol(pos) {
+        Some(Symbol::String(s)) => Ok((s.to_string(), pos + 1)),
+        sym => Err(Error::new(OguError::ParserError(
+            ParseError::ExpectingString,
+        )))
+        .context(format!(
+            "Expecting string, but found: {:?} @{}",
+            sym,
+            parser.pos_to_line(pos).unwrap_or(0)
+        )),
     }
 }
 

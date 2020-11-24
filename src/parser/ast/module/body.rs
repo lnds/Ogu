@@ -13,6 +13,7 @@ use anyhow::{Context, Error, Result};
 #[derive(Debug, Clone)]
 pub enum FuncType {
     Void,
+    Macro,
     Simple(String),
     Complex(String, Vec<AlgebraicElement>),
     Param(String),
@@ -70,6 +71,7 @@ pub enum Declaration {
     TraitDecl(String, Vec<FuncPrototype>),
     ExtensionDecl(String, String, Vec<Declaration>),
     FunctionPrototype(FuncPrototype),
+    MacroDecl(Box<Declaration>),
 }
 
 type DeclVec = Vec<Declaration>;
@@ -97,10 +99,25 @@ impl Body {
         Ok(result)
     }
 
-    fn parse_decl(parser: &Parser, pos: usize) -> DeclParseResult {
+    pub fn parse_decl(parser: &Parser, pos: usize) -> DeclParseResult {
         let pos = parser.skip_nl(pos);
         match parser.get_symbol(pos) {
             None => Ok(None),
+            Some(Symbol::Macro) => {
+                let pos = consume_symbol(parser, pos, Symbol::Macro)?;
+                if let Some((decl, pos)) = Body::parse_decl(parser, pos)? {
+                    Ok(Some((Declaration::MacroDecl(Box::new(decl)), pos)))
+                } else {
+                    Err(Error::new(OguError::ParserError(
+                        ParseError::ExpectingDeclaration,
+                    )))
+                    .context(format!(
+                        "Expecting macro declaration at {}, @{}",
+                        parser.pos_to_line(pos).unwrap_or(0),
+                        pos
+                    ))
+                }
+            }
             Some(Symbol::Id(_)) if parser.peek(pos + 1, Symbol::Colon) => {
                 let (proto, pos) = Declaration::parse_func_prototype(parser, pos)?;
                 Ok(Some((Declaration::FunctionPrototype(proto), pos)))
@@ -208,14 +225,13 @@ impl Declaration {
         }
 
         let (type_id, pos) = consume_type_id(parser, pos)?;
-        let (type_args, pos) = if parser.peek(pos, Symbol::Assign) {
-            (None, pos)
-        } else if parser.peek(pos, Symbol::NewLine) {
-            (None, pos)
-        } else {
-            let (args, pos) = Declaration::parse_type_args(parser, pos)?;
-            (Some(args), pos)
-        };
+        let (type_args, pos) =
+            if parser.peek(pos, Symbol::Assign) || parser.peek(pos, Symbol::NewLine) {
+                (None, pos)
+            } else {
+                let (args, pos) = Declaration::parse_type_args(parser, pos)?;
+                (Some(args), pos)
+            };
         let (top_indent, pos) = parse_opt_indent(parser, pos);
         let pos = consume_symbol(parser, pos, Symbol::Assign)?;
         let (type_decl, pos) = Declaration::parse_algebraic_type(parser, pos)?;
@@ -433,6 +449,7 @@ impl Declaration {
                 let pos = consume_symbol(parser, pos, Symbol::RightParen)?;
                 Ok((t, pos))
             }
+            Some(Symbol::Macro) => Ok((FuncType::Macro, pos + 1)),
             sym => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingTypeIdentifier,
             )))

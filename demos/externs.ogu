@@ -1,0 +1,9 @@
+
+extern "rust"
+
+    abs : Int -> Int
+
+    print : String -> ()
+
+    println! : macro
+

@@ -210,6 +210,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::In
                 | Symbol::RightBracket
                 | Symbol::RightCurly
+                | Symbol::RightCurlyCurly
                 | Symbol::Where
                 | Symbol::With
                 | Symbol::While

@@ -5,18 +5,19 @@ greet1! name
     | name == "world " = println! "hello world"
     | otherwise = println! "hello " name
 
-greet2! name1 name2 = println! "hello " name1 " & " name2
+macro greet!
+    | () = greet0!
+    | {{ $x :: $xs }} = greet1 {{ $x }} ;  greet! $xs 
 
 
 main () = do
 
-    greet0!
+    greet! ()
 
-    greet1! "world"
+    greet! "world"
 
-    greet1! "Mampato"
+    greet! "Mampato"
 
-    greet2! "Mampato" "Rena"
+    greet! "Mampato" "Rena"
 
-main () =
-    greet2! "Mampato" "Ogu" "Rena" "Xse"
+    greet! "Mampato" "Ogu" "Rena" "Xse"

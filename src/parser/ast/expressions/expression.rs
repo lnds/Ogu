@@ -140,6 +140,7 @@ pub enum Expression {
     CondExpr(Vec<(Option<Expression>, Expression)>),
     CaseExpr(Box<Expression>, Vec<(Option<Expression>, Expression)>),
     IfExpr(Box<Expression>, Box<Expression>, Box<Expression>),
+    MacroExpandExpr(Box<Expression>),
 
     LoopExpr(
         Option<Vec<Equation>>,
@@ -504,6 +505,7 @@ impl Expression {
             Some(Symbol::LeftParen) => Expression::parse_paren_expr(parser, pos),
             Some(Symbol::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Symbol::LeftCurly) => Expression::parse_record_expr(parser, pos),
+            Some(Symbol::LeftCurlyCurly) => Expression::parse_macro_expand_expr(parser, pos),
             Some(Symbol::HashCurly) => Expression::parse_dict_expr(parser, pos),
             Some(Symbol::DollarCurly) => Expression::parse_set_expr(parser, pos),
             Some(Symbol::Lazy) => Expression::parse_lazy_expr(parser, pos),
@@ -513,6 +515,13 @@ impl Expression {
             Some(Symbol::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
             _ => Expression::parse_func_call_expr(parser, pos),
         }
+    }
+
+    fn parse_macro_expand_expr(parser: &Parser, pos: usize) -> ParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::LeftCurlyCurly)?;
+        let (expr, pos) = Expression::parse(parser, pos)?;
+        let pos = consume_symbol(parser, pos, Symbol::RightCurlyCurly)?;
+        Ok((Expression::MacroExpandExpr(Box::new(expr)), pos))
     }
 
     fn parse_paren_expr(parser: &Parser, pos: usize) -> ParseResult {

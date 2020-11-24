@@ -1,5 +1,6 @@
 pub mod body;
 pub mod exposing;
+pub mod externs;
 pub mod imports;
 
 use crate::lexer::tokens::Symbol;
@@ -8,6 +9,7 @@ use std::path::PathBuf;
 
 use crate::parser::ast::module::body::Body;
 use crate::parser::ast::module::exposing::Exposing;
+use crate::parser::ast::module::externs::Extern;
 use crate::parser::ast::module::imports::Import;
 use anyhow::Result;
 
@@ -23,6 +25,7 @@ pub struct Module {
     name: ModuleName,
     exposing: Option<Exposing>,
     imports: Option<Vec<Import>>,
+    externs: Option<Extern>,
     body: Body,
 }
 
@@ -38,11 +41,14 @@ impl<'a> Module {
         let pos = parser.skip_nl(pos);
         let (imports, pos) = Import::parse(parser, pos)?;
         let pos = parser.skip_nl(pos);
+        let (externs, pos) = Extern::parse(parser, pos)?;
+        let pos = parser.skip_nl(pos);
         let body = Body::parse(parser, pos)?;
         Ok(Module {
             name,
             exposing,
             imports,
+            externs,
             body,
         })
     }

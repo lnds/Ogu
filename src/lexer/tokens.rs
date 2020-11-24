@@ -1,6 +1,3 @@
-use crate::lexer::tokens::Symbol::{
-    DollarCurly, HashCurly, LeftBracket, LeftCurly, LeftParen, RightBracket, RightCurly, RightParen,
-};
 use logos::{Lexer, Logos};
 use std::fmt::Display;
 
@@ -45,6 +42,8 @@ pub enum Symbol<'a> {
     Exposing,
     #[token("extends", priority = 2000)]
     Extends,
+    #[token("extern", priority = 2000)]
+    Extern,
     #[token("for", priority = 2000)]
     For,
     #[token("from", priority = 2000)]
@@ -63,6 +62,8 @@ pub enum Symbol<'a> {
     Let,
     #[token("loop", priority = 2000)]
     Loop,
+    #[token("macro", priority = 2000)]
+    Macro,
     #[token("module", priority = 2000)]
     Module,
     #[token("not", priority = 2000)]
@@ -153,6 +154,8 @@ pub enum Symbol<'a> {
     LessThanOrEqual,
     #[token("[", priority = 1000)]
     LeftBracket,
+    #[token("{{", priority = 1000)]
+    LeftCurlyCurly,
     #[token("{", priority = 1000)]
     LeftCurly,
     #[token("#{", priority = 100)]
@@ -195,6 +198,8 @@ pub enum Symbol<'a> {
     Question,
     #[token("]", priority = 1000)]
     RightBracket,
+    #[token("}}", priority = 1000)]
+    RightCurlyCurly,
     #[token("}", priority = 1000)]
     RightCurly,
     #[token(")", priority = 1000)]
@@ -223,15 +228,25 @@ pub enum Symbol<'a> {
 
 impl<'a> Symbol<'a> {
     pub fn is_open_paren(&self) -> bool {
-        *self == LeftParen
-            || *self == LeftBracket
-            || *self == LeftCurly
-            || *self == HashCurly
-            || *self == DollarCurly
+        matches!(
+            *self,
+            Symbol::LeftParen
+                | Symbol::LeftBracket
+                | Symbol::LeftCurly
+                | Symbol::LeftCurlyCurly
+                | Symbol::HashCurly
+                | Symbol::DollarCurly
+        )
     }
 
     pub fn is_close_paren(&self) -> bool {
-        *self == RightParen || *self == RightBracket || *self == RightCurly
+        matches!(
+            *self,
+            Symbol::RightParen
+                | Symbol::RightBracket
+                | Symbol::RightCurly
+                | Symbol::RightCurlyCurly
+        )
     }
 }
 
@@ -377,9 +392,10 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Else));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("exposing extends for from if in is lazy");
+        let mut lex = Symbol::lexer("exposing extends extern for from if in is lazy");
         assert_eq!(lex.next(), Some(Symbol::Exposing));
         assert_eq!(lex.next(), Some(Symbol::Extends));
+        assert_eq!(lex.next(), Some(Symbol::Extern));
         assert_eq!(lex.next(), Some(Symbol::For));
         assert_eq!(lex.next(), Some(Symbol::From));
         assert_eq!(lex.next(), Some(Symbol::If));
@@ -389,10 +405,11 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer(
-            "let loop module not of otherwise repeat recur reify return then trait until",
+            "let loop macro module not of otherwise repeat recur reify return then trait until",
         );
         assert_eq!(lex.next(), Some(Symbol::Let));
         assert_eq!(lex.next(), Some(Symbol::Loop));
+        assert_eq!(lex.next(), Some(Symbol::Macro));
         assert_eq!(lex.next(), Some(Symbol::Module));
         assert_eq!(lex.next(), Some(Symbol::Not));
         assert_eq!(lex.next(), Some(Symbol::Of));
@@ -440,7 +457,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Doto));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("<! == >= > | \\ <= [ { #{ (");
+        let mut lex = Symbol::lexer("<! == >= > | \\ <= [ { {{ #{ (");
         assert_eq!(lex.next(), Some(Symbol::DotoBack));
         assert_eq!(lex.next(), Some(Symbol::Equal));
         assert_eq!(lex.next(), Some(Symbol::GreaterOrEqual));
@@ -450,6 +467,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::LessThanOrEqual));
         assert_eq!(lex.next(), Some(Symbol::LeftBracket));
         assert_eq!(lex.next(), Some(Symbol::LeftCurly));
+        assert_eq!(lex.next(), Some(Symbol::LeftCurlyCurly));
         assert_eq!(lex.next(), Some(Symbol::HashCurly));
         assert_eq!(lex.next(), Some(Symbol::LeftParen));
         assert_eq!(lex.next(), None);
@@ -467,7 +485,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::PipeLeftFirstArg));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("|> >| + ++ ^ ? ] } )");
+        let mut lex = Symbol::lexer("|> >| + ++ ^ ? ] } }} )");
         assert_eq!(lex.next(), Some(Symbol::PipeRight));
         assert_eq!(lex.next(), Some(Symbol::PipeRightFirstArg));
         assert_eq!(lex.next(), Some(Symbol::Plus));
@@ -476,6 +494,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Question));
         assert_eq!(lex.next(), Some(Symbol::RightBracket));
         assert_eq!(lex.next(), Some(Symbol::RightCurly));
+        assert_eq!(lex.next(), Some(Symbol::RightCurlyCurly));
         assert_eq!(lex.next(), Some(Symbol::RightParen));
         assert_eq!(lex.next(), None);
     }

@@ -22,7 +22,10 @@ pub enum FuncType {
 }
 
 #[derive(Debug, Clone)]
-pub struct FuncPrototype(String, FuncType);
+pub enum FuncPrototype {
+    Normal(String, FuncType),
+    Effect(String, FuncType),
+}
 
 #[derive(Debug, Clone)]
 pub enum AlgebraicElement {
@@ -71,10 +74,12 @@ pub enum Declaration {
         Option<Vec<Derivation>>,
     ),
     TypeAlias(String, Option<Vec<String>>, BaseType),
-    TraitDecl(String, Vec<FuncPrototype>),
+    TraitDecl(String, Option<Vec<String>>, Vec<FuncPrototype>),
     ExtensionDecl(String, String, Vec<Declaration>),
     FunctionPrototype(FuncPrototype),
     MacroDecl(Box<Declaration>),
+    Effect(FuncPrototype),
+    Handler(String),
 }
 
 type DeclVec = Vec<Declaration>;
@@ -129,6 +134,10 @@ impl Body {
             Some(Symbol::Type) => Declaration::parse_type_decl(parser, pos),
             Some(Symbol::Alias) => Declaration::parse_type_alias_decl(parser, pos),
             Some(Symbol::Trait) => Declaration::parse_trait_decl(parser, pos),
+            Some(Symbol::Effect) => {
+                let (prot, pos) = Declaration::parse_effect_func_prototype(parser, pos)?;
+                Ok(Some((Declaration::Effect(prot), pos)))
+            }
             Some(Symbol::Extends) => Declaration::parse_extends(parser, pos),
             sym => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingDeclaration,
@@ -401,13 +410,24 @@ impl Declaration {
     fn parse_trait_decl(parser: &Parser, pos: usize) -> DeclParseResult {
         let pos = consume_symbol(parser, pos, Symbol::Trait)?;
         let (tid, pos) = consume_type_id(parser, pos)?;
-        let (in_indent, pos) = parse_opt_indent(parser, pos);
+        let (in_indent, mut pos) = parse_opt_indent(parser, pos);
+        let mut args = vec![];
+        while !parser.peek(pos, Symbol::Where) {
+            let (arg, new_pos) = consume_id(parser, pos)?;
+            args.push(arg);
+            pos = new_pos;
+        }
         let pos = consume_symbol(parser, pos, Symbol::Where)?;
         let pos = parser.skip_nl(pos);
         let mut pos = consume_symbol(parser, pos, Symbol::Indent)?;
         let mut trait_decls = vec![];
         while !parser.peek(pos, Symbol::Dedent) {
-            let (func_proto, new_pos) = Declaration::parse_func_prototype(parser, pos)?;
+            let (func_proto, new_pos) = if parser.peek(pos, Symbol::Effect) {
+                Declaration::parse_effect_func_prototype(parser, pos)?
+            } else {
+                Declaration::parse_func_prototype(parser, pos)?
+            };
+
             trait_decls.push(func_proto);
             pos = parser.skip_nl(new_pos);
         }
@@ -415,14 +435,28 @@ impl Declaration {
         let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
         let pos = parse_opt_dedent(parser, pos, in_indent)?;
 
-        Ok(Some((Declaration::TraitDecl(tid, trait_decls), pos)))
+        Ok(Some((
+            Declaration::TraitDecl(
+                tid,
+                if args.is_empty() { None } else { Some(args) },
+                trait_decls,
+            ),
+            pos,
+        )))
+    }
+    fn parse_effect_func_prototype(parser: &Parser, pos: usize) -> Result<(FuncPrototype, usize)> {
+        let pos = consume_symbol(parser, pos, Symbol::Effect)?;
+        let (func_id, pos) = consume_id(parser, pos)?;
+        let pos = consume_symbol(parser, pos, Symbol::Colon)?;
+        let (types, pos) = Declaration::parse_func_types(parser, pos)?;
+        Ok((FuncPrototype::Effect(func_id, types), pos))
     }
 
     fn parse_func_prototype(parser: &Parser, pos: usize) -> Result<(FuncPrototype, usize)> {
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Symbol::Colon)?;
         let (types, pos) = Declaration::parse_func_types(parser, pos)?;
-        Ok((FuncPrototype(func_id, types), pos))
+        Ok((FuncPrototype::Normal(func_id, types), pos))
     }
 
     fn parse_func_types(parser: &Parser, pos: usize) -> Result<(FuncType, usize)> {

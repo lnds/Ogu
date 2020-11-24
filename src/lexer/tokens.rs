@@ -16,7 +16,7 @@ pub enum Symbol<'a> {
     Error,
     #[regex(r"[ \t]", logos::skip)]
     Ws,
-    #[regex(r"--.*", logos::skip)]
+    #[regex(r"--.*", logos::skip, priority = 100000)]
     Comment,
     #[regex(r"[\n\r]+")]
     NewLine,
@@ -34,6 +34,8 @@ pub enum Symbol<'a> {
     Do,
     #[token("eager", priority = 2000)]
     Eager,
+    #[token("effect", priority = 2000)]
+    Effect,
     #[token("elif", priority = 2000)]
     Elif,
     #[token("else", priority = 2000)]
@@ -48,6 +50,10 @@ pub enum Symbol<'a> {
     For,
     #[token("from", priority = 2000)]
     From,
+    #[token("handle", priority = 2000)]
+    Handle,
+    #[token("handler", priority = 2000)]
+    Handler,
     #[token("if", priority = 2000)]
     If,
     #[token("import", priority = 2000)]
@@ -72,6 +78,8 @@ pub enum Symbol<'a> {
     Of,
     #[token("otherwise", priority = 2000)]
     Otherwise,
+    #[token("perform", priority = 2000)]
+    Perform,
     #[token("primitive", priority = 2000)]
     Primitive,
     #[token("recur", priority = 2000)]
@@ -82,6 +90,8 @@ pub enum Symbol<'a> {
     Reify,
     #[token("return", priority = 2000)]
     Return,
+    #[token("resume", priority = 2000)]
+    Resume,
     #[token("then", priority = 2000)]
     Then,
     #[token("trait", priority = 2000)]
@@ -383,31 +393,35 @@ mod test_tokens {
 
     #[test]
     fn test_keywords() {
-        let mut lex = Symbol::lexer("as case cond do derive eager elif else");
+        let mut lex = Symbol::lexer("as case cond do derive eager effect elif else");
         assert_eq!(lex.next(), Some(Symbol::As));
         assert_eq!(lex.next(), Some(Symbol::Case));
         assert_eq!(lex.next(), Some(Symbol::Cond));
         assert_eq!(lex.next(), Some(Symbol::Do));
         assert_eq!(lex.next(), Some(Symbol::Derive));
         assert_eq!(lex.next(), Some(Symbol::Eager));
+        assert_eq!(lex.next(), Some(Symbol::Effect));
         assert_eq!(lex.next(), Some(Symbol::Elif));
         assert_eq!(lex.next(), Some(Symbol::Else));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("exposing extends extern for from if in is lazy");
+        let mut lex =
+            Symbol::lexer("exposing extends extern for from if handle handler in is lazy");
         assert_eq!(lex.next(), Some(Symbol::Exposing));
         assert_eq!(lex.next(), Some(Symbol::Extends));
         assert_eq!(lex.next(), Some(Symbol::Extern));
         assert_eq!(lex.next(), Some(Symbol::For));
         assert_eq!(lex.next(), Some(Symbol::From));
         assert_eq!(lex.next(), Some(Symbol::If));
+        assert_eq!(lex.next(), Some(Symbol::Handle));
+        assert_eq!(lex.next(), Some(Symbol::Handler));
         assert_eq!(lex.next(), Some(Symbol::In));
         assert_eq!(lex.next(), Some(Symbol::Is));
         assert_eq!(lex.next(), Some(Symbol::Lazy));
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer(
-            "let loop macro module not of otherwise primitive repeat recur reify return then trait until",
+            "let loop macro module not of otherwise perform primitive repeat recur reify resume return then trait until",
         );
         assert_eq!(lex.next(), Some(Symbol::Let));
         assert_eq!(lex.next(), Some(Symbol::Loop));
@@ -416,10 +430,12 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Not));
         assert_eq!(lex.next(), Some(Symbol::Of));
         assert_eq!(lex.next(), Some(Symbol::Otherwise));
+        assert_eq!(lex.next(), Some(Symbol::Perform));
         assert_eq!(lex.next(), Some(Symbol::Primitive));
         assert_eq!(lex.next(), Some(Symbol::Repeat));
         assert_eq!(lex.next(), Some(Symbol::Recur));
         assert_eq!(lex.next(), Some(Symbol::Reify));
+        assert_eq!(lex.next(), Some(Symbol::Resume));
         assert_eq!(lex.next(), Some(Symbol::Return));
         assert_eq!(lex.next(), Some(Symbol::Then));
         assert_eq!(lex.next(), Some(Symbol::Trait));

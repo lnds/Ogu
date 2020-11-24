@@ -5,8 +5,8 @@ use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::Guard;
 use crate::parser::{
-    consume_id, consume_symbol, consume_type_id, look_ahead_where, parse_opt_dedent,
-    parse_opt_indent, ParseError, Parser,
+    consume_id, consume_string, consume_symbol, consume_type_id, look_ahead_where,
+    parse_opt_dedent, parse_opt_indent, ParseError, Parser,
 };
 use anyhow::{Context, Error, Result};
 
@@ -14,6 +14,7 @@ use anyhow::{Context, Error, Result};
 pub enum FuncType {
     Void,
     Macro,
+    ExternType(String),
     Simple(String),
     Complex(String, Vec<AlgebraicElement>),
     Param(String),
@@ -35,6 +36,7 @@ pub struct RecordElement(String, AlgebraicElement);
 #[derive(Debug, Clone)]
 pub enum AlgebraicType {
     Simple(String),
+    Primitive(String),
     Complex(String, Vec<AlgebraicElement>),
     Record(String, Vec<RecordElement>),
 }
@@ -51,6 +53,7 @@ pub enum BaseType {
     Array(Vec<BaseType>),
     SimpleRecord(Vec<RecordElement>),
     Algebraic(AlgebraicType),
+    ExternType(String),
 }
 
 #[derive(Debug, Clone)]
@@ -321,22 +324,32 @@ impl Declaration {
     }
 
     fn parse_algebraic_type(parser: &Parser, pos: usize) -> Result<(AlgebraicType, usize)> {
-        let (type_id, pos) = consume_type_id(parser, pos)?;
-        if parser.peek(pos, Symbol::LeftCurly) {
-            Declaration::parse_record_type(parser, pos, type_id)
+        if parser.peek(pos, Symbol::Primitive) {
+            Declaration::parse_primitive_type(parser, pos)
         } else {
-            let mut params = vec![];
-            let mut pos = pos;
-            while let Some((alg_elem, new_pos)) = consume_alg_type_param(parser, pos)? {
-                params.push(alg_elem);
-                pos = new_pos;
-            }
-            if params.is_empty() {
-                Ok((AlgebraicType::Simple(type_id), pos))
+            let (type_id, pos) = consume_type_id(parser, pos)?;
+            if parser.peek(pos, Symbol::LeftCurly) {
+                Declaration::parse_record_type(parser, pos, type_id)
             } else {
-                Ok((AlgebraicType::Complex(type_id, params), pos))
+                let mut params = vec![];
+                let mut pos = pos;
+                while let Some((alg_elem, new_pos)) = consume_alg_type_param(parser, pos)? {
+                    params.push(alg_elem);
+                    pos = new_pos;
+                }
+                if params.is_empty() {
+                    Ok((AlgebraicType::Simple(type_id), pos))
+                } else {
+                    Ok((AlgebraicType::Complex(type_id, params), pos))
+                }
             }
         }
+    }
+
+    fn parse_primitive_type(parser: &Parser, pos: usize) -> Result<(AlgebraicType, usize)> {
+        let pos = consume_symbol(parser, pos, Symbol::Primitive)?;
+        let (id, pos) = consume_id(parser, pos)?;
+        Ok((AlgebraicType::Primitive(id), pos))
     }
 
     fn parse_record_type(
@@ -491,6 +504,10 @@ impl Declaration {
             Some(Symbol::LeftParen) => Declaration::parse_tuple(parser, pos),
             Some(Symbol::LeftCurly) => Declaration::parse_simple_record(parser, pos),
             Some(Symbol::LeftBracket) => Declaration::parse_array(parser, pos),
+            Some(Symbol::String(_)) => {
+                let (str, pos) = consume_string(parser, pos)?;
+                Ok((BaseType::ExternType(str), pos))
+            }
             _ => {
                 let (alg, pos) = Declaration::parse_algebraic_type(parser, pos)?;
                 Ok((BaseType::Algebraic(alg), pos))

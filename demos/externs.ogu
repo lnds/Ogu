@@ -1,7 +1,18 @@
 
-extern "rust"
+
+extern "rust" where
+
+    type alias Vec = "std::vec::Vec"
+
+    type alias Option = "std::option::Option"
+
+    type alias Int = primitive i64
+
+    type alias USize = primitive usize
 
     abs : Int -> Int
+
+    get : Vec Int -> USize -> Option
 
     print : String -> ()
 

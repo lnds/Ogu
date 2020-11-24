@@ -19,6 +19,7 @@ impl Extern {
     fn parse_extern(parser: &Parser, pos: usize) -> Result<(Option<Extern>, usize)> {
         let pos = consume_symbol(parser, pos, Symbol::Extern)?;
         let (lang, pos) = consume_string(parser, pos)?;
+        let pos = consume_symbol(parser, pos, Symbol::Where)?;
         let pos = parser.skip_nl(pos);
         let pos = consume_symbol(parser, pos, Symbol::Indent)?;
         let mut pos = parser.skip_nl(pos);

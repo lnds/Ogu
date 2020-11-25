@@ -80,6 +80,7 @@ pub enum Declaration {
     MacroDecl(Box<Declaration>),
     Effect(FuncPrototype),
     Handler(String, Vec<Arg>, Vec<HandleGuard>),
+    DocString(Option<String>),
 }
 
 type DeclVec = Vec<Declaration>;
@@ -140,6 +141,10 @@ impl Body {
                 Ok(Some((Declaration::Effect(prot), pos)))
             }
             Some(Symbol::Extends) => Declaration::parse_extends(parser, pos),
+            Some(Symbol::LargeString(i)) => Ok(Some((
+                Declaration::DocString(parser.get_large_string(i)),
+                pos + 1,
+            ))),
             sym => Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingDeclaration,
             )))

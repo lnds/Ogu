@@ -90,23 +90,25 @@ div x y =
     | handle_state
 
 
--- alebraic effects general form:
---
--- perform <effect> args [with initial_context]
---
--- to handle:
---
---  do {effects} handle | <effect> [<context>] [with args] -> <actions>
--- <actions> : <expression> | yield <expression> | resume [<new_context>] [with <expression>]
---
--- to declare
---
--- effect : <function-prototype>
---
--- type T = .. derive Effect
---
--- handlers:
---
---    handler name
---      { | <effect> [<context>] [with args] -> <actions> }
---
+"""
+ algebraic effects general form:
+
+ perform <effect> args [with initial_context]
+
+ to handle:
+
+  do {effects} handle | <effect> [<context>] [with args] -> <actions>
+ <actions> : <expression> | yield <expression> | resume [<new_context>] [with <expression>]
+
+ to declare
+
+ effect : <function-prototype>
+
+ type T = .. derive Effect
+
+ handlers:
+
+    handler name
+      { | <effect> [<context>] [with args] -> <actions> }
+
+"""

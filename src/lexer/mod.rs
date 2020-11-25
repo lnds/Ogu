@@ -130,9 +130,13 @@ fn scan_line<'a>(
 ) -> TokenList<'a> {
     let line_len = text.len();
     let text = text.trim_start();
+
+    let mut in_string = !large_string.is_empty();
+
     let indentation = line_len - text.len();
+
     let mut line_symbols = vec![];
-    if *paren_level == 0 {
+    if *paren_level == 0 && !in_string {
         line_symbols = scan_indentation(indentation, &mut indent_stack);
     }
 
@@ -140,9 +144,9 @@ fn scan_line<'a>(
         Some(pos) => text.split_at(pos),
         None => (text, ""),
     };
-    let mut in_string = !large_string.is_empty();
     let lexer = if in_string {
         large_string.push_str(text);
+        large_string.push('\n');
         if rest.contains("\"\"\"") {
             large_strings.push(large_string.clone());
             line_symbols.push(Symbol::LargeString(large_strings.len() - 1));
@@ -154,6 +158,9 @@ fn scan_line<'a>(
     } else {
         if !rest.is_empty() {
             large_string.clone_from(&rest[3..].to_string());
+            if large_string.is_empty() {
+                large_string.push('\n');
+            }
             in_string = true;
         }
         Symbol::lexer(text)

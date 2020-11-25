@@ -811,7 +811,7 @@ impl Expression {
 
     pub fn parse_recur(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Symbol::Recur)?;
-        let (args, pos) = Expression::parse_func_call_args(parser, pos)?;
+        let (args, pos) = consume_args(parser, pos)?;
         Ok((Expression::RecurExpr(args), pos))
     }
 
@@ -826,7 +826,7 @@ impl Expression {
                 pos,
             ))
         } else if !is_func_call_end_symbol(parser.get_symbol(pos)) {
-            let (args, pos) = Expression::parse_func_call_args(parser, pos)?;
+            let (args, pos) = consume_args(parser, pos)?;
             if parser.peek(pos, Symbol::With) {
                 let pos = consume_symbol(parser, pos, Symbol::With)?;
                 let (context, pos) = Expression::parse_prim_expr(parser, pos)?;
@@ -850,21 +850,9 @@ impl Expression {
         if is_func_call_end_symbol(parser.get_symbol(pos)) {
             Ok((expr, pos))
         } else {
-            let (args, pos) = Expression::parse_func_call_args(parser, pos)?;
+            let (args, pos) = consume_args(parser, pos)?;
             Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
         }
-    }
-
-    fn parse_func_call_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usize)> {
-        let mut args = vec![];
-        let (expr, mut pos) = Expression::parse_prim_expr(parser, pos)?;
-        args.push(expr);
-        while !is_func_call_end_symbol(parser.get_symbol(pos)) {
-            let (expr, new_pos) = Expression::parse_prim_expr(parser, pos)?;
-            args.push(expr);
-            pos = new_pos;
-        }
-        Ok((args, pos))
     }
 
     fn parse_prim_expr(parser: &Parser, pos: usize) -> ParseResult {
@@ -981,11 +969,13 @@ impl Expression {
         eqs.push(eq);
         while parser.peek(pos, Symbol::NewLine) || parser.peek(pos, Symbol::Comma) {
             pos = parser.skip_nl(pos + 1);
-            if parser.peek(pos, Symbol::Loop)
-                || parser.peek(pos, Symbol::While)
-                || parser.peek(pos, Symbol::Until)
-                || parser.peek(pos, Symbol::Dedent)
-            {
+            if matches!(
+                parser.get_symbol(pos),
+                Some(Symbol::Loop)
+                    | Some(Symbol::While)
+                    | Some(Symbol::Until)
+                    | Some(Symbol::Dedent)
+            ) {
                 break;
             }
             let (eq, new_pos) = Equation::parse_back_arrow_or_assign_eq(parser, pos)?;

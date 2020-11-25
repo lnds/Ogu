@@ -270,7 +270,12 @@ impl Expression {
             pos = consume_symbol(parser, new_pos, Symbol::Arrow)?;
             let (value, new_pos) = Expression::parse(parser, pos)?;
             pos = parser.skip_nl(new_pos);
-            conds.push((cond, value));
+            if cond.is_none() {
+                conds.push((None, value));
+                break;
+            } else {
+                conds.push((cond, value));
+            }
         }
         let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
         Ok((Expression::CondExpr(conds), pos))
@@ -299,7 +304,12 @@ impl Expression {
             let (value, new_pos) = Expression::parse(parser, new_pos)?;
             pos = parse_opt_dedent(parser, new_pos, in_indent)?;
             pos = parser.skip_nl(pos);
-            matches.push((cond, value));
+            if cond.is_none() {
+                matches.push((None, value));
+                break;
+            } else {
+                matches.push((cond, value));
+            }
         }
         let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
         Ok((Expression::CaseExpr(Box::new(match_expr), matches), pos))
@@ -331,16 +341,10 @@ impl Expression {
         } else {
             let pos = consume_symbol(parser, pos, Symbol::Lambda)?;
             let (args, pos) = Expression::parse_lambda_args(parser, pos)?;
-            if !parser.peek(pos, Symbol::Arrow) {
-                Err(Error::new(OguError::ParserError(
-                    ParseError::ExpectingArrow,
-                )))
-                .context("expecting ->")
-            } else {
-                let pos = parser.skip_nl(pos + 1); // skip arrow
-                let (expr, pos) = Expression::parse_expr(parser, pos)?;
-                Ok((Expression::LambdaExpr(args, Box::new(expr)), pos))
-            }
+            let pos = consume_symbol(parser, pos, Symbol::Arrow)?;
+            let pos = parser.skip_nl(pos); // skip arrow
+            let (expr, pos) = Expression::parse_expr(parser, pos)?;
+            Ok((Expression::LambdaExpr(args, Box::new(expr)), pos))
         }
     }
 
@@ -1163,33 +1167,21 @@ impl Expression {
         let pos = consume_symbol(parser, pos, Symbol::Resume)?;
         if is_func_call_end_symbol(parser.get_symbol(pos)) {
             Ok((Expression::ResumeExpr(None, None), pos))
+        } else if parser.peek(pos, Symbol::With) {
+            let pos = consume_symbol(parser, pos, Symbol::With)?;
+            let (args, pos) = consume_args(parser, pos)?;
+            Ok((Expression::ResumeExpr(None, Some(args)), pos))
         } else {
+            let (new_ctx, pos) = Expression::parse_primary_expr(parser, pos)?;
             if parser.peek(pos, Symbol::With) {
-                let mut pos = consume_symbol(parser, pos, Symbol::With)?;
-                let mut args = vec![];
-                while !is_func_call_end_symbol(parser.get_symbol(pos)) {
-                    let (arg, new_pos) = Expression::parse(parser, pos)?;
-                    args.push(arg);
-                    pos = new_pos;
-                }
-                Ok((Expression::ResumeExpr(None, Some(args)), pos))
+                let pos = consume_symbol(parser, pos, Symbol::With)?;
+                let (args, pos) = consume_args(parser, pos)?;
+                Ok((
+                    Expression::ResumeExpr(Some(Box::new(new_ctx)), Some(args)),
+                    pos,
+                ))
             } else {
-                let (new_ctx, pos) = Expression::parse_primary_expr(parser, pos)?;
-                if parser.peek(pos, Symbol::With) {
-                    let mut pos = consume_symbol(parser, pos, Symbol::With)?;
-                    let mut args = vec![];
-                    while !is_func_call_end_symbol(parser.get_symbol(pos)) {
-                        let (arg, new_pos) = Expression::parse(parser, pos)?;
-                        args.push(arg);
-                        pos = new_pos;
-                    }
-                    Ok((
-                        Expression::ResumeExpr(Some(Box::new(new_ctx)), Some(args)),
-                        pos,
-                    ))
-                } else {
-                    Ok((Expression::ResumeExpr(Some(Box::new(new_ctx)), None), pos))
-                }
+                Ok((Expression::ResumeExpr(Some(Box::new(new_ctx)), None), pos))
             }
         }
     }

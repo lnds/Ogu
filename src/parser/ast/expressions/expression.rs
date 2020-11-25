@@ -268,8 +268,10 @@ impl Expression {
         while !parser.peek(pos, Symbol::Dedent) {
             let (cond, new_pos) = Expression::parse_opt_otherwise(parser, pos)?;
             pos = consume_symbol(parser, new_pos, Symbol::Arrow)?;
-            let (value, new_pos) = Expression::parse(parser, pos)?;
-            pos = parser.skip_nl(new_pos);
+            let (in_indent, new_pos) = parse_opt_indent(parser, pos);
+            let (value, new_pos) = Expression::parse(parser, new_pos)?;
+            pos = parse_opt_dedent(parser, new_pos, in_indent)?;
+            pos = parser.skip_nl(pos);
             if cond.is_none() {
                 conds.push((None, value));
                 break;
@@ -1097,7 +1099,7 @@ impl Expression {
         Ok((TryHandleExpr(Box::new(expr), handles), pos))
     }
 
-    fn parse_handle_guards(parser: &Parser, pos: usize) -> Result<(Vec<HandleGuard>, usize)> {
+    pub fn parse_handle_guards(parser: &Parser, pos: usize) -> Result<(Vec<HandleGuard>, usize)> {
         let mut handles = vec![];
         let mut pos = pos;
         while parser.peek(pos, Symbol::Guard) {
@@ -1119,6 +1121,7 @@ impl Expression {
         } else if !parser.peek(pos, Symbol::Arrow) && !parser.peek(pos, Symbol::NewLine) {
             let (ctx, pos) = Expression::parse(parser, pos)?;
             if parser.peek(pos, Symbol::With) {
+                let pos = consume_symbol(parser, pos, Symbol::With)?;
                 let (args, pos) = Expression::parse_args_before_arrow(parser, pos)?;
                 (
                     Some(ctx),

@@ -23,9 +23,9 @@ trait State s where
     effect get! : State s -> s
     effect set! : State s -> s -> ()
 
---handler handle_state
---    | get! (State x) -> resume State x with x
---    | set! _ with y  -> resume State y with () -- could omits context
+handler handle_state
+    | get! (State x) -> resume State x with x
+    | set! _ with y  -> resume State y with () -- could omits context
 
 
 -- state is implicit

@@ -2,7 +2,7 @@ use crate::backend::OguError;
 use crate::lexer::tokens::Symbol;
 use crate::parser::ast::expressions::args::Arg;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::Expression;
+use crate::parser::ast::expressions::expression::{Expression, HandleGuard};
 use crate::parser::ast::expressions::guards::Guard;
 use crate::parser::{
     consume_id, consume_string, consume_symbol, consume_type_id, look_ahead_where,
@@ -79,7 +79,7 @@ pub enum Declaration {
     FunctionPrototype(FuncPrototype),
     MacroDecl(Box<Declaration>),
     Effect(FuncPrototype),
-    Handler(String),
+    Handler(String, Vec<Arg>, Vec<HandleGuard>),
 }
 
 type DeclVec = Vec<Declaration>;
@@ -134,6 +134,7 @@ impl Body {
             Some(Symbol::Type) => Declaration::parse_type_decl(parser, pos),
             Some(Symbol::Alias) => Declaration::parse_type_alias_decl(parser, pos),
             Some(Symbol::Trait) => Declaration::parse_trait_decl(parser, pos),
+            Some(Symbol::Handler) => Declaration::parse_handler_decl(parser, pos),
             Some(Symbol::Effect) => {
                 let (prot, pos) = Declaration::parse_effect_func_prototype(parser, pos)?;
                 Ok(Some((Declaration::Effect(prot), pos)))
@@ -583,6 +584,18 @@ impl Declaration {
         }
         let pos = consume_symbol(parser, pos, end)?;
         Ok((types, pos))
+    }
+}
+
+impl Declaration {
+    fn parse_handler_decl(parser: &Parser, pos: usize) -> DeclParseResult {
+        let pos = consume_symbol(parser, pos, Symbol::Handler)?;
+        let (id, pos) = consume_id(parser, pos)?;
+        let (args, pos) = Arg::parse(parser, pos)?;
+        let pos = consume_symbol(parser, pos, Symbol::Indent)?;
+        let (guards, pos) = Expression::parse_handle_guards(parser, pos)?;
+        let pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        Ok(Some((Declaration::Handler(id, args, guards), pos)))
     }
 }
 

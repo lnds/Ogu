@@ -242,6 +242,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::LessThanOrEqual
                 | Symbol::Type
                 | Symbol::Trait
+                | Symbol::Try
                 | Symbol::Alias
                 | Symbol::SemiColon
                 | Symbol::Colon

@@ -1,23 +1,36 @@
 -- algebraic effects
 
-effect ask! : () -> a
+effect ask : () -> a
 
 hal () =
-    do
-        "Hello " ++ perform ask! () ++ ". How are you doing" ++ perform ask! () ++ "?"
+    try
+        "Hello " ++ perform ask () ++ ". How are you doing" ++ perform ask () ++ "?"
     handle
-      | ask!  -> yield "Dave"
+      | ask  -> yield "Dave"
 
+
+effect defer : (() -> ()) -> ()
+
+test_defer () =
+    try
+        defer println! $ "world";
+        println! "hello"
+    handle
+        | defer with f -> resume ; (f)
 
 trait State s where
 
     effect get! : State s -> s
     effect set! : State s -> s -> ()
 
+--handler handle_state
+--    | get! (State x) -> resume State x with x
+--    | set! _ with y  -> resume State y with () -- could omits context
+
 
 -- state is implicit
 counter! () =
-    do
+    try
         let
             i = perform get!
         in
@@ -27,8 +40,7 @@ counter! () =
              perform set! (i - 1);
              counter! ()
     handle
-        | get! (State x) -> resume State x with x
-        | set! _ with y -> resume State y with () -- could omits context
+        | handle_state
 
 test () =
     perform counter! with (State 2)
@@ -36,7 +48,7 @@ test () =
 
 -- fetch! probably is async operation
 async_get_data () =
-    do
+    try
         perform "we need data" ()
     handle
         | "we need data" _ -> resume _ with fetch! "data source"
@@ -48,13 +60,12 @@ log! : String -> String -> ()
 
 
 test_log warning_condition message =
-    do
-        perform "info" "function begins"
+    try
+        perform "info" "function begins";
         if warning_condition then
             perform "warn" message
         else
             perform "info" message
-
     handle
         | "info" with msg -> log! "info" msg ; resume -- context ommited
         | "warn" with msg -> log! "warn" msg ; resume
@@ -62,14 +73,11 @@ test_log warning_condition message =
 
 type DivByZero = DivByZero derive (Effect)
 
--- handler handle_state =
---    | get! (State x) -> resume State x with x
---    | set! _ with y -> resume State y with () -- could omits context
 
 
 -- if divide by zero print an error message and returns 0
 div x y =
-   do
+   try
         let
             divisor = perform counter! with (State 2)
         in

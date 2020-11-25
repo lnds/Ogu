@@ -96,6 +96,8 @@ pub enum Symbol<'a> {
     Then,
     #[token("trait", priority = 2000)]
     Trait,
+    #[token("try", priority = 2000)]
+    Try,
     #[token("type", priority = 2000)]
     Type,
     #[token("until", priority = 2000)]
@@ -421,7 +423,7 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex = Symbol::lexer(
-            "let loop macro module not of otherwise perform primitive repeat recur reify resume return then trait until",
+            "let loop macro module not of otherwise perform primitive repeat recur reify resume return then trait try until",
         );
         assert_eq!(lex.next(), Some(Symbol::Let));
         assert_eq!(lex.next(), Some(Symbol::Loop));
@@ -439,6 +441,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::Return));
         assert_eq!(lex.next(), Some(Symbol::Then));
         assert_eq!(lex.next(), Some(Symbol::Trait));
+        assert_eq!(lex.next(), Some(Symbol::Try));
         assert_eq!(lex.next(), Some(Symbol::Until));
         assert_eq!(lex.next(), None);
 

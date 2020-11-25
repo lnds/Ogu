@@ -131,6 +131,14 @@ pub fn consume_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usi
     }
 }
 
+pub fn consume_opt_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usize> {
+    if parser.peek(pos, symbol) {
+        consume_symbol(parser, pos, symbol)
+    } else {
+        Ok(pos)
+    }
+}
+
 pub fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
     let pos = parser.skip_nl(pos);
     if parser.peek(pos, Symbol::Indent) {

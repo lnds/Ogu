@@ -61,6 +61,8 @@ pub enum ParseError {
     ExpectingTypeIdentifier,
     #[error("Expecting string")]
     ExpectingString,
+    #[error("Unexpected token")]
+    UnexpectedToken,
 }
 
 pub struct Parser<'a> {

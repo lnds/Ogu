@@ -14,4 +14,5 @@ siracusa n
 
 
 main () =
-    (ackermann 2 3) + (siracusa 11)
+    println! $ (ackermann 2 3) + (siracusa 11)
+

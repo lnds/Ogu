@@ -96,8 +96,8 @@ pub enum Expression {
     PipeFirstArgFuncCall(Box<Expression>, Box<Expression>),
     PipeBackFuncCall(Box<Expression>, Box<Expression>),
     PipeBackFirstArgFuncCall(Box<Expression>, Box<Expression>),
-    FuncCallWithDollar(Box<Expression>, Vec<Expression>),
-    FuncCallExpr(Box<Expression>, Vec<Expression>),
+    FuncCallWithDollar(Box<Expression>, Box<Expression>),
+    FuncCallExpr(Box<Expression>, Box<Expression>),
     LambdaExpr(Vec<LambdaArg>, Box<Expression>),
     MatchesExpr(Box<Expression>, Box<Expression>),
     NoMatchesExpr(Box<Expression>, Box<Expression>),
@@ -225,20 +225,16 @@ impl Expression {
     parse_left_assoc!(
         parse_backdoto_func_call_expr,
         Symbol::DotoBack,
-        Expression::parse_dollar_func_call_expr
+        Expression::parse_control_expr
     );
 
-    fn parse_dollar_func_call_expr(parser: &Parser, pos: usize) -> ParseResult {
-        let (expr, pos) = Expression::parse_expr(parser, pos)?;
-        if parser.peek(pos, Symbol::Dollar) {
-            let (args, pos) = consume_args(parser, pos + 1)?;
-            Ok((Expression::FuncCallWithDollar(Box::new(expr), args), pos))
-        } else {
-            Ok((expr, pos))
-        }
-    }
+    parse_right_assoc!(
+        parse_dollar_func_call_expr,
+        Symbol::Dollar,
+        Expression::parse_pipe_func_call_expr
+    );
 
-    pub fn parse_expr(parser: &Parser, pos: usize) -> ParseResult {
+    pub fn parse_control_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
             None => Err(Error::new(OguError::ParserError(
                 ParseError::ExpressionExpected,
@@ -345,7 +341,7 @@ impl Expression {
             let (args, pos) = Expression::parse_lambda_args(parser, pos)?;
             let pos = consume_symbol(parser, pos, Symbol::Arrow)?;
             let pos = parser.skip_nl(pos); // skip arrow
-            let (expr, pos) = Expression::parse_expr(parser, pos)?;
+            let (expr, pos) = Expression::parse_control_expr(parser, pos)?;
             Ok((Expression::LambdaExpr(args, Box::new(expr)), pos))
         }
     }
@@ -601,7 +597,9 @@ impl Expression {
                     pos = consume_symbol(parser, pos, Symbol::RightParen)?;
                     Ok((Expression::TupleExpr(exprs), pos))
                 } else {
-                    todo!()
+                    let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                    let pos = consume_symbol(parser, pos, Symbol::RightParen)?;
+                    Ok((expr, pos))
                 }
             }
             None => Err(Error::new(OguError::ParserError(
@@ -852,8 +850,16 @@ impl Expression {
         if is_func_call_end_symbol(parser.get_symbol(pos)) {
             Ok((expr, pos))
         } else {
-            let (args, pos) = consume_args(parser, pos)?;
-            Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
+            let (arg, new_pos) = Expression::parse_primary_expr(parser, pos)?;
+            if is_func_call_end_symbol(parser.get_symbol(new_pos)) {
+                Ok((
+                    Expression::FuncCallExpr(Box::new(expr), Box::new(arg)),
+                    new_pos,
+                ))
+            } else {
+                let (arg, pos) = Expression::parse_func_call_expr(parser, pos)?;
+                Ok((Expression::FuncCallExpr(Box::new(expr), Box::new(arg)), pos))
+            }
         }
     }
 
@@ -868,10 +874,20 @@ impl Expression {
                     fields.push(id);
                     pos = new_pos;
                 }
-                if fields.is_empty() {
-                    Ok((Expression::Identifier(id), pos))
+                let (expr, pos) = if fields.is_empty() {
+                    (Expression::Identifier(id), pos)
                 } else {
-                    Ok((Expression::QualifedIdentifier(id, fields), pos))
+                    (Expression::QualifedIdentifier(id, fields), pos)
+                };
+                if parser.peek(pos, Symbol::Dollar) {
+                    let pos = consume_symbol(parser, pos, Symbol::Dollar)?;
+                    let (arg, pos) = Expression::parse(parser, pos)?;
+                    Ok((
+                        Expression::FuncCallWithDollar(Box::new(expr), Box::new(arg)),
+                        pos,
+                    ))
+                } else {
+                    Ok((expr, pos))
                 }
             }
             sym if is_func_call_end_symbol(sym) => {

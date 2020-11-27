@@ -52,7 +52,7 @@ pub fn parse_right_assoc_expr(
     pos: usize,
     op: Symbol,
     next_level: fn(&Parser, usize) -> ParseResult,
-    build: fn(Expression, Expression) -> Expression,
+    build: fn(Expression, Expression) -> Result<Expression>,
 ) -> ParseResult {
     let (expr, pos) = next_level(parser, pos)?;
     if !parser.peek(pos, op) {
@@ -68,13 +68,13 @@ pub fn consume_right_args(
     op: Symbol,
     next_level: fn(&Parser, usize) -> ParseResult,
     base_expr: Expression,
-    build: fn(Expression, Expression) -> Expression,
+    build: fn(Expression, Expression) -> Result<Expression>,
 ) -> ParseResult {
     if !parser.peek(pos, op) {
         Ok((base_expr, pos))
     } else {
         let (expr, pos) = parse_right_assoc_expr(parser, pos + 1, op, next_level, build)?;
-        consume_right_args(parser, pos, op, next_level, build(base_expr, expr), build)
+        consume_right_args(parser, pos, op, next_level, build(base_expr, expr)?, build)
     }
 }
 
@@ -98,7 +98,7 @@ pub fn consume_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usi
     let mut args = vec![];
     let mut pos = pos;
     while !is_func_call_end_symbol(parser.get_symbol(pos)) {
-        let (expr, new_pos) = Expression::parse_expr(parser, pos)?;
+        let (expr, new_pos) = Expression::parse_control_expr(parser, pos)?;
         pos = new_pos;
         args.push(expr);
     }
@@ -250,6 +250,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Extends
                 | Symbol::Reify
                 | Symbol::Otherwise
+                | Symbol::Error
         ),
     }
 }
@@ -287,11 +288,15 @@ pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
     }
 }
 
-pub fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Expression {
+pub fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expression> {
     let RightAssocExpr(sym, left, right) = ra_expr;
     match sym {
-        Symbol::Cons => Expression::ConsExpr(left, right),
-        Symbol::Pow => Expression::PowExpr(left, right),
-        _ => Expression::Error,
+        Symbol::Cons => Ok(Expression::ConsExpr(left, right)),
+        Symbol::Pow => Ok(Expression::PowExpr(left, right)),
+        Symbol::Dollar => Ok(Expression::FuncCallWithDollar(left, right)),
+        sym => Err(Error::new(OguError::ParserError(
+            ParseError::UnexpectedToken,
+        )))
+        .context(format!("expecting valid expression, found: {:?}", sym)),
     }
 }

@@ -1,5 +1,5 @@
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::{LineNumber, Symbol, Token};
+use crate::lexer::tokens::{LineNumber, Token, TokenContext};
 use crate::parser::ast::module::Module;
 use std::path::PathBuf;
 
@@ -82,24 +82,24 @@ impl<'a> Parser<'a> {
         Module::parse(self, filename, 0)
     }
 
-    pub fn peek(&self, pos: usize, symbol: Symbol) -> bool {
+    pub fn peek(&self, pos: usize, symbol: Token) -> bool {
         match self.tokens.peek(pos) {
             None => false,
-            Some(tok) => tok.symbol == symbol,
+            Some(tok) => tok.token == symbol,
         }
     }
 
-    pub fn get(&self, pos: usize) -> Option<Token> {
+    pub fn get(&self, pos: usize) -> Option<TokenContext> {
         self.tokens.peek(pos)
     }
 
-    pub fn get_symbol(&self, pos: usize) -> Option<Symbol> {
-        self.tokens.peek(pos).map(|t| t.symbol)
+    pub fn get_symbol(&self, pos: usize) -> Option<Token> {
+        self.tokens.peek(pos).map(|t| t.token)
     }
 
     pub fn skip_nl(&self, pos: usize) -> usize {
         match self.get_symbol(pos) {
-            Some(Symbol::NewLine) => self.skip_nl(pos + 1),
+            Some(Token::NewLine) => self.skip_nl(pos + 1),
             _ => pos,
         }
     }
@@ -117,7 +117,7 @@ impl<'a> Parser<'a> {
     }
 }
 
-pub fn consume_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usize> {
+pub fn consume_symbol(parser: &Parser, pos: usize, symbol: Token) -> Result<usize> {
     if !parser.peek(pos, symbol) {
         Err(Error::new(OguError::ParserError(
             ParseError::ExpectingSymbol(symbol.to_string()),
@@ -133,7 +133,7 @@ pub fn consume_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usi
     }
 }
 
-pub fn consume_opt_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result<usize> {
+pub fn consume_opt_symbol(parser: &Parser, pos: usize, symbol: Token) -> Result<usize> {
     if parser.peek(pos, symbol) {
         consume_symbol(parser, pos, symbol)
     } else {
@@ -143,7 +143,7 @@ pub fn consume_opt_symbol(parser: &Parser, pos: usize, symbol: Symbol) -> Result
 
 pub fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
     let pos = parser.skip_nl(pos);
-    if parser.peek(pos, Symbol::Indent) {
+    if parser.peek(pos, Token::Indent) {
         (true, pos + 1)
     } else {
         (false, pos)
@@ -153,7 +153,7 @@ pub fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
 pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
-        pos = consume_symbol(parser, pos, Symbol::Dedent)?;
+        pos = consume_symbol(parser, pos, Token::Dedent)?;
     }
     Ok(pos)
 }
@@ -161,9 +161,9 @@ pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<
 pub fn parse_opt_where_or_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
-        if parser.peek(pos, Symbol::Dedent) {
-            pos = consume_symbol(parser, pos, Symbol::Dedent)?;
-        } else if !parser.peek(pos, Symbol::Where) {
+        if parser.peek(pos, Token::Dedent) {
+            pos = consume_symbol(parser, pos, Token::Dedent)?;
+        } else if !parser.peek(pos, Token::Where) {
             return Err(Error::new(OguError::ParserError(
                 ParseError::ExpectingWhere,
             )))
@@ -179,11 +179,11 @@ pub fn parse_opt_where_or_dedent(parser: &Parser, pos: usize, in_indent: bool) -
 
 pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
     let pos = parser.skip_nl(pos);
-    if parser.peek(pos, Symbol::Where) {
+    if parser.peek(pos, Token::Where) {
         Some(pos)
-    } else if parser.peek(pos, Symbol::Indent) {
+    } else if parser.peek(pos, Token::Indent) {
         let pos = parser.skip_nl(pos + 1);
-        if parser.peek(pos, Symbol::Where) {
+        if parser.peek(pos, Token::Where) {
             Some(pos)
         } else {
             None
@@ -195,7 +195,7 @@ pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
 
 pub fn consume_string(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_symbol(pos) {
-        Some(Symbol::String(s)) => Ok((s.to_string(), pos + 1)),
+        Some(Token::String(s)) => Ok((s.to_string(), pos + 1)),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::ExpectingString,
         )))
@@ -209,7 +209,7 @@ pub fn consume_string(parser: &Parser, pos: usize) -> Result<(String, usize)> {
 
 pub fn consume_type_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_symbol(pos) {
-        Some(Symbol::TypeId(type_id)) => Ok((type_id.to_string(), pos + 1)),
+        Some(Token::TypeId(type_id)) => Ok((type_id.to_string(), pos + 1)),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::ExpectingTypeIdentifier,
         )))
@@ -227,8 +227,8 @@ pub fn consume_qualified_type_id(
 ) -> Result<(String, Vec<String>, usize)> {
     let (t_id, mut pos) = consume_type_id(parser, pos)?;
     let mut names = vec![];
-    while parser.peek(pos, Symbol::Dot) {
-        pos = consume_symbol(parser, pos, Symbol::Dot)?;
+    while parser.peek(pos, Token::Dot) {
+        pos = consume_symbol(parser, pos, Token::Dot)?;
         let (t_id, new_pos) = consume_type_id(parser, pos)?;
         names.push(t_id);
         pos = new_pos;
@@ -237,7 +237,7 @@ pub fn consume_qualified_type_id(
 }
 pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_symbol(pos) {
-        Some(Symbol::Id(id)) => Ok((id.to_string(), pos + 1)),
+        Some(Token::Id(id)) => Ok((id.to_string(), pos + 1)),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::ExpectingIdentifier,
         )))

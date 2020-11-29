@@ -1,5 +1,5 @@
 use crate::backend::banner::akarru;
-use crate::lexer::tokens::Symbol;
+use crate::lexer::tokens::Token;
 use crate::lexer::Lexer;
 use crate::parser::{ParseError, Parser};
 use anyhow::Result;
@@ -66,7 +66,7 @@ fn run_module(path: &PathBuf, params: &Params) -> Result<()> {
     println!("parsing {:?}", path);
     let (tokens, large_strings) = lexer.scan()?;
     if params.tokens {
-        let syms: Vec<Symbol> = tokens.iter().map(|t| t.symbol).collect();
+        let syms: Vec<Token> = tokens.iter().map(|t| t.token).collect();
         println!("TOKENS = {:?}", syms);
     }
     let mut parser = Parser::new(tokens, large_strings)?;

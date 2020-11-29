@@ -1,5 +1,5 @@
 use crate::backend::OguError;
-use crate::lexer::tokens::Symbol;
+use crate::lexer::tokens::Token;
 use crate::parser::{consume_symbol, ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
@@ -11,7 +11,7 @@ pub enum Exposing {
 
 impl<'a> Exposing {
     pub(crate) fn parse(parser: &Parser<'a>, pos: usize) -> Result<(Option<Self>, usize)> {
-        if parser.peek(pos, Symbol::Exposing) {
+        if parser.peek(pos, Token::Exposing) {
             Exposing::exposing(parser, pos + 1)
         } else {
             Ok((None, pos))
@@ -19,13 +19,13 @@ impl<'a> Exposing {
     }
 
     fn exposing(parser: &Parser<'a>, pos: usize) -> Result<(Option<Exposing>, usize)> {
-        let pos = consume_symbol(parser, pos, Symbol::LeftParen)?;
-        let (expo, pos) = if parser.peek(pos, Symbol::DotDot) {
+        let pos = consume_symbol(parser, pos, Token::LeftParen)?;
+        let (expo, pos) = if parser.peek(pos, Token::DotDot) {
             (Exposing::All, pos + 1)
         } else {
             Exposing::exposing_ids(parser, pos)?
         };
-        if !parser.peek(pos, Symbol::RightParen) {
+        if !parser.peek(pos, Token::RightParen) {
             return Err(Error::new(OguError::ParserError(
                 ParseError::ExposingExpectOpenParenthesis,
             )))
@@ -39,11 +39,11 @@ impl<'a> Exposing {
         let mut pos = pos;
         loop {
             match parser.get_symbol(pos) {
-                Some(Symbol::Id(s)) => {
+                Some(Token::Id(s)) => {
                     ids.push(s.to_string());
                     pos += 1;
                 }
-                Some(Symbol::TypeId(s)) => {
+                Some(Token::TypeId(s)) => {
                     ids.push(s.to_string());
                     pos += 1;
                 }
@@ -54,7 +54,7 @@ impl<'a> Exposing {
                     .context(format!("Expecting identifier but found: {:?}", sym))
                 }
             };
-            if !parser.peek(pos, Symbol::Comma) {
+            if !parser.peek(pos, Token::Comma) {
                 break;
             } else {
                 pos += 1;

@@ -5,20 +5,20 @@ pub mod equations;
 pub mod guards;
 
 use crate::backend::OguError;
-use crate::lexer::tokens::Symbol;
+use crate::lexer::tokens::Token;
 use crate::parser::ast::expressions::expression::{Expression, ParseResult};
 use crate::parser::{ParseError, Parser};
 use anyhow::{Context, Error, Result};
 
-pub struct LeftAssocExpr<'a>(Symbol<'a>, Box<Expression>, Box<Expression>);
+pub struct LeftAssocExpr<'a>(Token<'a>, Box<Expression>, Box<Expression>);
 
-pub struct RightAssocExpr<'a>(Symbol<'a>, Box<Expression>, Box<Expression>);
+pub struct RightAssocExpr<'a>(Token<'a>, Box<Expression>, Box<Expression>);
 
 // 1 + 2 + 3 => (1 + 2) + 3
 pub fn parse_left_assoc_expr(
     parser: &Parser,
     pos: usize,
-    op: Symbol,
+    op: Token,
     next_level: fn(&Parser, usize) -> ParseResult,
     build: fn(Expression, Expression) -> Expression,
 ) -> Result<(Expression, usize)> {
@@ -33,7 +33,7 @@ pub fn parse_left_assoc_expr(
 pub fn consume_left_args(
     parser: &Parser,
     pos: usize,
-    op: Symbol,
+    op: Token,
     next_level: fn(&Parser, usize) -> ParseResult,
     left_expr: Expression,
     build: fn(Expression, Expression) -> Expression,
@@ -50,7 +50,7 @@ pub fn consume_left_args(
 pub fn parse_right_assoc_expr(
     parser: &Parser,
     pos: usize,
-    op: Symbol,
+    op: Token,
     next_level: fn(&Parser, usize) -> ParseResult,
     build: fn(Expression, Expression) -> Result<Expression>,
 ) -> ParseResult {
@@ -65,7 +65,7 @@ pub fn parse_right_assoc_expr(
 pub fn consume_right_args(
     parser: &Parser,
     pos: usize,
-    op: Symbol,
+    op: Token,
     next_level: fn(&Parser, usize) -> ParseResult,
     base_expr: Expression,
     build: fn(Expression, Expression) -> Result<Expression>,
@@ -81,7 +81,7 @@ pub fn consume_right_args(
 pub fn consume_exprs_sep_by(
     parser: &Parser,
     pos: usize,
-    symbol: Symbol,
+    symbol: Token,
 ) -> Result<(Vec<Expression>, usize)> {
     let mut result = vec![];
     let (expr, mut pos) = Expression::parse(parser, pos)?;
@@ -108,7 +108,7 @@ pub fn consume_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usi
 pub fn consume_ids_sep_by(
     parser: &Parser,
     pos: usize,
-    symbol: Symbol,
+    symbol: Token,
 ) -> Result<(Vec<String>, usize)> {
     let mut result = vec![];
     let (id, mut pos) = consume_id(parser, pos)?;
@@ -122,7 +122,7 @@ pub fn consume_ids_sep_by(
 }
 
 pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
-    if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
+    if let Some(Token::Id(id)) = parser.get_symbol(pos) {
         Ok((id.to_string(), pos + 1))
     } else {
         Err(Error::new(OguError::ParserError(
@@ -137,117 +137,117 @@ pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     }
 }
 
-pub fn is_literal(symbol: Symbol) -> bool {
-    matches!(symbol, Symbol::Integer(_)
-        |Symbol::Float(_)
-        |Symbol::String(_)
-        |Symbol::LargeString(_)
-        |Symbol::FormatString(_) 
-        |Symbol::RegExp(_)
-        |Symbol::Char(_)
-        |Symbol::IsoDate(_))
+pub fn is_literal(symbol: Token) -> bool {
+    matches!(symbol, Token::Integer(_)
+        |Token::Float(_)
+        |Token::String(_)
+        |Token::LargeString(_)
+        |Token::FormatString(_) 
+        |Token::RegExp(_)
+        |Token::Char(_)
+        |Token::IsoDate(_))
 }
 
-pub fn is_basic_op(symbol: Symbol) -> bool {
+pub fn is_basic_op(symbol: Token) -> bool {
     matches!(
         symbol,
-        Symbol::Cons
-            | Symbol::Plus
-            | Symbol::PlusPlus
-            | Symbol::Mult
-            | Symbol::Div
-            | Symbol::DivDiv
-            | Symbol::Minus
-            | Symbol::Mod
-            | Symbol::Pow
-            | Symbol::And
-            | Symbol::Or
-            | Symbol::Equal
-            | Symbol::NotEqual
-            | Symbol::Not
-            | Symbol::LessThan
-            | Symbol::LessThanOrEqual
-            | Symbol::Greater
-            | Symbol::GreaterOrEqual
+        Token::Cons
+            | Token::Plus
+            | Token::PlusPlus
+            | Token::Mult
+            | Token::Div
+            | Token::DivDiv
+            | Token::Minus
+            | Token::Mod
+            | Token::Pow
+            | Token::And
+            | Token::Or
+            | Token::Equal
+            | Token::NotEqual
+            | Token::Not
+            | Token::LessThan
+            | Token::LessThanOrEqual
+            | Token::Greater
+            | Token::GreaterOrEqual
     )
 }
 
-pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
+pub fn is_func_call_end_symbol(symbol: Option<Token>) -> bool {
     match symbol {
         None => true,
-        Some(Symbol::Error) => true,
+        Some(Token::Error) => true,
         Some(sym) => matches!(
             sym,
-            Symbol::NewLine
-                | Symbol::Arroba
-                | Symbol::Arrow
-                | Symbol::BackArrow
-                | Symbol::Indent
-                | Symbol::Dedent
-                | Symbol::Assign
-                | Symbol::Dollar
-                | Symbol::DollarCurly
-                | Symbol::Comma
-                | Symbol::Cond
-                | Symbol::Case
-                | Symbol::Dot
-                | Symbol::DotDot
-                | Symbol::DotDotDot
-                | Symbol::Cons
-                | Symbol::FatArrow
-                | Symbol::Let
-                | Symbol::Loop
-                | Symbol::Do
-                | Symbol::Then
-                | Symbol::Else
-                | Symbol::Elif
-                | Symbol::Of
-                | Symbol::Return
-                | Symbol::Recur
-                | Symbol::Yield
-                | Symbol::RightParen
-                | Symbol::In
-                | Symbol::RightBracket
-                | Symbol::RightCurly
-                | Symbol::RightCurlyCurly
-                | Symbol::Where
-                | Symbol::With
-                | Symbol::While
-                | Symbol::Until
-                | Symbol::PipeLeft
-                | Symbol::Perform
-                | Symbol::PipeRight
-                | Symbol::ComposeForward
-                | Symbol::ComposeBackward
-                | Symbol::Pow
-                | Symbol::Plus
-                | Symbol::PlusPlus
-                | Symbol::Mult
-                | Symbol::Minus
-                | Symbol::Div
-                | Symbol::DivDiv
-                | Symbol::Mod
-                | Symbol::And
-                | Symbol::Or
-                | Symbol::Not
-                | Symbol::Equal
-                | Symbol::NotEqual
-                | Symbol::Guard
-                | Symbol::GreaterOrEqual
-                | Symbol::Greater
-                | Symbol::LessThan
-                | Symbol::LessThanOrEqual
-                | Symbol::Type
-                | Symbol::Trait
-                | Symbol::Try
-                | Symbol::Alias
-                | Symbol::SemiColon
-                | Symbol::Colon
-                | Symbol::Derive
-                | Symbol::Extends
-                | Symbol::Reify
-                | Symbol::Otherwise
-                | Symbol::Error
+            Token::NewLine
+                | Token::Arroba
+                | Token::Arrow
+                | Token::BackArrow
+                | Token::Indent
+                | Token::Dedent
+                | Token::Assign
+                | Token::Dollar
+                | Token::DollarCurly
+                | Token::Comma
+                | Token::Cond
+                | Token::Case
+                | Token::Dot
+                | Token::DotDot
+                | Token::DotDotDot
+                | Token::Cons
+                | Token::FatArrow
+                | Token::Let
+                | Token::Loop
+                | Token::Do
+                | Token::Then
+                | Token::Else
+                | Token::Elif
+                | Token::Of
+                | Token::Return
+                | Token::Recur
+                | Token::Yield
+                | Token::RightParen
+                | Token::In
+                | Token::RightBracket
+                | Token::RightCurly
+                | Token::RightCurlyCurly
+                | Token::Where
+                | Token::With
+                | Token::While
+                | Token::Until
+                | Token::PipeLeft
+                | Token::Perform
+                | Token::PipeRight
+                | Token::ComposeForward
+                | Token::ComposeBackward
+                | Token::Pow
+                | Token::Plus
+                | Token::PlusPlus
+                | Token::Mult
+                | Token::Minus
+                | Token::Div
+                | Token::DivDiv
+                | Token::Mod
+                | Token::And
+                | Token::Or
+                | Token::Not
+                | Token::Equal
+                | Token::NotEqual
+                | Token::Guard
+                | Token::GreaterOrEqual
+                | Token::Greater
+                | Token::LessThan
+                | Token::LessThanOrEqual
+                | Token::Type
+                | Token::Trait
+                | Token::Try
+                | Token::Alias
+                | Token::SemiColon
+                | Token::Colon
+                | Token::Derive
+                | Token::Extends
+                | Token::Reify
+                | Token::Otherwise
+                | Token::Error
         ),
     }
 }
@@ -255,27 +255,27 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
 pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
     let LeftAssocExpr(sym, left, right) = la_expr;
     match sym {
-        Symbol::PipeRight => Expression::FuncCallExpr(right, left),
-        Symbol::Or => Expression::OrExpr(left, right),
-        Symbol::And => Expression::AndExpr(left, right),
-        Symbol::LessThan => Expression::LtExpr(left, right),
-        Symbol::LessThanOrEqual => Expression::LeExpr(left, right),
-        Symbol::Greater => Expression::GtExpr(left, right),
-        Symbol::GreaterOrEqual => Expression::GeExpr(left, right),
-        Symbol::Equal => Expression::EqExpr(left, right),
-        Symbol::NotEqual => Expression::NeExpr(left, right),
-        Symbol::Plus => Expression::AddExpr(left, right),
-        Symbol::PlusPlus => Expression::ConcatExpr(left, right),
-        Symbol::Minus => Expression::SubExpr(left, right),
-        Symbol::Mult => Expression::MulExpr(left, right),
-        Symbol::Div => Expression::DivExpr(left, right),
-        Symbol::DivDiv => Expression::IntDivExpr(left, right),
-        Symbol::Mod => Expression::ModExpr(left, right),
-        Symbol::ComposeBackward => Expression::ComposeBckExpr(left, right),
-        Symbol::Matches => Expression::MatchesExpr(left, right),
-        Symbol::NotMatches => Expression::NoMatchesExpr(left, right),
-        Symbol::Match => Expression::ReMatchExpr(left, right),
-        Symbol::Arroba => Expression::IndexExpr(left, right),
+        Token::PipeRight => Expression::FuncCallExpr(right, left),
+        Token::Or => Expression::OrExpr(left, right),
+        Token::And => Expression::AndExpr(left, right),
+        Token::LessThan => Expression::LtExpr(left, right),
+        Token::LessThanOrEqual => Expression::LeExpr(left, right),
+        Token::Greater => Expression::GtExpr(left, right),
+        Token::GreaterOrEqual => Expression::GeExpr(left, right),
+        Token::Equal => Expression::EqExpr(left, right),
+        Token::NotEqual => Expression::NeExpr(left, right),
+        Token::Plus => Expression::AddExpr(left, right),
+        Token::PlusPlus => Expression::ConcatExpr(left, right),
+        Token::Minus => Expression::SubExpr(left, right),
+        Token::Mult => Expression::MulExpr(left, right),
+        Token::Div => Expression::DivExpr(left, right),
+        Token::DivDiv => Expression::IntDivExpr(left, right),
+        Token::Mod => Expression::ModExpr(left, right),
+        Token::ComposeBackward => Expression::ComposeBckExpr(left, right),
+        Token::Matches => Expression::MatchesExpr(left, right),
+        Token::NotMatches => Expression::NoMatchesExpr(left, right),
+        Token::Match => Expression::ReMatchExpr(left, right),
+        Token::Arroba => Expression::IndexExpr(left, right),
         sym => {
             println!("TODO {:?}", sym);
             todo!()
@@ -286,11 +286,11 @@ pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
 pub fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expression> {
     let RightAssocExpr(sym, left, right) = ra_expr;
     match sym {
-        Symbol::Cons => Ok(Expression::ConsExpr(left, right)),
-        Symbol::Pow => Ok(Expression::PowExpr(left, right)),
-        Symbol::Dollar => Ok(Expression::FuncCallExpr(left, right)),
-        Symbol::ComposeForward => Ok(Expression::ComposeFwdExpr(left, right)),
-        Symbol::PipeLeft => Ok(Expression::FuncCallExpr(left, right)),
+        Token::Cons => Ok(Expression::ConsExpr(left, right)),
+        Token::Pow => Ok(Expression::PowExpr(left, right)),
+        Token::Dollar => Ok(Expression::FuncCallExpr(left, right)),
+        Token::ComposeForward => Ok(Expression::ComposeFwdExpr(left, right)),
+        Token::PipeLeft => Ok(Expression::FuncCallExpr(left, right)),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::UnexpectedToken,
         )))

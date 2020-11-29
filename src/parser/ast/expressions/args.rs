@@ -1,5 +1,5 @@
 use crate::backend::OguError;
-use crate::lexer::tokens::Symbol;
+use crate::lexer::tokens::Token;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::{consume_symbol, ParseError, Parser};
 use anyhow::{Context, Error, Result};
@@ -29,10 +29,10 @@ impl Arg {
     fn parse_arg(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
         match parser.get_symbol(pos) {
             None => Ok(None),
-            Some(Symbol::LeftParen) => Arg::parse_tuple(parser, pos),
-            Some(Symbol::Assign) => Ok(None),
-            Some(Symbol::NewLine) => Ok(None),
-            Some(Symbol::Guard) => Ok(None),
+            Some(Token::LeftParen) => Arg::parse_tuple(parser, pos),
+            Some(Token::Assign) => Ok(None),
+            Some(Token::NewLine) => Ok(None),
+            Some(Token::Guard) => Ok(None),
             _ => {
                 let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
                 if let Expression::Identifier(id) = expr {
@@ -45,10 +45,10 @@ impl Arg {
     }
 
     fn parse_tuple(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
-        if parser.peek(pos + 1, Symbol::RightParen) {
+        if parser.peek(pos + 1, Token::RightParen) {
             return Ok(Some((Arg::Void, pos + 2)));
         }
-        let mut pos = consume_symbol(parser, pos, Symbol::LeftParen)?;
+        let mut pos = consume_symbol(parser, pos, Token::LeftParen)?;
         let mut args = vec![];
         match Arg::parse_arg(parser, pos)? {
             Some((arg, new_pos)) => {
@@ -60,8 +60,8 @@ impl Arg {
                     .context("unexpected token");
             }
         }
-        while !parser.peek(pos, Symbol::RightParen) {
-            if !parser.peek(pos, Symbol::Comma) {
+        while !parser.peek(pos, Token::RightParen) {
+            if !parser.peek(pos, Token::Comma) {
                 return Err(Error::new(OguError::ParserError(
                     ParseError::ExpectingComma,
                 )))

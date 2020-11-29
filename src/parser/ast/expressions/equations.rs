@@ -1,5 +1,5 @@
 use crate::backend::OguError;
-use crate::lexer::tokens::Symbol;
+use crate::lexer::tokens::Token;
 use crate::parser::ast::expressions::args::{Arg, VecArg};
 use crate::parser::ast::expressions::consume_ids_sep_by;
 use crate::parser::ast::expressions::expression::Expression;
@@ -22,11 +22,11 @@ pub enum Equation {
 
 impl Equation {
     pub fn parse(parser: &Parser, pos: usize, inner: bool) -> Result<(Equation, usize)> {
-        if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
+        if let Some(Token::Id(id)) = parser.get_symbol(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
         } else if inner {
             let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
-            if parser.peek(pos, Symbol::Assign) {
+            if parser.peek(pos, Token::Assign) {
                 Equation::parse_lval_no_guards(expr, parser, pos + 1)
             } else {
                 Equation::parse_lval_guards(expr, parser, pos)
@@ -44,22 +44,18 @@ impl Equation {
     }
 
     pub fn parse_back_arrow_or_assign_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        Equation::parse_value_assign2(parser, pos, Symbol::BackArrow, Symbol::Assign)
+        Equation::parse_value_assign2(parser, pos, Token::BackArrow, Token::Assign)
     }
     pub fn parse_back_arrow_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        Equation::parse_value_assign(parser, pos, Symbol::BackArrow)
+        Equation::parse_value_assign(parser, pos, Token::BackArrow)
     }
 
     pub fn parse_value(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        Equation::parse_value_assign(parser, pos, Symbol::Assign)
+        Equation::parse_value_assign(parser, pos, Token::Assign)
     }
 
-    fn parse_value_assign(
-        parser: &Parser,
-        pos: usize,
-        symbol: Symbol,
-    ) -> Result<(Equation, usize)> {
-        if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
+    fn parse_value_assign(parser: &Parser, pos: usize, symbol: Token) -> Result<(Equation, usize)> {
+        if let Some(Token::Id(id)) = parser.get_symbol(pos) {
             let pos = consume_symbol(parser, pos + 1, symbol)?;
             Equation::parse_val(id.to_string(), parser, pos)
         } else {
@@ -73,10 +69,10 @@ impl Equation {
     fn parse_value_assign2(
         parser: &Parser,
         pos: usize,
-        symbol1: Symbol,
-        symbol2: Symbol,
+        symbol1: Token,
+        symbol2: Token,
     ) -> Result<(Equation, usize)> {
-        if let Some(Symbol::Id(id)) = parser.get_symbol(pos) {
+        if let Some(Token::Id(id)) = parser.get_symbol(pos) {
             let pos = pos + 1;
             let pos = if parser.peek(pos, symbol1) {
                 consume_symbol(parser, pos, symbol1)?
@@ -84,10 +80,10 @@ impl Equation {
                 consume_symbol(parser, pos, symbol2)?
             };
             Equation::parse_val(id.to_string(), parser, pos)
-        } else if parser.peek(pos, Symbol::LeftParen) {
-            let pos = consume_symbol(parser, pos, Symbol::LeftParen)?;
-            let (ids, pos) = consume_ids_sep_by(parser, pos, Symbol::Comma)?;
-            let pos = consume_symbol(parser, pos, Symbol::RightParen)?;
+        } else if parser.peek(pos, Token::LeftParen) {
+            let pos = consume_symbol(parser, pos, Token::LeftParen)?;
+            let (ids, pos) = consume_ids_sep_by(parser, pos, Token::Comma)?;
+            let pos = consume_symbol(parser, pos, Token::RightParen)?;
             let pos = if parser.peek(pos, symbol1) {
                 consume_symbol(parser, pos, symbol1)?
             } else {
@@ -110,7 +106,7 @@ impl Equation {
 
     fn parse_func_or_val(id: &str, parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
         let name = id.to_string();
-        if parser.peek(pos, Symbol::Assign) {
+        if parser.peek(pos, Token::Assign) {
             Equation::parse_val(name, parser, pos + 1)
         } else {
             Equation::parse_func(name, parser, pos)
@@ -126,7 +122,7 @@ impl Equation {
 
     fn parse_func(name: String, parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
         let (args, pos) = Arg::parse(parser, pos)?;
-        if parser.peek(pos, Symbol::Assign) {
+        if parser.peek(pos, Token::Assign) {
             Equation::parse_func_no_guards(name, args, parser, pos + 1)
         } else {
             Equation::parse_func_guards(name, args, parser, pos)

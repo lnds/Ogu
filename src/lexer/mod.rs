@@ -10,12 +10,12 @@ use std::io::{self, BufRead, Cursor};
 use std::path::PathBuf;
 
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::Symbol::NewLine;
+use crate::lexer::tokens::Token::NewLine;
 use crate::lexer::tokens::{
-    IndentStack, LineNumber, LineSize, Symbol, SymbolList, Token, TokenList,
+    IndentStack, LineCount, LineNumber, LineWidth, Token, TokenContext, TokenContextList,
 };
 
-type Line = (LineSize, String);
+type Line = (LineCount, String);
 type LineList = Vec<Line>;
 
 enum LexerSource {
@@ -25,7 +25,7 @@ enum LexerSource {
 
 pub struct Lexer {
     source: LexerSource,
-    paren_level: LineSize,
+    paren_level: LineCount,
     lines: LineList,
 }
 
@@ -71,7 +71,7 @@ impl<'a> Lexer {
         Ok((TokenStream::new(tokens), large_strings))
     }
 
-    fn map_lines(&'a mut self, mut large_strings: &mut Vec<String>) -> TokenList<'a> {
+    fn map_lines(&'a mut self, mut large_strings: &mut Vec<String>) -> TokenContextList<'a> {
         let mut tokens = vec![];
         let mut indent_stack = vec![0];
         let mut large_string = String::new();
@@ -93,9 +93,10 @@ impl<'a> Lexer {
                     break;
                 }
                 indent_stack.pop();
-                tokens.push(Token {
-                    symbol: Symbol::Dedent,
+                tokens.push(TokenContext {
+                    token: Token::Dedent,
                     line: line_num,
+                    col: 0,
                 });
             }
         }
@@ -123,11 +124,11 @@ fn read_lines(reader: &mut dyn BufRead) -> LineList {
 fn scan_line<'a>(
     text: &'a str,
     line_number: &LineNumber,
-    paren_level: &mut LineSize,
+    paren_level: &mut LineCount,
     large_string: &mut String,
     mut indent_stack: &mut IndentStack,
     large_strings: &mut Vec<String>,
-) -> TokenList<'a> {
+) -> TokenContextList<'a> {
     let line_len = text.len();
     let text = text.trim_start();
 
@@ -135,9 +136,9 @@ fn scan_line<'a>(
 
     let indentation = line_len - text.len();
 
-    let mut line_symbols = vec![];
+    let mut line_tokens = vec![];
     if *paren_level == 0 && !in_string {
-        line_symbols = scan_indentation(indentation, &mut indent_stack);
+        line_tokens = scan_indentation(indentation, &mut indent_stack);
     }
 
     let (text, rest) = match text.find("\"\"\"") {
@@ -149,11 +150,11 @@ fn scan_line<'a>(
         large_string.push('\n');
         if rest.contains("\"\"\"") {
             large_strings.push(large_string.clone());
-            line_symbols.push(Symbol::LargeString(large_strings.len() - 1));
+            line_tokens.push((Token::LargeString(large_strings.len() - 1), 0));
             large_string.clear();
-            Symbol::lexer(&rest[3..])
+            Token::lexer(&rest[3..])
         } else {
-            Symbol::lexer(rest)
+            Token::lexer(rest)
         }
     } else {
         if !rest.is_empty() {
@@ -163,37 +164,40 @@ fn scan_line<'a>(
             }
             in_string = true;
         }
-        Symbol::lexer(text)
+        Token::lexer(text)
     };
 
-    for sym in lexer {
-        if sym.is_open_paren() {
+    for (tok, span) in lexer.spanned() {
+        if tok.is_open_paren() {
             *paren_level += 1;
-        } else if sym.is_close_paren() {
+        } else if tok.is_close_paren() {
             if *paren_level == 0 {
-                line_symbols.push(Symbol::Error);
+                line_tokens.push((Token::Error, 0));
             } else {
                 *paren_level -= 1;
             }
         }
-        line_symbols.push(sym);
+        line_tokens.push((tok, span.start));
     }
     if *paren_level == 0 && !in_string {
-        line_symbols.push(NewLine)
+        line_tokens.push((NewLine, text.len()))
     }
-    line_symbols
+    line_tokens
         .iter()
-        .map(|s| Token::new(*s, *line_number + 1))
-        .collect::<TokenList<'a>>()
+        .map(|(s, col)| TokenContext::new(*s, *line_number + 1, *col))
+        .collect::<TokenContextList<'a>>()
 }
 
-fn scan_indentation<'a>(start_pos: LineSize, indent_stack: &mut IndentStack) -> SymbolList<'a> {
+fn scan_indentation<'a>(
+    start_pos: LineCount,
+    indent_stack: &mut IndentStack,
+) -> Vec<(Token<'a>, LineWidth)> {
     match indent_stack.last() {
         None => vec![],
         Some(&pos) => {
             if start_pos > pos {
                 indent_stack.push(start_pos);
-                return vec![Symbol::Indent];
+                return vec![(Token::Indent, start_pos)];
             }
             if start_pos < pos {
                 let indent_length = indent_stack.len();
@@ -203,7 +207,7 @@ fn scan_indentation<'a>(start_pos: LineSize, indent_stack: &mut IndentStack) -> 
                     }
                     indent_stack.pop();
                 }
-                vec![Symbol::Dedent; indent_length - indent_stack.len()]
+                vec![(Token::Dedent, pos); indent_length - indent_stack.len()]
             } else {
                 vec![]
             }
@@ -213,7 +217,7 @@ fn scan_indentation<'a>(start_pos: LineSize, indent_stack: &mut IndentStack) -> 
 
 #[cfg(test)]
 mod test_lexer {
-    use crate::lexer::tokens::{Symbol, Token};
+    use crate::lexer::tokens::{Token, TokenContext};
     use crate::lexer::Lexer;
     use std::path::PathBuf;
     use walkdir::{DirEntry, WalkDir};
@@ -227,85 +231,85 @@ mod test_lexer {
         let mut iter = stream.iter();
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("func"),
+            Some(&TokenContext {
+                token: Token::Id("func"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Assign,
+            Some(&TokenContext {
+                token: Token::Assign,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::NewLine,
+            Some(&TokenContext {
+                token: Token::NewLine,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Indent,
+            Some(&TokenContext {
+                token: Token::Indent,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("this"),
+            Some(&TokenContext {
+                token: Token::Id("this"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Is,
+            Some(&TokenContext {
+                token: Token::Is,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("a"),
+            Some(&TokenContext {
+                token: Token::Id("a"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("function"),
+            Some(&TokenContext {
+                token: Token::Id("function"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::NewLine,
+            Some(&TokenContext {
+                token: Token::NewLine,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Dedent,
+            Some(&TokenContext {
+                token: Token::Dedent,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("end"),
+            Some(&TokenContext {
+                token: Token::Id("end"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::NewLine,
+            Some(&TokenContext {
+                token: Token::NewLine,
                 line: 3
             })
         );
@@ -321,148 +325,148 @@ mod test_lexer {
         let mut iter = stream.iter();
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("func"),
+            Some(&TokenContext {
+                token: Token::Id("func"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Assign,
+            Some(&TokenContext {
+                token: Token::Assign,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::LeftParen,
+            Some(&TokenContext {
+                token: Token::LeftParen,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Integer("1"),
+            Some(&TokenContext {
+                token: Token::Integer("1"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Comma,
+            Some(&TokenContext {
+                token: Token::Comma,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Integer("2"),
+            Some(&TokenContext {
+                token: Token::Integer("2"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Comma,
+            Some(&TokenContext {
+                token: Token::Comma,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Integer("3"),
+            Some(&TokenContext {
+                token: Token::Integer("3"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Comma,
+            Some(&TokenContext {
+                token: Token::Comma,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Integer("4"),
+            Some(&TokenContext {
+                token: Token::Integer("4"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::RightParen,
+            Some(&TokenContext {
+                token: Token::RightParen,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::NewLine,
+            Some(&TokenContext {
+                token: Token::NewLine,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Indent,
+            Some(&TokenContext {
+                token: Token::Indent,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("this"),
+            Some(&TokenContext {
+                token: Token::Id("this"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Is,
+            Some(&TokenContext {
+                token: Token::Is,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("a"),
+            Some(&TokenContext {
+                token: Token::Id("a"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("function"),
+            Some(&TokenContext {
+                token: Token::Id("function"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::NewLine,
+            Some(&TokenContext {
+                token: Token::NewLine,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Dedent,
+            Some(&TokenContext {
+                token: Token::Dedent,
                 line: 4
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("end"),
+            Some(&TokenContext {
+                token: Token::Id("end"),
                 line: 4
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::NewLine,
+            Some(&TokenContext {
+                token: Token::NewLine,
                 line: 4
             })
         );
@@ -478,162 +482,162 @@ mod test_lexer {
         let mut iter = stream.iter();
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("func"),
+            Some(&TokenContext {
+                token: Token::Id("func"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Assign,
+            Some(&TokenContext {
+                token: Token::Assign,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::LeftParen,
+            Some(&TokenContext {
+                token: Token::LeftParen,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Integer("1"),
+            Some(&TokenContext {
+                token: Token::Integer("1"),
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Comma,
+            Some(&TokenContext {
+                token: Token::Comma,
                 line: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Integer("2"),
+            Some(&TokenContext {
+                token: Token::Integer("2"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Comma,
+            Some(&TokenContext {
+                token: Token::Comma,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Integer("3"),
+            Some(&TokenContext {
+                token: Token::Integer("3"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Comma,
+            Some(&TokenContext {
+                token: Token::Comma,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Integer("4"),
+            Some(&TokenContext {
+                token: Token::Integer("4"),
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::RightParen,
+            Some(&TokenContext {
+                token: Token::RightParen,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Error,
+            Some(&TokenContext {
+                token: Token::Error,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::RightParen,
+            Some(&TokenContext {
+                token: Token::RightParen,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::NewLine,
+            Some(&TokenContext {
+                token: Token::NewLine,
                 line: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Indent,
+            Some(&TokenContext {
+                token: Token::Indent,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("this"),
+            Some(&TokenContext {
+                token: Token::Id("this"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Is,
+            Some(&TokenContext {
+                token: Token::Is,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("a"),
+            Some(&TokenContext {
+                token: Token::Id("a"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("function"),
+            Some(&TokenContext {
+                token: Token::Id("function"),
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::NewLine,
+            Some(&TokenContext {
+                token: Token::NewLine,
                 line: 3
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Dedent,
+            Some(&TokenContext {
+                token: Token::Dedent,
                 line: 4
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::Id("end"),
+            Some(&TokenContext {
+                token: Token::Id("end"),
                 line: 4
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&Token {
-                symbol: Symbol::NewLine,
+            Some(&TokenContext {
+                token: Token::NewLine,
                 line: 4
             })
         );

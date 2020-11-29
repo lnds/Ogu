@@ -3,7 +3,7 @@ pub mod exposing;
 pub mod externs;
 pub mod imports;
 
-use crate::lexer::tokens::Symbol;
+use crate::lexer::tokens::Token;
 use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use std::path::PathBuf;
 
@@ -31,7 +31,7 @@ pub struct Module {
 
 impl<'a> Module {
     pub fn parse(parser: &'a Parser<'a>, filename: &PathBuf, pos: usize) -> Result<Self> {
-        let (name, pos) = if parser.peek(pos, Symbol::Module) {
+        let (name, pos) = if parser.peek(pos, Token::Module) {
             name_from_parser(parser, pos)?
         } else {
             (name_from_filename(filename), pos)
@@ -72,7 +72,7 @@ fn capitalize(s: &str) -> String {
 }
 
 fn name_from_parser(parser: &Parser, pos: usize) -> Result<(ModuleName, usize)> {
-    let pos = consume_symbol(parser, pos, Symbol::Module)?;
+    let pos = consume_symbol(parser, pos, Token::Module)?;
     let (t_id, names, pos) = consume_qualified_type_id(parser, pos)?;
     if names.is_empty() {
         Ok((ModuleName::Simple(t_id), pos))

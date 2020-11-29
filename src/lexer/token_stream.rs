@@ -1,16 +1,16 @@
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::TokenContext;
 
 #[derive(Debug)]
 pub struct TokenStream<'a> {
-    tokens: Vec<Token<'a>>,
+    tokens: Vec<TokenContext<'a>>,
 }
 
 impl<'a> TokenStream<'a> {
-    pub fn new(tokens: Vec<Token>) -> TokenStream {
+    pub fn new(tokens: Vec<TokenContext>) -> TokenStream {
         TokenStream { tokens }
     }
 
-    pub fn iter(&'a self) -> std::slice::Iter<'a, Token<'a>> {
+    pub fn iter(&'a self) -> std::slice::Iter<'a, TokenContext<'a>> {
         self.tokens.iter()
     }
 
@@ -22,7 +22,7 @@ impl<'a> TokenStream<'a> {
         self.len() == 0
     }
 
-    pub fn peek(&'a self, pos: usize) -> Option<Token<'a>> {
+    pub fn peek(&'a self, pos: usize) -> Option<TokenContext<'a>> {
         self.tokens.get(pos).cloned()
     }
 }

@@ -181,6 +181,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
             Symbol::NewLine
                 | Symbol::Arroba
                 | Symbol::Arrow
+                | Symbol::BackArrow
                 | Symbol::Indent
                 | Symbol::Dedent
                 | Symbol::Assign

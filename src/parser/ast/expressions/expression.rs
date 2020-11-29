@@ -507,7 +507,6 @@ impl Expression {
 
     pub fn parse_primary_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
-            Some(Symbol::LeftParen) => Expression::parse_paren_expr(parser, pos),
             Some(Symbol::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Symbol::LeftCurly) => Expression::parse_record_expr(parser, pos),
             Some(Symbol::LeftCurlyCurly) => Expression::parse_macro_expand_expr(parser, pos),
@@ -851,6 +850,8 @@ impl Expression {
 
     fn parse_prim_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {
+            Some(Symbol::LeftParen) => Expression::parse_paren_expr(parser, pos),
+
             Some(Symbol::Id(_)) => {
                 let (id, mut pos) = consume_id(parser, pos)?;
                 let mut fields = vec![];

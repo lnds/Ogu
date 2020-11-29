@@ -6,9 +6,9 @@ use anyhow::Result;
 #[derive(Debug, Clone)]
 pub(crate) enum Arg {
     Void,
-    SimpleArg(String),
-    TupleArg(Vec<Arg>),
-    ExprArg(Box<Expression>),
+    Simple(String),
+    Tuple(Vec<Arg>),
+    Expr(Box<Expression>),
 }
 
 pub(crate) type VecArg = Vec<Arg>;
@@ -35,9 +35,9 @@ impl Arg {
             _ => {
                 let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
                 if let Expression::Identifier(id) = expr {
-                    Ok(Some((Arg::SimpleArg(id), pos)))
+                    Ok(Some((Arg::Simple(id), pos)))
                 } else {
-                    Ok(Some((Arg::ExprArg(Box::new(expr)), pos)))
+                    Ok(Some((Arg::Expr(Box::new(expr)), pos)))
                 }
             }
         }
@@ -72,6 +72,6 @@ impl Arg {
                 }
             }
         }
-        Ok(Some((Arg::TupleArg(args), pos + 1)))
+        Ok(Some((Arg::Tuple(args), pos + 1)))
     }
 }

@@ -20,6 +20,7 @@ type LineList = Vec<Line>;
 
 enum LexerSource {
     File(PathBuf),
+    #[allow(dead_code)]
     Text(String),
 }
 
@@ -39,14 +40,6 @@ impl<'a> Lexer {
             paren_level: 0,
             lines: vec![],
         })
-    }
-
-    pub(crate) fn from(str: &str) -> Self {
-        Lexer {
-            source: LexerSource::Text(str.to_string()),
-            paren_level: 0,
-            lines: vec![],
-        }
     }
 
     pub(crate) fn scan(&'a mut self) -> Result<(TokenStream<'a>, Vec<String>)> {
@@ -218,9 +211,19 @@ fn scan_indentation<'a>(
 #[cfg(test)]
 mod test_lexer {
     use crate::lexer::tokens::{Token, TokenContext};
-    use crate::lexer::Lexer;
+    use crate::lexer::{Lexer, LexerSource};
     use std::path::PathBuf;
     use walkdir::{DirEntry, WalkDir};
+
+    impl Lexer {
+        pub(crate) fn from(str: &str) -> Self {
+            Lexer {
+                source: LexerSource::Text(str.to_string()),
+                paren_level: 0,
+                lines: vec![],
+            }
+        }
+    }
 
     #[test]
     fn test_scan_indentation() {

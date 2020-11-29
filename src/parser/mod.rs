@@ -162,7 +162,7 @@ pub(crate) fn raise_parser_error<T>(
     let position = if let Some((line, col)) = parser.pos_to_line_col(pos) {
         format!("@ line = {}, col = {}", line, col)
     } else {
-        format!("@ EOF")
+        "@ EOF".to_string()
     };
     if show_token {
         Err(Error::new(OguError::ParserError(msg.to_string()))).context(format!(

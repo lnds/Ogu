@@ -14,12 +14,9 @@ impl<'a> TokenStream<'a> {
         self.tokens.iter()
     }
 
+    #[allow(dead_code)]
     pub(crate) fn len(&'a self) -> usize {
         self.tokens.len()
-    }
-
-    pub(crate) fn is_empty(&'a self) -> bool {
-        self.len() == 0
     }
 
     pub(crate) fn peek(&'a self, pos: usize) -> Option<TokenContext<'a>> {

@@ -16,7 +16,7 @@ impl SymbolTable {
         let public_symbols = Self::extract_public_symbols(module, &module_name)?;
         let private_symbols = Self::extract_private_symbols(&module);
         Ok(Self {
-            module_name: module_name.to_string(),
+            module_name,
             public_symbols,
             private_symbols,
         })
@@ -28,7 +28,7 @@ impl SymbolTable {
 
     fn extract_public_symbols(
         module: &mut Module,
-        module_name: &String,
+        module_name: &str,
     ) -> Result<HashMap<String, Declaration>> {
         let names = module.get_exposed_names();
         let mut result = HashMap::new();

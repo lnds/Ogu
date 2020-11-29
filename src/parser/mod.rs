@@ -5,66 +5,8 @@ use std::path::PathBuf;
 
 use crate::backend::OguError;
 use anyhow::{Context, Error, Result};
-use thiserror::Error;
 
 pub mod ast;
-
-#[derive(Error, Debug)]
-pub enum ParseError {
-    #[error("Expected a Type ID")]
-    TypeIdExpected,
-    #[error("Expecting symbol")]
-    ExpectingSymbol(String),
-    #[error("Expecting '(' after exposing keyword")]
-    ExposingExpectOpenParenthesis,
-    #[error("Expecting identifier")]
-    ExpectingIdentifier,
-    #[error("Expecting module declartion")]
-    ExpectingDeclaration,
-    #[error("Expecting =")]
-    ExpectingAssignation,
-    #[error("Expecting valid arg")]
-    ExpectingValidArg,
-    #[error("Expecting indentation")]
-    ExpectingIndentation,
-    #[error("Expecting end of indentation")]
-    ExpectingIndentationEnd,
-    #[error("Expecting ,")]
-    ExpectingComma,
-    #[error("ExpressionExpected")]
-    ExpressionExpected,
-    #[error("Expecting a valid arg")]
-    InvalidArg,
-    #[error("Expecting a lambda arg")]
-    ExpectingLambdaArg,
-    #[error("Expecting ->")]
-    ExpectingArrow,
-    #[error("Expecting (")]
-    ExpectingLeftParenthesis,
-    #[error("Expecting )")]
-    ExpectingRightParenthesis,
-    #[error("Expecting do")]
-    ExpectingDo,
-    #[error("Expecting let")]
-    ExpectingLet,
-    #[error("Expecting in")]
-    ExpectingIn,
-    #[error("Expecting where")]
-    ExpectingWhere,
-    #[error("EOF unexpected")]
-    EofUnexpected,
-    #[error("Expecting operator")]
-    ExpectingOperator,
-    #[error("Invalid declaration")]
-    InvalidDeclaration,
-    #[error("Expecting type identifier")]
-    ExpectingTypeIdentifier,
-    #[error("Expecting string")]
-    ExpectingString,
-    #[error("Unexpected token")]
-    UnexpectedToken,
-}
-
 pub struct Parser<'a> {
     tokens: TokenStream<'a>,
     large_strings: Vec<String>,

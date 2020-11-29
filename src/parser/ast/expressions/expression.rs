@@ -394,47 +394,23 @@ impl Expression {
         Expression::parse_matches_expr(parser, pos)
     }
 
-    fn parse_matches_expr(parser: &Parser, pos: usize) -> ParseResult {
-        let (left, pos) = Expression::parse_nomatch_expr(parser, pos)?;
-        if !parser.peek(pos, Symbol::Matches) {
-            Ok((left, pos))
-        } else {
-            let pos = parser.skip_nl(pos + 1);
-            let (right, pos) = Expression::parse_nomatch_expr(parser, pos)?;
-            Ok((
-                Expression::MatchesExpr(Box::new(left), Box::new(right)),
-                pos,
-            ))
-        }
-    }
+    parse_left_assoc!(
+        parse_matches_expr,
+        Symbol::Matches,
+        Expression::parse_nomatch_expr
+    );
 
-    fn parse_nomatch_expr(parser: &Parser, pos: usize) -> ParseResult {
-        let (left, pos) = Expression::parse_rematch_expr(parser, pos)?;
-        if !parser.peek(pos, Symbol::NotMatches) {
-            Ok((left, pos))
-        } else {
-            let pos = parser.skip_nl(pos + 1);
-            let (right, pos) = Expression::parse_rematch_expr(parser, pos)?;
-            Ok((
-                Expression::NoMatchesExpr(Box::new(left), Box::new(right)),
-                pos,
-            ))
-        }
-    }
+    parse_left_assoc!(
+        parse_nomatch_expr,
+        Symbol::NotMatches,
+        Expression::parse_rematch_expr
+    );
 
-    fn parse_rematch_expr(parser: &Parser, pos: usize) -> ParseResult {
-        let (left, pos) = Expression::parse_cons_expr(parser, pos)?;
-        if !parser.peek(pos, Symbol::Match) {
-            Ok((left, pos))
-        } else {
-            let pos = parser.skip_nl(pos + 1);
-            let (right, pos) = Expression::parse_cons_expr(parser, pos)?;
-            Ok((
-                Expression::ReMatchExpr(Box::new(left), Box::new(right)),
-                pos,
-            ))
-        }
-    }
+    parse_left_assoc!(
+        parse_rematch_expr,
+        Symbol::Match,
+        Expression::parse_cons_expr
+    );
 
     parse_right_assoc!(parse_cons_expr, Symbol::Cons, Expression::parse_add_expr);
 
@@ -478,15 +454,11 @@ impl Expression {
         Expression::parse_postfix_expr
     );
 
-    fn parse_postfix_expr(parser: &Parser, pos: usize) -> ParseResult {
-        let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
-        if parser.peek(pos, Symbol::Arroba) {
-            let (index, pos) = Expression::parse_logical_expr(parser, pos + 1)?;
-            Ok((Expression::IndexExpr(Box::new(expr), Box::new(index)), pos))
-        } else {
-            Ok((expr, pos))
-        }
-    }
+    parse_left_assoc!(
+        parse_postfix_expr,
+        Symbol::Arroba,
+        Expression::parse_primary_expr
+    );
 
     pub fn parse_primary_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_symbol(pos) {

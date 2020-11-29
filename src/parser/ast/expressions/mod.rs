@@ -272,6 +272,10 @@ pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
         Symbol::DivDiv => Expression::IntDivExpr(left, right),
         Symbol::Mod => Expression::ModExpr(left, right),
         Symbol::ComposeBackward => Expression::ComposeBckExpr(left, right),
+        Symbol::Matches => Expression::MatchesExpr(left, right),
+        Symbol::NotMatches => Expression::NoMatchesExpr(left, right),
+        Symbol::Match => Expression::ReMatchExpr(left, right),
+        Symbol::Arroba => Expression::IndexExpr(left, right),
         sym => {
             println!("TODO {:?}", sym);
             todo!()

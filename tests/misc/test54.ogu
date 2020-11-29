@@ -1,0 +1,3 @@
+test = x |> h |> g |> f
+
+test2 = f <| g <| h <| x

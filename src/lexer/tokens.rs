@@ -192,12 +192,8 @@ pub enum Symbol<'a> {
     Or,
     #[token("<|", priority = 1000)]
     PipeLeft,
-    #[token("|<", priority = 1000)]
-    PipeLeftFirstArg,
     #[token("|>")]
     PipeRight,
-    #[token(">|")]
-    PipeRightFirstArg,
     #[token("+", priority = 1000)]
     Plus,
     #[token("++", priority = 1000)]
@@ -488,7 +484,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::LeftParen));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("< ~ =~ - % * /= || <| |<");
+        let mut lex = Symbol::lexer("< ~ =~ - % * /= || <|");
         assert_eq!(lex.next(), Some(Symbol::LessThan));
         assert_eq!(lex.next(), Some(Symbol::Match));
         assert_eq!(lex.next(), Some(Symbol::Matches));
@@ -498,12 +494,10 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::NotEqual));
         assert_eq!(lex.next(), Some(Symbol::Or));
         assert_eq!(lex.next(), Some(Symbol::PipeLeft));
-        assert_eq!(lex.next(), Some(Symbol::PipeLeftFirstArg));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("|> >| + ++ ^ ? ] } }} )");
+        let mut lex = Symbol::lexer("|> + ++ ^ ? ] } }} )");
         assert_eq!(lex.next(), Some(Symbol::PipeRight));
-        assert_eq!(lex.next(), Some(Symbol::PipeRightFirstArg));
         assert_eq!(lex.next(), Some(Symbol::Plus));
         assert_eq!(lex.next(), Some(Symbol::PlusPlus));
         assert_eq!(lex.next(), Some(Symbol::Pow));

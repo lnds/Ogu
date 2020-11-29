@@ -6,6 +6,6 @@ main  = do
 
     "foo" |> str "bar" |> str "zoo"
 
-    "foo" >| str "bar" >| str "zoo"
+    "foo" |> str "bar" |> str "zoo"
 
-    "foo" >| str "bar"
+    "foo" |> str "bar"

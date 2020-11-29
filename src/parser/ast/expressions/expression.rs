@@ -193,24 +193,12 @@ impl Expression {
     parse_left_assoc!(
         parse_pipe_func_call_expr,
         Symbol::PipeRight,
-        Expression::parse_pipe_first_arg_func_call_expr
-    );
-
-    parse_left_assoc!(
-        parse_pipe_first_arg_func_call_expr,
-        Symbol::PipeRightFirstArg,
         Expression::parse_backpipe_func_call_expr
     );
 
-    parse_left_assoc!(
+    parse_right_assoc!(
         parse_backpipe_func_call_expr,
         Symbol::PipeLeft,
-        Expression::parse_backpipe_first_arg_func_call_expr
-    );
-
-    parse_left_assoc!(
-        parse_backpipe_first_arg_func_call_expr,
-        Symbol::PipeLeftFirstArg,
         Expression::parse_control_expr
     );
 

@@ -216,9 +216,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Until
                 | Symbol::PipeLeft
                 | Symbol::Perform
-                | Symbol::PipeLeftFirstArg
                 | Symbol::PipeRight
-                | Symbol::PipeRightFirstArg
                 | Symbol::ComposeForward
                 | Symbol::ComposeBackward
                 | Symbol::Pow
@@ -257,10 +255,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
 pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
     let LeftAssocExpr(sym, left, right) = la_expr;
     match sym {
-        Symbol::PipeRight => Expression::PipeFuncCall(left, right),
-        Symbol::PipeRightFirstArg => Expression::PipeFirstArgFuncCall(left, right),
-        Symbol::PipeLeft => Expression::PipeBackFuncCall(left, right),
-        Symbol::PipeLeftFirstArg => Expression::PipeBackFirstArgFuncCall(left, right),
+        Symbol::PipeRight => Expression::FuncCallExpr(right, left),
         Symbol::Or => Expression::OrExpr(left, right),
         Symbol::And => Expression::AndExpr(left, right),
         Symbol::LessThan => Expression::LtExpr(left, right),
@@ -291,6 +286,7 @@ pub fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expression> {
         Symbol::Pow => Ok(Expression::PowExpr(left, right)),
         Symbol::Dollar => Ok(Expression::FuncCallWithDollar(left, right)),
         Symbol::ComposeForward => Ok(Expression::ComposeFwdExpr(left, right)),
+        Symbol::PipeLeft => Ok(Expression::FuncCallExpr(left, right)),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::UnexpectedToken,
         )))

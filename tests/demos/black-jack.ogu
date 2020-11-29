@@ -129,7 +129,7 @@ solicitar-apuesta pozo apuesta-minima =
         obtener-apuesta $ read-int! msj
 
     msj = f"\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): "
-    ask! m = prompt! m >| to-int -1
+    ask! m = prompt! m |> to-int -1
     read-int! m = for value = ask! m while value < 0 loop  repeat let value = ask! m return value
 
 -- Programa principal

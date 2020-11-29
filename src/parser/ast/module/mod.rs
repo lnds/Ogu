@@ -52,17 +52,8 @@ impl Module {
         }
     }
 
-    fn get_decls(&mut self) -> Vec<Declaration> {
+    pub(crate) fn get_decls(&mut self) -> Vec<Declaration> {
         self.body.get_decls()
-    }
-
-    pub(crate) fn get_decl_by_name(&mut self, name: &str) -> Option<Declaration> {
-        for decl in self.body.get_decls().iter() {
-            if decl.get_name() == *name {
-                return Some(decl.clone());
-            }
-        }
-        None
     }
 }
 

@@ -1,20 +1,22 @@
+use crate::backend::OguError;
 use crate::parser::ast::module::body::Declaration;
 use crate::parser::ast::module::Module;
-use crate::symbols::raise_symbol_table_error;
-use anyhow::Result;
-use std::collections::HashMap;
+use anyhow::{Context, Error, Result};
+use std::collections::{HashMap, HashSet};
+use std::iter::FromIterator;
+
+type SymHashTable = HashMap<String, Declaration>;
 
 pub(crate) struct SymbolTable {
     module_name: String,
-    public_symbols: HashMap<String, Declaration>,
-    private_symbols: HashMap<String, Declaration>,
+    public_symbols: SymHashTable,
+    private_symbols: SymHashTable,
 }
 
 impl SymbolTable {
     pub fn new(module: &mut Module) -> Result<Self> {
         let module_name = Self::extract_module_name(&module);
-        let public_symbols = Self::extract_public_symbols(module, &module_name)?;
-        let private_symbols = Self::extract_private_symbols(&module);
+        let (public_symbols, private_symbols) = Self::extract_symbols(module, &module_name)?;
         Ok(Self {
             module_name,
             public_symbols,
@@ -26,28 +28,40 @@ impl SymbolTable {
         module.get_module_name()
     }
 
-    fn extract_public_symbols(
+    fn extract_symbols(
         module: &mut Module,
         module_name: &str,
-    ) -> Result<HashMap<String, Declaration>> {
-        let names = module.get_exposed_names();
-        let mut result = HashMap::new();
-        for name in names.iter() {
-            match module.get_decl_by_name(name) {
-                None => {
-                    return raise_symbol_table_error(
-                        "name not found in module",
-                        name.to_string(),
-                        module_name.to_string(),
-                    )
-                }
-                Some(decl) => result.insert(name.to_string(), decl.clone()),
-            };
+    ) -> Result<(SymHashTable, SymHashTable)> {
+        let exposed_names: HashSet<String> =
+            HashSet::from_iter(module.get_exposed_names().iter().cloned());
+        let mut pub_decls = HashMap::new();
+        let mut prv_decls = HashMap::new();
+        for decl in module.get_decls().iter() {
+            let name = decl.get_name();
+            if exposed_names.contains(&name) {
+                pub_decls.insert(name, decl.clone());
+            } else {
+                prv_decls.insert(name, decl.clone());
+            }
         }
-        Ok(result)
-    }
-
-    fn extract_private_symbols(_module: &Module) -> HashMap<String, Declaration> {
-        todo!()
+        let pub_names_found: HashSet<String> =
+            HashSet::from_iter(pub_decls.keys().into_iter().cloned());
+        let diff: HashSet<String> = exposed_names
+            .difference(&pub_names_found)
+            .cloned()
+            .collect();
+        if diff.is_empty() {
+            Ok((pub_decls, prv_decls))
+        } else {
+            let not_found = diff.iter().cloned().collect::<Vec<String>>().join(",");
+            Err(Error::new(OguError::SymbolTableError(format!(
+                "Exposed identifiers not found: {}",
+                not_found
+            ))))
+            .context(format!(
+                "Exposed identifiers not found: {} in module {}",
+                not_found, module_name
+            ))
+        }
     }
 }

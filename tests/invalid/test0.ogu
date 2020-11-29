@@ -1,9 +1,3 @@
--- errores semánticos
+module A exposing (f, g)
 
-alias ok = M1.M2.ok ; ok
-
-alias bad = TID.TID.BAD ;
-
-alias OK = M1.M2.OK
-
-alias BAD = M1.M2.bad
+f = 1

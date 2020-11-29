@@ -1,0 +1,5 @@
+
+test = ((f >> g >> h)  x) -- should be (f >> g >> h) x but probably we have a bug
+
+
+

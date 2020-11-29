@@ -14,4 +14,4 @@ draw-fib! turtle depth =
        move-back! turtle 30
 
 main () =
-    create-turtle! 400 400 !> pen-up! !> go-to! 0 -100 !> pen-down!  !> draw-fib! 10 !> show!
+    create-turtle! 400 400 |> pen-up! |> go-to! 0 -100 |> pen-down!  |> draw-fib! 10 |> show!

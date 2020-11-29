@@ -105,8 +105,6 @@ pub enum Expression {
     ConsExpr(Box<Expression>, Box<Expression>),
     PowExpr(Box<Expression>, Box<Expression>),
     IndexExpr(Box<Expression>, Box<Expression>),
-    DotoCall(Box<Expression>, Box<Expression>),
-    DotoBackCall(Box<Expression>, Box<Expression>),
     UnaryCons(Option<Box<Expression>>),
     UnaryAdd(Option<Box<Expression>>),
     UnaryConcat(Option<Box<Expression>>),
@@ -213,18 +211,6 @@ impl Expression {
     parse_left_assoc!(
         parse_backpipe_first_arg_func_call_expr,
         Symbol::PipeLeftFirstArg,
-        Expression::parse_doto_func_call_expr
-    );
-
-    parse_left_assoc!(
-        parse_doto_func_call_expr,
-        Symbol::Doto,
-        Expression::parse_backdoto_func_call_expr
-    );
-
-    parse_left_assoc!(
-        parse_backdoto_func_call_expr,
-        Symbol::DotoBack,
         Expression::parse_control_expr
     );
 
@@ -497,7 +483,7 @@ impl Expression {
         Expression::parse_compose_fwd_expr
     );
 
-    parse_left_assoc!(
+    parse_right_assoc!(
         parse_compose_fwd_expr,
         Symbol::ComposeForward,
         Expression::parse_compose_bck_expr
@@ -597,9 +583,9 @@ impl Expression {
                     pos = consume_symbol(parser, pos, Symbol::RightParen)?;
                     Ok((Expression::TupleExpr(exprs), pos))
                 } else {
-                    let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                    let (arg, pos) = Expression::parse_prim_expr(parser, pos)?;
                     let pos = consume_symbol(parser, pos, Symbol::RightParen)?;
-                    Ok((expr, pos))
+                    Ok((Expression::FuncCallExpr(Box::new(expr), Box::new(arg)), pos))
                 }
             }
             None => Err(Error::new(OguError::ParserError(

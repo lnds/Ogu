@@ -148,10 +148,6 @@ pub enum Symbol<'a> {
     DotDot,
     #[token(".", priority = 1000)]
     Dot,
-    #[token("!>", priority = 1000)]
-    Doto,
-    #[token("<!", priority = 1000)]
-    DotoBack,
     #[token("=>", priority = 1000)]
     FatArrow,
     #[token("==", priority = 1000)]
@@ -466,7 +462,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::ComposeForward));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("<< :: / // $ ... ..< .. . !>");
+        let mut lex = Symbol::lexer("<< :: / // $ ... ..< .. . ");
         assert_eq!(lex.next(), Some(Symbol::ComposeBackward));
         assert_eq!(lex.next(), Some(Symbol::Cons));
         assert_eq!(lex.next(), Some(Symbol::Div));
@@ -476,11 +472,9 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Symbol::DotDotLess));
         assert_eq!(lex.next(), Some(Symbol::DotDot));
         assert_eq!(lex.next(), Some(Symbol::Dot));
-        assert_eq!(lex.next(), Some(Symbol::Doto));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Symbol::lexer("<! == >= > | \\ <= [ { {{ #{ (");
-        assert_eq!(lex.next(), Some(Symbol::DotoBack));
+        let mut lex = Symbol::lexer("== >= > | \\ <= [ { {{ #{ (");
         assert_eq!(lex.next(), Some(Symbol::Equal));
         assert_eq!(lex.next(), Some(Symbol::GreaterOrEqual));
         assert_eq!(lex.next(), Some(Symbol::Greater));

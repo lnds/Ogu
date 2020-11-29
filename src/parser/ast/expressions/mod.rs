@@ -192,8 +192,6 @@ pub fn is_func_call_end_symbol(symbol: Option<Symbol>) -> bool {
                 | Symbol::Dot
                 | Symbol::DotDot
                 | Symbol::DotDotDot
-                | Symbol::Doto
-                | Symbol::DotoBack
                 | Symbol::Cons
                 | Symbol::FatArrow
                 | Symbol::Let
@@ -262,8 +260,6 @@ pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
         Symbol::PipeRightFirstArg => Expression::PipeFirstArgFuncCall(left, right),
         Symbol::PipeLeft => Expression::PipeBackFuncCall(left, right),
         Symbol::PipeLeftFirstArg => Expression::PipeBackFirstArgFuncCall(left, right),
-        Symbol::Doto => Expression::DotoCall(left, right),
-        Symbol::DotoBack => Expression::DotoBackCall(left, right),
         Symbol::Or => Expression::OrExpr(left, right),
         Symbol::And => Expression::AndExpr(left, right),
         Symbol::LessThan => Expression::LtExpr(left, right),
@@ -279,7 +275,6 @@ pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
         Symbol::Div => Expression::DivExpr(left, right),
         Symbol::DivDiv => Expression::IntDivExpr(left, right),
         Symbol::Mod => Expression::ModExpr(left, right),
-        Symbol::ComposeForward => Expression::ComposeFwdExpr(left, right),
         Symbol::ComposeBackward => Expression::ComposeBckExpr(left, right),
         sym => {
             println!("TODO {:?}", sym);
@@ -294,6 +289,7 @@ pub fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expression> {
         Symbol::Cons => Ok(Expression::ConsExpr(left, right)),
         Symbol::Pow => Ok(Expression::PowExpr(left, right)),
         Symbol::Dollar => Ok(Expression::FuncCallWithDollar(left, right)),
+        Symbol::ComposeForward => Ok(Expression::ComposeFwdExpr(left, right)),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::UnexpectedToken,
         )))

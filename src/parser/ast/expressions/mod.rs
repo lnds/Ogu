@@ -284,7 +284,7 @@ pub fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expression> {
     match sym {
         Symbol::Cons => Ok(Expression::ConsExpr(left, right)),
         Symbol::Pow => Ok(Expression::PowExpr(left, right)),
-        Symbol::Dollar => Ok(Expression::FuncCallWithDollar(left, right)),
+        Symbol::Dollar => Ok(Expression::FuncCallExpr(left, right)),
         Symbol::ComposeForward => Ok(Expression::ComposeFwdExpr(left, right)),
         Symbol::PipeLeft => Ok(Expression::FuncCallExpr(left, right)),
         sym => Err(Error::new(OguError::ParserError(

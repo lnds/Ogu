@@ -92,11 +92,6 @@ pub enum Expression {
     SetExpr(Vec<Expression>),
     RecordExpr(Vec<(String, Expression)>),
     TypedFuncCall(String, Vec<Expression>, Vec<Expression>),
-    PipeFuncCall(Box<Expression>, Box<Expression>),
-    PipeFirstArgFuncCall(Box<Expression>, Box<Expression>),
-    PipeBackFuncCall(Box<Expression>, Box<Expression>),
-    PipeBackFirstArgFuncCall(Box<Expression>, Box<Expression>),
-    FuncCallWithDollar(Box<Expression>, Box<Expression>),
     FuncCallExpr(Box<Expression>, Box<Expression>),
     LambdaExpr(Vec<LambdaArg>, Box<Expression>),
     MatchesExpr(Box<Expression>, Box<Expression>),
@@ -857,10 +852,7 @@ impl Expression {
                 if parser.peek(pos, Symbol::Dollar) {
                     let pos = consume_symbol(parser, pos, Symbol::Dollar)?;
                     let (arg, pos) = Expression::parse(parser, pos)?;
-                    Ok((
-                        Expression::FuncCallWithDollar(Box::new(expr), Box::new(arg)),
-                        pos,
-                    ))
+                    Ok((Expression::FuncCallExpr(Box::new(expr), Box::new(arg)), pos))
                 } else {
                     Ok((expr, pos))
                 }

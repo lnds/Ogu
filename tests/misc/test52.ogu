@@ -1,5 +1,5 @@
 
 
-p = a $ b $ c + d $ e + f
+p = sort "julie" ++ "moronuki"
 
-q = a $ b $ c + d  e + f
+q = sort $ "julie" ++ "moronuki"

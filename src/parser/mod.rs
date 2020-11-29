@@ -1,5 +1,5 @@
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::{LineNumber, Token, TokenContext};
+use crate::lexer::tokens::{LineNumber, LineWidth, Token, TokenContext};
 use crate::parser::ast::module::Module;
 use std::path::PathBuf;
 
@@ -93,19 +93,19 @@ impl<'a> Parser<'a> {
         self.tokens.peek(pos)
     }
 
-    pub fn get_symbol(&self, pos: usize) -> Option<Token> {
+    pub fn get_token(&self, pos: usize) -> Option<Token> {
         self.tokens.peek(pos).map(|t| t.token)
     }
 
     pub fn skip_nl(&self, pos: usize) -> usize {
-        match self.get_symbol(pos) {
+        match self.get_token(pos) {
             Some(Token::NewLine) => self.skip_nl(pos + 1),
             _ => pos,
         }
     }
 
-    pub fn pos_to_line(&self, pos: usize) -> Option<LineNumber> {
-        self.tokens.peek(pos).map(|t| t.line)
+    pub fn pos_to_line_col(&self, pos: usize) -> Option<(LineNumber, LineWidth)> {
+        self.tokens.peek(pos).map(|t| (t.line, t.col))
     }
 
     pub fn get_large_string(&self, index: usize) -> Option<String> {
@@ -123,10 +123,10 @@ pub fn consume_symbol(parser: &Parser, pos: usize, symbol: Token) -> Result<usiz
             ParseError::ExpectingSymbol(symbol.to_string()),
         )))
         .context(format!(
-            "expecting: {:?} @ {}, found = {:?}",
+            "expecting: {:?} @ {:?}, found = {:?}",
             symbol,
-            parser.pos_to_line(pos).unwrap_or(0),
-            parser.get_symbol(pos)
+            parser.pos_to_line_col(pos),
+            parser.get_token(pos)
         ))
     } else {
         Ok(pos + 1)
@@ -168,9 +168,8 @@ pub fn parse_opt_where_or_dedent(parser: &Parser, pos: usize, in_indent: bool) -
                 ParseError::ExpectingWhere,
             )))
             .context(format!(
-                "Expecting where @{} ({})",
-                parser.pos_to_line(pos).unwrap_or(0),
-                pos
+                "Expecting where @{:?}",
+                parser.pos_to_line_col(pos)
             ));
         }
     }
@@ -194,29 +193,29 @@ pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
 }
 
 pub fn consume_string(parser: &Parser, pos: usize) -> Result<(String, usize)> {
-    match parser.get_symbol(pos) {
+    match parser.get_token(pos) {
         Some(Token::String(s)) => Ok((s.to_string(), pos + 1)),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::ExpectingString,
         )))
         .context(format!(
-            "Expecting string, but found: {:?} @{}",
+            "Expecting string, but found: {:?} @{:?}",
             sym,
-            parser.pos_to_line(pos).unwrap_or(0)
+            parser.pos_to_line_col(pos)
         )),
     }
 }
 
 pub fn consume_type_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
-    match parser.get_symbol(pos) {
+    match parser.get_token(pos) {
         Some(Token::TypeId(type_id)) => Ok((type_id.to_string(), pos + 1)),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::ExpectingTypeIdentifier,
         )))
         .context(format!(
-            "Expecting type id found: {:?} @{}",
+            "Expecting type id found: {:?} @{:?}",
             sym,
-            parser.pos_to_line(pos).unwrap_or(0)
+            parser.pos_to_line_col(pos)
         )),
     }
 }
@@ -236,15 +235,15 @@ pub fn consume_qualified_type_id(
     Ok((t_id, names, pos))
 }
 pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
-    match parser.get_symbol(pos) {
+    match parser.get_token(pos) {
         Some(Token::Id(id)) => Ok((id.to_string(), pos + 1)),
         sym => Err(Error::new(OguError::ParserError(
             ParseError::ExpectingIdentifier,
         )))
         .context(format!(
-            "Expecting id found: {:?} @{}",
+            "Expecting id found: {:?} @{:?}",
             sym,
-            parser.pos_to_line(pos).unwrap_or(0)
+            parser.pos_to_line_col(pos)
         )),
     }
 }

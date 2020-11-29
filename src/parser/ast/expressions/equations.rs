@@ -22,7 +22,7 @@ pub enum Equation {
 
 impl Equation {
     pub fn parse(parser: &Parser, pos: usize, inner: bool) -> Result<(Equation, usize)> {
-        if let Some(Token::Id(id)) = parser.get_symbol(pos) {
+        if let Some(Token::Id(id)) = parser.get_token(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
         } else if inner {
             let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
@@ -36,9 +36,9 @@ impl Equation {
                 ParseError::ExpectingIdentifier,
             )))
             .context(format!(
-                "Expecting id, but found: {:?} at {}",
-                parser.get_symbol(pos),
-                parser.pos_to_line(pos).unwrap_or(0)
+                "Expecting id, but found: {:?} at {:?}",
+                parser.get_token(pos),
+                parser.pos_to_line_col(pos)
             ))
         }
     }
@@ -55,7 +55,7 @@ impl Equation {
     }
 
     fn parse_value_assign(parser: &Parser, pos: usize, symbol: Token) -> Result<(Equation, usize)> {
-        if let Some(Token::Id(id)) = parser.get_symbol(pos) {
+        if let Some(Token::Id(id)) = parser.get_token(pos) {
             let pos = consume_symbol(parser, pos + 1, symbol)?;
             Equation::parse_val(id.to_string(), parser, pos)
         } else {
@@ -72,7 +72,7 @@ impl Equation {
         symbol1: Token,
         symbol2: Token,
     ) -> Result<(Equation, usize)> {
-        if let Some(Token::Id(id)) = parser.get_symbol(pos) {
+        if let Some(Token::Id(id)) = parser.get_token(pos) {
             let pos = pos + 1;
             let pos = if parser.peek(pos, symbol1) {
                 consume_symbol(parser, pos, symbol1)?
@@ -96,10 +96,9 @@ impl Equation {
                 ParseError::ExpectingIdentifier,
             )))
             .context(format!(
-                "Expecting identifier but found: {:?} @{};{}",
-                parser.get_symbol(pos),
-                parser.pos_to_line(pos).unwrap_or(0),
-                pos
+                "Expecting identifier but found: {:?} @{:?}",
+                parser.get_token(pos),
+                parser.pos_to_line_col(pos)
             ))
         }
     }

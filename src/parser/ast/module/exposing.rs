@@ -38,7 +38,7 @@ impl<'a> Exposing {
         let mut ids = vec![];
         let mut pos = pos;
         loop {
-            match parser.get_symbol(pos) {
+            match parser.get_token(pos) {
                 Some(Token::Id(s)) => {
                     ids.push(s.to_string());
                     pos += 1;

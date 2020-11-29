@@ -29,9 +29,8 @@ impl Extern {
                 decls.push(decl);
                 pos = parser.skip_nl(new_pos);
             } else {
-                return Err(Error::new(OguError::ParserError(ParseError::EofUnexpected))).context(
-                    format!("unexpected eof @{}", parser.pos_to_line(pos).unwrap_or(0)),
-                );
+                return Err(Error::new(OguError::ParserError(ParseError::EofUnexpected)))
+                    .context(format!("unexpected eof @{:?}", parser.pos_to_line_col(pos)));
             }
         }
         let pos = consume_symbol(parser, pos, Token::Dedent)?;

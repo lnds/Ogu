@@ -177,7 +177,7 @@ fn scan_line<'a>(
                 *paren_level -= 1;
             }
         }
-        line_tokens.push((tok, span.start));
+        line_tokens.push((tok, span.start + 1));
     }
     if *paren_level == 0 && !in_string {
         line_tokens.push((NewLine, text.len()))

@@ -27,7 +27,7 @@ impl Arg {
     }
 
     fn parse_arg(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
-        match parser.get_symbol(pos) {
+        match parser.get_token(pos) {
             None => Ok(None),
             Some(Token::LeftParen) => Arg::parse_tuple(parser, pos),
             Some(Token::Assign) => Ok(None),
@@ -66,8 +66,8 @@ impl Arg {
                     ParseError::ExpectingComma,
                 )))
                 .context(format!(
-                    "expecting comma at {}",
-                    parser.pos_to_line(pos).unwrap_or(0)
+                    "expecting comma at {:?}",
+                    parser.pos_to_line_col(pos)
                 ));
             }
             match Arg::parse_arg(parser, pos + 1)? {
@@ -77,7 +77,7 @@ impl Arg {
                 }
                 None => {
                     return Err(Error::new(OguError::ParserError(ParseError::InvalidArg))).context(
-                        format!("unexpected token @{}", parser.pos_to_line(pos).unwrap_or(0)),
+                        format!("unexpected token @{:?}", parser.pos_to_line_col(pos)),
                     );
                 }
             }

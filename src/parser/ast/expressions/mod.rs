@@ -97,7 +97,7 @@ pub fn consume_exprs_sep_by(
 pub fn consume_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usize)> {
     let mut args = vec![];
     let mut pos = pos;
-    while !is_func_call_end_symbol(parser.get_symbol(pos)) {
+    while !is_func_call_end_symbol(parser.get_token(pos)) {
         let (expr, new_pos) = Expression::parse_control_expr(parser, pos)?;
         pos = new_pos;
         args.push(expr);
@@ -122,17 +122,16 @@ pub fn consume_ids_sep_by(
 }
 
 pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
-    if let Some(Token::Id(id)) = parser.get_symbol(pos) {
+    if let Some(Token::Id(id)) = parser.get_token(pos) {
         Ok((id.to_string(), pos + 1))
     } else {
         Err(Error::new(OguError::ParserError(
             ParseError::ExpectingIdentifier,
         )))
         .context(format!(
-            "expecting id, but found: {:?} at {} ({})",
-            parser.get_symbol(pos),
-            parser.pos_to_line(pos).unwrap_or(0),
-            pos
+            "expecting id, but found: {:?} at {:?}",
+            parser.get_token(pos),
+            parser.pos_to_line_col(pos)
         ))
     }
 }

@@ -110,7 +110,7 @@ impl Body {
 
     pub fn parse_decl(parser: &Parser, pos: usize) -> DeclParseResult {
         let pos = parser.skip_nl(pos);
-        match parser.get_symbol(pos) {
+        match parser.get_token(pos) {
             None => Ok(None),
             Some(Token::Macro) => {
                 let pos = consume_symbol(parser, pos, Token::Macro)?;
@@ -121,9 +121,8 @@ impl Body {
                         ParseError::ExpectingDeclaration,
                     )))
                     .context(format!(
-                        "Expecting macro declaration at {}, @{}",
-                        parser.pos_to_line(pos).unwrap_or(0),
-                        pos
+                        "Expecting macro declaration at {:?}",
+                        parser.pos_to_line_col(pos)
                     ))
                 }
             }
@@ -149,9 +148,8 @@ impl Body {
                 ParseError::ExpectingDeclaration,
             )))
             .context(format!(
-                "Expecting declaration at {}, @{}, found: {:?}",
-                parser.pos_to_line(pos).unwrap_or(0),
-                pos,
+                "Expecting declaration at {:?} found: {:?}",
+                parser.pos_to_line_col(pos),
                 sym
             )),
         }
@@ -208,8 +206,8 @@ impl Declaration {
                 ParseError::InvalidDeclaration,
             )))
             .context(format!(
-                "Invalid declaration @{}",
-                parser.pos_to_line(pos).unwrap_or(0)
+                "Invalid declaration @{:?}",
+                parser.pos_to_line_col(pos)
             )),
         }
     }
@@ -477,7 +475,7 @@ impl Declaration {
     }
 
     fn parse_func_type(parser: &Parser, pos: usize) -> Result<(FuncType, usize)> {
-        match parser.get_symbol(pos) {
+        match parser.get_token(pos) {
             Some(Token::TypeId(_)) => {
                 let (type_id, pos) = consume_type_id(parser, pos)?;
                 let mut params = vec![];
@@ -540,7 +538,7 @@ impl Declaration {
 
 impl Declaration {
     fn parse_base_type(parser: &Parser, pos: usize) -> Result<(BaseType, usize)> {
-        match parser.get_symbol(pos) {
+        match parser.get_token(pos) {
             Some(Token::LeftParen) => Declaration::parse_tuple(parser, pos),
             Some(Token::LeftCurly) => Declaration::parse_simple_record(parser, pos),
             Some(Token::LeftBracket) => Declaration::parse_array(parser, pos),
@@ -608,7 +606,7 @@ fn consume_alg_type_param(
     parser: &Parser,
     pos: usize,
 ) -> Result<Option<(AlgebraicElement, usize)>> {
-    match parser.get_symbol(pos) {
+    match parser.get_token(pos) {
         Some(Token::TypeId(type_id)) => {
             Ok(Some((AlgebraicElement::Type(type_id.to_string()), pos + 1)))
         }
@@ -626,9 +624,9 @@ fn consume_alg_type_param(
             ParseError::ExpectingTypeIdentifier,
         )))
         .context(format!(
-            "Expecting a type or a param, found: {:?} @ {}",
+            "Expecting a type or a param, found: {:?} @ {:?}",
             sym,
-            parser.pos_to_line(pos).unwrap_or(0)
+            parser.pos_to_line_col(pos)
         )),
     }
 }

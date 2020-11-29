@@ -117,25 +117,17 @@ impl<'a> Parser<'a> {
     }
 }
 
-pub fn consume_symbol(parser: &Parser, pos: usize, symbol: Token) -> Result<usize> {
-    if !parser.peek(pos, symbol) {
-        Err(Error::new(OguError::ParserError(
-            ParseError::ExpectingSymbol(symbol.to_string()),
-        )))
-        .context(format!(
-            "expecting: {:?} @ {:?}, found = {:?}",
-            symbol,
-            parser.pos_to_line_col(pos),
-            parser.get_token(pos)
-        ))
+pub fn consume_symbol(parser: &Parser, pos: usize, token: Token) -> Result<usize> {
+    if !parser.peek(pos, token) {
+        raise_parser_error(&format!("Expecting {:?}", token), parser, pos, true)
     } else {
         Ok(pos + 1)
     }
 }
 
-pub fn consume_opt_symbol(parser: &Parser, pos: usize, symbol: Token) -> Result<usize> {
-    if parser.peek(pos, symbol) {
-        consume_symbol(parser, pos, symbol)
+pub fn consume_opt_symbol(parser: &Parser, pos: usize, token: Token) -> Result<usize> {
+    if parser.peek(pos, token) {
+        consume_symbol(parser, pos, token)
     } else {
         Ok(pos)
     }
@@ -164,13 +156,7 @@ pub fn parse_opt_where_or_dedent(parser: &Parser, pos: usize, in_indent: bool) -
         if parser.peek(pos, Token::Dedent) {
             pos = consume_symbol(parser, pos, Token::Dedent)?;
         } else if !parser.peek(pos, Token::Where) {
-            return Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingWhere,
-            )))
-            .context(format!(
-                "Expecting where @{:?}",
-                parser.pos_to_line_col(pos)
-            ));
+            return raise_parser_error("Expecting 'where'", parser, pos, true);
         }
     }
     Ok(pos)
@@ -195,28 +181,14 @@ pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
 pub fn consume_string(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_token(pos) {
         Some(Token::String(s)) => Ok((s.to_string(), pos + 1)),
-        sym => Err(Error::new(OguError::ParserError(
-            ParseError::ExpectingString,
-        )))
-        .context(format!(
-            "Expecting string, but found: {:?} @{:?}",
-            sym,
-            parser.pos_to_line_col(pos)
-        )),
+        _ => raise_parser_error("Expecting an string", parser, pos, true),
     }
 }
 
 pub fn consume_type_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_token(pos) {
         Some(Token::TypeId(type_id)) => Ok((type_id.to_string(), pos + 1)),
-        sym => Err(Error::new(OguError::ParserError(
-            ParseError::ExpectingTypeIdentifier,
-        )))
-        .context(format!(
-            "Expecting type id found: {:?} @{:?}",
-            sym,
-            parser.pos_to_line_col(pos)
-        )),
+        _ => raise_parser_error("expecting a type identifier", parser, pos, true),
     }
 }
 
@@ -237,13 +209,30 @@ pub fn consume_qualified_type_id(
 pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_token(pos) {
         Some(Token::Id(id)) => Ok((id.to_string(), pos + 1)),
-        sym => Err(Error::new(OguError::ParserError(
-            ParseError::ExpectingIdentifier,
-        )))
-        .context(format!(
-            "Expecting id found: {:?} @{:?}",
-            sym,
-            parser.pos_to_line_col(pos)
-        )),
+        _ => raise_parser_error("Expecting identifier", parser, pos, true),
+    }
+}
+
+pub fn raise_parser_error<T>(
+    msg: &str,
+    parser: &Parser,
+    pos: usize,
+    show_token: bool,
+) -> Result<T> {
+    let position = if let Some((line, col)) = parser.pos_to_line_col(pos) {
+        format!("@ line = {}, col = {}", line, col)
+    } else {
+        format!("@ EOF")
+    };
+    if show_token {
+        Err(Error::new(OguError::ParserError(msg.to_string()))).context(format!(
+            "Error {} {}, token found = {}",
+            msg,
+            position,
+            parser.get_token(pos).unwrap_or(Token::Error)
+        ))
+    } else {
+        Err(Error::new(OguError::ParserError(msg.to_string())))
+            .context(format!("Error: {} {}", msg, position))
     }
 }

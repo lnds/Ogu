@@ -4,11 +4,10 @@ pub mod args;
 pub mod equations;
 pub mod guards;
 
-use crate::backend::OguError;
 use crate::lexer::tokens::Token;
 use crate::parser::ast::expressions::expression::{Expression, ParseResult};
-use crate::parser::{ParseError, Parser};
-use anyhow::{Context, Error, Result};
+use crate::parser::{raise_parser_error, Parser};
+use anyhow::Result;
 
 pub struct LeftAssocExpr<'a>(Token<'a>, Box<Expression>, Box<Expression>);
 
@@ -125,14 +124,7 @@ pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     if let Some(Token::Id(id)) = parser.get_token(pos) {
         Ok((id.to_string(), pos + 1))
     } else {
-        Err(Error::new(OguError::ParserError(
-            ParseError::ExpectingIdentifier,
-        )))
-        .context(format!(
-            "expecting id, but found: {:?} at {:?}",
-            parser.get_token(pos),
-            parser.pos_to_line_col(pos)
-        ))
+        raise_parser_error("Expecting identifier", parser, pos, true)
     }
 }
 
@@ -290,9 +282,6 @@ pub fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expression> {
         Token::Dollar => Ok(Expression::FuncCallExpr(left, right)),
         Token::ComposeForward => Ok(Expression::ComposeFwdExpr(left, right)),
         Token::PipeLeft => Ok(Expression::FuncCallExpr(left, right)),
-        sym => Err(Error::new(OguError::ParserError(
-            ParseError::UnexpectedToken,
-        )))
-        .context(format!("expecting valid expression, found: {:?}", sym)),
+        _ => todo!(),
     }
 }

@@ -1,14 +1,13 @@
-use crate::backend::OguError;
 use crate::lexer::tokens::Token;
 use crate::parser::ast::expressions::args::{Arg, VecArg};
 use crate::parser::ast::expressions::consume_ids_sep_by;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::{parse_guards, Guard};
 use crate::parser::{
-    consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent, ParseError,
-    Parser,
+    consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent,
+    raise_parser_error, Parser,
 };
-use anyhow::{Context, Error, Result};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub enum Equation {
@@ -32,14 +31,7 @@ impl Equation {
                 Equation::parse_lval_guards(expr, parser, pos)
             }
         } else {
-            Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingIdentifier,
-            )))
-            .context(format!(
-                "Expecting id, but found: {:?} at {:?}",
-                parser.get_token(pos),
-                parser.pos_to_line_col(pos)
-            ))
+            raise_parser_error("Expecting id", parser, pos, true)
         }
     }
 
@@ -92,14 +84,7 @@ impl Equation {
             let (expr, pos) = Expression::parse(parser, pos)?;
             Ok((Equation::TupleValue(ids, expr), pos))
         } else {
-            Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingIdentifier,
-            )))
-            .context(format!(
-                "Expecting identifier but found: {:?} @{:?}",
-                parser.get_token(pos),
-                parser.pos_to_line_col(pos)
-            ))
+            raise_parser_error("Expecting identifier", parser, pos, true)
         }
     }
 

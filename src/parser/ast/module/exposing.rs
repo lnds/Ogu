@@ -1,7 +1,6 @@
-use crate::backend::OguError;
 use crate::lexer::tokens::Token;
-use crate::parser::{consume_symbol, ParseError, Parser};
-use anyhow::{Context, Error, Result};
+use crate::parser::{consume_symbol, raise_parser_error, Parser};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub enum Exposing {
@@ -26,10 +25,7 @@ impl<'a> Exposing {
             Exposing::exposing_ids(parser, pos)?
         };
         if !parser.peek(pos, Token::RightParen) {
-            return Err(Error::new(OguError::ParserError(
-                ParseError::ExposingExpectOpenParenthesis,
-            )))
-            .context("expecting )");
+            return raise_parser_error("expecting ')' in exposing clause", parser, pos, false);
         }
         Ok((Some(expo), pos + 1))
     }
@@ -47,11 +43,13 @@ impl<'a> Exposing {
                     ids.push(s.to_string());
                     pos += 1;
                 }
-                sym => {
-                    return Err(Error::new(OguError::ParserError(
-                        ParseError::ExpectingIdentifier,
-                    )))
-                    .context(format!("Expecting identifier but found: {:?}", sym))
+                _ => {
+                    return raise_parser_error(
+                        "expecting identifier in list of exposing",
+                        parser,
+                        pos,
+                        true,
+                    );
                 }
             };
             if !parser.peek(pos, Token::Comma) {

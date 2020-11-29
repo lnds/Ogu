@@ -1,8 +1,7 @@
-use crate::backend::OguError;
 use crate::lexer::tokens::Token;
 use crate::parser::ast::module::body::{Body, Declaration};
-use crate::parser::{consume_string, consume_symbol, ParseError, Parser};
-use anyhow::{Context, Error, Result};
+use crate::parser::{consume_string, consume_symbol, raise_parser_error, Parser};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub struct Extern(String, Vec<Declaration>);
@@ -29,8 +28,12 @@ impl Extern {
                 decls.push(decl);
                 pos = parser.skip_nl(new_pos);
             } else {
-                return Err(Error::new(OguError::ParserError(ParseError::EofUnexpected)))
-                    .context(format!("unexpected eof @{:?}", parser.pos_to_line_col(pos)));
+                return raise_parser_error(
+                    "unexpected eof parsing extern clause",
+                    parser,
+                    pos,
+                    false,
+                );
             }
         }
         let pos = consume_symbol(parser, pos, Token::Dedent)?;

@@ -1,8 +1,7 @@
-use crate::backend::OguError;
 use crate::lexer::tokens::Token;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::{consume_symbol, ParseError, Parser};
-use anyhow::{Context, Error, Result};
+use crate::parser::{consume_symbol, raise_parser_error, Parser};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub enum Arg {
@@ -56,19 +55,12 @@ impl Arg {
                 pos = new_pos;
             }
             None => {
-                return Err(Error::new(OguError::ParserError(ParseError::InvalidArg)))
-                    .context("unexpected token");
+                return raise_parser_error("unexpected token parsing tuple", parser, pos, true);
             }
         }
         while !parser.peek(pos, Token::RightParen) {
             if !parser.peek(pos, Token::Comma) {
-                return Err(Error::new(OguError::ParserError(
-                    ParseError::ExpectingComma,
-                )))
-                .context(format!(
-                    "expecting comma at {:?}",
-                    parser.pos_to_line_col(pos)
-                ));
+                return raise_parser_error("Expecting ','", parser, pos, true);
             }
             match Arg::parse_arg(parser, pos + 1)? {
                 Some((new_arg, new_pos)) => {
@@ -76,9 +68,7 @@ impl Arg {
                     args.push(new_arg.clone())
                 }
                 None => {
-                    return Err(Error::new(OguError::ParserError(ParseError::InvalidArg))).context(
-                        format!("unexpected token @{:?}", parser.pos_to_line_col(pos)),
-                    );
+                    return raise_parser_error("Unexpected token", parser, pos, true);
                 }
             }
         }

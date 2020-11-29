@@ -1,7 +1,7 @@
 use crate::backend::banner::akarru;
 use crate::lexer::tokens::Token;
 use crate::lexer::Lexer;
-use crate::parser::{ParseError, Parser};
+use crate::parser::Parser;
 use anyhow::Result;
 use std::fmt::Debug;
 use std::path::PathBuf;
@@ -17,7 +17,7 @@ pub enum OguError {
     #[error("Source not found")]
     NotFound(String),
     #[error("Parser error")]
-    ParserError(ParseError),
+    ParserError(String),
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 }

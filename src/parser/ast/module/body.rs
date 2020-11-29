@@ -1,4 +1,3 @@
-use crate::backend::OguError;
 use crate::lexer::tokens::Token;
 use crate::parser::ast::expressions::args::Arg;
 use crate::parser::ast::expressions::equations::Equation;
@@ -6,9 +5,9 @@ use crate::parser::ast::expressions::expression::{Expression, HandleGuard};
 use crate::parser::ast::expressions::guards::Guard;
 use crate::parser::{
     consume_id, consume_string, consume_symbol, consume_type_id, look_ahead_where,
-    parse_opt_dedent, parse_opt_indent, ParseError, Parser,
+    parse_opt_dedent, parse_opt_indent, raise_parser_error, Parser,
 };
-use anyhow::{Context, Error, Result};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub enum FuncType {
@@ -117,13 +116,7 @@ impl Body {
                 if let Some((decl, pos)) = Body::parse_decl(parser, pos)? {
                     Ok(Some((Declaration::MacroDecl(Box::new(decl)), pos)))
                 } else {
-                    Err(Error::new(OguError::ParserError(
-                        ParseError::ExpectingDeclaration,
-                    )))
-                    .context(format!(
-                        "Expecting macro declaration at {:?}",
-                        parser.pos_to_line_col(pos)
-                    ))
+                    raise_parser_error("expecting macro declaration", parser, pos, false)
                 }
             }
             Some(Token::Id(_)) if parser.peek(pos + 1, Token::Colon) => {
@@ -144,14 +137,7 @@ impl Body {
                 Declaration::DocString(parser.get_large_string(i)),
                 pos + 1,
             ))),
-            sym => Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingDeclaration,
-            )))
-            .context(format!(
-                "Expecting declaration at {:?} found: {:?}",
-                parser.pos_to_line_col(pos),
-                sym
-            )),
+            _ => raise_parser_error("expecting a declaration", parser, pos, true),
         }
     }
 }
@@ -202,13 +188,7 @@ impl Declaration {
                     )))
                 }
             }
-            _ => Err(Error::new(OguError::ParserError(
-                ParseError::InvalidDeclaration,
-            )))
-            .context(format!(
-                "Invalid declaration @{:?}",
-                parser.pos_to_line_col(pos)
-            )),
+            _ => raise_parser_error("invalid declaration", parser, pos, true),
         }
     }
 
@@ -501,10 +481,7 @@ impl Declaration {
                 Ok((t, pos))
             }
             Some(Token::Macro) => Ok((FuncType::Macro, pos + 1)),
-            sym => Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingTypeIdentifier,
-            )))
-            .context(format!("Expecting a type or a param, found: {:?}", sym)),
+            _ => raise_parser_error("expecting a type or a param", parser, pos, true),
         }
     }
 }
@@ -620,13 +597,11 @@ fn consume_alg_type_param(
         Some(Token::RightParen) => Ok(None),
         Some(Token::Comma) => Ok(None),
         Some(Token::Derive) => Ok(None),
-        sym => Err(Error::new(OguError::ParserError(
-            ParseError::ExpectingTypeIdentifier,
-        )))
-        .context(format!(
-            "Expecting a type or a param, found: {:?} @ {:?}",
-            sym,
-            parser.pos_to_line_col(pos)
-        )),
+        _ => raise_parser_error(
+            "Expecting a type or a param, in type declaration",
+            parser,
+            pos,
+            true,
+        ),
     }
 }

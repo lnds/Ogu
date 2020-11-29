@@ -1,4 +1,3 @@
-use crate::backend::OguError;
 use crate::lexer::tokens::Token;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression::TryHandleExpr;
@@ -9,9 +8,9 @@ use crate::parser::ast::expressions::{
 };
 use crate::parser::{
     consume_opt_symbol, consume_symbol, consume_type_id, parse_opt_dedent, parse_opt_indent,
-    ParseError, Parser,
+    raise_parser_error, Parser,
 };
-use anyhow::{Context, Error, Result};
+use anyhow::Result;
 
 #[macro_export]
 macro_rules! parse_left_assoc {
@@ -205,10 +204,7 @@ impl Expression {
 
     pub fn parse_control_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_token(pos) {
-            None => Err(Error::new(OguError::ParserError(
-                ParseError::ExpressionExpected,
-            )))
-            .context("Expecting an expression but found eof"),
+            None => raise_parser_error("Expecting an expression but found EOF", parser, pos, false),
             Some(Token::Cond) => Expression::parse_cond(parser, pos),
             Some(Token::Case) => Expression::parse_case(parser, pos),
             Some(Token::Do) => Expression::parse_do(parser, pos),
@@ -335,14 +331,7 @@ impl Expression {
                 Ok((LambdaArg::Tuple(ids), pos))
             }
             Some(Token::Id(id)) => Ok((LambdaArg::Simple(id.to_string()), pos + 1)),
-            sym => Err(Error::new(OguError::ParserError(
-                ParseError::ExpectingLambdaArg,
-            )))
-            .context(format!(
-                "expecting arg, found: {:?} @{:?}",
-                sym,
-                parser.pos_to_line_col(pos)
-            )),
+            _ => raise_parser_error("Expecting lambda arg", parser, pos, true),
         }
     }
 
@@ -510,10 +499,7 @@ impl Expression {
                     Token::GreaterOrEqual => Ok((Expression::UnaryGe(opt_expr), pos)),
                     Token::LessThan => Ok((Expression::UnaryLt(opt_expr), pos)),
                     Token::LessThanOrEqual => Ok((Expression::UnaryLe(opt_expr), pos)),
-                    sym => Err(Error::new(OguError::ParserError(
-                        ParseError::ExpectingOperator,
-                    )))
-                    .context(format!("expecting an operator, found {:?}", sym)),
+                    _ => raise_parser_error("Expecting an operator", parser, pos, true),
                 }
             }
             Some(_) => {
@@ -538,10 +524,7 @@ impl Expression {
                     Ok((Expression::FuncCallExpr(Box::new(expr), Box::new(arg)), pos))
                 }
             }
-            None => Err(Error::new(OguError::ParserError(
-                ParseError::ExpressionExpected,
-            )))
-            .context("unexpected eof"),
+            None => raise_parser_error("unexpected EOF", parser, pos, false),
         }
     }
 
@@ -606,10 +589,7 @@ impl Expression {
                     todo!()
                 }
             }
-            None => Err(Error::new(OguError::ParserError(
-                ParseError::ExpressionExpected,
-            )))
-            .context("unexpected eof"),
+            None => raise_parser_error("unexpected eof", parser, pos, true),
         }
     }
 
@@ -820,12 +800,7 @@ impl Expression {
                 }
             }
             sym if is_func_call_end_symbol(sym) => {
-                Err(Error::new(OguError::ParserError(ParseError::InvalidArg))).context(format!(
-                    "invalid symbol: {:?} @{:?}:{}",
-                    sym,
-                    parser.pos_to_line_col(pos),
-                    pos
-                ))
+                raise_parser_error("invalid token", parser, pos, true)
             }
             _ => Expression::parse_dollar_func_call_expr(parser, pos),
         }

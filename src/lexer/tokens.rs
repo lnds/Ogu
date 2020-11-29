@@ -1,15 +1,15 @@
 use logos::{Lexer, Logos};
 use std::fmt::Display;
 
-pub type LineCount = usize;
+pub(crate) type LineCount = usize;
 
-pub type LineWidth = usize;
-pub type LineNumber = usize;
+pub(crate) type LineWidth = usize;
+pub(crate) type LineNumber = usize;
 
-pub type IndentStack = Vec<LineCount>;
+pub(crate) type IndentStack = Vec<LineCount>;
 
 #[derive(Logos, Debug, Clone, Copy, PartialEq)]
-pub enum Token<'a> {
+pub(crate) enum Token<'a> {
     Indent,
     Dedent,
     LargeString(usize),
@@ -234,7 +234,7 @@ pub enum Token<'a> {
 }
 
 impl<'a> Token<'a> {
-    pub fn is_open_paren(&self) -> bool {
+    pub(crate) fn is_open_paren(&self) -> bool {
         matches!(
             *self,
             Token::LeftParen
@@ -246,7 +246,7 @@ impl<'a> Token<'a> {
         )
     }
 
-    pub fn is_close_paren(&self) -> bool {
+    pub(crate) fn is_close_paren(&self) -> bool {
         matches!(
             *self,
             Token::RightParen | Token::RightBracket | Token::RightCurly | Token::RightCurlyCurly
@@ -281,14 +281,14 @@ fn extract_regex<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Option<&'a str> {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct TokenContext<'a> {
-    pub token: Token<'a>,
-    pub line: LineCount,
-    pub col: LineWidth,
+pub(crate) struct TokenContext<'a> {
+    pub(crate) token: Token<'a>,
+    pub(crate) line: LineCount,
+    pub(crate) col: LineWidth,
 }
 
 impl<'a> TokenContext<'a> {
-    pub fn new(symbol: Token<'a>, line: LineCount, col: LineWidth) -> Self {
+    pub(crate) fn new(symbol: Token<'a>, line: LineCount, col: LineWidth) -> Self {
         TokenContext {
             token: symbol,
             line,
@@ -297,7 +297,7 @@ impl<'a> TokenContext<'a> {
     }
 }
 
-pub type TokenContextList<'a> = Vec<TokenContext<'a>>;
+pub(crate) type TokenContextList<'a> = Vec<TokenContext<'a>>;
 
 #[cfg(test)]
 mod test_tokens {

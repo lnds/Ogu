@@ -10,7 +10,7 @@ use crate::parser::{
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub enum Equation {
+pub(crate) enum Equation {
     Value(String, Expression),
     TupleValue(Vec<String>, Expression),
     LValue(Expression, Expression),
@@ -20,7 +20,7 @@ pub enum Equation {
 }
 
 impl Equation {
-    pub fn parse(parser: &Parser, pos: usize, inner: bool) -> Result<(Equation, usize)> {
+    pub(crate) fn parse(parser: &Parser, pos: usize, inner: bool) -> Result<(Equation, usize)> {
         if let Some(Token::Id(id)) = parser.get_token(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
         } else if inner {
@@ -35,14 +35,17 @@ impl Equation {
         }
     }
 
-    pub fn parse_back_arrow_or_assign_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+    pub(crate) fn parse_back_arrow_or_assign_eq(
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<(Equation, usize)> {
         Equation::parse_value_assign2(parser, pos, Token::BackArrow, Token::Assign)
     }
-    pub fn parse_back_arrow_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+    pub(crate) fn parse_back_arrow_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
         Equation::parse_value_assign(parser, pos, Token::BackArrow)
     }
 
-    pub fn parse_value(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+    pub(crate) fn parse_value(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
         Equation::parse_value_assign(parser, pos, Token::Assign)
     }
 

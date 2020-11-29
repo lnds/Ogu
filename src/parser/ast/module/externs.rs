@@ -4,7 +4,7 @@ use crate::parser::{consume_string, consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub struct Extern(String, Vec<Declaration>);
+pub(crate) struct Extern(String, Vec<Declaration>);
 
 impl Extern {
     pub(crate) fn parse(parser: &Parser, pos: usize) -> Result<(Option<Self>, usize)> {

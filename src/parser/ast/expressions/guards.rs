@@ -6,14 +6,14 @@ use crate::parser::{
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub struct Guard(
+pub(crate) struct Guard(
     pub Option<Box<Expression>>, // otherwise
     pub Box<Expression>,
 );
 
-pub type GuardVec = Vec<Guard>;
+pub(crate) type GuardVec = Vec<Guard>;
 
-pub fn parse_guards(parser: &Parser, pos: usize) -> Result<(GuardVec, usize)> {
+pub(crate) fn parse_guards(parser: &Parser, pos: usize) -> Result<(GuardVec, usize)> {
     let (in_indent, pos) = parse_opt_indent(parser, pos);
     let (guard, mut pos) = parse_guard(parser, pos)?;
     let mut guards = vec![guard];

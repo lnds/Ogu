@@ -4,17 +4,17 @@ use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub enum Arg {
+pub(crate) enum Arg {
     Void,
     SimpleArg(String),
     TupleArg(Vec<Arg>),
     ExprArg(Box<Expression>),
 }
 
-pub type VecArg = Vec<Arg>;
+pub(crate) type VecArg = Vec<Arg>;
 
 impl Arg {
-    pub fn parse(parser: &Parser, pos: usize) -> Result<(VecArg, usize)> {
+    pub(crate) fn parse(parser: &Parser, pos: usize) -> Result<(VecArg, usize)> {
         let mut result = vec![];
         let mut pos = pos;
         while let Some((arg, new_pos)) = Arg::parse_arg(parser, pos)? {

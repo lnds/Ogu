@@ -1,7 +1,9 @@
 use crate::backend::banner::akarru;
 use crate::lexer::tokens::Token;
 use crate::lexer::Lexer;
+use crate::parser::ast::module::Module;
 use crate::parser::Parser;
+use crate::symbols::loader::Loader;
 use anyhow::Result;
 use std::fmt::Debug;
 use std::path::PathBuf;
@@ -18,6 +20,8 @@ pub enum OguError {
     NotFound(String),
     #[error("Parser error")]
     ParserError(String),
+    #[error("Symbol table error")]
+    SymbolTableError(String),
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 }
@@ -55,13 +59,15 @@ pub fn run(params: Params) -> Result<()> {
     if params.banner {
         akarru()?
     }
+    let mut loader = Loader::new();
     for file in params.files.iter() {
-        run_module(file, &params)?
+        let mut module = compile_module(file, &params)?;
+        loader.add(&mut module)?;
     }
-    Ok(())
+    loader.validate()
 }
 
-fn run_module(path: &PathBuf, params: &Params) -> Result<()> {
+fn compile_module(path: &PathBuf, params: &Params) -> Result<Module> {
     let mut lexer = Lexer::new(path)?;
     println!("parsing {:?}", path);
     let (tokens, large_strings) = lexer.scan()?;
@@ -74,5 +80,5 @@ fn run_module(path: &PathBuf, params: &Params) -> Result<()> {
     if params.print {
         println!("AST = {:#?}", module);
     }
-    Ok(())
+    Ok(module)
 }

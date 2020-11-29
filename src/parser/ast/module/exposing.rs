@@ -3,7 +3,7 @@ use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub enum Exposing {
+pub(crate) enum Exposing {
     All,
     List(Vec<String>),
 }

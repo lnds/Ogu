@@ -23,14 +23,14 @@ enum LexerSource {
     Text(String),
 }
 
-pub struct Lexer {
+pub(crate) struct Lexer {
     source: LexerSource,
     paren_level: LineCount,
     lines: LineList,
 }
 
 impl<'a> Lexer {
-    pub fn new(path: &PathBuf) -> Result<Lexer> {
+    pub(crate) fn new(path: &PathBuf) -> Result<Lexer> {
         if !path.exists() {
             return Err(Error::new(OguError::NotFound(format!("{:?}", path))));
         }
@@ -41,7 +41,7 @@ impl<'a> Lexer {
         })
     }
 
-    pub fn from(str: &str) -> Self {
+    pub(crate) fn from(str: &str) -> Self {
         Lexer {
             source: LexerSource::Text(str.to_string()),
             paren_level: 0,
@@ -49,7 +49,7 @@ impl<'a> Lexer {
         }
     }
 
-    pub fn scan(&'a mut self) -> Result<(TokenStream<'a>, Vec<String>)> {
+    pub(crate) fn scan(&'a mut self) -> Result<(TokenStream<'a>, Vec<String>)> {
         self.lines = match &self.source {
             LexerSource::File(path) => {
                 let file = File::open(&path)?;
@@ -233,84 +233,96 @@ mod test_lexer {
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("func"),
-                line: 1
+                line: 1,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Assign,
-                line: 1
+                line: 1,
+                col: 6
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::NewLine,
-                line: 1
+                line: 1,
+                col: 6
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Indent,
-                line: 2
+                line: 2,
+                col: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("this"),
-                line: 2
+                line: 2,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Is,
-                line: 2
+                line: 2,
+                col: 6
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("a"),
-                line: 2
+                line: 2,
+                col: 9
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("function"),
-                line: 2
+                line: 2,
+                col: 11
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::NewLine,
-                line: 2
+                line: 2,
+                col: 18
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Dedent,
-                line: 3
+                line: 3,
+                col: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("end"),
-                line: 3
+                line: 3,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::NewLine,
-                line: 3
+                line: 3,
+                col: 3
             })
         );
         assert_eq!(iter.next(), None);
@@ -327,147 +339,168 @@ mod test_lexer {
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("func"),
-                line: 1
+                line: 1,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Assign,
-                line: 1
+                line: 1,
+                col: 6
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::LeftParen,
-                line: 1
+                line: 1,
+                col: 8
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Integer("1"),
-                line: 1
+                line: 1,
+                col: 9
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Comma,
-                line: 1
+                line: 1,
+                col: 10
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Integer("2"),
-                line: 2
+                line: 2,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Comma,
-                line: 2
+                line: 2,
+                col: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Integer("3"),
-                line: 2
+                line: 2,
+                col: 4
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Comma,
-                line: 2
+                line: 2,
+                col: 5
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Integer("4"),
-                line: 2
+                line: 2,
+                col: 7
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::RightParen,
-                line: 2
+                line: 2,
+                col: 8
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::NewLine,
-                line: 2
+                line: 2,
+                col: 8
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Indent,
-                line: 3
+                line: 3,
+                col: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("this"),
-                line: 3
+                line: 3,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Is,
-                line: 3
+                line: 3,
+                col: 6
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("a"),
-                line: 3
+                line: 3,
+                col: 9
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("function"),
-                line: 3
+                line: 3,
+                col: 11
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::NewLine,
-                line: 3
+                line: 3,
+                col: 18
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Dedent,
-                line: 4
+                line: 4,
+                col: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("end"),
-                line: 4
+                line: 4,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::NewLine,
-                line: 4
+                line: 4,
+                col: 3
             })
         );
         assert_eq!(iter.next(), None);
@@ -484,161 +517,184 @@ mod test_lexer {
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("func"),
-                line: 1
+                line: 1,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Assign,
-                line: 1
+                line: 1,
+                col: 6,
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::LeftParen,
-                line: 1
+                line: 1,
+                col: 8,
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Integer("1"),
-                line: 1
+                line: 1,
+                col: 9
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Comma,
-                line: 1
+                line: 1,
+                col: 10
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Integer("2"),
-                line: 2
+                line: 2,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Comma,
-                line: 2
+                line: 2,
+                col: 2,
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Integer("3"),
-                line: 2
+                line: 2,
+                col: 4
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Comma,
-                line: 2
+                line: 2,
+                col: 5
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Integer("4"),
-                line: 2
+                line: 2,
+                col: 7
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::RightParen,
-                line: 2
+                line: 2,
+                col: 8
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Error,
-                line: 2
+                line: 2,
+                col: 0
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::RightParen,
-                line: 2
+                line: 2,
+                col: 9
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::NewLine,
-                line: 2
+                line: 2,
+                col: 9
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Indent,
-                line: 3
+                line: 3,
+                col: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("this"),
-                line: 3
+                line: 3,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Is,
-                line: 3
+                line: 3,
+                col: 6
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("a"),
-                line: 3
+                line: 3,
+                col: 9
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("function"),
-                line: 3
+                line: 3,
+                col: 11
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::NewLine,
-                line: 3
+                line: 3,
+                col: 18
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Dedent,
-                line: 4
+                line: 4,
+                col: 2
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::Id("end"),
-                line: 4
+                line: 4,
+                col: 1
             })
         );
         assert_eq!(
             iter.next(),
             Some(&TokenContext {
                 token: Token::NewLine,
-                line: 4
+                line: 4,
+                col: 3
             })
         );
         assert_eq!(iter.next(), None);

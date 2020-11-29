@@ -37,19 +37,19 @@ macro_rules! parse_right_assoc {
 }
 
 #[derive(Debug, Clone)]
-pub enum RecurValue {
+pub(crate) enum RecurValue {
     Value(Expression),
     Var(String, Expression),
 }
 
 #[derive(Debug, Clone)]
-pub enum LoopCond {
+pub(crate) enum LoopCond {
     WhileExpr(Box<Expression>),
     UntilExpr(Box<Expression>),
 }
 
 #[derive(Debug, Clone)]
-pub struct HandleGuard(
+pub(crate) struct HandleGuard(
     Expression,
     Option<Expression>,
     Option<Vec<String>>,
@@ -57,8 +57,7 @@ pub struct HandleGuard(
 );
 
 #[derive(Debug, Clone)]
-pub enum Expression {
-    Error,
+pub(crate) enum Expression {
     Identifier(String),
     QualifedIdentifier(String, Vec<String>),
     TypeIdentifier(String),
@@ -134,7 +133,6 @@ pub enum Expression {
     ComposeFwdExpr(Box<Expression>, Box<Expression>),
     ComposeBckExpr(Box<Expression>, Box<Expression>),
     TupleExpr(Vec<Expression>),
-    OpFunc(Box<Token<'static>>),
     DoExpr(Vec<Expression>),
     TryHandleExpr(Box<Expression>, Vec<HandleGuard>),
     RepeatExpr(Vec<RecurValue>),
@@ -158,16 +156,16 @@ pub enum Expression {
     ),
 }
 
-pub type ParseResult = Result<(Expression, usize)>;
+pub(crate) type ParseResult = Result<(Expression, usize)>;
 
 #[derive(Debug, Clone)]
-pub enum LambdaArg {
+pub(crate) enum LambdaArg {
     Simple(String),
     Tuple(Vec<String>),
 }
 
 impl Expression {
-    pub fn parse(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse(parser: &Parser, pos: usize) -> ParseResult {
         let (expr, mut pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
         if parser.peek(pos, Token::SemiColon) {
             let mut exprs = vec![expr];
@@ -202,7 +200,7 @@ impl Expression {
         Expression::parse_pipe_func_call_expr
     );
 
-    pub fn parse_control_expr(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_control_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_token(pos) {
             None => raise_parser_error("Expecting an expression but found EOF", parser, pos, false),
             Some(Token::Cond) => Expression::parse_cond(parser, pos),
@@ -221,7 +219,7 @@ impl Expression {
         }
     }
 
-    pub fn parse_cond(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_cond(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Token::Cond)?;
         let pos = parser.skip_nl(pos);
         let mut pos = consume_symbol(parser, pos, Token::Indent)?;
@@ -253,7 +251,7 @@ impl Expression {
         }
     }
 
-    pub fn parse_case(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_case(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Token::Case)?;
         let (match_expr, pos) = Expression::parse_logical_expr(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Of)?;
@@ -278,7 +276,7 @@ impl Expression {
         Ok((Expression::CaseExpr(Box::new(match_expr), matches), pos))
     }
 
-    pub fn parse_reify(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_reify(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Token::Reify)?;
         let (type_id, pos) = consume_type_id(parser, pos)?;
         let (indent, pos) = parse_opt_indent(parser, pos);
@@ -298,7 +296,7 @@ impl Expression {
         Ok((Expression::ReifyExpr(type_id, eqs), pos))
     }
 
-    pub fn parse_lambda_expr(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_lambda_expr(parser: &Parser, pos: usize) -> ParseResult {
         if !parser.peek(pos, Token::Lambda) {
             Expression::parse_logical_expr(parser, pos)
         } else {
@@ -445,7 +443,7 @@ impl Expression {
         Expression::parse_primary_expr
     );
 
-    pub fn parse_primary_expr(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_primary_expr(parser: &Parser, pos: usize) -> ParseResult {
         match parser.get_token(pos) {
             Some(Token::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Token::LeftCurly) => Expression::parse_record_expr(parser, pos),
@@ -655,7 +653,7 @@ impl Expression {
     fn parse_yield_expr(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Token::Yield)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
-        Ok((Expression::LazyExpr(Box::new(expr)), pos))
+        Ok((Expression::YieldExpr(Box::new(expr)), pos))
     }
 
     fn parse_not_expr(parser: &Parser, pos: usize) -> ParseResult {
@@ -719,13 +717,13 @@ impl Expression {
         }
     }
 
-    pub fn parse_recur(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_recur(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Token::Recur)?;
         let (args, pos) = consume_args(parser, pos)?;
         Ok((Expression::RecurExpr(args), pos))
     }
 
-    pub fn parse_perform(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_perform(parser: &Parser, pos: usize) -> ParseResult {
         let pos = consume_symbol(parser, pos, Token::Perform)?;
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
         if parser.peek(pos, Token::With) {
@@ -1016,7 +1014,10 @@ impl Expression {
         Ok((TryHandleExpr(Box::new(expr), handles), pos))
     }
 
-    pub fn parse_handle_guards(parser: &Parser, pos: usize) -> Result<(Vec<HandleGuard>, usize)> {
+    pub(crate) fn parse_handle_guards(
+        parser: &Parser,
+        pos: usize,
+    ) -> Result<(Vec<HandleGuard>, usize)> {
         let mut handles = vec![];
         let mut pos = pos;
         while parser.peek(pos, Token::Guard) {

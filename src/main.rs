@@ -4,6 +4,7 @@ use structopt::StructOpt;
 pub mod backend;
 pub mod lexer;
 pub mod parser;
+mod symbols;
 
 use backend::Params;
 

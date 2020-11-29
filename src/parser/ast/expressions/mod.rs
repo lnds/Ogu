@@ -14,7 +14,7 @@ pub struct LeftAssocExpr<'a>(Token<'a>, Box<Expression>, Box<Expression>);
 pub struct RightAssocExpr<'a>(Token<'a>, Box<Expression>, Box<Expression>);
 
 // 1 + 2 + 3 => (1 + 2) + 3
-pub fn parse_left_assoc_expr(
+pub(crate) fn parse_left_assoc_expr(
     parser: &Parser,
     pos: usize,
     op: Token,
@@ -29,7 +29,7 @@ pub fn parse_left_assoc_expr(
     }
 }
 
-pub fn consume_left_args(
+pub(crate) fn consume_left_args(
     parser: &Parser,
     pos: usize,
     op: Token,
@@ -46,7 +46,7 @@ pub fn consume_left_args(
 }
 
 // 1 ^ 2 ^ 3 => 1 ^ (2 ^ 3)
-pub fn parse_right_assoc_expr(
+pub(crate) fn parse_right_assoc_expr(
     parser: &Parser,
     pos: usize,
     op: Token,
@@ -61,7 +61,7 @@ pub fn parse_right_assoc_expr(
     }
 }
 
-pub fn consume_right_args(
+pub(crate) fn consume_right_args(
     parser: &Parser,
     pos: usize,
     op: Token,
@@ -77,7 +77,7 @@ pub fn consume_right_args(
     }
 }
 
-pub fn consume_exprs_sep_by(
+pub(crate) fn consume_exprs_sep_by(
     parser: &Parser,
     pos: usize,
     symbol: Token,
@@ -93,7 +93,7 @@ pub fn consume_exprs_sep_by(
     Ok((result, pos))
 }
 
-pub fn consume_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usize)> {
+pub(crate) fn consume_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usize)> {
     let mut args = vec![];
     let mut pos = pos;
     while !is_func_call_end_symbol(parser.get_token(pos)) {
@@ -104,7 +104,7 @@ pub fn consume_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usi
     Ok((args, pos))
 }
 
-pub fn consume_ids_sep_by(
+pub(crate) fn consume_ids_sep_by(
     parser: &Parser,
     pos: usize,
     symbol: Token,
@@ -120,7 +120,7 @@ pub fn consume_ids_sep_by(
     Ok((result, pos))
 }
 
-pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+pub(crate) fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     if let Some(Token::Id(id)) = parser.get_token(pos) {
         Ok((id.to_string(), pos + 1))
     } else {
@@ -128,7 +128,7 @@ pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     }
 }
 
-pub fn is_literal(symbol: Token) -> bool {
+pub(crate) fn is_literal(symbol: Token) -> bool {
     matches!(symbol, Token::Integer(_)
         |Token::Float(_)
         |Token::String(_)
@@ -139,7 +139,7 @@ pub fn is_literal(symbol: Token) -> bool {
         |Token::IsoDate(_))
 }
 
-pub fn is_basic_op(symbol: Token) -> bool {
+pub(crate) fn is_basic_op(symbol: Token) -> bool {
     matches!(
         symbol,
         Token::Cons
@@ -163,7 +163,7 @@ pub fn is_basic_op(symbol: Token) -> bool {
     )
 }
 
-pub fn is_func_call_end_symbol(symbol: Option<Token>) -> bool {
+pub(crate) fn is_func_call_end_symbol(symbol: Option<Token>) -> bool {
     match symbol {
         None => true,
         Some(Token::Error) => true,
@@ -243,7 +243,7 @@ pub fn is_func_call_end_symbol(symbol: Option<Token>) -> bool {
     }
 }
 
-pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
+pub(crate) fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
     let LeftAssocExpr(sym, left, right) = la_expr;
     match sym {
         Token::PipeRight => Expression::FuncCallExpr(right, left),
@@ -274,7 +274,7 @@ pub fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
     }
 }
 
-pub fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expression> {
+pub(crate) fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expression> {
     let RightAssocExpr(sym, left, right) = ra_expr;
     match sym {
         Token::Cons => Ok(Expression::ConsExpr(left, right)),

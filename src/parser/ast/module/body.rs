@@ -10,10 +10,9 @@ use crate::parser::{
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub enum FuncType {
+pub(crate) enum FuncType {
     Void,
     Macro,
-    ExternType(String),
     Simple(String),
     Complex(String, Vec<AlgebraicElement>),
     Param(String),
@@ -21,22 +20,31 @@ pub enum FuncType {
 }
 
 #[derive(Debug, Clone)]
-pub enum FuncPrototype {
+pub(crate) enum FuncPrototype {
     Normal(String, FuncType),
     Effect(String, FuncType),
 }
 
+impl FuncPrototype {
+    fn get_name(&self) -> String {
+        match self {
+            FuncPrototype::Normal(s, _) => s.to_string(),
+            FuncPrototype::Effect(s, _) => s.to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
-pub enum AlgebraicElement {
+pub(crate) enum AlgebraicElement {
     Type(String),
     Param(String),
 }
 
 #[derive(Debug, Clone)]
-pub struct RecordElement(String, AlgebraicElement);
+pub(crate) struct RecordElement(String, AlgebraicElement);
 
 #[derive(Debug, Clone)]
-pub enum AlgebraicType {
+pub(crate) enum AlgebraicType {
     Simple(String),
     Primitive(String),
     Complex(String, Vec<AlgebraicElement>),
@@ -44,13 +52,13 @@ pub enum AlgebraicType {
 }
 
 #[derive(Debug, Clone)]
-pub enum Derivation {
+pub(crate) enum Derivation {
     ListOfTraits(Vec<String>),
     Trait(String, Vec<Equation>),
 }
 
 #[derive(Debug, Clone)]
-pub enum BaseType {
+pub(crate) enum BaseType {
     Tuple(Vec<BaseType>),
     Array(Vec<BaseType>),
     SimpleRecord(Vec<RecordElement>),
@@ -59,7 +67,7 @@ pub enum BaseType {
 }
 
 #[derive(Debug, Clone)]
-pub enum Declaration {
+pub(crate) enum Declaration {
     Value(String, Expression),
     ValueWithWhere(String, Expression, Vec<Equation>),
     Function(String, Vec<Arg>, Expression),
@@ -82,16 +90,43 @@ pub enum Declaration {
     DocString(Option<String>),
 }
 
+impl Declaration {
+    pub fn get_name(&self) -> String {
+        match self {
+            Declaration::Value(val, _) => val.to_string(),
+            Declaration::ValueWithWhere(val, _, _) => val.to_string(),
+            Declaration::Function(f, _, _) => f.to_string(),
+            Declaration::FunctionWithWhere(f, _, _, _) => f.to_string(),
+            Declaration::FunctionWithGuards(f, _, _) => f.to_string(),
+            Declaration::FunctionWithGuardsAndWhere(f, _, _, _) => f.to_string(),
+            Declaration::TypeDecl(ty, _, _, _) => ty.to_string(),
+            Declaration::TypeAlias(ty, _, _) => ty.to_string(),
+            Declaration::TraitDecl(tr, _, _) => tr.to_string(),
+            Declaration::ExtensionDecl(e, _, _) => e.to_string(),
+            Declaration::FunctionPrototype(ft) => ft.get_name(),
+            Declaration::MacroDecl(d) => d.get_name(),
+            Declaration::Effect(fp) => fp.get_name(),
+            Declaration::Handler(h, _, _) => h.to_string(),
+            Declaration::DocString(Some(s)) => s.to_string(),
+            Declaration::DocString(None) => String::new(),
+        }
+    }
+}
+
 type DeclVec = Vec<Declaration>;
 
 #[derive(Debug)]
-pub struct Body {
+pub(crate) struct Body {
     declarations: Vec<Declaration>,
 }
 
 type DeclParseResult = Result<Option<(Declaration, usize)>>;
 
 impl Body {
+    pub(crate) fn get_decls(&mut self) -> Vec<Declaration> {
+        self.declarations.clone()
+    }
+
     pub(crate) fn parse(parser: &Parser, pos: usize) -> Result<Self> {
         let declarations = Body::parse_decls(parser, pos)?;
         Ok(Body { declarations })

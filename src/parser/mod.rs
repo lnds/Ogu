@@ -1,65 +1,58 @@
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::{LineNumber, LineWidth, Token, TokenContext};
+use crate::lexer::tokens::{LineNumber, LineWidth, Token};
 use crate::parser::ast::module::Module;
 use std::path::PathBuf;
 
 use crate::backend::OguError;
 use anyhow::{Context, Error, Result};
 
-pub mod ast;
-pub struct Parser<'a> {
+pub(crate) mod ast;
+
+pub(crate) struct Parser<'a> {
     tokens: TokenStream<'a>,
     large_strings: Vec<String>,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(tokens: TokenStream<'a>, large_strings: Vec<String>) -> Result<Parser<'a>> {
+    pub(crate) fn new(tokens: TokenStream<'a>, large_strings: Vec<String>) -> Result<Parser<'a>> {
         Ok(Parser {
             tokens,
             large_strings,
         })
     }
 
-    pub fn parse(&mut self, filename: &PathBuf) -> Result<Module> {
+    pub(crate) fn parse(&mut self, filename: &PathBuf) -> Result<Module> {
         Module::parse(self, filename, 0)
     }
 
-    pub fn peek(&self, pos: usize, symbol: Token) -> bool {
+    pub(crate) fn peek(&self, pos: usize, symbol: Token) -> bool {
         match self.tokens.peek(pos) {
             None => false,
             Some(tok) => tok.token == symbol,
         }
     }
 
-    pub fn get(&self, pos: usize) -> Option<TokenContext> {
-        self.tokens.peek(pos)
-    }
-
-    pub fn get_token(&self, pos: usize) -> Option<Token> {
+    pub(crate) fn get_token(&self, pos: usize) -> Option<Token> {
         self.tokens.peek(pos).map(|t| t.token)
     }
 
-    pub fn skip_nl(&self, pos: usize) -> usize {
+    pub(crate) fn skip_nl(&self, pos: usize) -> usize {
         match self.get_token(pos) {
             Some(Token::NewLine) => self.skip_nl(pos + 1),
             _ => pos,
         }
     }
 
-    pub fn pos_to_line_col(&self, pos: usize) -> Option<(LineNumber, LineWidth)> {
+    pub(crate) fn pos_to_line_col(&self, pos: usize) -> Option<(LineNumber, LineWidth)> {
         self.tokens.peek(pos).map(|t| (t.line, t.col))
     }
 
-    pub fn get_large_string(&self, index: usize) -> Option<String> {
+    pub(crate) fn get_large_string(&self, index: usize) -> Option<String> {
         self.large_strings.get(index).cloned()
-    }
-
-    pub fn set_large_strings(&mut self, strs: Vec<String>) {
-        self.large_strings = strs;
     }
 }
 
-pub fn consume_symbol(parser: &Parser, pos: usize, token: Token) -> Result<usize> {
+pub(crate) fn consume_symbol(parser: &Parser, pos: usize, token: Token) -> Result<usize> {
     if !parser.peek(pos, token) {
         raise_parser_error(&format!("Expecting {:?}", token), parser, pos, true)
     } else {
@@ -67,7 +60,7 @@ pub fn consume_symbol(parser: &Parser, pos: usize, token: Token) -> Result<usize
     }
 }
 
-pub fn consume_opt_symbol(parser: &Parser, pos: usize, token: Token) -> Result<usize> {
+pub(crate) fn consume_opt_symbol(parser: &Parser, pos: usize, token: Token) -> Result<usize> {
     if parser.peek(pos, token) {
         consume_symbol(parser, pos, token)
     } else {
@@ -75,7 +68,7 @@ pub fn consume_opt_symbol(parser: &Parser, pos: usize, token: Token) -> Result<u
     }
 }
 
-pub fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
+pub(crate) fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
     let pos = parser.skip_nl(pos);
     if parser.peek(pos, Token::Indent) {
         (true, pos + 1)
@@ -84,7 +77,7 @@ pub fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
     }
 }
 
-pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
+pub(crate) fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
         pos = consume_symbol(parser, pos, Token::Dedent)?;
@@ -92,7 +85,11 @@ pub fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<
     Ok(pos)
 }
 
-pub fn parse_opt_where_or_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
+pub(crate) fn parse_opt_where_or_dedent(
+    parser: &Parser,
+    pos: usize,
+    in_indent: bool,
+) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
         if parser.peek(pos, Token::Dedent) {
@@ -104,7 +101,7 @@ pub fn parse_opt_where_or_dedent(parser: &Parser, pos: usize, in_indent: bool) -
     Ok(pos)
 }
 
-pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
+pub(crate) fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
     let pos = parser.skip_nl(pos);
     if parser.peek(pos, Token::Where) {
         Some(pos)
@@ -120,21 +117,21 @@ pub fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
     }
 }
 
-pub fn consume_string(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+pub(crate) fn consume_string(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_token(pos) {
         Some(Token::String(s)) => Ok((s.to_string(), pos + 1)),
         _ => raise_parser_error("Expecting an string", parser, pos, true),
     }
 }
 
-pub fn consume_type_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+pub(crate) fn consume_type_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_token(pos) {
         Some(Token::TypeId(type_id)) => Ok((type_id.to_string(), pos + 1)),
         _ => raise_parser_error("expecting a type identifier", parser, pos, true),
     }
 }
 
-pub fn consume_qualified_type_id(
+pub(crate) fn consume_qualified_type_id(
     parser: &Parser,
     pos: usize,
 ) -> Result<(String, Vec<String>, usize)> {
@@ -148,14 +145,15 @@ pub fn consume_qualified_type_id(
     }
     Ok((t_id, names, pos))
 }
-pub fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+
+pub(crate) fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
     match parser.get_token(pos) {
         Some(Token::Id(id)) => Ok((id.to_string(), pos + 1)),
         _ => raise_parser_error("Expecting identifier", parser, pos, true),
     }
 }
 
-pub fn raise_parser_error<T>(
+pub(crate) fn raise_parser_error<T>(
     msg: &str,
     parser: &Parser,
     pos: usize,

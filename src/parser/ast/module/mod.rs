@@ -7,7 +7,7 @@ use crate::lexer::tokens::Token;
 use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use std::path::PathBuf;
 
-use crate::parser::ast::module::body::Body;
+use crate::parser::ast::module::body::{Body, Declaration};
 use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::externs::Extern;
 use crate::parser::ast::module::imports::Import;
@@ -21,12 +21,49 @@ pub enum ModuleName {
 }
 
 #[derive(Debug)]
-pub struct Module {
+pub(crate) struct Module {
     name: ModuleName,
     exposing: Option<Exposing>,
     imports: Option<Vec<Import>>,
     externs: Option<Extern>,
     body: Body,
+}
+
+impl Module {
+    pub(crate) fn get_module_name(&self) -> String {
+        match &self.name {
+            ModuleName::Anonymous => String::new(),
+            ModuleName::Simple(s) => s.to_string(),
+            ModuleName::Qualified(s, sl) => format!("{}.{}", s, sl.join(".")),
+        }
+    }
+
+    pub(crate) fn get_exposed_names(&mut self) -> Vec<String> {
+        match &self.exposing {
+            None => vec![],
+            Some(Exposing::All) => {
+                let mut result = vec![];
+                for decl in self.get_decls().iter() {
+                    result.push(decl.get_name())
+                }
+                result
+            }
+            Some(Exposing::List(v)) => v.clone(),
+        }
+    }
+
+    fn get_decls(&mut self) -> Vec<Declaration> {
+        self.body.get_decls()
+    }
+
+    pub(crate) fn get_decl_by_name(&mut self, name: &String) -> Option<Declaration> {
+        for decl in self.body.get_decls().iter() {
+            if decl.get_name() == *name {
+                return Some(decl.clone());
+            }
+        }
+        None
+    }
 }
 
 impl<'a> Module {

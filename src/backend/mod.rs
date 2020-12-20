@@ -3,12 +3,15 @@ use crate::lexer::tokens::Token;
 use crate::lexer::Lexer;
 use crate::parser::ast::module::Module;
 use crate::parser::Parser;
-use crate::symbols::loader::Loader;
 use anyhow::Result;
 use std::fmt::Debug;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use thiserror::Error;
+use crate::symbols::SymbolTable;
+use crate::symbols::types::Type;
+use crate::symbols::symbols::Symbol;
+use crate::symbols::scopes::Scope;
 
 pub mod banner;
 
@@ -59,12 +62,12 @@ pub fn run(params: Params) -> Result<()> {
     if params.banner {
         akarru()?
     }
-    let mut loader = Loader::new();
+    let mut symbol_table = SymbolTable::new("_ogu");
+    symbol_table.define(Symbol::Macro("println!", Type::Unit, 1));
     for file in params.files.iter() {
         let mut module = compile_module(file, &params)?;
-        loader.add(&mut module)?;
     }
-    loader.validate()
+    Ok(())
 }
 
 fn compile_module(path: &PathBuf, params: &Params) -> Result<Module> {

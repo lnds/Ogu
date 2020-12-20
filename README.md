@@ -5,35 +5,29 @@ Ogú is a dynamic programming language.
 
 ## Current Edition
 
-This is the Ferrilo edition of this language. See below for details.
+This is the Ñeclito edition of this language. See below for details.
 
 ## Building Ogú
 
-You will need Java 1.8, Scala 2.12 and SBT 1.2.8.
+You will need rust 1.48 or superior.
 
 You can build Ogú this way:
 
-    $ sbt assembly
+    $ cargo build --release
 
-This will create the file `target/scala-2.12/ogu-ferrilo-assembly-0.2.5.jar`.
+This will create the file `target/release/ogu`.
 
 # Usage
 
-You can use Ogu this way
+    $ ogu
 
-    $ java -jar  target/scala-2.12/ogu-ferrilo-assembly-0.2.5.jar
+(After `cargo build`)
 
-(After `sbt assembly`)
+To run an Ogu Script you write it on a file with .ogu extension, and then passing the name to the ogu executable.
 
-To run an Ogu Script you write it on a file with .ogu extension, and then passing the name to the .jar.
-
-Inside the demos directory are many samples of ogu scripts, for example, to play a simple snake game you can do this:
-
-    $ java -jar  target/scala-2.12/ogu-ferrilo-assembly-0.2.5.jar demos/snake.ogu
-    
 ## Syntax
 
-You can read about the Ogú syntax on the file OGU-0.2-en.md.
+You can read about the Ogú syntax on the file OGU-0.3-en.md.
 
 # About the name
 
@@ -47,10 +41,11 @@ These are the future editions:
 
 - Plunke (0.1): (Deprecated) The first edition using Clojure runtime to interpret scripts written in a subset of the language.
 
-- Ferrilo (0.2): Second edition. It's a rewirte of the parser in Scala. There are many importante changes in syntax. 
+- Ferrilo (0.2): (Deprecated) Second edition. It's a rewrite of the parser in Scala. There are many important changes in syntax. 
 This release still depends on clojure runtime 1.10.0.
 
-- Ñeclito (0.3)
+- Ñeclito (0.3): Third edition. Change and simplifies the syntax. This edition it's a more focused on functional paradigm.
+The compiler it's written in Rust.
 
 - Bromisnar (0.4)
 

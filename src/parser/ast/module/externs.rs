@@ -4,10 +4,11 @@ use crate::parser::{consume_string, consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Extern(String, Vec<Declaration>);
+pub(crate) struct Extern<'a>(&'a str, Vec<Declaration<'a>>);
 
-impl Extern {
-    pub(crate) fn parse(parser: &Parser, pos: usize) -> Result<(Option<Self>, usize)> {
+impl<'a> Extern<'a> {
+
+    pub(crate) fn parse(parser: &'a Parser, pos: usize) -> Result<(Option<Self>, usize)> {
         if parser.peek(pos, Token::Extern) {
             Extern::parse_extern(parser, pos)
         } else {
@@ -15,7 +16,7 @@ impl Extern {
         }
     }
 
-    fn parse_extern(parser: &Parser, pos: usize) -> Result<(Option<Extern>, usize)> {
+    fn parse_extern(parser: &'a Parser<'a >, pos: usize) -> Result<(Option<Extern<'a>>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Extern)?;
         let (lang, pos) = consume_string(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Where)?;

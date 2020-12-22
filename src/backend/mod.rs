@@ -55,31 +55,28 @@ pub struct Params {
     args: Vec<String>,
 }
 
-pub fn run(params: Params) -> Result<()> {
+pub fn run(params: &Params) -> Result<()> {
     if params.banner {
         akarru()?
     }
     let mut loader = Loader::new();
-    for file in params.files.iter() {
-        let module = compile_module(file, &params)?;
+    for path in params.files.iter() {
+        let mut lexer = Lexer::new(path)?;
+        println!("parsing {:?}", path);
+        let (tokens, large_strings) = lexer.scan()?;
+        if params.tokens {
+            let syms: Vec<Token> = tokens.iter().map(|t| t.token).collect();
+            println!("TOKENS = {:?}", syms);
+        }
+        let mut parser = Parser::new(tokens, large_strings)?;
+        let module = parser.parse(path)?;
+        if params.print {
+            println!("AST = {:#?}", module);
+        }
         loader.add(&module);
-        loader.parse(&module)?;
+        loader.parse(&module);
     }
     Ok(())
 }
 
-fn compile_module(path: &PathBuf, params: &Params) -> Result<ModuleAst> {
-    let mut lexer = Lexer::new(path)?;
-    println!("parsing {:?}", path);
-    let (tokens, large_strings) = lexer.scan()?;
-    if params.tokens {
-        let syms: Vec<Token> = tokens.iter().map(|t| t.token).collect();
-        println!("TOKENS = {:?}", syms);
-    }
-    let mut parser = Parser::new(tokens, large_strings)?;
-    let module = parser.parse(path)?;
-    if params.print {
-        println!("AST = {:#?}", module);
-    }
-    Ok(module)
-}
+

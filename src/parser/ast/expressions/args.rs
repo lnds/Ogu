@@ -4,17 +4,18 @@ use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub(crate) enum Arg {
+pub(crate) enum Arg<'a> {
     Void,
-    Simple(String),
-    Tuple(Vec<Arg>),
-    Expr(Box<Expression>),
+    Simple(&'a str),
+    Tuple(Vec<Arg<'a>>),
+    Expr(Box<Expression<'a>>),
 }
 
-pub(crate) type VecArg = Vec<Arg>;
+pub(crate) type VecArg<'a> = Vec<Arg<'a>>;
 
-impl Arg {
-    pub(crate) fn parse(parser: &Parser, pos: usize) -> Result<(VecArg, usize)> {
+impl<'a> Arg<'a> {
+
+    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<(VecArg<'a>, usize)> {
         let mut result = vec![];
         let mut pos = pos;
         while let Some((arg, new_pos)) = Arg::parse_arg(parser, pos)? {
@@ -25,7 +26,7 @@ impl Arg {
         Ok((result, pos))
     }
 
-    fn parse_arg(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
+    fn parse_arg(parser: &'a Parser<'a>, pos: usize) -> Result<Option<(Arg<'a>, usize)>> {
         match parser.get_token(pos) {
             None => Ok(None),
             Some(Token::LeftParen) => Arg::parse_tuple(parser, pos),
@@ -43,7 +44,7 @@ impl Arg {
         }
     }
 
-    fn parse_tuple(parser: &Parser, pos: usize) -> Result<Option<(Arg, usize)>> {
+    fn parse_tuple(parser: &'a Parser<'a>, pos: usize) -> Result<Option<(Arg<'a>, usize)>> {
         if parser.peek(pos + 1, Token::RightParen) {
             return Ok(Some((Arg::Void, pos + 2)));
         }

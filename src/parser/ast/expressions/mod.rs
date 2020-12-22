@@ -9,18 +9,18 @@ use crate::parser::ast::expressions::expression::{Expression, ParseResult};
 use crate::parser::{raise_parser_error, Parser};
 use anyhow::Result;
 
-pub struct LeftAssocExpr<'a>(Token<'a>, Box<Expression>, Box<Expression>);
+pub struct LeftAssocExpr<'a>(Token<'a>, Box<Expression<'a>>, Box<Expression<'a>>);
 
-pub struct RightAssocExpr<'a>(Token<'a>, Box<Expression>, Box<Expression>);
+pub struct RightAssocExpr<'a>(Token<'a>, Box<Expression<'a>>, Box<Expression<'a>>);
 
 // 1 + 2 + 3 => (1 + 2) + 3
-pub(crate) fn parse_left_assoc_expr(
-    parser: &Parser,
+pub(crate) fn parse_left_assoc_expr<'a>(
+    parser: &'a Parser<'a>,
     pos: usize,
     op: Token,
-    next_level: fn(&Parser, usize) -> ParseResult,
-    build: fn(Expression, Expression) -> Expression,
-) -> Result<(Expression, usize)> {
+    next_level: fn(&'a Parser<'a>, usize) -> ParseResult<'a>,
+    build: fn(Expression<'a>, Expression<'a>) -> Expression<'a>,
+) -> Result<(Expression<'a>, usize)> {
     let (expr, pos) = next_level(parser, pos)?;
     if !parser.peek(pos, op) {
         Ok((expr, pos))
@@ -29,14 +29,14 @@ pub(crate) fn parse_left_assoc_expr(
     }
 }
 
-pub(crate) fn consume_left_args(
-    parser: &Parser,
+pub(crate) fn consume_left_args<'a>(
+    parser: &'a Parser<'a>,
     pos: usize,
     op: Token,
-    next_level: fn(&Parser, usize) -> ParseResult,
-    left_expr: Expression,
-    build: fn(Expression, Expression) -> Expression,
-) -> ParseResult {
+    next_level: fn(&'a Parser<'a>, usize) -> ParseResult<'a>,
+    left_expr: Expression<'a>,
+    build: fn(Expression<'a>, Expression<'a>) -> Expression<'a>,
+) -> ParseResult<'a> {
     if !parser.peek(pos, op) {
         Ok((left_expr, pos))
     } else {
@@ -46,13 +46,13 @@ pub(crate) fn consume_left_args(
 }
 
 // 1 ^ 2 ^ 3 => 1 ^ (2 ^ 3)
-pub(crate) fn parse_right_assoc_expr(
-    parser: &Parser,
+pub(crate) fn parse_right_assoc_expr<'a>(
+    parser: &'a Parser<'a>,
     pos: usize,
     op: Token,
-    next_level: fn(&Parser, usize) -> ParseResult,
-    build: fn(Expression, Expression) -> Result<Expression>,
-) -> ParseResult {
+    next_level: fn(&'a Parser<'a>, usize) -> ParseResult<'a>,
+    build: fn(Expression<'a>, Expression<'a>) -> Result<Expression<'a>>,
+) -> ParseResult<'a> {
     let (expr, pos) = next_level(parser, pos)?;
     if !parser.peek(pos, op) {
         Ok((expr, pos))
@@ -61,14 +61,14 @@ pub(crate) fn parse_right_assoc_expr(
     }
 }
 
-pub(crate) fn consume_right_args(
-    parser: &Parser,
+pub(crate) fn consume_right_args<'a>(
+    parser: &'a Parser<'a>,
     pos: usize,
     op: Token,
-    next_level: fn(&Parser, usize) -> ParseResult,
-    base_expr: Expression,
-    build: fn(Expression, Expression) -> Result<Expression>,
-) -> ParseResult {
+    next_level: fn(&'a Parser<'a>, usize) -> ParseResult<'a>,
+    base_expr: Expression<'a>,
+    build: fn(Expression<'a>, Expression<'a>) -> Result<Expression<'a>>,
+) -> ParseResult<'a> {
     if !parser.peek(pos, op) {
         Ok((base_expr, pos))
     } else {
@@ -77,11 +77,11 @@ pub(crate) fn consume_right_args(
     }
 }
 
-pub(crate) fn consume_exprs_sep_by(
-    parser: &Parser,
+pub(crate) fn consume_exprs_sep_by<'a>(
+    parser: &'a Parser<'a>,
     pos: usize,
     symbol: Token,
-) -> Result<(Vec<Expression>, usize)> {
+) -> Result<(Vec<Expression<'a>>, usize)> {
     let mut result = vec![];
     let (expr, mut pos) = Expression::parse(parser, pos)?;
     result.push(expr);
@@ -93,7 +93,7 @@ pub(crate) fn consume_exprs_sep_by(
     Ok((result, pos))
 }
 
-pub(crate) fn consume_args(parser: &Parser, pos: usize) -> Result<(Vec<Expression>, usize)> {
+pub(crate) fn consume_args<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<Expression<'a>>, usize)> {
     let mut args = vec![];
     let mut pos = pos;
     while !is_func_call_end_symbol(parser.get_token(pos)) {
@@ -104,11 +104,11 @@ pub(crate) fn consume_args(parser: &Parser, pos: usize) -> Result<(Vec<Expressio
     Ok((args, pos))
 }
 
-pub(crate) fn consume_ids_sep_by(
-    parser: &Parser,
+pub(crate) fn consume_ids_sep_by<'a>(
+    parser: &'a  Parser<'a>,
     pos: usize,
     symbol: Token,
-) -> Result<(Vec<String>, usize)> {
+) -> Result<(Vec<&'a str>, usize)> {
     let mut result = vec![];
     let (id, mut pos) = consume_id(parser, pos)?;
     result.push(id);
@@ -120,9 +120,9 @@ pub(crate) fn consume_ids_sep_by(
     Ok((result, pos))
 }
 
-pub(crate) fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+pub(crate) fn consume_id<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(&'a str, usize)> {
     if let Some(Token::Id(id)) = parser.get_token(pos) {
-        Ok((id.to_string(), pos + 1))
+        Ok((id, pos + 1))
     } else {
         raise_parser_error("Expecting identifier", parser, pos, true)
     }

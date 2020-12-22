@@ -10,17 +10,18 @@ use crate::parser::{
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub(crate) enum Equation {
-    Value(String, Expression),
-    TupleValue(Vec<String>, Expression),
-    LValue(Expression, Expression),
-    LValueWithGuards(Expression, Vec<Guard>),
-    Function(String, Vec<Arg>, Expression),
-    FunctionWithGuards(String, Vec<Arg>, Vec<Guard>),
+pub(crate) enum Equation<'a> {
+    Value(&'a str, Expression<'a>),
+    TupleValue(Vec<&'a str>, Expression<'a>),
+    LValue(Expression<'a>, Expression<'a>),
+    LValueWithGuards(Expression<'a>, Vec<Guard<'a>>),
+    Function(&'a str, Vec<Arg<'a>>, Expression<'a>),
+    FunctionWithGuards(&'a str, Vec<Arg<'a>>, Vec<Guard<'a>>),
 }
 
-impl Equation {
-    pub(crate) fn parse(parser: &Parser, pos: usize, inner: bool) -> Result<(Equation, usize)> {
+impl<'a> Equation<'a> {
+
+    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize, inner: bool) -> Result<(Equation<'a>, usize)> {
         if let Some(Token::Id(id)) = parser.get_token(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
         } else if inner {
@@ -36,23 +37,24 @@ impl Equation {
     }
 
     pub(crate) fn parse_back_arrow_or_assign_eq(
-        parser: &Parser,
+        parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(Equation, usize)> {
+    ) -> Result<(Equation<'a>, usize)> {
         Equation::parse_value_assign2(parser, pos, Token::BackArrow, Token::Assign)
     }
-    pub(crate) fn parse_back_arrow_eq(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+
+    pub(crate) fn parse_back_arrow_eq(parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
         Equation::parse_value_assign(parser, pos, Token::BackArrow)
     }
 
-    pub(crate) fn parse_value(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+    pub(crate) fn parse_value(parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
         Equation::parse_value_assign(parser, pos, Token::Assign)
     }
 
-    fn parse_value_assign(parser: &Parser, pos: usize, symbol: Token) -> Result<(Equation, usize)> {
+    fn parse_value_assign(parser: &'a Parser<'a>, pos: usize, symbol: Token) -> Result<(Equation<'a>, usize)> {
         if let Some(Token::Id(id)) = parser.get_token(pos) {
             let pos = consume_symbol(parser, pos + 1, symbol)?;
-            Equation::parse_val(id.to_string(), parser, pos)
+            Equation::parse_val(id, parser, pos)
         } else {
             let (l_expr, pos) = Expression::parse_primary_expr(parser, pos)?;
             let pos = consume_symbol(parser, pos, symbol)?;
@@ -62,11 +64,11 @@ impl Equation {
     }
 
     fn parse_value_assign2(
-        parser: &Parser,
+        parser: &'a Parser<'a>,
         pos: usize,
         symbol1: Token,
         symbol2: Token,
-    ) -> Result<(Equation, usize)> {
+    ) -> Result<(Equation<'a>, usize)> {
         if let Some(Token::Id(id)) = parser.get_token(pos) {
             let pos = pos + 1;
             let pos = if parser.peek(pos, symbol1) {
@@ -74,7 +76,7 @@ impl Equation {
             } else {
                 consume_symbol(parser, pos, symbol2)?
             };
-            Equation::parse_val(id.to_string(), parser, pos)
+            Equation::parse_val(id, parser, pos)
         } else if parser.peek(pos, Token::LeftParen) {
             let pos = consume_symbol(parser, pos, Token::LeftParen)?;
             let (ids, pos) = consume_ids_sep_by(parser, pos, Token::Comma)?;
@@ -91,8 +93,7 @@ impl Equation {
         }
     }
 
-    fn parse_func_or_val(id: &str, parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
-        let name = id.to_string();
+    fn parse_func_or_val(name: &'a str, parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
         if parser.peek(pos, Token::Assign) {
             Equation::parse_val(name, parser, pos + 1)
         } else {
@@ -100,14 +101,14 @@ impl Equation {
         }
     }
 
-    fn parse_val(name: String, parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+    fn parse_val(name: &'a str, parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
         // we already parsed a =
         let pos = parser.skip_nl(pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
         Ok((Equation::Value(name, expr), pos))
     }
 
-    fn parse_func(name: String, parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+    fn parse_func(name: &'a str, parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
         let (args, pos) = Arg::parse(parser, pos)?;
         if parser.peek(pos, Token::Assign) {
             Equation::parse_func_no_guards(name, args, parser, pos + 1)
@@ -117,10 +118,10 @@ impl Equation {
     }
 
     fn parse_lval_no_guards(
-        expr_left: Expression,
-        parser: &Parser,
+        expr_left: Expression<'a>,
+        parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(Equation, usize)> {
+    ) -> Result<(Equation<'a>, usize)> {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr_val, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
@@ -129,11 +130,11 @@ impl Equation {
     }
 
     fn parse_func_no_guards(
-        name: String,
-        args: VecArg,
-        parser: &Parser,
+        name: &'a str,
+        args: VecArg<'a>,
+        parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(Equation, usize)> {
+    ) -> Result<(Equation<'a>, usize)> {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_where_or_dedent(parser, pos, indent)?;
@@ -142,21 +143,21 @@ impl Equation {
     }
 
     fn parse_func_guards(
-        name: String,
-        args: VecArg,
-        parser: &Parser,
+        name: &'a str,
+        args: VecArg<'a>,
+        parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(Equation, usize)> {
+    ) -> Result<(Equation<'a>, usize)> {
         let (guards, pos) = parse_guards(parser, pos)?;
         let eq = Equation::FunctionWithGuards(name, args, guards);
         Ok((eq, pos))
     }
 
     fn parse_lval_guards(
-        left_expr: Expression,
-        parser: &Parser,
+        left_expr: Expression<'a>,
+        parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(Equation, usize)> {
+    ) -> Result<(Equation<'a>, usize)> {
         let (guards, pos) = parse_guards(parser, pos)?;
         let eq = Equation::LValueWithGuards(left_expr, guards);
         Ok((eq, pos))

@@ -10,5 +10,5 @@ use backend::Params;
 
 fn main() -> Result<()> {
     let params = Params::from_args();
-    backend::run(params)
+    backend::run(&params)
 }

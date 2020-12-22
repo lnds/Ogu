@@ -3,13 +3,13 @@ use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub(crate) enum Exposing {
+pub(crate) enum Exposing<'a> {
     All,
-    List(Vec<String>),
+    List(Vec<&'a str>),
 }
 
-impl<'a> Exposing {
-    pub(crate) fn parse(parser: &Parser<'a>, pos: usize) -> Result<(Option<Self>, usize)> {
+impl<'a> Exposing<'a> {
+    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<(Option<Self>, usize)> {
         if parser.peek(pos, Token::Exposing) {
             Exposing::exposing(parser, pos + 1)
         } else {
@@ -17,7 +17,7 @@ impl<'a> Exposing {
         }
     }
 
-    fn exposing(parser: &Parser<'a>, pos: usize) -> Result<(Option<Exposing>, usize)> {
+    fn exposing(parser: &'a Parser<'a>, pos: usize) -> Result<(Option<Exposing<'a>>, usize)> {
         let pos = consume_symbol(parser, pos, Token::LeftParen)?;
         let (expo, pos) = if parser.peek(pos, Token::DotDot) {
             (Exposing::All, pos + 1)
@@ -30,17 +30,17 @@ impl<'a> Exposing {
         Ok((Some(expo), pos + 1))
     }
 
-    fn exposing_ids(parser: &Parser<'a>, pos: usize) -> Result<(Exposing, usize)> {
+    fn exposing_ids(parser: &'a Parser<'a>, pos: usize) -> Result<(Exposing<'a>, usize)> {
         let mut ids = vec![];
         let mut pos = pos;
         loop {
             match parser.get_token(pos) {
                 Some(Token::Id(s)) => {
-                    ids.push(s.to_string());
+                    ids.push(s);
                     pos += 1;
                 }
                 Some(Token::TypeId(s)) => {
-                    ids.push(s.to_string());
+                    ids.push(s);
                     pos += 1;
                 }
                 _ => {

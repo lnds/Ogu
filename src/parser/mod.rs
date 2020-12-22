@@ -21,7 +21,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    pub(crate) fn parse(&mut self, filename: &PathBuf) -> Result<ModuleAst> {
+    pub(crate) fn parse(&mut self, filename: &'a PathBuf) -> Result<ModuleAst> {
         ModuleAst::parse(self, filename, 0)
     }
 
@@ -68,7 +68,7 @@ pub(crate) fn consume_opt_symbol(parser: &Parser, pos: usize, token: Token) -> R
     }
 }
 
-pub(crate) fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
+pub(crate) fn parse_opt_indent<'a>(parser: &'a Parser<'a>, pos: usize) -> (bool, usize) {
     let pos = parser.skip_nl(pos);
     if parser.peek(pos, Token::Indent) {
         (true, pos + 1)
@@ -77,7 +77,7 @@ pub(crate) fn parse_opt_indent(parser: &Parser, pos: usize) -> (bool, usize) {
     }
 }
 
-pub(crate) fn parse_opt_dedent(parser: &Parser, pos: usize, in_indent: bool) -> Result<usize> {
+pub(crate) fn parse_opt_dedent<'a>(parser: &'a Parser<'a>, pos: usize, in_indent: bool) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
         pos = consume_symbol(parser, pos, Token::Dedent)?;
@@ -117,24 +117,24 @@ pub(crate) fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
     }
 }
 
-pub(crate) fn consume_string(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+pub(crate) fn consume_string<'a>(parser: &'a Parser, pos: usize) -> Result<(&'a str, usize)> {
     match parser.get_token(pos) {
-        Some(Token::String(s)) => Ok((s.to_string(), pos + 1)),
+        Some(Token::String(s)) => Ok((s, pos + 1)),
         _ => raise_parser_error("Expecting an string", parser, pos, true),
     }
 }
 
-pub(crate) fn consume_type_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+pub(crate) fn consume_type_id<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(&'a str, usize)> {
     match parser.get_token(pos) {
-        Some(Token::TypeId(type_id)) => Ok((type_id.to_string(), pos + 1)),
+        Some(Token::TypeId(type_id)) => Ok((type_id, pos + 1)),
         _ => raise_parser_error("expecting a type identifier", parser, pos, true),
     }
 }
 
-pub(crate) fn consume_qualified_type_id(
-    parser: &Parser,
+pub(crate) fn consume_qualified_type_id<'a>(
+    parser: &'a Parser,
     pos: usize,
-) -> Result<(String, Vec<String>, usize)> {
+) -> Result<(&'a str, Vec<&'a str>, usize)> {
     let (t_id, mut pos) = consume_type_id(parser, pos)?;
     let mut names = vec![];
     while parser.peek(pos, Token::Dot) {
@@ -146,9 +146,9 @@ pub(crate) fn consume_qualified_type_id(
     Ok((t_id, names, pos))
 }
 
-pub(crate) fn consume_id(parser: &Parser, pos: usize) -> Result<(String, usize)> {
+pub(crate) fn consume_id<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(&'a str, usize)> {
     match parser.get_token(pos) {
-        Some(Token::Id(id)) => Ok((id.to_string(), pos + 1)),
+        Some(Token::Id(id)) => Ok((id, pos + 1)),
         _ => raise_parser_error("Expecting identifier", parser, pos, true),
     }
 }

@@ -1,7 +1,8 @@
-pub mod symbols;
-pub mod scopes;
-pub mod types;
-pub mod loader;
+pub(crate) mod symbols;
+pub(crate) mod scopes;
+pub(crate) mod types;
+pub(crate) mod loader;
+pub (crate) mod module;
 
 use crate::backend::OguError;
 use anyhow::{Context, Error, Result};
@@ -9,7 +10,7 @@ use crate::symbols::scopes::Scope;
 use crate::symbols::symbols::Symbol;
 use std::collections::HashMap;
 
-pub struct SymbolTable<'a> {
+pub(crate) struct SymbolTable<'a> {
     name: String,
     enclosing_scope: Option<Box<dyn Scope<'a> + 'a>>,
     symbols: HashMap<&'a str, Symbol>,
@@ -26,7 +27,7 @@ impl<'a> SymbolTable<'a> {
 
 impl<'a> Scope<'a> for SymbolTable<'a> {
 
-    fn push(self: Box<Self>, name: &str) -> Box<dyn Scope<'a> + 'a> {
+    fn push_scope(self: Box<Self>, name: &str) -> Box<dyn Scope<'a> + 'a> {
         Box::new(SymbolTable {
             name: name.to_string(),
             enclosing_scope: Some(self),

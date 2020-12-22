@@ -15,7 +15,7 @@ use anyhow::Result;
 #[macro_export]
 macro_rules! parse_left_assoc {
     ($func_name:ident, $op:expr, $next_level: expr) => {
-        fn $func_name(parser: &Parser, pos: usize) -> ParseResult {
+        fn $func_name (parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
             parse_left_assoc_expr(parser, pos, $op, $next_level, |left, right| {
                 let la_expr = LeftAssocExpr($op, Box::new(left), Box::new(right));
                 left_assoc_expr_to_expr(la_expr)
@@ -27,7 +27,7 @@ macro_rules! parse_left_assoc {
 #[macro_export]
 macro_rules! parse_right_assoc {
     ($func_name:ident, $op:expr, $next_level: expr) => {
-        fn $func_name(parser: &Parser, pos: usize) -> ParseResult {
+        fn $func_name (parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
             parse_right_assoc_expr(parser, pos, $op, $next_level, |base_expr, expr| {
                 let ra_expr = RightAssocExpr($op, Box::new(base_expr), Box::new(expr));
                 right_assoc_expr_to_expr(ra_expr)
@@ -37,135 +37,135 @@ macro_rules! parse_right_assoc {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum RecurValue {
-    Value(Expression),
-    Var(String, Expression),
+pub(crate) enum RecurValue<'a> {
+    Value(Expression<'a>),
+    Var(&'a str, Expression<'a>),
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum LoopCond {
-    WhileExpr(Box<Expression>),
-    UntilExpr(Box<Expression>),
+pub(crate) enum LoopCond<'a> {
+    WhileExpr(Box<Expression<'a>>),
+    UntilExpr(Box<Expression<'a>>),
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct HandleGuard(
-    Expression,
-    Option<Expression>,
-    Option<Vec<String>>,
-    Option<Expression>,
+pub(crate) struct HandleGuard<'a>(
+    Expression<'a>,
+    Option<Expression<'a>>,
+    Option<Vec<&'a str>>,
+    Option<Expression<'a>>,
 );
 
 #[derive(Debug, Clone)]
-pub(crate) enum Expression {
-    Identifier(String),
-    QualifedIdentifier(String, Vec<String>),
-    TypeIdentifier(String),
-    StringLiteral(String),
+pub(crate) enum Expression<'a> {
+    Identifier(&'a str),
+    QualifedIdentifier(&'a str, Vec<&'a str>),
+    TypeIdentifier(&'a str),
+    StringLiteral(&'a str),
     LargeStringLiteral(Option<String>),
-    RegexpLiteral(String),
-    CharLiteral(String),
-    IntegerLiteral(String),
-    FloatLiteral(String),
-    DateLiteral(String),
-    FormatString(String),
+    RegexpLiteral(&'a str),
+    CharLiteral(&'a str),
+    IntegerLiteral(&'a str),
+    FloatLiteral(&'a str),
+    DateLiteral(&'a str),
+    FormatString(&'a str),
     Unit,
     EmptyList,
-    NotExpr(Box<Expression>),
-    LazyExpr(Box<Expression>),
-    YieldExpr(Box<Expression>),
-    ReifyExpr(String, Vec<Equation>),
-    ListExpr(Vec<Expression>),
+    NotExpr(Box<Expression<'a>>),
+    LazyExpr(Box<Expression<'a>>),
+    YieldExpr(Box<Expression<'a>>),
+    ReifyExpr(&'a str, Vec<Equation<'a>>),
+    ListExpr(Vec<Expression<'a>>),
     ListByComprehension(
-        Vec<Expression>,
-        Vec<Equation>,
-        Vec<Expression>,
-        Vec<Equation>,
+        Vec<Expression<'a>>,
+        Vec<Equation<'a>>,
+        Vec<Expression<'a>>,
+        Vec<Equation<'a>>,
     ),
-    RangeExpr(Vec<Expression>, Box<Expression>),
-    RangeOpenExpr(Vec<Expression>, Box<Expression>),
-    RangeInfExpr(Vec<Expression>),
+    RangeExpr(Vec<Expression<'a>>, Box<Expression<'a>>),
+    RangeOpenExpr(Vec<Expression<'a>>, Box<Expression<'a>>),
+    RangeInfExpr(Vec<Expression<'a>>),
     // [exprs...]
-    DictExpr(Vec<(Expression, Expression)>),
-    SetExpr(Vec<Expression>),
-    RecordExpr(Vec<(String, Expression)>),
-    TypedFuncCall(String, Vec<Expression>, Vec<Expression>),
-    FuncCallExpr(Box<Expression>, Box<Expression>),
-    LambdaExpr(Vec<LambdaArg>, Box<Expression>),
-    MatchesExpr(Box<Expression>, Box<Expression>),
-    NoMatchesExpr(Box<Expression>, Box<Expression>),
-    ReMatchExpr(Box<Expression>, Box<Expression>),
-    ConsExpr(Box<Expression>, Box<Expression>),
-    PowExpr(Box<Expression>, Box<Expression>),
-    IndexExpr(Box<Expression>, Box<Expression>),
-    UnaryCons(Option<Box<Expression>>),
-    UnaryAdd(Option<Box<Expression>>),
-    UnaryConcat(Option<Box<Expression>>),
-    UnarySub(Option<Box<Expression>>),
-    UnaryMul(Option<Box<Expression>>),
-    UnaryPow(Option<Box<Expression>>),
-    UnaryMod(Option<Box<Expression>>),
-    UnaryDiv(Option<Box<Expression>>),
-    UnaryAnd(Option<Box<Expression>>),
-    UnaryOr(Option<Box<Expression>>),
-    UnaryNot(Option<Box<Expression>>),
-    UnaryEq(Option<Box<Expression>>),
-    UnaryNotEq(Option<Box<Expression>>),
-    UnaryGt(Option<Box<Expression>>),
-    UnaryGe(Option<Box<Expression>>),
-    UnaryLt(Option<Box<Expression>>),
-    UnaryLe(Option<Box<Expression>>),
-    OrExpr(Box<Expression>, Box<Expression>),
-    AndExpr(Box<Expression>, Box<Expression>),
-    LeExpr(Box<Expression>, Box<Expression>),
-    LtExpr(Box<Expression>, Box<Expression>),
-    GeExpr(Box<Expression>, Box<Expression>),
-    GtExpr(Box<Expression>, Box<Expression>),
-    EqExpr(Box<Expression>, Box<Expression>),
-    NeExpr(Box<Expression>, Box<Expression>),
-    AddExpr(Box<Expression>, Box<Expression>),
-    ConcatExpr(Box<Expression>, Box<Expression>),
-    SubExpr(Box<Expression>, Box<Expression>),
-    MulExpr(Box<Expression>, Box<Expression>),
-    DivExpr(Box<Expression>, Box<Expression>),
-    IntDivExpr(Box<Expression>, Box<Expression>),
-    ModExpr(Box<Expression>, Box<Expression>),
-    ComposeFwdExpr(Box<Expression>, Box<Expression>),
-    ComposeBckExpr(Box<Expression>, Box<Expression>),
-    TupleExpr(Vec<Expression>),
-    DoExpr(Vec<Expression>),
-    TryHandleExpr(Box<Expression>, Vec<HandleGuard>),
-    RepeatExpr(Vec<RecurValue>),
-    RecurExpr(Vec<Expression>),
+    DictExpr(Vec<(Expression<'a>, Expression<'a>)>),
+    SetExpr(Vec<Expression<'a>>),
+    RecordExpr(Vec<(&'a str, Expression<'a>)>),
+    TypedFuncCall(String, Vec<Expression<'a>>, Vec<Expression<'a>>),
+    FuncCallExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>),
+    MatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    NoMatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    ReMatchExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    ConsExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    PowExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    IndexExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    UnaryCons(Option<Box<Expression<'a>>>),
+    UnaryAdd(Option<Box<Expression<'a>>>),
+    UnaryConcat(Option<Box<Expression<'a>>>),
+    UnarySub(Option<Box<Expression<'a>>>),
+    UnaryMul(Option<Box<Expression<'a>>>),
+    UnaryPow(Option<Box<Expression<'a>>>),
+    UnaryMod(Option<Box<Expression<'a>>>),
+    UnaryDiv(Option<Box<Expression<'a>>>),
+    UnaryAnd(Option<Box<Expression<'a>>>),
+    UnaryOr(Option<Box<Expression<'a>>>),
+    UnaryNot(Option<Box<Expression<'a>>>),
+    UnaryEq(Option<Box<Expression<'a>>>),
+    UnaryNotEq(Option<Box<Expression<'a>>>),
+    UnaryGt(Option<Box<Expression<'a>>>),
+    UnaryGe(Option<Box<Expression<'a>>>),
+    UnaryLt(Option<Box<Expression<'a>>>),
+    UnaryLe(Option<Box<Expression<'a>>>),
+    OrExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    AndExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    LeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    LtExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    GeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    GtExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    EqExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    NeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    AddExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    ConcatExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    SubExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    MulExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    DivExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    IntDivExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    ModExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    ComposeFwdExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    ComposeBckExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    TupleExpr(Vec<Expression<'a>>),
+    DoExpr(Vec<Expression<'a>>),
+    TryHandleExpr(Box<Expression<'a>>, Vec<HandleGuard<'a>>),
+    RepeatExpr(Vec<RecurValue<'a>>),
+    RecurExpr(Vec<Expression<'a>>),
     PerformExpr(
-        Box<Expression>,
-        Option<Vec<Expression>>,
-        Option<Box<Expression>>,
+        Box<Expression<'a>>,
+        Option<Vec<Expression<'a>>>,
+        Option<Box<Expression<'a>>>,
     ),
-    LetExpr(Vec<Equation>, Box<Expression>),
-    CondExpr(Vec<(Option<Expression>, Expression)>),
-    CaseExpr(Box<Expression>, Vec<(Option<Expression>, Expression)>),
-    IfExpr(Box<Expression>, Box<Expression>, Box<Expression>),
-    MacroExpandExpr(Box<Expression>),
-    ResumeExpr(Option<Box<Expression>>, Option<Vec<Expression>>),
+    LetExpr(Vec<Equation<'a>>, Box<Expression<'a>>),
+    CondExpr(Vec<(Option<Expression<'a>>, Expression<'a>)>),
+    CaseExpr(Box<Expression<'a>>, Vec<(Option<Expression<'a>>, Expression<'a>)>),
+    IfExpr(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>),
+    MacroExpandExpr(Box<Expression<'a>>),
+    ResumeExpr(Option<Box<Expression<'a>>>, Option<Vec<Expression<'a>>>),
     LoopExpr(
-        Option<Vec<Equation>>,
-        Option<LoopCond>,
-        Box<Expression>,
-        Option<Box<Expression>>,
+        Option<Vec<Equation<'a>>>,
+        Option<LoopCond<'a>>,
+        Box<Expression<'a>>,
+        Option<Box<Expression<'a>>>,
     ),
 }
 
-pub(crate) type ParseResult = Result<(Expression, usize)>;
+pub(crate) type ParseResult<'a> = Result<(Expression<'a>, usize)>;
 
 #[derive(Debug, Clone)]
-pub(crate) enum LambdaArg {
+pub(crate) enum LambdaArg<'a> {
     Simple(String),
-    Tuple(Vec<String>),
+    Tuple(Vec<&'a str>),
 }
 
-impl Expression {
-    pub(crate) fn parse(parser: &Parser, pos: usize) -> ParseResult {
+impl<'a> Expression<'a> {
+    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, mut pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
         if parser.peek(pos, Token::SemiColon) {
             let mut exprs = vec![expr];
@@ -200,7 +200,7 @@ impl Expression {
         Expression::parse_pipe_func_call_expr
     );
 
-    pub(crate) fn parse_control_expr(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_control_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             None => raise_parser_error("Expecting an expression but found EOF", parser, pos, false),
             Some(Token::Cond) => Expression::parse_cond(parser, pos),
@@ -219,7 +219,7 @@ impl Expression {
         }
     }
 
-    pub(crate) fn parse_cond(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_cond(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Cond)?;
         let pos = parser.skip_nl(pos);
         let mut pos = consume_symbol(parser, pos, Token::Indent)?;
@@ -242,7 +242,7 @@ impl Expression {
         Ok((Expression::CondExpr(conds), pos))
     }
 
-    fn parse_opt_otherwise(parser: &Parser, pos: usize) -> Result<(Option<Expression>, usize)> {
+    fn parse_opt_otherwise(parser: &'a Parser<'a>, pos: usize) -> Result<(Option<Expression<'a>>, usize)> {
         if parser.peek(pos, Token::Otherwise) {
             Ok((None, consume_symbol(parser, pos, Token::Otherwise)?))
         } else {
@@ -251,7 +251,7 @@ impl Expression {
         }
     }
 
-    pub(crate) fn parse_case(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_case(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Case)?;
         let (match_expr, pos) = Expression::parse_logical_expr(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Of)?;
@@ -276,7 +276,7 @@ impl Expression {
         Ok((Expression::CaseExpr(Box::new(match_expr), matches), pos))
     }
 
-    pub(crate) fn parse_reify(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_reify(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Reify)?;
         let (type_id, pos) = consume_type_id(parser, pos)?;
         let (indent, pos) = parse_opt_indent(parser, pos);
@@ -296,7 +296,7 @@ impl Expression {
         Ok((Expression::ReifyExpr(type_id, eqs), pos))
     }
 
-    pub(crate) fn parse_lambda_expr(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_lambda_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         if !parser.peek(pos, Token::Lambda) {
             Expression::parse_logical_expr(parser, pos)
         } else {
@@ -309,7 +309,7 @@ impl Expression {
         }
     }
 
-    fn parse_lambda_args(parser: &Parser, pos: usize) -> Result<(Vec<LambdaArg>, usize)> {
+    fn parse_lambda_args(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<LambdaArg<'a>>, usize)> {
         let mut args = vec![];
         let (arg, mut pos) = Expression::parse_lambda_arg(parser, pos)?;
         args.push(arg);
@@ -321,7 +321,7 @@ impl Expression {
         Ok((args, pos))
     }
 
-    fn parse_lambda_arg(parser: &Parser, pos: usize) -> Result<(LambdaArg, usize)> {
+    fn parse_lambda_arg(parser: &'a Parser<'a>, pos: usize) -> Result<(LambdaArg<'a>, usize)> {
         match parser.get_token(pos) {
             Some(Token::LeftParen) => {
                 let (ids, pos) = consume_ids_sep_by(parser, pos + 1, Token::Comma)?;
@@ -333,7 +333,7 @@ impl Expression {
         }
     }
 
-    fn parse_logical_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_logical_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         Expression::parse_logical_or_expr(parser, pos)
     }
 
@@ -349,7 +349,7 @@ impl Expression {
         Expression::parse_comparative_expr
     );
 
-    fn parse_comparative_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_comparative_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         Expression::parse_lt_expr(parser, pos)
     }
 
@@ -373,7 +373,7 @@ impl Expression {
 
     parse_left_assoc!(parse_ne_expr, Token::NotEqual, Expression::parse_regex_expr);
 
-    fn parse_regex_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_regex_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         Expression::parse_matches_expr(parser, pos)
     }
 
@@ -443,7 +443,7 @@ impl Expression {
         Expression::parse_primary_expr
     );
 
-    pub(crate) fn parse_primary_expr(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_primary_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             Some(Token::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Token::LeftCurly) => Expression::parse_record_expr(parser, pos),
@@ -460,14 +460,14 @@ impl Expression {
         }
     }
 
-    fn parse_macro_expand_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_macro_expand_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::LeftCurlyCurly)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::RightCurlyCurly)?;
         Ok((Expression::MacroExpandExpr(Box::new(expr)), pos))
     }
 
-    fn parse_paren_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_paren_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::LeftParen)?;
         match parser.get_token(pos) {
             Some(Token::RightParen) => Ok((Expression::Unit, pos + 1)),
@@ -526,7 +526,7 @@ impl Expression {
         }
     }
 
-    fn parse_list_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_list_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::LeftBracket)?;
         match parser.get_token(pos) {
             Some(Token::RightBracket) => Ok((Expression::EmptyList, pos + 1)),
@@ -591,7 +591,7 @@ impl Expression {
         }
     }
 
-    fn parse_record_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_record_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let mut pos = consume_symbol(parser, pos, Token::LeftCurly)?;
         let mut pairs = vec![];
         while !parser.peek(pos, Token::RightCurly) {
@@ -609,7 +609,7 @@ impl Expression {
         Ok((Expression::RecordExpr(pairs), pos))
     }
 
-    fn parse_dict_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_dict_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let mut pos = consume_symbol(parser, pos, Token::HashCurly)?;
         let mut pairs = vec![];
         while !parser.peek(pos, Token::RightCurly) {
@@ -628,7 +628,7 @@ impl Expression {
         Ok((Expression::DictExpr(pairs), pos))
     }
 
-    fn parse_set_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_set_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let mut pos = consume_symbol(parser, pos, Token::DollarCurly)?;
         let mut elems = vec![];
         while !parser.peek(pos, Token::RightCurly) {
@@ -644,39 +644,39 @@ impl Expression {
         Ok((Expression::SetExpr(elems), pos))
     }
 
-    fn parse_lazy_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_lazy_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Lazy)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
         Ok((Expression::LazyExpr(Box::new(expr)), pos))
     }
 
-    fn parse_yield_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_yield_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Yield)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
         Ok((Expression::YieldExpr(Box::new(expr)), pos))
     }
 
-    fn parse_not_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_not_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Not)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
         Ok((Expression::NotExpr(Box::new(expr)), pos))
     }
 
-    fn parse_literal_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_literal_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             Some(Token::LargeString(index)) => Ok((
                 Expression::LargeStringLiteral(parser.get_large_string(index)),
                 pos + 1,
             )),
-            Some(Token::String(str)) => Ok((Expression::StringLiteral(str.to_string()), pos + 1)),
-            Some(Token::Integer(int)) => Ok((Expression::IntegerLiteral(int.to_string()), pos + 1)),
-            Some(Token::Float(float)) => Ok((Expression::FloatLiteral(float.to_string()), pos + 1)),
-            Some(Token::IsoDate(date)) => Ok((Expression::DateLiteral(date.to_string()), pos + 1)),
+            Some(Token::String(str)) => Ok((Expression::StringLiteral(str), pos + 1)),
+            Some(Token::Integer(int)) => Ok((Expression::IntegerLiteral(int), pos + 1)),
+            Some(Token::Float(float)) => Ok((Expression::FloatLiteral(float), pos + 1)),
+            Some(Token::IsoDate(date)) => Ok((Expression::DateLiteral(date), pos + 1)),
             Some(Token::FormatString(f_str)) => {
-                Ok((Expression::FormatString(f_str.to_string()), pos + 1))
+                Ok((Expression::FormatString(f_str), pos + 1))
             }
-            Some(Token::Char(chr)) => Ok((Expression::CharLiteral(chr.to_string()), pos + 1)),
-            Some(Token::RegExp(expr)) => Ok((Expression::RegexpLiteral(expr.to_string()), pos + 1)),
+            Some(Token::Char(chr)) => Ok((Expression::CharLiteral(chr), pos + 1)),
+            Some(Token::RegExp(expr)) => Ok((Expression::RegexpLiteral(expr), pos + 1)),
             sym => {
                 println!("parse literal sym = {:?}", sym);
                 todo!()
@@ -684,7 +684,7 @@ impl Expression {
         }
     }
 
-    fn parse_ctor_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_ctor_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             Some(Token::TypeId(tid)) => {
                 let type_id = tid.to_string();
@@ -695,10 +695,10 @@ impl Expression {
                         pos = consume_symbol(parser, pos, Token::Dot)?;
                         match parser.get_token(pos) {
                             Some(Token::Id(id)) => {
-                                q_ids.push(Expression::Identifier(id.to_string()))
+                                q_ids.push(Expression::Identifier(id))
                             }
                             Some(Token::TypeId(tid)) => {
-                                q_ids.push(Expression::TypeIdentifier(tid.to_string()))
+                                q_ids.push(Expression::TypeIdentifier(tid))
                             }
                             _ => break,
                         }
@@ -717,13 +717,13 @@ impl Expression {
         }
     }
 
-    pub(crate) fn parse_recur(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_recur(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Recur)?;
         let (args, pos) = consume_args(parser, pos)?;
         Ok((Expression::RecurExpr(args), pos))
     }
 
-    pub(crate) fn parse_perform(parser: &Parser, pos: usize) -> ParseResult {
+    pub(crate) fn parse_perform(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Perform)?;
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
         if parser.peek(pos, Token::With) {
@@ -753,7 +753,7 @@ impl Expression {
         }
     }
 
-    fn parse_func_call_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
         if is_func_call_end_symbol(parser.get_token(pos)) {
             Ok((expr, pos))
@@ -771,7 +771,7 @@ impl Expression {
         }
     }
 
-    fn parse_prim_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_prim_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             Some(Token::LeftParen) => Expression::parse_paren_expr(parser, pos),
 
@@ -804,7 +804,7 @@ impl Expression {
         }
     }
 
-    fn parse_let(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_let(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Let)?;
         let (indent, pos) = parse_opt_indent(parser, pos);
         let mut equations = vec![];
@@ -828,14 +828,14 @@ impl Expression {
         Ok((Expression::LetExpr(equations, Box::new(expr)), pos))
     }
 
-    fn parse_let_equation(parser: &Parser, pos: usize) -> Result<(Equation, usize)> {
+    fn parse_let_equation(parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (eq, pos) = Equation::parse(parser, pos, true)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
         Ok((eq, pos))
     }
 
-    fn parse_loop(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_loop(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (for_part, pos) = if parser.peek(pos, Token::For) {
             let (eqs, pos) = Expression::parse_for(parser, pos)?;
             (Some(eqs), pos)
@@ -881,7 +881,7 @@ impl Expression {
         }
     }
 
-    fn parse_for(parser: &Parser, pos: usize) -> Result<(Vec<Equation>, usize)> {
+    fn parse_for(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<Equation<'a>>, usize)> {
         let pos = consume_symbol(parser, pos, Token::For)?;
         let (indent, pos) = parse_opt_indent(parser, pos);
         let mut eqs = vec![];
@@ -903,19 +903,19 @@ impl Expression {
         Ok((eqs, pos))
     }
 
-    fn parse_while(parser: &Parser, pos: usize) -> Result<(LoopCond, usize)> {
+    fn parse_while(parser: &'a Parser<'a>, pos: usize) -> Result<(LoopCond<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Token::While)?;
         let (expr, pos) = Expression::parse_logical_expr(parser, pos)?;
         Ok((LoopCond::WhileExpr(Box::new(expr)), pos))
     }
 
-    fn parse_until(parser: &Parser, pos: usize) -> Result<(LoopCond, usize)> {
+    fn parse_until(parser: &'a Parser<'a>, pos: usize) -> Result<(LoopCond<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Until)?;
         let (expr, pos) = Expression::parse_logical_expr(parser, pos)?;
         Ok((LoopCond::UntilExpr(Box::new(expr)), pos))
     }
 
-    fn parse_repeat(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_repeat(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Repeat)?;
         let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
@@ -937,7 +937,7 @@ impl Expression {
         Ok((Expression::RepeatExpr(exprs), pos))
     }
 
-    fn parse_recur_expr(parser: &Parser, pos: usize) -> Result<(RecurValue, usize)> {
+    fn parse_recur_expr(parser: &'a Parser<'a>, pos: usize) -> Result<(RecurValue<'a>, usize)> {
         if parser.peek(pos, Token::Let) {
             let pos = consume_symbol(parser, pos, Token::Let)?;
             let (id, pos) = consume_id(parser, pos)?;
@@ -950,11 +950,11 @@ impl Expression {
         }
     }
 
-    fn parse_if(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_if(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         Expression::parse_inner_if(parser, pos, Token::If)
     }
 
-    fn parse_inner_if(parser: &Parser, pos: usize, if_symbol: Token) -> ParseResult {
+    fn parse_inner_if(parser: &'a Parser<'a>, pos: usize, if_symbol: Token) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, if_symbol)?;
         let (cond, pos) = Expression::parse(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Then)?;
@@ -983,7 +983,7 @@ impl Expression {
         }
     }
 
-    fn parse_do(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_do(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Do)?;
         let pos = parser.skip_nl(pos);
         let pos = consume_symbol(parser, pos, Token::Indent)?;
@@ -1001,7 +1001,7 @@ impl Expression {
         Ok((Expression::DoExpr(exprs), pos))
     }
 
-    fn parse_try_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_try_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Try)?;
         let (in_indent, pos) = parse_opt_indent(parser, pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
@@ -1015,9 +1015,9 @@ impl Expression {
     }
 
     pub(crate) fn parse_handle_guards(
-        parser: &Parser,
+        parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(Vec<HandleGuard>, usize)> {
+    ) -> Result<(Vec<HandleGuard<'a>>, usize)> {
         let mut handles = vec![];
         let mut pos = pos;
         while parser.peek(pos, Token::Guard) {
@@ -1029,7 +1029,7 @@ impl Expression {
         Ok((handles, pos))
     }
 
-    fn parse_handle_guard(parser: &Parser, pos: usize) -> Result<(HandleGuard, usize)> {
+    fn parse_handle_guard(parser: &'a Parser<'a>, pos: usize) -> Result<(HandleGuard<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Guard)?;
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
         let (ctx, args, pos) = if parser.peek(pos, Token::With) {
@@ -1063,7 +1063,7 @@ impl Expression {
         }
     }
 
-    fn parse_args_before_arrow(parser: &Parser, pos: usize) -> Result<(Vec<String>, usize)> {
+    fn parse_args_before_arrow(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<&'a str>, usize)> {
         let mut args = vec![];
         let mut pos = pos;
         while !parser.peek(pos, Token::Arrow) {
@@ -1074,7 +1074,7 @@ impl Expression {
         Ok((args, pos))
     }
 
-    fn parse_resume_expr(parser: &Parser, pos: usize) -> ParseResult {
+    fn parse_resume_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Resume)?;
         if is_func_call_end_symbol(parser.get_token(pos)) {
             Ok((Expression::ResumeExpr(None, None), pos))

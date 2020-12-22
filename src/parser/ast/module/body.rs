@@ -8,131 +8,133 @@ use crate::parser::{
     parse_opt_dedent, parse_opt_indent, raise_parser_error, Parser,
 };
 use anyhow::Result;
+use std::ops::Deref;
+use std::borrow::Borrow;
 
 #[derive(Debug, Clone)]
-pub(crate) enum FuncType {
+pub(crate) enum FuncType<'a> {
     Void,
     Macro,
-    Simple(String),
-    Complex(String, Vec<AlgebraicElement>),
-    Param(String),
-    Chain(Box<FuncType>, Box<FuncType>),
+    Simple(&'a str),
+    Complex(&'a str, Vec<AlgebraicElement<'a>>),
+    Param(&'a str),
+    Chain(Box<FuncType<'a>>, Box<FuncType<'a>>),
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum FuncPrototype {
-    Normal(String, FuncType),
-    Effect(String, FuncType),
+pub(crate) enum FuncPrototype<'a> {
+    Normal(&'a str, FuncType<'a>),
+    Effect(&'a str, FuncType<'a>),
 }
 
-impl FuncPrototype {
-    fn get_name(&self) -> String {
+impl<'a> FuncPrototype<'a> {
+    fn get_name(&self) -> &'a str {
         match self {
-            FuncPrototype::Normal(s, _) => s.to_string(),
-            FuncPrototype::Effect(s, _) => s.to_string(),
+            FuncPrototype::Normal(s, _) => s,
+            FuncPrototype::Effect(s, _) => s,
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum AlgebraicElement {
-    Type(String),
-    Param(String),
+pub(crate) enum AlgebraicElement<'a> {
+    Type(&'a str),
+    Param(&'a str),
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct RecordElement(String, AlgebraicElement);
+pub(crate) struct RecordElement<'a>(&'a str, AlgebraicElement<'a>);
 
 #[derive(Debug, Clone)]
-pub(crate) enum AlgebraicType {
-    Simple(String),
-    Primitive(String),
-    Complex(String, Vec<AlgebraicElement>),
-    Record(String, Vec<RecordElement>),
+pub(crate) enum AlgebraicType<'a> {
+    Simple(&'a str),
+    Primitive(&'a str),
+    Complex(&'a str, Vec<AlgebraicElement<'a>>),
+    Record(&'a str, Vec<RecordElement<'a>>),
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum Derivation {
-    ListOfTraits(Vec<String>),
-    Trait(String, Vec<Equation>),
+pub(crate) enum Derivation<'a> {
+    ListOfTraits(Vec<&'a str>),
+    Trait(&'a str, Vec<Equation<'a>>),
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum BaseType {
-    Tuple(Vec<BaseType>),
-    Array(Vec<BaseType>),
-    SimpleRecord(Vec<RecordElement>),
-    Algebraic(AlgebraicType),
-    ExternType(String),
+pub(crate) enum BaseType<'a> {
+    Tuple(Vec<BaseType<'a>>),
+    Array(Vec<BaseType<'a>>),
+    SimpleRecord(Vec<RecordElement<'a>>),
+    Algebraic(AlgebraicType<'a>),
+    ExternType(&'a str),
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum Declaration {
-    Value(String, Expression),
-    ValueWithWhere(String, Expression, Vec<Equation>),
-    Function(String, Vec<Arg>, Expression),
-    FunctionWithWhere(String, Vec<Arg>, Expression, Vec<Equation>),
-    FunctionWithGuards(String, Vec<Arg>, Vec<Guard>),
-    FunctionWithGuardsAndWhere(String, Vec<Arg>, Vec<Guard>, Vec<Equation>),
+pub(crate) enum Declaration<'a> {
+    Value(&'a str, Expression<'a>),
+    ValueWithWhere(&'a str, Expression<'a>, Vec<Equation<'a>>),
+    Function(&'a str, Vec<Arg<'a>>, Expression<'a>),
+    FunctionWithWhere(&'a str, Vec<Arg<'a>>, Expression<'a>, Vec<Equation<'a>>),
+    FunctionWithGuards(&'a str, Vec<Arg<'a>>, Vec<Guard<'a>>),
+    FunctionWithGuardsAndWhere(&'a str, Vec<Arg<'a>>, Vec<Guard<'a>>, Vec<Equation<'a>>),
     TypeDecl(
-        String,
-        Option<Vec<String>>,
-        Vec<AlgebraicType>,
-        Option<Vec<Derivation>>,
+        &'a str,
+        Option<Vec<&'a str>>,
+        Vec<AlgebraicType<'a>>,
+        Option<Vec<Derivation<'a>>>,
     ),
-    TypeAlias(String, Option<Vec<String>>, BaseType),
-    TraitDecl(String, Option<Vec<String>>, Vec<FuncPrototype>),
-    ExtensionDecl(String, String, Vec<Declaration>),
-    FunctionPrototype(FuncPrototype),
-    MacroDecl(Box<Declaration>),
-    Effect(FuncPrototype),
-    Handler(String, Vec<Arg>, Vec<HandleGuard>),
+    TypeAlias(&'a str, Option<Vec<&'a str>>, BaseType<'a>),
+    TraitDecl(&'a str, Option<Vec<&'a str>>, Vec<FuncPrototype<'a>>),
+    ExtensionDecl(&'a str, &'a str, Vec<Declaration<'a>>),
+    FunctionPrototype(FuncPrototype<'a>),
+    MacroDecl(Box<Declaration<'a>>),
+    Effect(FuncPrototype<'a>),
+    Handler(&'a str, Vec<Arg<'a>>, Vec<HandleGuard<'a>>),
     DocString(Option<String>),
 }
 
-impl Declaration {
-    pub fn get_name(&self) -> String {
+impl<'a> Declaration<'a> {
+    pub fn get_name(&self) -> &'a str {
         match self {
-            Declaration::Value(val, _) => val.to_string(),
-            Declaration::ValueWithWhere(val, _, _) => val.to_string(),
-            Declaration::Function(f, _, _) => f.to_string(),
-            Declaration::FunctionWithWhere(f, _, _, _) => f.to_string(),
-            Declaration::FunctionWithGuards(f, _, _) => f.to_string(),
-            Declaration::FunctionWithGuardsAndWhere(f, _, _, _) => f.to_string(),
-            Declaration::TypeDecl(ty, _, _, _) => ty.to_string(),
-            Declaration::TypeAlias(ty, _, _) => ty.to_string(),
-            Declaration::TraitDecl(tr, _, _) => tr.to_string(),
-            Declaration::ExtensionDecl(e, _, _) => e.to_string(),
+            Declaration::Value(val, _) => val,
+            Declaration::ValueWithWhere(val, _, _) => val,
+            Declaration::Function(f, _, _) => f,
+            Declaration::FunctionWithWhere(f, _, _, _) => f,
+            Declaration::FunctionWithGuards(f, _, _) => f,
+            Declaration::FunctionWithGuardsAndWhere(f, _, _, _) => f,
+            Declaration::TypeDecl(ty, _, _, _) => ty,
+            Declaration::TypeAlias(ty, _, _) => ty,
+            Declaration::TraitDecl(tr, _, _) => tr,
+            Declaration::ExtensionDecl(e, _, _) => e,
             Declaration::FunctionPrototype(ft) => ft.get_name(),
             Declaration::MacroDecl(d) => d.get_name(),
             Declaration::Effect(fp) => fp.get_name(),
-            Declaration::Handler(h, _, _) => h.to_string(),
-            Declaration::DocString(Some(s)) => s.to_string(),
-            Declaration::DocString(None) => String::new(),
+            Declaration::Handler(h, _, _) => h,
+            Declaration::DocString(Some(s)) => "",
+            Declaration::DocString(None) => "",
         }
     }
 }
 
-type DeclVec = Vec<Declaration>;
+type DeclVec<'a> = Vec<Declaration<'a>>;
 
-#[derive(Debug)]
-pub(crate) struct Body {
-    declarations: Vec<Declaration>,
+#[derive(Debug, Clone)]
+pub(crate) struct Body<'a> {
+    declarations: Vec<Declaration<'a>>,
 }
 
-type DeclParseResult = Result<Option<(Declaration, usize)>>;
+type DeclParseResult<'a> = Result<Option<(Declaration<'a>, usize)>>;
 
-impl Body {
-    pub(crate) fn get_decls(&mut self) -> Vec<Declaration> {
+impl<'a> Body<'a> {
+    pub(crate) fn get_decls(&mut self) -> Vec<Declaration<'a>> {
         self.declarations.clone()
     }
 
-    pub(crate) fn parse(parser: &Parser, pos: usize) -> Result<Self> {
+    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<Body<'a>> {
         let declarations = Body::parse_decls(parser, pos)?;
         Ok(Body { declarations })
     }
 
-    fn parse_decls(parser: &Parser, pos: usize) -> Result<DeclVec> {
+    fn parse_decls(parser: &'a Parser<'a>, pos: usize) -> Result<DeclVec<'a>> {
         let mut result = vec![];
         let mut pos = pos;
         while let Some((decl, new_pos)) = Body::parse_decl(parser, pos)? {
@@ -142,7 +144,7 @@ impl Body {
         Ok(result)
     }
 
-    pub fn parse_decl(parser: &Parser, pos: usize) -> DeclParseResult {
+    pub fn parse_decl(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let pos = parser.skip_nl(pos);
         match parser.get_token(pos) {
             None => Ok(None),
@@ -177,8 +179,8 @@ impl Body {
     }
 }
 
-impl Declaration {
-    pub fn parse_func_or_val(parser: &Parser, pos: usize) -> DeclParseResult {
+impl<'a> Declaration<'a> {
+    pub fn parse_func_or_val(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let (eq, pos) = Equation::parse(parser, pos, true)?;
         let (opt_where, pos) = if let Some(where_pos) = look_ahead_where(parser, pos) {
             let (where_decl, mut pos) = Declaration::parse_where(parser, where_pos)?;
@@ -227,7 +229,7 @@ impl Declaration {
         }
     }
 
-    fn parse_where(parser: &Parser, pos: usize) -> Result<(Vec<Equation>, usize)> {
+    fn parse_where(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<Equation<'a>>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Where)?;
         let (indent, mut pos) = parse_opt_indent(parser, pos);
         let mut eqs = vec![];
@@ -248,8 +250,9 @@ impl Declaration {
     }
 }
 
-impl Declaration {
-    fn parse_type_decl(parser: &Parser, pos: usize) -> DeclParseResult {
+impl<'a> Declaration<'a> {
+
+    fn parse_type_decl(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Type)?;
         if parser.peek(pos, Token::Alias) {
             return Declaration::parse_type_alias_decl(parser, pos);
@@ -299,7 +302,7 @@ impl Declaration {
         }
     }
 
-    pub fn parse_type_alias_decl(parser: &Parser, pos: usize) -> DeclParseResult {
+    pub fn parse_type_alias_decl(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Alias)?;
         let (type_id, pos) = consume_type_id(parser, pos)?;
         let (type_args, pos) = if parser.peek(pos, Token::Assign) {
@@ -316,7 +319,7 @@ impl Declaration {
         )))
     }
 
-    fn parse_derivation(parser: &Parser, pos: usize) -> Result<(Derivation, usize)> {
+    fn parse_derivation(parser: &'a Parser<'a>, pos: usize) -> Result<(Derivation<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Derive)?;
         if parser.peek(pos, Token::LeftParen) {
             let mut pos = consume_symbol(parser, pos, Token::LeftParen)?;
@@ -351,7 +354,7 @@ impl Declaration {
         }
     }
 
-    fn parse_algebraic_type(parser: &Parser, pos: usize) -> Result<(AlgebraicType, usize)> {
+    fn parse_algebraic_type(parser: &'a Parser<'a>, pos: usize) -> Result<(AlgebraicType<'a>, usize)> {
         if parser.peek(pos, Token::Primitive) {
             Declaration::parse_primitive_type(parser, pos)
         } else {
@@ -374,22 +377,22 @@ impl Declaration {
         }
     }
 
-    fn parse_primitive_type(parser: &Parser, pos: usize) -> Result<(AlgebraicType, usize)> {
+    fn parse_primitive_type(parser: &'a Parser<'a>, pos: usize) -> Result<(AlgebraicType<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Primitive)?;
         let (id, pos) = consume_id(parser, pos)?;
         Ok((AlgebraicType::Primitive(id), pos))
     }
 
     fn parse_record_type(
-        parser: &Parser,
+        parser: &'a Parser<'a>,
         pos: usize,
-        type_id: String,
-    ) -> Result<(AlgebraicType, usize)> {
+        type_id: &'a str,
+    ) -> Result<(AlgebraicType<'a>, usize)> {
         let (members, pos) = Declaration::parse_record_members(parser, pos)?;
         Ok((AlgebraicType::Record(type_id, members), pos))
     }
 
-    fn parse_record_members(parser: &Parser, pos: usize) -> Result<(Vec<RecordElement>, usize)> {
+    fn parse_record_members(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<RecordElement<'a>>, usize)> {
         let pos = consume_symbol(parser, pos, Token::LeftCurly)?;
         let (in_indent, pos) = parse_opt_indent(parser, pos);
         let (member, mut pos) = Declaration::parse_record_member(parser, pos)?;
@@ -406,14 +409,14 @@ impl Declaration {
         Ok((members, pos))
     }
 
-    fn parse_record_member(parser: &Parser, pos: usize) -> Result<(RecordElement, usize)> {
+    fn parse_record_member(parser: &'a Parser<'a>, pos: usize) -> Result<(RecordElement<'a>, usize)> {
         let (id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Colon)?;
         let (tid, pos) = consume_type_id(parser, pos)?;
         Ok((RecordElement(id, AlgebraicElement::Type(tid)), pos))
     }
 
-    fn parse_type_args(parser: &Parser, pos: usize) -> Result<(Vec<String>, usize)> {
+    fn parse_type_args(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<&'a str>, usize)> {
         let (id, mut pos) = consume_id(parser, pos)?;
         let mut args = vec![id];
         while !parser.peek(pos, Token::Assign) {
@@ -425,8 +428,9 @@ impl Declaration {
     }
 }
 
-impl Declaration {
-    fn parse_trait_decl(parser: &Parser, pos: usize) -> DeclParseResult {
+impl<'a> Declaration<'a> {
+
+    fn parse_trait_decl(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Trait)?;
         let (tid, pos) = consume_type_id(parser, pos)?;
         let (in_indent, mut pos) = parse_opt_indent(parser, pos);
@@ -463,7 +467,8 @@ impl Declaration {
             pos,
         )))
     }
-    fn parse_effect_func_prototype(parser: &Parser, pos: usize) -> Result<(FuncPrototype, usize)> {
+
+    fn parse_effect_func_prototype(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncPrototype<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Effect)?;
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Colon)?;
@@ -471,14 +476,14 @@ impl Declaration {
         Ok((FuncPrototype::Effect(func_id, types), pos))
     }
 
-    fn parse_func_prototype(parser: &Parser, pos: usize) -> Result<(FuncPrototype, usize)> {
+    fn parse_func_prototype(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncPrototype<'a>, usize)> {
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Colon)?;
         let (types, pos) = Declaration::parse_func_types(parser, pos)?;
         Ok((FuncPrototype::Normal(func_id, types), pos))
     }
 
-    fn parse_func_types(parser: &Parser, pos: usize) -> Result<(FuncType, usize)> {
+    fn parse_func_types(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncType<'a>, usize)> {
         let (t, pos) = Declaration::parse_func_type(parser, pos)?;
         if parser.peek(pos, Token::Arrow) {
             let pos = consume_symbol(parser, pos, Token::Arrow)?;
@@ -489,7 +494,7 @@ impl Declaration {
         }
     }
 
-    fn parse_func_type(parser: &Parser, pos: usize) -> Result<(FuncType, usize)> {
+    fn parse_func_type(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncType<'a>, usize)> {
         match parser.get_token(pos) {
             Some(Token::TypeId(_)) => {
                 let (type_id, pos) = consume_type_id(parser, pos)?;
@@ -505,7 +510,7 @@ impl Declaration {
                     Ok((FuncType::Complex(type_id, params), pos))
                 }
             }
-            Some(Token::Id(id)) => Ok((FuncType::Param(id.to_string()), pos + 1)),
+            Some(Token::Id(id)) => Ok((FuncType::Param(id), pos + 1)),
             Some(Token::LeftParen) if parser.peek(pos + 1, Token::RightParen) => {
                 Ok((FuncType::Void, pos + 2))
             }
@@ -521,8 +526,8 @@ impl Declaration {
     }
 }
 
-impl Declaration {
-    fn parse_extends(parser: &Parser, pos: usize) -> DeclParseResult {
+impl<'a> Declaration<'a> {
+    fn parse_extends(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Extends)?;
         let (type_id, pos) = consume_type_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::With)?;
@@ -548,8 +553,8 @@ impl Declaration {
     }
 }
 
-impl Declaration {
-    fn parse_base_type(parser: &Parser, pos: usize) -> Result<(BaseType, usize)> {
+impl<'a> Declaration<'a> {
+    fn parse_base_type(parser: &'a Parser<'a>, pos: usize) -> Result<(BaseType<'a>, usize)> {
         match parser.get_token(pos) {
             Some(Token::LeftParen) => Declaration::parse_tuple(parser, pos),
             Some(Token::LeftCurly) => Declaration::parse_simple_record(parser, pos),
@@ -565,29 +570,29 @@ impl Declaration {
         }
     }
 
-    fn parse_simple_record(parser: &Parser, pos: usize) -> Result<(BaseType, usize)> {
+    fn parse_simple_record(parser: &'a Parser<'a>, pos: usize) -> Result<(BaseType<'a>, usize)> {
         let (rec, pos) = Declaration::parse_record_members(parser, pos)?;
         Ok((BaseType::SimpleRecord(rec), pos))
     }
 
-    fn parse_tuple(parser: &Parser, pos: usize) -> Result<(BaseType, usize)> {
+    fn parse_tuple(parser: &'a Parser<'a>, pos: usize) -> Result<(BaseType<'a>, usize)> {
         let (types, pos) =
             Declaration::parse_seq(parser, pos, Token::LeftParen, Token::RightParen)?;
         Ok((BaseType::Tuple(types), pos))
     }
 
-    fn parse_array(parser: &Parser, pos: usize) -> Result<(BaseType, usize)> {
+    fn parse_array(parser: &'a Parser<'a>, pos: usize) -> Result<(BaseType<'a>, usize)> {
         let (types, pos) =
             Declaration::parse_seq(parser, pos, Token::LeftBracket, Token::RightBracket)?;
         Ok((BaseType::Array(types), pos))
     }
 
     fn parse_seq(
-        parser: &Parser,
+        parser: &'a Parser<'a>,
         pos: usize,
         start: Token,
         end: Token,
-    ) -> Result<(Vec<BaseType>, usize)> {
+    ) -> Result<(Vec<BaseType<'a>>, usize)> {
         let pos = consume_symbol(parser, pos, start)?;
         let (ty, mut pos) = Declaration::parse_base_type(parser, pos)?;
         let mut types = vec![ty];
@@ -602,8 +607,8 @@ impl Declaration {
     }
 }
 
-impl Declaration {
-    fn parse_handler_decl(parser: &Parser, pos: usize) -> DeclParseResult {
+impl<'a> Declaration<'a> {
+    fn parse_handler_decl(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Handler)?;
         let (id, pos) = consume_id(parser, pos)?;
         let (args, pos) = Arg::parse(parser, pos)?;
@@ -614,15 +619,15 @@ impl Declaration {
     }
 }
 
-fn consume_alg_type_param(
-    parser: &Parser,
+fn consume_alg_type_param<'a>(
+    parser: &'a Parser,
     pos: usize,
-) -> Result<Option<(AlgebraicElement, usize)>> {
+) -> Result<Option<(AlgebraicElement<'a>, usize)>> {
     match parser.get_token(pos) {
         Some(Token::TypeId(type_id)) => {
-            Ok(Some((AlgebraicElement::Type(type_id.to_string()), pos + 1)))
+            Ok(Some((AlgebraicElement::Type(type_id), pos + 1)))
         }
-        Some(Token::Id(id)) => Ok(Some((AlgebraicElement::Param(id.to_string()), pos + 1))),
+        Some(Token::Id(id)) => Ok(Some((AlgebraicElement::Param(id), pos + 1))),
         Some(Token::Arrow) => Ok(None),
         Some(Token::NewLine) => Ok(None),
         Some(Token::Indent) => Ok(None),

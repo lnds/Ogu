@@ -22,12 +22,17 @@ impl<'a> Loader<'a> {
 
     pub(crate) fn add(&mut self, module: &Module)  {
         if let Some(scope) = self.current_scope.take() {
-            let name = module.get_module_name().clone();
+            let name = module.get_module_name();
             self.current_scope = Some(scope.push(&name))
         }
     }
 
     pub(crate) fn parse(&self, module: &Module) -> Result<()> {
+        match &self.current_scope {
+            None => println!("NO SCOPE"),
+            Some(scope) => println!("current_scope = {}", scope.scope_name())
+        }
+        
         todo!()
     }
 }

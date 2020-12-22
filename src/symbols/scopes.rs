@@ -1,9 +1,8 @@
 use crate::symbols::symbols::Symbol;
 
-pub trait Scope {
-    fn scope_name(&self) -> &'static str;
-    fn push(&mut self, scope: &'static dyn Scope);
-    fn pop(&mut self) -> Option<&'static dyn Scope>;
+pub trait Scope<'a> {
+    fn push(self: Box<Self>, name: &str) -> Box<dyn Scope<'a> + 'a>;
+    fn scope_name(&self) -> &str;
     fn define(&mut self, sym: Symbol);
     fn resolve(&self, name: &str) -> Option<Symbol>;
 }

@@ -8,10 +8,7 @@ use std::fmt::Debug;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use thiserror::Error;
-use crate::symbols::SymbolTable;
-use crate::symbols::types::Type;
-use crate::symbols::symbols::Symbol;
-use crate::symbols::scopes::Scope;
+use crate::symbols::loader::Loader;
 
 pub mod banner;
 
@@ -62,10 +59,11 @@ pub fn run(params: Params) -> Result<()> {
     if params.banner {
         akarru()?
     }
-    let mut symbol_table = SymbolTable::new("_ogu");
-    symbol_table.define(Symbol::Macro("println!", Type::Unit, 1));
+    let mut loader = Loader::new();
     for file in params.files.iter() {
-        let mut module = compile_module(file, &params)?;
+        let module = compile_module(file, &params)?;
+        loader.add(&module);
+        loader.parse(&module)?;
     }
     Ok(())
 }

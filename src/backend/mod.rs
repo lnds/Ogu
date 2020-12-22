@@ -1,7 +1,7 @@
 use crate::backend::banner::akarru;
 use crate::lexer::tokens::Token;
 use crate::lexer::Lexer;
-use crate::parser::ast::module::Module;
+use crate::parser::ast::module::ModuleAst;
 use crate::parser::Parser;
 use anyhow::Result;
 use std::fmt::Debug;
@@ -68,7 +68,7 @@ pub fn run(params: Params) -> Result<()> {
     Ok(())
 }
 
-fn compile_module(path: &PathBuf, params: &Params) -> Result<Module> {
+fn compile_module(path: &PathBuf, params: &Params) -> Result<ModuleAst> {
     let mut lexer = Lexer::new(path)?;
     println!("parsing {:?}", path);
     let (tokens, large_strings) = lexer.scan()?;

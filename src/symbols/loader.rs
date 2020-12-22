@@ -1,4 +1,4 @@
-use crate::parser::ast::module::Module;
+use crate::parser::ast::module::ModuleAst;
 use anyhow::Result;
 use crate::symbols::SymbolTable;
 use crate::symbols::scopes::Scope;
@@ -20,19 +20,19 @@ impl<'a> Loader<'a> {
         }
     }
 
-    pub(crate) fn add(&mut self, module: &Module)  {
+    pub(crate) fn add(&mut self, module: &ModuleAst)  {
         if let Some(scope) = self.current_scope.take() {
             let name = module.get_module_name();
             self.current_scope = Some(scope.push(&name))
         }
     }
 
-    pub(crate) fn parse(&self, module: &Module) -> Result<()> {
+    pub(crate) fn parse(&self, module: &ModuleAst) -> Result<()> {
         match &self.current_scope {
             None => println!("NO SCOPE"),
             Some(scope) => println!("current_scope = {}", scope.scope_name())
         }
-        
+
         todo!()
     }
 }

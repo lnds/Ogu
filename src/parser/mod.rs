@@ -1,6 +1,6 @@
 use crate::lexer::token_stream::TokenStream;
 use crate::lexer::tokens::{LineNumber, LineWidth, Token};
-use crate::parser::ast::module::Module;
+use crate::parser::ast::module::ModuleAst;
 use std::path::PathBuf;
 
 use crate::backend::OguError;
@@ -21,8 +21,8 @@ impl<'a> Parser<'a> {
         })
     }
 
-    pub(crate) fn parse(&mut self, filename: &PathBuf) -> Result<Module> {
-        Module::parse(self, filename, 0)
+    pub(crate) fn parse(&mut self, filename: &PathBuf) -> Result<ModuleAst> {
+        ModuleAst::parse(self, filename, 0)
     }
 
     pub(crate) fn peek(&self, pos: usize, symbol: Token) -> bool {

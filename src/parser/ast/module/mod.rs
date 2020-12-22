@@ -21,7 +21,7 @@ pub enum ModuleName {
 }
 
 #[derive(Debug)]
-pub(crate) struct Module {
+pub(crate) struct ModuleAst {
     name: ModuleName,
     exposing: Option<Exposing>,
     imports: Option<Vec<Import>>,
@@ -29,7 +29,7 @@ pub(crate) struct Module {
     body: Body,
 }
 
-impl Module {
+impl ModuleAst {
     pub(crate) fn get_module_name(&self) -> String {
         match &self.name {
             ModuleName::Anonymous => String::new(),
@@ -57,7 +57,7 @@ impl Module {
     }
 }
 
-impl<'a> Module {
+impl<'a> ModuleAst {
     pub fn parse(parser: &'a Parser<'a>, filename: &PathBuf, pos: usize) -> Result<Self> {
         let (name, pos) = if parser.peek(pos, Token::Module) {
             name_from_parser(parser, pos)?
@@ -72,7 +72,7 @@ impl<'a> Module {
         let (externs, pos) = Extern::parse(parser, pos)?;
         let pos = parser.skip_nl(pos);
         let body = Body::parse(parser, pos)?;
-        Ok(Module {
+        Ok(ModuleAst {
             name,
             exposing,
             imports,

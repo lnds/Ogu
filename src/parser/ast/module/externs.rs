@@ -1,5 +1,5 @@
 use crate::lexer::tokens::Token;
-use crate::parser::ast::module::body::{Body, Declaration};
+use crate::parser::ast::module::body::{BodyAst, Declaration};
 use crate::parser::{consume_string, consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
 
@@ -25,7 +25,7 @@ impl<'a> Extern<'a> {
         let mut pos = parser.skip_nl(pos);
         let mut decls = vec![];
         while !parser.peek(pos, Token::Dedent) {
-            if let Some((decl, new_pos)) = Body::parse_decl(parser, pos)? {
+            if let Some((decl, new_pos)) = BodyAst::parse_decl(parser, pos)? {
                 decls.push(decl);
                 pos = parser.skip_nl(new_pos);
             } else {

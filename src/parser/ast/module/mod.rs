@@ -7,7 +7,7 @@ use crate::lexer::tokens::Token;
 use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use std::path::PathBuf;
 
-use crate::parser::ast::module::body::{Body, Declaration};
+use crate::parser::ast::module::body::{BodyAst, Declaration};
 use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::externs::Extern;
 use crate::parser::ast::module::imports::Import;
@@ -29,7 +29,7 @@ pub(crate) struct ModuleAst<'a> {
     pub(crate) exposing: Option<Exposing<'a>>,
     imports: Option<Vec<Import<'a>>>,
     externs: Option<Extern<'a>>,
-    body: Body<'a>,
+    pub(crate) body: BodyAst<'a>,
 }
 
 impl<'a> ModuleAst<'a> {
@@ -40,8 +40,6 @@ impl<'a> ModuleAst<'a> {
             ModuleName::Qualified(s, sl) => format!("{}.{}", s, sl.join(".")),
         }
     }
-
-
 
     pub(crate) fn get_exposed_names(&mut self) -> Vec<&str> {
         match &self.exposing {
@@ -76,7 +74,7 @@ impl<'a> ModuleAst<'a> {
         let pos = parser.skip_nl(pos);
         let (externs, pos) = Extern::parse(parser, pos)?;
         let pos = parser.skip_nl(pos);
-        let body = Body::parse(parser, pos)?;
+        let body = BodyAst::parse(parser, pos)?;
         Ok(ModuleAst {
             name,
             exposing,

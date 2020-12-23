@@ -2,14 +2,16 @@ use std::collections::{HashMap, HashSet};
 use crate::symbols::types::Type;
 use crate::parser::ast::module::{ModuleAst};
 use crate::symbols::scopes::Scope;
-use crate::symbols::symbols::Symbol;
+use crate::symbols::symbols::{Symbol, SymbolValue};
 use crate::parser::ast::module::exposing::Exposing;
 use std::iter::FromIterator;
 use crate::backend::Compiler;
+use crate::parser::ast::module::body::{BodyAst, Declaration};
+use crate::lexer::tokens::Token::HashCurly;
 
-pub(crate) struct Module<'a> {
+pub(crate) struct Module {
     name: String,
-    symbols: HashMap<&'a str, Symbol>,
+    symbols: HashMap<String, Symbol>,
     //enclosing_scope: Box<dyn Scope>,
     /*
     exports: ModuleExports<'a>,
@@ -20,34 +22,35 @@ pub(crate) struct Module<'a> {
      */
 }
 
-impl<'a> Module<'a> {
+impl Module {
 
     pub(crate) fn new(module_ast: &ModuleAst) -> Self {
         println!("new module {}", module_ast.get_module_name());
+        let mut symbols = HashMap::new();
+        for decl in module_ast.body.declarations.iter() {
+            match decl {
+                Declaration::Value(name, expr) => {
+                    symbols.insert(name.to_string(), Symbol::new(name, SymbolValue::Value(format!("{:?}", expr))));
+                }
+                _ => {}
+            };
+        }
         Module {
             name: module_ast.get_module_name().to_string(),
-            symbols: HashMap::new(),
-            //enclosing_scope: Box::new(),
-            /*
-            exports: ModuleExports::new(module_ast),
-            funcs: HashMap::new(),
-            types: HashMap::new(),
-            macros: HashMap::new(),
-            enclosing_scope: Some(scope)
-
-             */
+            symbols,
         }
     }
 
+
 }
 
-impl<'a> Scope for Module<'a> {
+impl<'a> Scope for Module {
 
     fn scope_name(&self) -> &str {
         &self.name
     }
 
-    fn define(&mut self, sym: Symbol) {
+    fn define(&mut self, sym: Symbol){
         self.symbols.insert(sym.get_name(), sym);
     }
 
@@ -55,8 +58,12 @@ impl<'a> Scope for Module<'a> {
         unimplemented!()
     }
 
+    fn dump(&self) {
+        println!("Module Scope: {}", self.scope_name());
+        println!("Symbols:");
+        println!("{:?}", self.symbols);
+    }
 }
-
 
 pub(crate) enum ModuleExports<'a> {
     Nothing,

@@ -10,23 +10,21 @@ use std::collections::HashMap;
 use crate::backend::errors::OguError;
 use crate::backend::Compiler;
 
-pub(crate) struct SymbolTable<'a> {
+pub(crate) struct SymbolTable {
     name: String,
     enclosing_scope: Option<Box<dyn Scope>>,
-    symbols: HashMap<&'a str, Symbol>,
+    symbols: HashMap<String, Symbol>,
 }
 
-impl<'a> SymbolTable<'a> {
+impl SymbolTable {
 
-    pub(crate) fn new(name: &'a str) -> Self {
+    pub(crate) fn new(name: &str) -> Self {
         SymbolTable { name: name.to_string(), enclosing_scope: None, symbols: HashMap::new() }
     }
 
-
 }
 
-impl<'a> Scope for SymbolTable<'a> {
-
+impl Scope for SymbolTable {
 
     fn scope_name(&self) -> &str {
         &self.name
@@ -37,7 +35,7 @@ impl<'a> Scope for SymbolTable<'a> {
     }
 
     fn resolve(&self, name: &str) -> Option<Symbol> {
-        match self.symbols.get(&name) {
+        match self.symbols.get(name) {
             Some(s) => Some(s.clone()),
             None =>
                 match &self.enclosing_scope {
@@ -47,6 +45,11 @@ impl<'a> Scope for SymbolTable<'a> {
         }
     }
 
+    fn dump(&self) {
+        println!("Scope: {}",self.name);
+        println!("Symbols:");
+        println!("{:?}", self.symbols);
+    }
 }
 
 pub(crate) fn raise_symbol_table_error<T>(msg: &str, symbol: String, module: String) -> Result<T> {

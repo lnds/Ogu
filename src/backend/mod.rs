@@ -9,7 +9,7 @@ use thiserror::Error;
 use crate::parser::ast::module::ModuleAst;
 use crate::lexer::token_stream::TokenStream;
 use crate::symbols::scopes::Scope;
-use crate::symbols::symbols::Symbol;
+use crate::symbols::symbols::{Symbol, SymbolValue};
 use crate::symbols::SymbolTable;
 use crate::symbols::types::Type;
 use crate::backend::params::Params;
@@ -18,7 +18,6 @@ use crate::symbols::module::Module;
 pub mod banner;
 pub mod params;
 pub mod errors;
-
 
 pub(crate) struct Compiler {
     show_tokens: bool,
@@ -30,8 +29,8 @@ pub(crate) struct Compiler {
 impl Compiler {
     pub(crate) fn new(params: &Params) -> Self {
         let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
-        symbol_table.define(Symbol::Macro("printf!", Type::Unit, 1));
-        symbol_table.define(Symbol::Macro("print!", Type::Unit, 1));
+        symbol_table.define(Symbol::new("printf!", SymbolValue::Macro(Type::Unit, 1)));
+        symbol_table.define(Symbol::new("print!", SymbolValue::Macro(Type::Unit, 1)));
         Compiler {
             show_tokens: params.tokens,
             show_ast: params.print,
@@ -58,6 +57,11 @@ impl Scope for Compiler {
         None
     }
 
+    fn dump(&self) {
+        for scope in self.scopes.iter() {
+            scope.dump();
+        }
+    }
 }
 
 impl Compiler {
@@ -68,6 +72,8 @@ impl Compiler {
         }
         Ok(())
     }
+
+
 
     fn compile(&self, path: PathBuf) -> Result<Box<dyn Scope>> {
         let mut lexer = Lexer::new(&path)?;
@@ -94,5 +100,7 @@ pub fn run(params: Params) -> Result<()> {
         akarru()?;
     }
     let mut backend = Compiler::new(&params);
-    backend.run(params.files.to_vec())
+    backend.run(params.files.to_vec())?;
+    backend.dump();
+    Ok(())
 }

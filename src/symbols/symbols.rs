@@ -1,17 +1,25 @@
 use crate::symbols::types::Type;
 
 #[derive(Debug, Clone)]
-pub enum Symbol {
-    NativeType(&'static str, Type),
-    Macro(&'static str, Type,  usize ),
+pub(crate) struct Symbol{
+    name: String,
+    value: SymbolValue,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) enum SymbolValue {
+    NativeType(Type),
+    Macro(Type,  usize ),
+    Value(String)
 }
 
 impl Symbol {
 
-    pub fn get_name(&self) -> &'static str {
-        match *self {
-            Symbol::NativeType(name, ..) => name,
-            Symbol::Macro(name, ..) => name,
-        }
+    pub(crate) fn new(name: &str, value: SymbolValue) -> Self {
+        Symbol { name: name.to_string(), value }
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name.to_string()
     }
 }

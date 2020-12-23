@@ -116,26 +116,26 @@ impl<'a> Declaration<'a> {
 type DeclVec<'a> = Vec<Declaration<'a>>;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Body<'a> {
-    declarations: Vec<Declaration<'a>>,
+pub(crate) struct BodyAst<'a> {
+    pub(crate) declarations: Vec<Declaration<'a>>,
 }
 
 type DeclParseResult<'a> = Result<Option<(Declaration<'a>, usize)>>;
 
-impl<'a> Body<'a> {
+impl<'a> BodyAst<'a> {
     pub(crate) fn get_decls(&mut self) -> Vec<Declaration<'a>> {
         self.declarations.clone()
     }
 
-    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<Body<'a>> {
-        let declarations = Body::parse_decls(parser, pos)?;
-        Ok(Body { declarations })
+    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<BodyAst<'a>> {
+        let declarations = BodyAst::parse_decls(parser, pos)?;
+        Ok(BodyAst { declarations })
     }
 
     fn parse_decls(parser: &'a Parser<'a>, pos: usize) -> Result<DeclVec<'a>> {
         let mut result = vec![];
         let mut pos = pos;
-        while let Some((decl, new_pos)) = Body::parse_decl(parser, pos)? {
+        while let Some((decl, new_pos)) = BodyAst::parse_decl(parser, pos)? {
             result.push(decl);
             pos = new_pos;
         }
@@ -148,7 +148,7 @@ impl<'a> Body<'a> {
             None => Ok(None),
             Some(Token::Macro) => {
                 let pos = consume_symbol(parser, pos, Token::Macro)?;
-                if let Some((decl, pos)) = Body::parse_decl(parser, pos)? {
+                if let Some((decl, pos)) = BodyAst::parse_decl(parser, pos)? {
                     Ok(Some((Declaration::MacroDecl(Box::new(decl)), pos)))
                 } else {
                     raise_parser_error("expecting macro declaration", parser, pos, false)

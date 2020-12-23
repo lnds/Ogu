@@ -85,7 +85,7 @@ impl Compiler {
         if self.show_ast {
             println!("AST = {:#?}", module);
         }
-        Ok(Box::new(Module::new(&module)?))
+        Ok(Box::new(Module::new(&module, self)?))
     }
 }
 

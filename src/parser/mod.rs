@@ -22,10 +22,6 @@ impl<'a> Parser<'a> {
         })
     }
 
-    pub(crate) fn parse(&mut self, filename: PathBuf) -> Result<ModuleAst> {
-        ModuleAst::parse(self, filename.clone(), 0)
-    }
-
     pub(crate) fn peek(&self, pos: usize, symbol: Token) -> bool {
         match self.tokens.peek(pos) {
             None => false,

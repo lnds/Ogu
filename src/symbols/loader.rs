@@ -22,11 +22,23 @@ impl Loader {
         }
     }
 
-    pub(crate) fn add(&mut self, module_ast: &'static ModuleAst)  {
-        if let Some(scope) = self.current_scope.take() {
-            self.current_scope = Some(Box::new(Module::new(module_ast, scope)));
-        }
+    pub(crate) fn get_scope(&mut self) -> Box<dyn Scope> {
+        self.current_scope.take().unwrap()
     }
+
+
+    pub(crate) fn push_scope(&mut self,  new_scope: Box<dyn Scope>) {
+            self.current_scope = Some(new_scope);
+    }
+
+    pub(crate) fn show_scope(&self) {
+        match &self.current_scope {
+            Nome => println!("NADA"),
+            Some(scope) => println!("SCOPE({})", scope.scope_name())
+        }
+
+    }
+
 /*
     pub(crate) fn parse(&self, _module: &ModuleAst) -> Result<()> {
         match &self.current_scope {

@@ -10,6 +10,7 @@ use thiserror::Error;
 use crate::symbols::loader::Loader;
 use crate::parser::ast::module::ModuleAst;
 use crate::lexer::token_stream::TokenStream;
+use crate::symbols::scopes::Scope;
 
 pub mod banner;
 
@@ -75,29 +76,27 @@ impl Backend {
 
 impl Backend {
     pub(crate) fn run(&mut self, files: Vec<PathBuf>) -> Result<()> {
+        let mut scope = self.loader.get_scope();
         for path in files.iter() {
-            self.compile(path.clone());
+            scope = self.compile(path.clone(), scope)?;
         }
         Ok(())
     }
 
-    fn compile(&mut self, path: PathBuf) -> Result<()> {
+    fn compile(&mut self, path: PathBuf, scope: Box<dyn Scope>) -> Result<(Box<dyn Scope>)> {
         let mut lexer = Lexer::new(&path)?;
-        println!("parsing {:?}", path);
+        println!("parsing {:?}", &path);
         let (tokens, strs) = lexer.scan()?;
         if self.show_tokens {
             let syms: Vec<Token> = tokens.iter().map(|t| t.token).collect();
             println!("TOKENS = {:?}", syms);
         }
-        let mut parser = Parser::new(tokens.to_owned(), strs.to_vec())?;
-        let module = parser.parse(path)?;
-        //self.load(&module);
-        //self.loader.add(&module);
+        let parser = Parser::new(tokens.to_owned(), strs.to_vec())?;
+        let module = ModuleAst::parse(&parser, path, 0)?;
         if self.show_ast {
             println!("AST = {:#?}", module);
         }
-
-        Ok(())
+        Ok(module.resolve_names(scope))
     }
 
 }

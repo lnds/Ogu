@@ -12,6 +12,8 @@ use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::externs::Extern;
 use crate::parser::ast::module::imports::Import;
 use anyhow::Result;
+use crate::symbols::scopes::Scope;
+use crate::symbols::module::Module;
 
 #[derive(Debug, Clone)]
 pub enum ModuleName<'a> {
@@ -36,6 +38,10 @@ impl<'a> ModuleAst<'a> {
             ModuleName::Simple(s) => s.to_string(),
             ModuleName::Qualified(s, sl) => format!("{}.{}", s, sl.join(".")),
         }
+    }
+
+    pub(crate) fn resolve_names(&self, scope: Box<dyn Scope>) -> Box<dyn Scope> {
+        Box::new(Module::new(&self, scope))
     }
 
     pub(crate) fn get_exposed_names(&mut self) -> Vec<&str> {
@@ -86,7 +92,7 @@ fn name_from_filename<'a>(filename: PathBuf) -> ModuleName<'a> {
     match filename.as_path().file_stem() {
         None => ModuleName::Anonymous,
         Some(s) => {
-            ModuleName::Simple(capitalize(&mut s.to_str().unwrap()))
+            ModuleName::Simple(capitalize(&s.to_str().unwrap()  ))
         }
     }
 }

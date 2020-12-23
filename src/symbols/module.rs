@@ -7,13 +7,14 @@ use crate::parser::ast::module::exposing::Exposing;
 use std::iter::FromIterator;
 
 pub(crate) struct Module {
-    //name: String,
+    name: String,
+    symbols: HashMap<String, Symbol>,
+    enclosing_scope: Option<Box<dyn Scope>>,
     /*
     exports: ModuleExports<'a>,
     funcs: HashMap<&'a str, Func>,
     types: HashMap<&'a str, Type>,
     macros: HashMap<&'a str, Macro>,
-    enclosing_scope: Option<Box<dyn Scope>>,
 
      */
 }
@@ -21,8 +22,11 @@ pub(crate) struct Module {
 impl Module {
 
     pub(crate) fn new(module_ast: &ModuleAst, scope: Box<dyn Scope>) -> Self {
+        println!("new module {} on scope: {}", module_ast.get_module_name(), scope.scope_name());
         Module {
-        //    name: module_ast.get_module_name().to_string(),
+            name: module_ast.get_module_name().to_string(),
+            symbols: HashMap::new(),
+            enclosing_scope: Some(scope)
             /*
             exports: ModuleExports::new(module_ast),
             funcs: HashMap::new(),
@@ -38,7 +42,7 @@ impl Module {
 impl<'a> Scope for Module {
 
     fn scope_name(&self) -> &str {
-        unimplemented!()
+        &self.name
     }
 
     fn define(&mut self, sym: Symbol) {

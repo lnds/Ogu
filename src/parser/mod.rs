@@ -3,8 +3,8 @@ use crate::lexer::tokens::{LineNumber, LineWidth, Token};
 use crate::parser::ast::module::ModuleAst;
 use std::path::PathBuf;
 
-use crate::backend::OguError;
 use anyhow::{Context, Error, Result};
+use crate::backend::errors::OguError;
 
 pub(crate) mod ast;
 

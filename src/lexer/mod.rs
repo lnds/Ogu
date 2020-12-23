@@ -3,7 +3,6 @@ pub mod tokens;
 
 use logos::Logos;
 
-use crate::backend::OguError;
 use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::{self, BufRead, Cursor};
@@ -14,6 +13,7 @@ use crate::lexer::tokens::Token::NewLine;
 use crate::lexer::tokens::{
     IndentStack, LineCount, LineNumber, LineWidth, Token, TokenContext, TokenContextList,
 };
+use crate::backend::errors::OguError;
 
 type Line = (LineCount, String);
 type LineList = Vec<Line>;

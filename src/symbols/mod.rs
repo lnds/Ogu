@@ -1,14 +1,13 @@
 pub(crate) mod symbols;
 pub(crate) mod scopes;
 pub(crate) mod types;
-pub(crate) mod loader;
 pub (crate) mod module;
 
-use crate::backend::OguError;
 use anyhow::{Context, Error, Result};
 use crate::symbols::scopes::Scope;
 use crate::symbols::symbols::Symbol;
 use std::collections::HashMap;
+use crate::backend::errors::OguError;
 
 pub(crate) struct SymbolTable<'a> {
     name: String,

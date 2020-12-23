@@ -6,7 +6,6 @@ use anyhow::Result;
 use std::fmt::Debug;
 use std::path::PathBuf;
 use thiserror::Error;
-use crate::symbols::loader::Loader;
 use crate::parser::ast::module::ModuleAst;
 use crate::lexer::token_stream::TokenStream;
 use crate::symbols::scopes::Scope;
@@ -14,42 +13,34 @@ use crate::symbols::symbols::Symbol;
 use crate::symbols::SymbolTable;
 use crate::symbols::types::Type;
 use crate::backend::params::Params;
+use crate::symbols::module::Module;
 
 pub mod banner;
 pub mod params;
+pub mod errors;
 
-#[derive(Error, Debug)]
-pub enum OguError {
-    #[error("Can't load Figfont")]
-    FigfontError(String),
-    #[error("Source not found")]
-    NotFound(String),
-    #[error("Parser error")]
-    ParserError(String),
-    #[error("Symbol table error")]
-    SymbolTableError(String),
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
-}
 
-pub(crate) struct Backend {
+pub(crate) struct Compiler {
     show_tokens: bool,
     show_ast: bool,
     scopes: Vec<Box<dyn Scope>>,
 }
 
 
-impl Backend {
+impl Compiler {
     pub(crate) fn new(params: &Params) -> Self {
-        Backend {
+        let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
+        symbol_table.define(Symbol::Macro("printf!", Type::Unit, 1));
+        symbol_table.define(Symbol::Macro("print!", Type::Unit, 1));
+        Compiler {
             show_tokens: params.tokens,
             show_ast: params.print,
-            scopes: vec![]
+            scopes: vec![symbol_table]
         }
     }
 }
 
-impl Scope for Backend {
+impl Scope for Compiler {
     fn scope_name(&self) -> &str {
         unimplemented!()
     }
@@ -63,11 +54,8 @@ impl Scope for Backend {
     }
 }
 
-impl Backend {
+impl Compiler {
     pub(crate) fn run(&mut self, files: Vec<PathBuf>) -> Result<()> {
-        let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
-        symbol_table.define(Symbol::Macro("printf!", Type::Unit, 1));
-        symbol_table.define(Symbol::Macro("print!", Type::Unit, 1));
         for path in files.iter() {
             let scope = self.compile(path.clone())?;
             self.scopes.push(scope);
@@ -75,7 +63,7 @@ impl Backend {
         Ok(())
     }
 
-    fn compile(&mut self, path: PathBuf) -> Result<(Box<dyn Scope>)> {
+    fn compile(&self, path: PathBuf) -> Result<Box<dyn Scope>> {
         let mut lexer = Lexer::new(&path)?;
         println!("parsing {:?}", &path);
         let (tokens, strs) = lexer.scan()?;
@@ -88,7 +76,7 @@ impl Backend {
         if self.show_ast {
             println!("AST = {:#?}", module);
         }
-        Ok(module.resolve_names(self))
+        Ok(Box::new(Module::new(&module)))
     }
 
 }
@@ -98,7 +86,7 @@ pub fn run(params: Params) -> Result<()> {
     if params.banner {
         akarru()?;
     }
-    let mut backend = Backend::new(&params);
+    let mut backend = Compiler::new(&params);
     backend.run(params.files.to_vec())
     /*
     if params.banner {

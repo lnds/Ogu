@@ -6,14 +6,14 @@ use crate::symbols::symbols::Symbol;
 use crate::symbols::types::Type;
 use crate::symbols::module::Module;
 
-pub(crate) struct Loader<'a> {
-    current_scope: Option<Box<dyn Scope<'a> + 'a>>,
+pub(crate) struct Loader {
+    current_scope: Option<Box<dyn Scope>>,
 }
 
 
-impl<'a> Loader<'a> {
+impl Loader {
 
-    pub(crate) fn new() -> Loader<'a> {
+    pub(crate) fn new() -> Self {
         let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
         symbol_table.define(Symbol::Macro("printf!", Type::Unit, 1));
         symbol_table.define(Symbol::Macro("print!", Type::Unit, 1));
@@ -22,13 +22,13 @@ impl<'a> Loader<'a> {
         }
     }
 
-    pub(crate) fn add(&'a mut self, module_ast: &'a ModuleAst)  {
+    pub(crate) fn add(&mut self, module_ast: &'static ModuleAst)  {
         if let Some(scope) = self.current_scope.take() {
             self.current_scope = Some(Box::new(Module::new(module_ast, scope)));
         }
     }
-
-    pub(crate) fn parse(&self, _module: &'a ModuleAst) -> Result<()> {
+/*
+    pub(crate) fn parse(&self, _module: &ModuleAst) -> Result<()> {
         match &self.current_scope {
             None => println!("NO SCOPE"),
             Some(scope) => println!("current_scope = {}", scope.scope_name())
@@ -36,4 +36,6 @@ impl<'a> Loader<'a> {
 
         todo!()
     }
+
+ */
 }

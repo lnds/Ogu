@@ -19,29 +19,29 @@ type Line = (LineCount, String);
 type LineList = Vec<Line>;
 
 #[derive(Clone)]
-enum LexerSource<'a> {
-    File(&'a PathBuf),
+enum LexerSource {
+    File(PathBuf),
     #[allow(dead_code)]
     Text(String),
 }
 
 #[derive(Clone)]
-pub(crate) struct Lexer<'a> {
-    source: LexerSource<'a>,
+pub(crate) struct Lexer {
+    source: LexerSource,
     paren_level: LineCount,
     lines: LineList,
 }
 
-impl<'a> Lexer<'a> {
+impl<'a> Lexer {
 
 
 
-    pub(crate) fn new(path: &'a PathBuf) -> Result<Lexer<'a>> {
+    pub(crate) fn new(path: &'a PathBuf) -> Result<Lexer> {
         if !path.exists() {
             return Err(Error::new(OguError::NotFound(format!("{:?}", path))));
         }
         Ok(Lexer {
-            source: LexerSource::File(path),
+            source: LexerSource::File(path.clone()),
             paren_level: 0,
             lines: vec![],
         })

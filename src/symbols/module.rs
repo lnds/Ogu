@@ -6,30 +6,36 @@ use crate::symbols::symbols::Symbol;
 use crate::parser::ast::module::exposing::Exposing;
 use std::iter::FromIterator;
 
-pub(crate) struct Module<'a> {
-    name: String,
+pub(crate) struct Module {
+    //name: String,
+    /*
     exports: ModuleExports<'a>,
     funcs: HashMap<&'a str, Func>,
     types: HashMap<&'a str, Type>,
     macros: HashMap<&'a str, Macro>,
-    enclosing_scope: Option<Box<dyn Scope<'a> + 'a>>,
+    enclosing_scope: Option<Box<dyn Scope>>,
+
+     */
 }
 
-impl<'a> Module<'a> {
+impl Module {
 
-    pub(crate) fn new(module_ast: &'a ModuleAst, scope: Box<dyn Scope<'a> + 'a>) -> Self {
+    pub(crate) fn new(module_ast: &ModuleAst, scope: Box<dyn Scope>) -> Self {
         Module {
-            name: module_ast.get_module_name().to_string(),
+        //    name: module_ast.get_module_name().to_string(),
+            /*
             exports: ModuleExports::new(module_ast),
             funcs: HashMap::new(),
             types: HashMap::new(),
             macros: HashMap::new(),
             enclosing_scope: Some(scope)
+
+             */
         }
     }
 }
 
-impl<'a> Scope<'a> for Module<'a> {
+impl<'a> Scope for Module {
 
     fn scope_name(&self) -> &str {
         unimplemented!()

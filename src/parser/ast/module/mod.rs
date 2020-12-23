@@ -58,7 +58,7 @@ impl<'a> ModuleAst<'a> {
 }
 
 impl<'a> ModuleAst<'a> {
-    pub fn parse(parser: &'a Parser<'a>, filename: &'a PathBuf, pos: usize) -> Result<ModuleAst<'a>> {
+    pub fn parse(parser: &'a Parser<'a>, filename: PathBuf, pos: usize) -> Result<ModuleAst<'a>> {
         let (name, pos) = if parser.peek(pos, Token::Module) {
             name_from_parser(parser, pos)?
         } else {
@@ -82,7 +82,7 @@ impl<'a> ModuleAst<'a> {
     }
 }
 
-fn name_from_filename(filename: &PathBuf) -> ModuleName {
+fn name_from_filename<'a>(filename: PathBuf) -> ModuleName<'a> {
     match filename.as_path().file_stem() {
         None => ModuleName::Anonymous,
         Some(s) => {

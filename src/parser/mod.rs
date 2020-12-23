@@ -22,8 +22,8 @@ impl<'a> Parser<'a> {
         })
     }
 
-    pub(crate) fn parse(&mut self, filename: &'a PathBuf) -> Result<ModuleAst> {
-        ModuleAst::parse(self, filename, 0)
+    pub(crate) fn parse(&mut self, filename: PathBuf) -> Result<ModuleAst> {
+        ModuleAst::parse(self, filename.clone(), 0)
     }
 
     pub(crate) fn peek(&self, pos: usize, symbol: Token) -> bool {

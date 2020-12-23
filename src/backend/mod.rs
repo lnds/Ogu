@@ -48,66 +48,67 @@ pub struct Params {
     files: Vec<PathBuf>,
 
     #[structopt(
-        name = "ARGS",
-        required_if("has_args", "true"),
-        last = true,
-        help = "args for main module"
+    name = "ARGS",
+    required_if("has_args", "true"),
+    last = true,
+    help = "args for main module"
     )]
     args: Vec<String>,
 }
 
-pub(crate) struct Backend<'a> {
-    params: &'a Params,
-    loader: Loader<'a>,
-    modules: Vec<ModuleAst<'a>>
+pub(crate) struct Backend {
+    show_tokens: bool,
+    show_ast: bool,
+    loader: Loader,
 }
 
 
-impl<'a> Backend<'a> {
-    pub(crate) fn new(params: &'a Params) -> Self {
+impl Backend {
+    pub(crate) fn new(params: &Params) -> Self {
         Backend {
-            params,
+            show_tokens: params.tokens,
+            show_ast: params.print,
             loader: Loader::new(),
-            modules: vec![],
         }
     }
 }
 
-impl<'a> Backend<'a> {
-
-    pub(crate) fn run(&mut self) -> Result<()> {
-        if self.params.banner {
-            akarru()?;
-        }
-        for path in self.params.files.iter() {
-            self.compile(path);
+impl Backend {
+    pub(crate) fn run(&mut self, files: Vec<PathBuf>) -> Result<()> {
+        for path in files.iter() {
+            self.compile(path.clone());
         }
         Ok(())
     }
 
-    fn compile(&mut self, path: &PathBuf) -> Result<()> {
-        let mut lexer = Lexer::new(path)?;
+    fn compile(&mut self, path: PathBuf) -> Result<()> {
+        let mut lexer = Lexer::new(&path)?;
         println!("parsing {:?}", path);
         let (tokens, strs) = lexer.scan()?;
-        if self.params.tokens {
+        if self.show_tokens {
             let syms: Vec<Token> = tokens.iter().map(|t| t.token).collect();
             println!("TOKENS = {:?}", syms);
         }
-        let mut parser  = Parser::new(tokens.to_owned(), strs.to_vec())?;
+        let mut parser = Parser::new(tokens.to_owned(), strs.to_vec())?;
         let module = parser.parse(path)?;
-        if self.params.print {
+        //self.load(&module);
+        //self.loader.add(&module);
+        if self.show_ast {
             println!("AST = {:#?}", module);
         }
-        //self.loader.add(&module);
+
         Ok(())
     }
 
 }
 
 
-pub fn run(params: &Params) -> Result<()> {
-    let mut backend = Backend::new(params);
-    backend.run()
+pub fn run(params: Params) -> Result<()> {
+    if params.banner {
+        akarru()?;
+    }
+    let mut backend = Backend::new(&params);
+    backend.run(params.files.to_vec())
     /*
     if params.banner {
         akarru()?

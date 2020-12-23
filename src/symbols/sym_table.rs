@@ -23,8 +23,8 @@ impl Scope for SymbolTable {
         &self.name
     }
 
-    fn define(&mut self, sym: Symbol) {
-        self.symbols.insert(sym.get_name(), sym);
+    fn define(&mut self, sym: Symbol) -> Option<Symbol> {
+        self.symbols.insert(sym.get_name(), sym)
     }
 
     fn resolve(&self, name: &str) -> Option<Symbol> {

@@ -28,6 +28,7 @@ pub(crate) struct Symbol {
 pub(crate) enum SymbolValue {
     Macro(Type, usize),
     Date(String),
+    Int(String),
 }
 
 impl Symbol {

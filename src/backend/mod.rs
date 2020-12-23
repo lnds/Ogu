@@ -43,7 +43,7 @@ impl Scope for Compiler {
         "_compiler"
     }
 
-    fn define(&mut self, _: Symbol) {
+    fn define(&mut self, _: Symbol) -> Option<Symbol> {
         unimplemented!()
     }
 

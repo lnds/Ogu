@@ -8,6 +8,7 @@ use anyhow::{Context, Error, Result};
 
 pub(crate) mod ast;
 
+#[derive(Clone)]
 pub(crate) struct Parser<'a> {
     tokens: TokenStream<'a>,
     large_strings: Vec<String>,

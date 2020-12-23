@@ -8,8 +8,6 @@ use crate::parser::{
     parse_opt_dedent, parse_opt_indent, raise_parser_error, Parser,
 };
 use anyhow::Result;
-use std::ops::Deref;
-use std::borrow::Borrow;
 
 #[derive(Debug, Clone)]
 pub(crate) enum FuncType<'a> {

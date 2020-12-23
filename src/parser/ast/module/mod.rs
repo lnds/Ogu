@@ -23,7 +23,7 @@ pub enum ModuleName<'a> {
 #[derive(Debug, Clone)]
 pub(crate) struct ModuleAst<'a> {
     name: ModuleName<'a>,
-    exposing: Option<Exposing<'a>>,
+    pub(crate) exposing: Option<Exposing<'a>>,
     imports: Option<Vec<Import<'a>>>,
     externs: Option<Extern<'a>>,
     body: Body<'a>,

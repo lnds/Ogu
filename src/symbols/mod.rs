@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 pub(crate) struct SymbolTable<'a> {
     name: String,
-    enclosing_scope: Option<Box<dyn Scope<'a> + 'a>>,
+    enclosing_scope: Option<Box<dyn Scope<'a>>>,
     symbols: HashMap<&'a str, Symbol>,
 }
 
@@ -27,13 +27,6 @@ impl<'a> SymbolTable<'a> {
 
 impl<'a> Scope<'a> for SymbolTable<'a> {
 
-    fn push_scope(self: Box<Self>, name: &str) -> Box<dyn Scope<'a> + 'a> {
-        Box::new(SymbolTable {
-            name: name.to_string(),
-            enclosing_scope: Some(self),
-            symbols: HashMap::new(),
-        })
-    }
 
     fn scope_name(&self) -> &str {
         &self.name

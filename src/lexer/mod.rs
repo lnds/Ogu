@@ -18,12 +18,14 @@ use crate::lexer::tokens::{
 type Line = (LineCount, String);
 type LineList = Vec<Line>;
 
+#[derive(Clone)]
 enum LexerSource<'a> {
     File(&'a PathBuf),
     #[allow(dead_code)]
     Text(String),
 }
 
+#[derive(Clone)]
 pub(crate) struct Lexer<'a> {
     source: LexerSource<'a>,
     paren_level: LineCount,
@@ -31,6 +33,9 @@ pub(crate) struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
+
+
+
     pub(crate) fn new(path: &'a PathBuf) -> Result<Lexer<'a>> {
         if !path.exists() {
             return Err(Error::new(OguError::NotFound(format!("{:?}", path))));

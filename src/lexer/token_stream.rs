@@ -1,6 +1,6 @@
 use crate::lexer::tokens::TokenContext;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct TokenStream<'a> {
     tokens: Vec<TokenContext<'a>>,
 }

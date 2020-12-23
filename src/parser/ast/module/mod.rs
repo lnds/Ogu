@@ -40,8 +40,8 @@ impl<'a> ModuleAst<'a> {
         }
     }
 
-    pub(crate) fn resolve_names(&self, scope: Box<dyn Scope>) -> Box<dyn Scope> {
-        Box::new(Module::new(&self, scope))
+    pub(crate) fn resolve_names(&self, scope: &dyn Scope) -> Box<dyn Scope> {
+        Box::new(Module::new(&self))
     }
 
     pub(crate) fn get_exposed_names(&mut self) -> Vec<&str> {

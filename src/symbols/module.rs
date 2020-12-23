@@ -9,7 +9,6 @@ use std::iter::FromIterator;
 pub(crate) struct Module {
     name: String,
     symbols: HashMap<String, Symbol>,
-    enclosing_scope: Option<Box<dyn Scope>>,
     /*
     exports: ModuleExports<'a>,
     funcs: HashMap<&'a str, Func>,
@@ -21,12 +20,11 @@ pub(crate) struct Module {
 
 impl Module {
 
-    pub(crate) fn new(module_ast: &ModuleAst, scope: Box<dyn Scope>) -> Self {
-        println!("new module {} on scope: {}", module_ast.get_module_name(), scope.scope_name());
+    pub(crate) fn new(module_ast: &ModuleAst) -> Self {
+        println!("new module {}", module_ast.get_module_name());
         Module {
             name: module_ast.get_module_name().to_string(),
             symbols: HashMap::new(),
-            enclosing_scope: Some(scope)
             /*
             exports: ModuleExports::new(module_ast),
             funcs: HashMap::new(),

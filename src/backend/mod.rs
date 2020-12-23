@@ -5,14 +5,18 @@ use crate::parser::Parser;
 use anyhow::Result;
 use std::fmt::Debug;
 use std::path::PathBuf;
-use structopt::StructOpt;
 use thiserror::Error;
 use crate::symbols::loader::Loader;
 use crate::parser::ast::module::ModuleAst;
 use crate::lexer::token_stream::TokenStream;
 use crate::symbols::scopes::Scope;
+use crate::symbols::symbols::Symbol;
+use crate::symbols::SymbolTable;
+use crate::symbols::types::Type;
+use crate::backend::params::Params;
 
 pub mod banner;
+pub mod params;
 
 #[derive(Error, Debug)]
 pub enum OguError {
@@ -28,39 +32,10 @@ pub enum OguError {
     IOError(#[from] std::io::Error),
 }
 
-const HELP_GREETINGS: &str = "\n\t\tOLA AMIKO MIO DE MI\n\n";
-
-#[derive(Debug, StructOpt)]
-#[structopt(name = "ogu", about = HELP_GREETINGS)]
-pub struct Params {
-    /// shows akarrú banner
-    #[structopt(short, long)]
-    banner: bool,
-
-    /// print TOKENS
-    #[structopt(short, long)]
-    tokens: bool,
-
-    /// print AST
-    #[structopt(short, long)]
-    print: bool,
-
-    #[structopt(parse(from_os_str), help = "ogu modules...", required = true)]
-    files: Vec<PathBuf>,
-
-    #[structopt(
-    name = "ARGS",
-    required_if("has_args", "true"),
-    last = true,
-    help = "args for main module"
-    )]
-    args: Vec<String>,
-}
-
 pub(crate) struct Backend {
     show_tokens: bool,
     show_ast: bool,
-    loader: Loader,
+    scopes: Vec<Box<dyn Scope>>,
 }
 
 
@@ -69,21 +44,38 @@ impl Backend {
         Backend {
             show_tokens: params.tokens,
             show_ast: params.print,
-            loader: Loader::new(),
+            scopes: vec![]
         }
+    }
+}
+
+impl Scope for Backend {
+    fn scope_name(&self) -> &str {
+        unimplemented!()
+    }
+
+    fn define(&mut self, sym: Symbol) {
+        unimplemented!()
+    }
+
+    fn resolve(&self, name: &str) -> Option<Symbol> {
+        unimplemented!()
     }
 }
 
 impl Backend {
     pub(crate) fn run(&mut self, files: Vec<PathBuf>) -> Result<()> {
-        let mut scope = self.loader.get_scope();
+        let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
+        symbol_table.define(Symbol::Macro("printf!", Type::Unit, 1));
+        symbol_table.define(Symbol::Macro("print!", Type::Unit, 1));
         for path in files.iter() {
-            scope = self.compile(path.clone(), scope)?;
+            let scope = self.compile(path.clone())?;
+            self.scopes.push(scope);
         }
         Ok(())
     }
 
-    fn compile(&mut self, path: PathBuf, scope: Box<dyn Scope>) -> Result<(Box<dyn Scope>)> {
+    fn compile(&mut self, path: PathBuf) -> Result<(Box<dyn Scope>)> {
         let mut lexer = Lexer::new(&path)?;
         println!("parsing {:?}", &path);
         let (tokens, strs) = lexer.scan()?;
@@ -96,7 +88,7 @@ impl Backend {
         if self.show_ast {
             println!("AST = {:#?}", module);
         }
-        Ok(module.resolve_names(scope))
+        Ok(module.resolve_names(self))
     }
 
 }

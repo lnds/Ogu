@@ -249,7 +249,6 @@ impl<'a> Declaration<'a> {
 }
 
 impl<'a> Declaration<'a> {
-
     fn parse_type_decl(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Type)?;
         if parser.peek(pos, Token::Alias) {
@@ -352,7 +351,10 @@ impl<'a> Declaration<'a> {
         }
     }
 
-    fn parse_algebraic_type(parser: &'a Parser<'a>, pos: usize) -> Result<(AlgebraicType<'a>, usize)> {
+    fn parse_algebraic_type(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(AlgebraicType<'a>, usize)> {
         if parser.peek(pos, Token::Primitive) {
             Declaration::parse_primitive_type(parser, pos)
         } else {
@@ -375,7 +377,10 @@ impl<'a> Declaration<'a> {
         }
     }
 
-    fn parse_primitive_type(parser: &'a Parser<'a>, pos: usize) -> Result<(AlgebraicType<'a>, usize)> {
+    fn parse_primitive_type(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(AlgebraicType<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Primitive)?;
         let (id, pos) = consume_id(parser, pos)?;
         Ok((AlgebraicType::Primitive(id), pos))
@@ -390,7 +395,10 @@ impl<'a> Declaration<'a> {
         Ok((AlgebraicType::Record(type_id, members), pos))
     }
 
-    fn parse_record_members(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<RecordElement<'a>>, usize)> {
+    fn parse_record_members(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Vec<RecordElement<'a>>, usize)> {
         let pos = consume_symbol(parser, pos, Token::LeftCurly)?;
         let (in_indent, pos) = parse_opt_indent(parser, pos);
         let (member, mut pos) = Declaration::parse_record_member(parser, pos)?;
@@ -407,7 +415,10 @@ impl<'a> Declaration<'a> {
         Ok((members, pos))
     }
 
-    fn parse_record_member(parser: &'a Parser<'a>, pos: usize) -> Result<(RecordElement<'a>, usize)> {
+    fn parse_record_member(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(RecordElement<'a>, usize)> {
         let (id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Colon)?;
         let (tid, pos) = consume_type_id(parser, pos)?;
@@ -427,7 +438,6 @@ impl<'a> Declaration<'a> {
 }
 
 impl<'a> Declaration<'a> {
-
     fn parse_trait_decl(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let pos = consume_symbol(parser, pos, Token::Trait)?;
         let (tid, pos) = consume_type_id(parser, pos)?;
@@ -466,7 +476,10 @@ impl<'a> Declaration<'a> {
         )))
     }
 
-    fn parse_effect_func_prototype(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncPrototype<'a>, usize)> {
+    fn parse_effect_func_prototype(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(FuncPrototype<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Effect)?;
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Colon)?;
@@ -474,7 +487,10 @@ impl<'a> Declaration<'a> {
         Ok((FuncPrototype::Effect(func_id, types), pos))
     }
 
-    fn parse_func_prototype(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncPrototype<'a>, usize)> {
+    fn parse_func_prototype(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(FuncPrototype<'a>, usize)> {
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Colon)?;
         let (types, pos) = Declaration::parse_func_types(parser, pos)?;
@@ -622,9 +638,7 @@ fn consume_alg_type_param<'a>(
     pos: usize,
 ) -> Result<Option<(AlgebraicElement<'a>, usize)>> {
     match parser.get_token(pos) {
-        Some(Token::TypeId(type_id)) => {
-            Ok(Some((AlgebraicElement::Type(type_id), pos + 1)))
-        }
+        Some(Token::TypeId(type_id)) => Ok(Some((AlgebraicElement::Type(type_id), pos + 1))),
         Some(Token::Id(id)) => Ok(Some((AlgebraicElement::Param(id), pos + 1))),
         Some(Token::Arrow) => Ok(None),
         Some(Token::NewLine) => Ok(None),

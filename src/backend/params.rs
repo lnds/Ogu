@@ -22,11 +22,10 @@ pub struct Params {
     pub files: Vec<PathBuf>,
 
     #[structopt(
-    name = "ARGS",
-    required_if("has_args", "true"),
-    last = true,
-    help = "args for main module"
+        name = "ARGS",
+        required_if("has_args", "true"),
+        last = true,
+        help = "args for main module"
     )]
     pub args: Vec<String>,
 }
-

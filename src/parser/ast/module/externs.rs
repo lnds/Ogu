@@ -7,7 +7,6 @@ use anyhow::Result;
 pub(crate) struct Extern<'a>(&'a str, Vec<Declaration<'a>>);
 
 impl<'a> Extern<'a> {
-
     pub(crate) fn parse(parser: &'a Parser, pos: usize) -> Result<(Option<Self>, usize)> {
         if parser.peek(pos, Token::Extern) {
             Extern::parse_extern(parser, pos)
@@ -16,7 +15,7 @@ impl<'a> Extern<'a> {
         }
     }
 
-    fn parse_extern(parser: &'a Parser<'a >, pos: usize) -> Result<(Option<Extern<'a>>, usize)> {
+    fn parse_extern(parser: &'a Parser<'a>, pos: usize) -> Result<(Option<Extern<'a>>, usize)> {
         let pos = consume_symbol(parser, pos, Token::Extern)?;
         let (lang, pos) = consume_string(parser, pos)?;
         let pos = consume_symbol(parser, pos, Token::Where)?;

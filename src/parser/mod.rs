@@ -3,8 +3,8 @@ use crate::lexer::tokens::{LineNumber, LineWidth, Token};
 use crate::parser::ast::module::ModuleAst;
 use std::path::PathBuf;
 
-use anyhow::{Context, Error, Result};
 use crate::backend::errors::OguError;
+use anyhow::{Context, Error, Result};
 
 pub(crate) mod ast;
 
@@ -74,7 +74,11 @@ pub(crate) fn parse_opt_indent<'a>(parser: &'a Parser<'a>, pos: usize) -> (bool,
     }
 }
 
-pub(crate) fn parse_opt_dedent<'a>(parser: &'a Parser<'a>, pos: usize, in_indent: bool) -> Result<usize> {
+pub(crate) fn parse_opt_dedent<'a>(
+    parser: &'a Parser<'a>,
+    pos: usize,
+    in_indent: bool,
+) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
         pos = consume_symbol(parser, pos, Token::Dedent)?;

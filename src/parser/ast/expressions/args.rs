@@ -14,7 +14,6 @@ pub(crate) enum Arg<'a> {
 pub(crate) type VecArg<'a> = Vec<Arg<'a>>;
 
 impl<'a> Arg<'a> {
-
     pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<(VecArg<'a>, usize)> {
         let mut result = vec![];
         let mut pos = pos;

@@ -8,7 +8,10 @@ use anyhow::Result;
 pub struct Import<'a>(ModuleName<'a>, Option<ModuleName<'a>>, Option<Exposing<'a>>);
 
 impl<'a> Import<'a> {
-    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<(Option<Vec<Import<'a>>>, usize)> {
+    pub(crate) fn parse(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Option<Vec<Import<'a>>>, usize)> {
         let mut imports = vec![];
         let mut pos = pos;
         while let Some((import, new_pos)) = Import::parse_import(parser, pos)? {

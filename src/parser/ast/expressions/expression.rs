@@ -15,7 +15,7 @@ use anyhow::Result;
 #[macro_export]
 macro_rules! parse_left_assoc {
     ($func_name:ident, $op:expr, $next_level: expr) => {
-        fn $func_name (parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
+        fn $func_name(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
             parse_left_assoc_expr(parser, pos, $op, $next_level, |left, right| {
                 let la_expr = LeftAssocExpr($op, Box::new(left), Box::new(right));
                 left_assoc_expr_to_expr(la_expr)
@@ -27,7 +27,7 @@ macro_rules! parse_left_assoc {
 #[macro_export]
 macro_rules! parse_right_assoc {
     ($func_name:ident, $op:expr, $next_level: expr) => {
-        fn $func_name (parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
+        fn $func_name(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
             parse_right_assoc_expr(parser, pos, $op, $next_level, |base_expr, expr| {
                 let ra_expr = RightAssocExpr($op, Box::new(base_expr), Box::new(expr));
                 right_assoc_expr_to_expr(ra_expr)
@@ -144,8 +144,15 @@ pub(crate) enum Expression<'a> {
     ),
     LetExpr(Vec<Equation<'a>>, Box<Expression<'a>>),
     CondExpr(Vec<(Option<Expression<'a>>, Expression<'a>)>),
-    CaseExpr(Box<Expression<'a>>, Vec<(Option<Expression<'a>>, Expression<'a>)>),
-    IfExpr(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>),
+    CaseExpr(
+        Box<Expression<'a>>,
+        Vec<(Option<Expression<'a>>, Expression<'a>)>,
+    ),
+    IfExpr(
+        Box<Expression<'a>>,
+        Box<Expression<'a>>,
+        Box<Expression<'a>>,
+    ),
     MacroExpandExpr(Box<Expression<'a>>),
     ResumeExpr(Option<Box<Expression<'a>>>, Option<Vec<Expression<'a>>>),
     LoopExpr(
@@ -242,7 +249,10 @@ impl<'a> Expression<'a> {
         Ok((Expression::CondExpr(conds), pos))
     }
 
-    fn parse_opt_otherwise(parser: &'a Parser<'a>, pos: usize) -> Result<(Option<Expression<'a>>, usize)> {
+    fn parse_opt_otherwise(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Option<Expression<'a>>, usize)> {
         if parser.peek(pos, Token::Otherwise) {
             Ok((None, consume_symbol(parser, pos, Token::Otherwise)?))
         } else {
@@ -309,7 +319,10 @@ impl<'a> Expression<'a> {
         }
     }
 
-    fn parse_lambda_args(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<LambdaArg<'a>>, usize)> {
+    fn parse_lambda_args(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Vec<LambdaArg<'a>>, usize)> {
         let mut args = vec![];
         let (arg, mut pos) = Expression::parse_lambda_arg(parser, pos)?;
         args.push(arg);
@@ -672,9 +685,7 @@ impl<'a> Expression<'a> {
             Some(Token::Integer(int)) => Ok((Expression::IntegerLiteral(int), pos + 1)),
             Some(Token::Float(float)) => Ok((Expression::FloatLiteral(float), pos + 1)),
             Some(Token::IsoDate(date)) => Ok((Expression::DateLiteral(date), pos + 1)),
-            Some(Token::FormatString(f_str)) => {
-                Ok((Expression::FormatString(f_str), pos + 1))
-            }
+            Some(Token::FormatString(f_str)) => Ok((Expression::FormatString(f_str), pos + 1)),
             Some(Token::Char(chr)) => Ok((Expression::CharLiteral(chr), pos + 1)),
             Some(Token::RegExp(expr)) => Ok((Expression::RegexpLiteral(expr), pos + 1)),
             sym => {
@@ -694,12 +705,8 @@ impl<'a> Expression<'a> {
                     while parser.peek(pos, Token::Dot) {
                         pos = consume_symbol(parser, pos, Token::Dot)?;
                         match parser.get_token(pos) {
-                            Some(Token::Id(id)) => {
-                                q_ids.push(Expression::Identifier(id))
-                            }
-                            Some(Token::TypeId(tid)) => {
-                                q_ids.push(Expression::TypeIdentifier(tid))
-                            }
+                            Some(Token::Id(id)) => q_ids.push(Expression::Identifier(id)),
+                            Some(Token::TypeId(tid)) => q_ids.push(Expression::TypeIdentifier(tid)),
                             _ => break,
                         }
                         pos += 1;
@@ -1063,7 +1070,10 @@ impl<'a> Expression<'a> {
         }
     }
 
-    fn parse_args_before_arrow(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<&'a str>, usize)> {
+    fn parse_args_before_arrow(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Vec<&'a str>, usize)> {
         let mut args = vec![];
         let mut pos = pos;
         while !parser.peek(pos, Token::Arrow) {

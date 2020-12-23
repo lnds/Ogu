@@ -1,6 +1,6 @@
+use crate::backend::errors::OguError;
 use anyhow::{Context, Result};
 use figlet_rs::FIGfont;
-use crate::backend::errors::OguError;
 
 const VERSION: &str = "Ogu compiler version 0.3.0 (Ñeclito)";
 

@@ -93,7 +93,10 @@ pub(crate) fn consume_exprs_sep_by<'a>(
     Ok((result, pos))
 }
 
-pub(crate) fn consume_args<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<Expression<'a>>, usize)> {
+pub(crate) fn consume_args<'a>(
+    parser: &'a Parser<'a>,
+    pos: usize,
+) -> Result<(Vec<Expression<'a>>, usize)> {
     let mut args = vec![];
     let mut pos = pos;
     while !is_func_call_end_symbol(parser.get_token(pos)) {
@@ -105,7 +108,7 @@ pub(crate) fn consume_args<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(Ve
 }
 
 pub(crate) fn consume_ids_sep_by<'a>(
-    parser: &'a  Parser<'a>,
+    parser: &'a Parser<'a>,
     pos: usize,
     symbol: Token,
 ) -> Result<(Vec<&'a str>, usize)> {

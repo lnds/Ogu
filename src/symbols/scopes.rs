@@ -1,5 +1,4 @@
-use crate::symbols::symbols::Symbol;
-use crate::backend::Compiler;
+use crate::symbols::Symbol;
 
 pub(crate) trait Scope {
     fn scope_name(&self) -> &str;

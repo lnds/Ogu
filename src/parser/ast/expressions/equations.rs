@@ -20,8 +20,11 @@ pub(crate) enum Equation<'a> {
 }
 
 impl<'a> Equation<'a> {
-
-    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize, inner: bool) -> Result<(Equation<'a>, usize)> {
+    pub(crate) fn parse(
+        parser: &'a Parser<'a>,
+        pos: usize,
+        inner: bool,
+    ) -> Result<(Equation<'a>, usize)> {
         if let Some(Token::Id(id)) = parser.get_token(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
         } else if inner {
@@ -43,7 +46,10 @@ impl<'a> Equation<'a> {
         Equation::parse_value_assign2(parser, pos, Token::BackArrow, Token::Assign)
     }
 
-    pub(crate) fn parse_back_arrow_eq(parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
+    pub(crate) fn parse_back_arrow_eq(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Equation<'a>, usize)> {
         Equation::parse_value_assign(parser, pos, Token::BackArrow)
     }
 
@@ -51,7 +57,11 @@ impl<'a> Equation<'a> {
         Equation::parse_value_assign(parser, pos, Token::Assign)
     }
 
-    fn parse_value_assign(parser: &'a Parser<'a>, pos: usize, symbol: Token) -> Result<(Equation<'a>, usize)> {
+    fn parse_value_assign(
+        parser: &'a Parser<'a>,
+        pos: usize,
+        symbol: Token,
+    ) -> Result<(Equation<'a>, usize)> {
         if let Some(Token::Id(id)) = parser.get_token(pos) {
             let pos = consume_symbol(parser, pos + 1, symbol)?;
             Equation::parse_val(id, parser, pos)
@@ -93,7 +103,11 @@ impl<'a> Equation<'a> {
         }
     }
 
-    fn parse_func_or_val(name: &'a str, parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
+    fn parse_func_or_val(
+        name: &'a str,
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Equation<'a>, usize)> {
         if parser.peek(pos, Token::Assign) {
             Equation::parse_val(name, parser, pos + 1)
         } else {
@@ -101,14 +115,22 @@ impl<'a> Equation<'a> {
         }
     }
 
-    fn parse_val(name: &'a str, parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
+    fn parse_val(
+        name: &'a str,
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Equation<'a>, usize)> {
         // we already parsed a =
         let pos = parser.skip_nl(pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
         Ok((Equation::Value(name, expr), pos))
     }
 
-    fn parse_func(name: &'a str, parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
+    fn parse_func(
+        name: &'a str,
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Equation<'a>, usize)> {
         let (args, pos) = Arg::parse(parser, pos)?;
         if parser.peek(pos, Token::Assign) {
             Equation::parse_func_no_guards(name, args, parser, pos + 1)

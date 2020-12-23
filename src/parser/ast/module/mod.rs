@@ -7,14 +7,14 @@ use crate::lexer::tokens::Token;
 use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use std::path::PathBuf;
 
+use crate::backend::Compiler;
 use crate::parser::ast::module::body::{BodyAst, Declaration};
 use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::externs::Extern;
 use crate::parser::ast::module::imports::Import;
-use anyhow::Result;
-use crate::symbols::scopes::Scope;
 use crate::symbols::module::Module;
-use crate::backend::Compiler;
+use crate::symbols::scopes::Scope;
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub enum ModuleName<'a> {
@@ -88,9 +88,7 @@ impl<'a> ModuleAst<'a> {
 fn name_from_filename<'a>(filename: PathBuf) -> ModuleName<'a> {
     match filename.as_path().file_stem() {
         None => ModuleName::Anonymous,
-        Some(s) => {
-            ModuleName::Simple(capitalize(&s.to_str().unwrap()  ))
-        }
+        Some(s) => ModuleName::Simple(capitalize(&s.to_str().unwrap())),
     }
 }
 

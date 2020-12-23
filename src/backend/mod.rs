@@ -1,23 +1,23 @@
 use crate::backend::banner::akarru;
+use crate::backend::params::Params;
+use crate::lexer::token_stream::TokenStream;
 use crate::lexer::tokens::Token;
 use crate::lexer::Lexer;
+use crate::parser::ast::module::ModuleAst;
 use crate::parser::Parser;
+use crate::symbols::module::Module;
+use crate::symbols::scopes::Scope;
+use crate::symbols::sym_table::SymbolTable;
+use crate::symbols::types::Type;
+use crate::symbols::{Macro, Symbol};
 use anyhow::Result;
 use std::fmt::Debug;
 use std::path::PathBuf;
 use thiserror::Error;
-use crate::parser::ast::module::ModuleAst;
-use crate::lexer::token_stream::TokenStream;
-use crate::symbols::scopes::Scope;
-use crate::symbols::symbols::{Symbol, SymbolValue};
-use crate::symbols::SymbolTable;
-use crate::symbols::types::Type;
-use crate::backend::params::Params;
-use crate::symbols::module::Module;
 
 pub mod banner;
-pub mod params;
 pub mod errors;
+pub mod params;
 
 pub(crate) struct Compiler {
     show_tokens: bool,
@@ -25,16 +25,15 @@ pub(crate) struct Compiler {
     scopes: Vec<Box<dyn Scope>>,
 }
 
-
 impl Compiler {
     pub(crate) fn new(params: &Params) -> Self {
         let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
-        symbol_table.define(Symbol::new("printf!", SymbolValue::Macro(Type::Unit, 1)));
-        symbol_table.define(Symbol::new("print!", SymbolValue::Macro(Type::Unit, 1)));
+        symbol_table.define(Macro::make("printf!", Type::Unit, 1));
+        symbol_table.define(Macro::make("print!", Type::Unit, 1));
         Compiler {
             show_tokens: params.tokens,
             show_ast: params.print,
-            scopes: vec![symbol_table]
+            scopes: vec![symbol_table],
         }
     }
 }
@@ -51,7 +50,7 @@ impl Scope for Compiler {
     fn resolve(&self, name: &str) -> Option<Symbol> {
         for s in self.scopes.iter() {
             if let Some(sym) = s.resolve(name) {
-                return Some(sym)
+                return Some(sym);
             }
         }
         None
@@ -67,13 +66,11 @@ impl Scope for Compiler {
 impl Compiler {
     pub(crate) fn run(&mut self, files: Vec<PathBuf>) -> Result<()> {
         for path in files.iter() {
-            let mut scope = self.compile(path.clone())?;
+            let scope = self.compile(path.clone())?;
             self.scopes.push(scope);
         }
         Ok(())
     }
-
-
 
     fn compile(&self, path: PathBuf) -> Result<Box<dyn Scope>> {
         let mut lexer = Lexer::new(&path)?;
@@ -88,12 +85,9 @@ impl Compiler {
         if self.show_ast {
             println!("AST = {:#?}", module);
         }
-        Ok(Box::new(Module::new(&module)))
+        Ok(Box::new(Module::new(&module)?))
     }
-
-
 }
-
 
 pub fn run(params: Params) -> Result<()> {
     if params.banner {

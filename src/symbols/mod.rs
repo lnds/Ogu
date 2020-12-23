@@ -8,6 +8,7 @@ use crate::symbols::scopes::Scope;
 use crate::symbols::symbols::Symbol;
 use std::collections::HashMap;
 use crate::backend::errors::OguError;
+use crate::backend::Compiler;
 
 pub(crate) struct SymbolTable<'a> {
     name: String,
@@ -45,6 +46,7 @@ impl<'a> Scope for SymbolTable<'a> {
                 }
         }
     }
+
 }
 
 pub(crate) fn raise_symbol_table_error<T>(msg: &str, symbol: String, module: String) -> Result<T> {

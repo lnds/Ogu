@@ -5,10 +5,11 @@ use crate::symbols::scopes::Scope;
 use crate::symbols::symbols::Symbol;
 use crate::parser::ast::module::exposing::Exposing;
 use std::iter::FromIterator;
+use crate::backend::Compiler;
 
-pub(crate) struct Module {
+pub(crate) struct Module<'a> {
     name: String,
-    symbols: HashMap<String, Symbol>,
+    symbols: HashMap<&'a str, Symbol>,
     //enclosing_scope: Box<dyn Scope>,
     /*
     exports: ModuleExports<'a>,
@@ -19,7 +20,7 @@ pub(crate) struct Module {
      */
 }
 
-impl Module {
+impl<'a> Module<'a> {
 
     pub(crate) fn new(module_ast: &ModuleAst) -> Self {
         println!("new module {}", module_ast.get_module_name());
@@ -37,21 +38,23 @@ impl Module {
              */
         }
     }
+
 }
 
-impl<'a> Scope for Module {
+impl<'a> Scope for Module<'a> {
 
     fn scope_name(&self) -> &str {
         &self.name
     }
 
     fn define(&mut self, sym: Symbol) {
-        unimplemented!()
+        self.symbols.insert(sym.get_name(), sym);
     }
 
     fn resolve(&self, name: &str) -> Option<Symbol> {
         unimplemented!()
     }
+
 }
 
 

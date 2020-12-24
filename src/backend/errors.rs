@@ -10,6 +10,8 @@ pub enum OguError {
     ParserError(String),
     #[error("Symbol table error")]
     SymbolTableError(String),
+    #[error("code gen error")]
+    CodeGenError(String),
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 }

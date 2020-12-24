@@ -21,7 +21,7 @@ pub struct Params {
     /// dump symbol table
     #[structopt(short, long)]
     pub dump_symbols: bool,
-    
+
     /// emit rust code
     #[structopt(short, long)]
     pub rust: bool,

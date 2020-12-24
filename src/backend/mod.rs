@@ -11,6 +11,8 @@ use crate::symbols::types::Type;
 use crate::symbols::{Macro, Symbol};
 use anyhow::Result;
 use std::path::PathBuf;
+use crate::codegen::transpilers::rust_transpiler::RustTranspiler;
+use crate::codegen::CodeGenerator;
 
 pub mod banner;
 pub mod errors;
@@ -55,6 +57,13 @@ impl Scope for Compiler {
             scope.dump();
         }
     }
+
+    fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<()> {
+        for scope in self.scopes.iter() {
+            scope.gen_code(generator)?;
+        }
+        Ok(())
+    }
 }
 
 impl Compiler {
@@ -81,6 +90,7 @@ impl Compiler {
         }
         Ok(Box::new(Module::new(&module, self)?))
     }
+
 }
 
 pub fn run(params: Params) -> Result<()> {
@@ -91,6 +101,10 @@ pub fn run(params: Params) -> Result<()> {
     backend.run(params.files.to_vec())?;
     if params.dump_symbols {
         backend.dump();
+    }
+    if params.rust {
+        let mut rust_transpiler: Box<dyn CodeGenerator> = Box::new(RustTranspiler::new()?);
+        backend.gen_code(&mut rust_transpiler)?
     }
     Ok(())
 }

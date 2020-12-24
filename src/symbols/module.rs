@@ -8,6 +8,7 @@ use crate::symbols::values::{Date, Int, Str};
 use crate::symbols::{raise_symbol_table_error, Symbol, SymbolValue};
 use anyhow::Result;
 use std::collections::HashMap;
+use crate::codegen::CodeGenerator;
 
 pub(crate) struct Module {
     name: String,
@@ -25,6 +26,10 @@ impl Module {
             Module::match_decl(decl, &mut module, compiler)?;
         }
         Ok(module)
+    }
+
+    pub(crate) fn get_name(&self) -> String{
+        self.name.clone()
     }
 
     fn match_decl(decl: &Declaration, module: &mut Module, compiler: &dyn Scope) -> Result<()> {
@@ -163,5 +168,9 @@ impl<'a> Scope for Module {
         println!("Module Scope: {}", self.scope_name());
         println!("Symbols:");
         println!("{:#?}", self.symbols);
+    }
+
+    fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<()> {
+        generator.process(self)
     }
 }

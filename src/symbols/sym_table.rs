@@ -1,6 +1,8 @@
 use crate::symbols::scopes::Scope;
 use crate::symbols::Symbol;
 use std::collections::HashMap;
+use crate::codegen::CodeGenerator;
+use anyhow::Result;
 
 pub(crate) struct SymbolTable {
     name: String,
@@ -28,8 +30,6 @@ impl Scope for SymbolTable {
     }
 
     fn resolve(&self, name: &str) -> Option<Symbol> {
-        println!("sym table resolve {} @ {}", name, self.name);
-        self.dump();
         match self.symbols.get(name) {
             Some(s) => Some(s.clone()),
             None => match &self.enclosing_scope {
@@ -43,5 +43,10 @@ impl Scope for SymbolTable {
         println!("Scope: {}", self.name);
         println!("Symbols:");
         println!("{:?}", self.symbols);
+    }
+
+    fn gen_code(&self, _generator: &mut Box<dyn CodeGenerator>) -> Result<()> {
+        // do nothing
+        Ok(())
     }
 }

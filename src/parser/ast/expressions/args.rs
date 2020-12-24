@@ -13,7 +13,7 @@ pub(crate) enum Arg<'a> {
 #[derive(Debug, Clone)]
 pub(crate) enum Args<'a> {
     Void,
-    Many(Vec<Arg<'a>>)
+    Many(Vec<Arg<'a>>),
 }
 
 impl<'a> Arg<'a> {
@@ -45,6 +45,7 @@ impl<'a> Arg<'a> {
             Some(Token::Assign) => Ok(None),
             Some(Token::NewLine) => Ok(None),
             Some(Token::Guard) => Ok(None),
+            Some(Token::Id(id)) => Ok(Some((Arg::Simple(id), pos+1))),
             _ => {
                 let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
                 if let Expression::Identifier(id) = expr {

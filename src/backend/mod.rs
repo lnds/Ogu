@@ -89,6 +89,8 @@ pub fn run(params: Params) -> Result<()> {
     }
     let mut backend = Compiler::new(&params);
     backend.run(params.files.to_vec())?;
-    backend.dump();
+    if params.dump_symbols {
+        backend.dump();
+    }
     Ok(())
 }

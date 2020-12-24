@@ -2,10 +2,11 @@ use crate::backend::params::Params;
 use anyhow::Result;
 use structopt::StructOpt;
 
-pub mod backend;
-pub mod lexer;
-pub mod parser;
-mod symbols;
+pub(crate) mod backend;
+pub(crate) mod lexer;
+pub(crate) mod parser;
+pub(crate) mod symbols;
+pub(crate) mod codegen;
 
 fn main() -> Result<()> {
     let params = Params::from_args();

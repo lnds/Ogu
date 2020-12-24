@@ -130,12 +130,9 @@ impl Module {
     }
 
     fn check_existence(name: &str, module: &mut Module, compiler: &dyn Scope) -> Result<()> {
-        println!("check existence of {} @ {}", name, module.name);
         if module.resolve(name).is_some() {
             Ok(())
         } else {
-            println!("por acá");
-            println!("check existence of {} @ compiler {}", name, compiler.scope_name());
             if compiler.resolve(name).is_some() {
                 Ok(())
             } else {

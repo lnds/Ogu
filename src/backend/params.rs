@@ -18,6 +18,15 @@ pub struct Params {
     #[structopt(short, long)]
     pub print: bool,
 
+    /// dump symbol table
+    #[structopt(short, long)]
+    pub dump_symbols: bool,
+    
+    /// emit rust code
+    #[structopt(short, long)]
+    pub rust: bool,
+
+
     #[structopt(parse(from_os_str), help = "ogu modules...", required = true)]
     pub files: Vec<PathBuf>,
 

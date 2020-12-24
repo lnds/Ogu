@@ -17,7 +17,6 @@ pub(crate) struct Module {
 
 impl Module {
     pub(crate) fn new(module_ast: &ModuleAst, compiler: &dyn Scope) -> Result<Self> {
-        println!("new module {}", module_ast.get_module_name());
         let mut module = Module {
             name: module_ast.get_module_name(),
             symbols: HashMap::new(),

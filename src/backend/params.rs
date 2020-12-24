@@ -10,6 +10,9 @@ pub struct Params {
     #[structopt(short, long)]
     pub banner: bool,
 
+    #[structopt(short, long)]
+    pub clean : bool,
+
     /// print TOKENS
     #[structopt(short, long)]
     pub tokens: bool,
@@ -27,7 +30,7 @@ pub struct Params {
     pub rust: bool,
 
 
-    #[structopt(parse(from_os_str), help = "ogu modules...", required = true)]
+    #[structopt(parse(from_os_str), help = "ogu modules...", required_if("clean", "false"))]
     pub files: Vec<PathBuf>,
 
     #[structopt(

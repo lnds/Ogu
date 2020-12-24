@@ -32,9 +32,10 @@ pub(crate) enum SymbolValue {
     Int(String),
     Str(String),
     BinExpr(Expr, Box<SymbolValue>, Box<SymbolValue>),
-    FuncDecl(Vec<SymbolValue>, Box<SymbolValue>),
+    FuncDecl(Box<SymbolValue>, Box<SymbolValue>),
     FuncCall(Box<SymbolValue>, Box<SymbolValue>),
-    Tuple(Vec<SymbolValue>),
+    Tuple(Box<SymbolValue>),
+    Seq(Vec<SymbolValue>),
 }
 
 impl Symbol {

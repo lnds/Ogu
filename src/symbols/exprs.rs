@@ -18,7 +18,7 @@ impl Expr {
 pub(crate) enum Func {}
 
 impl Func {
-    pub(crate) fn make(name: &str, args: Vec<SymbolValue>, expr: SymbolValue) -> Symbol {
-        Symbol::new(name, SymbolValue::FuncDecl(args, Box::new(expr)))
+    pub(crate) fn make(name: &str, args: SymbolValue, expr: SymbolValue) -> Symbol {
+        Symbol::new(name, SymbolValue::FuncDecl(Box::new(args), Box::new(expr)))
     }
 }

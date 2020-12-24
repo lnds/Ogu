@@ -1,5 +1,5 @@
 use crate::lexer::tokens::Token;
-use crate::parser::ast::expressions::args::{Arg, VecArg};
+use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::consume_ids_sep_by;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::{parse_guards, Guard};
@@ -15,8 +15,8 @@ pub(crate) enum Equation<'a> {
     TupleValue(Vec<&'a str>, Expression<'a>),
     LValue(Expression<'a>, Expression<'a>),
     LValueWithGuards(Expression<'a>, Vec<Guard<'a>>),
-    Function(&'a str, Vec<Arg<'a>>, Expression<'a>),
-    FunctionWithGuards(&'a str, Vec<Arg<'a>>, Vec<Guard<'a>>),
+    Function(&'a str, Args<'a>, Expression<'a>),
+    FunctionWithGuards(&'a str, Args<'a>, Vec<Guard<'a>>),
 }
 
 impl<'a> Equation<'a> {
@@ -153,7 +153,7 @@ impl<'a> Equation<'a> {
 
     fn parse_func_no_guards(
         name: &'a str,
-        args: VecArg<'a>,
+        args: Args<'a>,
         parser: &'a Parser<'a>,
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
@@ -166,7 +166,7 @@ impl<'a> Equation<'a> {
 
     fn parse_func_guards(
         name: &'a str,
-        args: VecArg<'a>,
+        args: Args<'a>,
         parser: &'a Parser<'a>,
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {

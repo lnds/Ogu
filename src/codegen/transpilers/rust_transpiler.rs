@@ -1,4 +1,4 @@
-use std::path::{PathBuf, Path};
+use std::path::PathBuf;
 use std::{env, fs};
 use crate::codegen::CodeGenerator;
 use anyhow::{Result, Error};
@@ -39,7 +39,7 @@ impl RustTranspiler {
 }
 
 impl CodeGenerator for RustTranspiler {
-    fn process(&mut self, module: &Module) -> Result<()>{
+    fn process(&mut self, module: &Module) -> Result<()> {
         let path = self.get_path(module.get_name().to_lowercase())?;
         self.set_output_path(&path)?;
         self.dump(module)
@@ -48,8 +48,7 @@ impl CodeGenerator for RustTranspiler {
 
 
 impl RustTranspiler {
-
-    fn dump_code(&self, path: &PathBuf,  module: &Module) -> Result<()> {
+    fn dump_code(&self, path: &PathBuf, module: &Module) -> Result<()> {
         let mut file = File::create(path)?;
         write!(file, "// ogu generated code from module: {}.ogu\n", module.get_name());
         Ok(())

@@ -5,24 +5,37 @@ use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub(crate) enum Arg<'a> {
-    Void,
     Simple(&'a str),
     Tuple(Vec<Arg<'a>>),
     Expr(Box<Expression<'a>>),
 }
 
-pub(crate) type VecArg<'a> = Vec<Arg<'a>>;
+#[derive(Debug, Clone)]
+pub(crate) enum Args<'a> {
+    Void,
+    Many(Vec<Arg<'a>>)
+}
 
 impl<'a> Arg<'a> {
-    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<(VecArg<'a>, usize)> {
+    pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<(Args<'a>, usize)> {
         let mut result = vec![];
         let mut pos = pos;
         while let Some((arg, new_pos)) = Arg::parse_arg(parser, pos)? {
-            result.push(arg);
-            pos = new_pos;
+            if let Arg::Tuple(v) = arg {
+                if v.is_empty() {
+                    return Ok((Args::Void, new_pos));
+                }
+            } else {
+                result.push(arg);
+                pos = new_pos;
+            }
         }
         pos = parser.skip_nl(pos);
-        Ok((result, pos))
+        if result.is_empty() {
+            Ok((Args::Void, pos))
+        } else {
+            Ok((Args::Many(result), pos))
+        }
     }
 
     fn parse_arg(parser: &'a Parser<'a>, pos: usize) -> Result<Option<(Arg<'a>, usize)>> {
@@ -45,7 +58,7 @@ impl<'a> Arg<'a> {
 
     fn parse_tuple(parser: &'a Parser<'a>, pos: usize) -> Result<Option<(Arg<'a>, usize)>> {
         if parser.peek(pos + 1, Token::RightParen) {
-            return Ok(Some((Arg::Void, pos + 2)));
+            return Ok(Some((Arg::Tuple(vec![]), pos + 2)));
         }
         let mut pos = consume_symbol(parser, pos, Token::LeftParen)?;
         let mut args = vec![];

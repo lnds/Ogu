@@ -1,5 +1,5 @@
 use crate::lexer::tokens::Token;
-use crate::parser::ast::expressions::args::Arg;
+use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::{Expression, HandleGuard};
 use crate::parser::ast::expressions::guards::Guard;
@@ -70,10 +70,10 @@ pub(crate) enum BaseType<'a> {
 pub(crate) enum Declaration<'a> {
     Value(&'a str, Expression<'a>),
     ValueWithWhere(&'a str, Expression<'a>, Vec<Equation<'a>>),
-    Function(&'a str, Vec<Arg<'a>>, Expression<'a>),
-    FunctionWithWhere(&'a str, Vec<Arg<'a>>, Expression<'a>, Vec<Equation<'a>>),
-    FunctionWithGuards(&'a str, Vec<Arg<'a>>, Vec<Guard<'a>>),
-    FunctionWithGuardsAndWhere(&'a str, Vec<Arg<'a>>, Vec<Guard<'a>>, Vec<Equation<'a>>),
+    Function(&'a str, Args<'a>, Expression<'a>),
+    FunctionWithWhere(&'a str, Args<'a>, Expression<'a>, Vec<Equation<'a>>),
+    FunctionWithGuards(&'a str, Args<'a>, Vec<Guard<'a>>),
+    FunctionWithGuardsAndWhere(&'a str, Args<'a>, Vec<Guard<'a>>, Vec<Equation<'a>>),
     TypeDecl(
         &'a str,
         Option<Vec<&'a str>>,
@@ -86,7 +86,7 @@ pub(crate) enum Declaration<'a> {
     FunctionPrototype(FuncPrototype<'a>),
     MacroDecl(Box<Declaration<'a>>),
     Effect(FuncPrototype<'a>),
-    Handler(&'a str, Vec<Arg<'a>>, Vec<HandleGuard<'a>>),
+    Handler(&'a str, Args<'a>, Vec<HandleGuard<'a>>),
     DocString(Option<String>),
 }
 

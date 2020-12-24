@@ -1,4 +1,4 @@
-use crate::parser::ast::expressions::args::Arg;
+use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::module::body::Declaration;
 use crate::parser::ast::module::ModuleAst;
@@ -27,7 +27,7 @@ impl Module {
         Ok(module)
     }
 
-    pub(crate) fn get_name(&self) -> String{
+    pub(crate) fn get_name(&self) -> String {
         self.name.clone()
     }
 
@@ -112,25 +112,37 @@ impl Module {
                 println!("not implementes {:?}", e);
                 todo!()
             }
-
         }
     }
 
     fn check_args(
+        args: &Args,
+        module: &mut Module,
+        compiler: &dyn Scope,
+    ) -> Result<SymbolValue> {
+        match args {
+            Args::Void => Ok(SymbolValue::Unit),
+            Args::Many(args) =>
+                Module::check_vec_args(args, module, compiler)
+        }
+    }
+
+
+    fn check_vec_args(
         args: &Vec<Arg>,
         module: &mut Module,
         compiler: &dyn Scope,
-    ) -> Result<Vec<SymbolValue>> {
+    ) -> Result<SymbolValue> {
         let mut result = vec![];
         for arg in args.iter() {
             match arg {
-                Arg::Void => result.push(SymbolValue::Unit),
                 Arg::Simple(id) => result.push(SymbolValue::Ref(id.to_string())),
-                Arg::Tuple(a) => result.push(SymbolValue::Tuple(Module::check_args(a, module, compiler)?)),
+                Arg::Tuple(a) => result.push(SymbolValue::Tuple(Box::new(Module::check_vec_args(a, module, compiler)?))),
                 Arg::Expr(e) => result.push(Module::check_expr(e, module, compiler)?),
             }
         }
-        Ok(result)
+
+        Ok(SymbolValue::Seq(result))
     }
 
     fn check_existence(name: &str, module: &mut Module, compiler: &dyn Scope) -> Result<()> {

@@ -28,6 +28,8 @@ impl Scope for SymbolTable {
     }
 
     fn resolve(&self, name: &str) -> Option<Symbol> {
+        println!("sym table resolve {} @ {}", name, self.name);
+        self.dump();
         match self.symbols.get(name) {
             Some(s) => Some(s.clone()),
             None => match &self.enclosing_scope {

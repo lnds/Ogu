@@ -8,15 +8,17 @@ pub(crate) enum Expr {
 
 impl Expr {
     pub(crate) fn make(name: &str, op: Expr, left: SymbolValue, right: SymbolValue) -> Symbol {
-        Symbol::new(name, SymbolValue::BinExpr(op, Box::new(left), Box::new(right)))
+        Symbol::new(
+            name,
+            SymbolValue::BinExpr(op, Box::new(left), Box::new(right)),
+        )
     }
 }
 
-pub(crate) struct Ref {}
+pub(crate) enum Func {}
 
-impl Ref {
-
-    pub(crate) fn make(name: &str) -> Symbol {
-        Symbol::new(name, SymbolValue::Ref(name.to_string()))
+impl Func {
+    pub(crate) fn make(name: &str, args: Vec<SymbolValue>, expr: SymbolValue) -> Symbol {
+        Symbol::new(name, SymbolValue::FuncDecl(args, Box::new(expr)))
     }
 }

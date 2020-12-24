@@ -107,7 +107,7 @@ impl<'a> Declaration<'a> {
             Declaration::MacroDecl(d) => d.get_name(),
             Declaration::Effect(fp) => fp.get_name(),
             Declaration::Handler(h, _, _) => h,
-            Declaration::DocString(Some(s)) => "",
+            Declaration::DocString(Some(_)) => "",
             Declaration::DocString(None) => "",
         }
     }

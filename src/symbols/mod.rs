@@ -1,17 +1,14 @@
+pub(crate) mod exprs;
 pub(crate) mod module;
 pub(crate) mod scopes;
 pub(crate) mod sym_table;
 pub(crate) mod types;
 pub(crate) mod values;
-pub(crate) mod exprs;
 
 use crate::backend::errors::OguError;
-use crate::backend::Compiler;
-use crate::symbols::scopes::Scope;
+use crate::symbols::exprs::Expr;
 use crate::symbols::types::Type;
 use anyhow::{Context, Error, Result};
-use std::collections::HashMap;
-use crate::symbols::exprs::Expr;
 
 pub(crate) fn raise_symbol_table_error<T>(msg: &str, symbol: String, module: String) -> Result<T> {
     Err(Error::new(OguError::SymbolTableError(msg.to_string()))).context(format!(
@@ -28,11 +25,16 @@ pub(crate) struct Symbol {
 
 #[derive(Debug, Clone)]
 pub(crate) enum SymbolValue {
+    Unit,
     Ref(String),
     Macro(Type, usize),
     Date(String),
     Int(String),
+    Str(String),
     BinExpr(Expr, Box<SymbolValue>, Box<SymbolValue>),
+    FuncDecl(Vec<SymbolValue>, Box<SymbolValue>),
+    FuncCall(Box<SymbolValue>, Box<SymbolValue>),
+    Tuple(Vec<SymbolValue>),
 }
 
 impl Symbol {

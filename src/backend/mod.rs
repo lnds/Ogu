@@ -1,6 +1,5 @@
 use crate::backend::banner::akarru;
 use crate::backend::params::Params;
-use crate::lexer::token_stream::TokenStream;
 use crate::lexer::tokens::Token;
 use crate::lexer::Lexer;
 use crate::parser::ast::module::ModuleAst;
@@ -11,9 +10,7 @@ use crate::symbols::sym_table::SymbolTable;
 use crate::symbols::types::Type;
 use crate::symbols::{Macro, Symbol};
 use anyhow::Result;
-use std::fmt::Debug;
 use std::path::PathBuf;
-use thiserror::Error;
 
 pub mod banner;
 pub mod errors;
@@ -22,18 +19,20 @@ pub mod params;
 pub(crate) struct Compiler {
     show_tokens: bool,
     show_ast: bool,
+    ogu_scope: Box<dyn Scope>,
     scopes: Vec<Box<dyn Scope>>,
 }
 
 impl Compiler {
     pub(crate) fn new(params: &Params) -> Self {
         let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
-        symbol_table.define(Macro::make("printf!", Type::Unit, 1));
+        symbol_table.define(Macro::make("println!", Type::Unit, 1));
         symbol_table.define(Macro::make("print!", Type::Unit, 1));
         Compiler {
             show_tokens: params.tokens,
             show_ast: params.print,
-            scopes: vec![symbol_table],
+            ogu_scope: symbol_table,
+            scopes: vec![],
         }
     }
 }
@@ -48,12 +47,7 @@ impl Scope for Compiler {
     }
 
     fn resolve(&self, name: &str) -> Option<Symbol> {
-        for s in self.scopes.iter() {
-            if let Some(sym) = s.resolve(name) {
-                return Some(sym);
-            }
-        }
-        None
+        self.ogu_scope.resolve(name)
     }
 
     fn dump(&self) {

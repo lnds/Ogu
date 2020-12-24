@@ -7,13 +7,10 @@ use crate::lexer::tokens::Token;
 use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use std::path::PathBuf;
 
-use crate::backend::Compiler;
 use crate::parser::ast::module::body::{BodyAst, Declaration};
 use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::externs::Extern;
 use crate::parser::ast::module::imports::Import;
-use crate::symbols::module::Module;
-use crate::symbols::scopes::Scope;
 use anyhow::Result;
 
 #[derive(Debug, Clone)]

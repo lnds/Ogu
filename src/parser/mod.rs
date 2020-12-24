@@ -1,7 +1,5 @@
 use crate::lexer::token_stream::TokenStream;
 use crate::lexer::tokens::{LineNumber, LineWidth, Token};
-use crate::parser::ast::module::ModuleAst;
-use std::path::PathBuf;
 
 use crate::backend::errors::OguError;
 use anyhow::{Context, Error, Result};

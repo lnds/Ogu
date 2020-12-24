@@ -1,4 +1,3 @@
-use crate::codegen::transpilers::rust_transpiler::RustTranspiler;
 use crate::codegen::CodeGenerator;
 use crate::symbols::scopes::Scope;
 use crate::backend::params::Params;

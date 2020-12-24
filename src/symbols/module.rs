@@ -9,6 +9,7 @@ use crate::symbols::{raise_symbol_table_error, Symbol, SymbolValue};
 use anyhow::Result;
 use std::collections::HashMap;
 use crate::codegen::CodeGenerator;
+use crate::parser::ast::expressions::guards::Guard;
 
 pub(crate) struct Module {
     name: String,
@@ -87,6 +88,8 @@ impl Module {
                 check_or_define_lr!(Expr, Mul, name, left, right)
             }
             Declaration::Function(name, args, expr) => check_or_define_fn!(Func, name, args, expr),
+            Declaration::FunctionWithGuards(name, args, guards) =>
+                check_or_define_fn!(Func, name, args, &Guard::guards_to_cond(guards)),
             d => {
                 println!("match decl failed at: {:#?}", d);
                 todo!();
@@ -133,7 +136,7 @@ impl Module {
 
 
     fn check_vec_args(
-        args: &Vec<Arg>,
+        args: &[Arg],
         module: &mut Module,
         compiler: &dyn Scope,
     ) -> Result<SymbolValue> {
@@ -150,18 +153,14 @@ impl Module {
     }
 
     fn check_existence(name: &str, module: &mut Module, compiler: &dyn Scope) -> Result<()> {
-        if module.resolve(name).is_some() {
+        if module.resolve(name).is_some()  || compiler.resolve(name).is_some() {
             Ok(())
         } else {
-            if compiler.resolve(name).is_some() {
-                Ok(())
-            } else {
-                raise_symbol_table_error(
-                    "symbol not found",
-                    name.to_string(),
-                    module.name.to_string(),
-                )
-            }
+            raise_symbol_table_error(
+                "symbol not found",
+                name.to_string(),
+                module.name.to_string(),
+            )
         }
     }
 }

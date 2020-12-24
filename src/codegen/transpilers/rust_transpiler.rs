@@ -52,7 +52,7 @@ impl CodeGenerator for RustTranspiler {
 impl RustTranspiler {
     fn dump_code(&self, path: &PathBuf, module: &Module) -> Result<()> {
         let mut file = File::create(path)?;
-        write!(file, "// ogu generated code from module: {}.ogu\n", module.get_name());
+        writeln!(file, "// ogu generated code from module: {}.ogu", module.get_name())?;
         for sym in module.get_symbols().iter() {
             self.dump_symbol_code(&mut file, sym)?;
         }
@@ -63,31 +63,31 @@ impl RustTranspiler {
         let name = symbol.get_name();
         match symbol.get_value() {
             FuncDecl(args, expr) => {
-                write!(file, "fn {}", name);
-                write!(file, "({}) {{\n", self.dump_args( args));
-                write!(file, "\t{}", self.dump_expr(&expr));
-                write!(file, "\n}}\n");
+                write!(file, "fn {}", name)?;
+                writeln!(file, "({}) {{", self.dump_args( &args))?;
+                writeln!(file, "\t{}", self.dump_expr(&expr))?;
+                writeln!(file, "}}")?;
             }
             sym => {
-                write!(file, "/* {:#?} */", sym);
+                write!(file, "/* {:#?} */", sym)?;
             },
         }
         Ok(())
     }
 
-    fn dump_args(&self,  val: Box<SymbolValue>) -> String {
-        match val.as_ref() {
+    fn dump_args(&self,  val: &SymbolValue) -> String {
+        match val {
             SymbolValue::Unit => String::new(),
             s => format!("{:?}", s)
         }
     }
 
-    fn dump_expr(&self, expr: &Box<SymbolValue>) -> String {
-        match expr.as_ref() {
+    fn dump_expr(&self, expr: &SymbolValue) -> String {
+        match expr {
             Ref(id) => id.to_string(),
             Str(s) => format!("\"{}\"", s.to_string()),
             FuncCall(f, a ) =>
-                format!("{} ({})", self.dump_expr(f), self.dump_expr(a)),
+                format!("{} ({})", self.dump_expr(&f), self.dump_expr(&a)),
             s => format!("/* {:?} */", s)
         }
     }

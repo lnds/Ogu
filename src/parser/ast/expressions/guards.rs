@@ -4,6 +4,7 @@ use crate::parser::{
     consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent, Parser,
 };
 use anyhow::Result;
+use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Guard<'a>(
@@ -12,6 +13,16 @@ pub(crate) struct Guard<'a>(
 );
 
 pub(crate) type GuardVec<'a> = Vec<Guard<'a>>;
+
+impl<'a> Guard<'a> {
+    pub fn guards_to_cond(guards: &[Guard<'a>]) -> Expression<'a> {
+        let mut pairs : Vec<(Option<Expression<'a>>, Expression<'a>)>= vec![];
+        for guard in guards.iter() {
+            pairs.push((guard.0.as_ref().map(|e| e.deref().clone()), guard.1.deref().clone()));
+        }
+        Expression::CondExpr(pairs)
+    }
+}
 
 pub(crate) fn parse_guards<'a>(
     parser: &'a Parser<'a>,

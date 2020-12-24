@@ -31,6 +31,10 @@ impl Module {
         self.name.clone()
     }
 
+    pub(crate) fn get_symbols(&self) -> Vec<Symbol> {
+        self.symbols.values().cloned().collect()
+    }
+
     fn match_decl(decl: &Declaration, module: &mut Module, compiler: &dyn Scope) -> Result<()> {
         macro_rules! check_or_define {
             ($t:ty, $name:ident, $v: expr) => {

@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use crate::codegen::CodeGenerator;
 use crate::parser::ast::expressions::guards::Guard;
 
-pub(crate) struct Module {
+pub struct Module {
     name: String,
     symbols: HashMap<String, Symbol>,
 }

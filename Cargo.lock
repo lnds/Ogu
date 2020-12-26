@@ -126,6 +126,19 @@ dependencies = [
  "anyhow",
  "figlet-rs",
  "logos",
+ "ogu-lang",
+ "structopt",
+ "thiserror",
+ "walkdir",
+]
+
+[[package]]
+name = "ogu-lang"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "figlet-rs",
+ "logos",
  "structopt",
  "thiserror",
  "walkdir",

@@ -10,13 +10,13 @@ use std::io::Write;
 use crate::symbols::{Symbol, SymbolValue};
 use crate::symbols::SymbolValue::{FuncDecl, Ref, Str, FuncCall};
 
-pub(crate) struct RustTranspiler {
+pub struct RustTranspiler {
     outputdir: PathBuf,
     current_file: Option<PathBuf>,
 }
 
 impl RustTranspiler {
-    pub(crate) fn new() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         Ok(RustTranspiler {
             outputdir: RustTranspiler::det_outputdir()?,
             current_file: None,

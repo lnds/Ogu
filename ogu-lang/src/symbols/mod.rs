@@ -1,6 +1,6 @@
 pub(crate) mod exprs;
 pub(crate) mod module;
-pub(crate) mod scopes;
+pub mod scopes;
 pub(crate) mod sym_table;
 pub(crate) mod types;
 pub(crate) mod values;
@@ -18,7 +18,7 @@ pub(crate) fn raise_symbol_table_error<T>(msg: &str, symbol: String, module: Str
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct Symbol {
+pub struct Symbol {
     name: String,
     value: SymbolValue,
 }
@@ -46,11 +46,11 @@ impl Symbol {
         }
     }
 
-    pub fn get_name(&self) -> String {
+    pub(crate) fn get_name(&self) -> String {
         self.name.to_string()
     }
 
-    pub fn get_value(&self) -> SymbolValue {
+    pub(crate) fn get_value(&self) -> SymbolValue {
         self.value.clone()
     }
 }

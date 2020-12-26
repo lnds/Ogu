@@ -1,9 +1,9 @@
-pub(crate) mod transpilers;
+pub mod transpilers;
 
 use crate::symbols::module::Module;
 use anyhow::Result;
 
-pub(crate) trait CodeGenerator {
+pub trait CodeGenerator {
 
     fn process(&mut self, module: &Module) -> Result<()>;
 }

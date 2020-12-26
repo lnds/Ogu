@@ -2,7 +2,7 @@ use crate::symbols::Symbol;
 use crate::codegen::CodeGenerator;
 use anyhow::Result;
 
-pub(crate) trait Scope {
+pub trait Scope {
     fn scope_name(&self) -> &str;
     fn define(&mut self, sym: Symbol) -> Option<Symbol>;
     fn resolve(&self, name: &str) -> Option<Symbol>;

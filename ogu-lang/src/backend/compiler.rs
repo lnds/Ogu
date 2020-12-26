@@ -12,7 +12,7 @@ use crate::parser::Parser;
 use crate::parser::ast::module::ModuleAst;
 use crate::symbols::module::Module;
 
-pub(crate) struct Compiler {
+pub struct Compiler {
     show_tokens: bool,
     show_ast: bool,
     ogu_scope: Box<dyn Scope>,
@@ -20,7 +20,7 @@ pub(crate) struct Compiler {
 }
 
 impl Compiler {
-    pub(crate) fn new(params: &Params) -> Self {
+    pub fn new(params: &Params) -> Self {
         let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
         symbol_table.define(Macro::make("println!", Type::Unit, 1));
         symbol_table.define(Macro::make("print!", Type::Unit, 1));
@@ -61,7 +61,7 @@ impl Scope for Compiler {
 }
 
 impl Compiler {
-    pub(crate) fn run(&mut self, files: Vec<PathBuf>) -> Result<()> {
+    pub fn run(&mut self, files: Vec<PathBuf>) -> Result<()> {
         for path in files.iter() {
             let scope = self.compile(path.clone())?;
             self.scopes.push(scope);

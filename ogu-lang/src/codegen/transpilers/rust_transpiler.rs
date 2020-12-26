@@ -7,8 +7,7 @@ use crate::codegen::transpilers::Transpiler;
 use std::fs::File;
 use crate::backend::errors::OguError::CodeGenError;
 use std::io::Write;
-use crate::symbols::{Symbol, SymbolValue};
-use crate::symbols::SymbolValue::{FuncDecl, Ref, Str, FuncCall};
+use crate::symbols::scopes::Scope;
 
 pub struct RustTranspiler {
     outputdir: PathBuf,
@@ -41,8 +40,8 @@ impl RustTranspiler {
 }
 
 impl CodeGenerator for RustTranspiler {
-    fn process(&mut self, module: &Module) -> Result<()> {
-        let path = self.get_path(module.get_name().to_lowercase())?;
+    fn process(&mut self, module: &dyn Scope) -> Result<()> {
+        let path = self.get_path(module.scope_name().to_lowercase())?;
         self.set_output_path(&path)?;
         self.dump(module)
     }
@@ -50,28 +49,17 @@ impl CodeGenerator for RustTranspiler {
 
 
 impl RustTranspiler {
-    fn dump_code(&self, path: &PathBuf, module: &Module) -> Result<()> {
+    fn dump_code(&self, path: &PathBuf, module: &dyn Scope) -> Result<()> {
         let mut file = File::create(path)?;
-        writeln!(file, "// ogu generated code from module: {}.ogu", module.get_name())?;
+        writeln!(file, "// ogu generated code from module: {}.ogu", module.scope_name())?;
         for sym in module.get_symbols().iter() {
-            self.dump_symbol_code(&mut file, sym)?;
+           // self.dump_symbol_code(&mut file, sym)?;
         }
         Ok(())
     }
-
-    fn dump_symbol_code(&self, file: &mut File, symbol: &Symbol) -> Result<()>{
+/*
+    fn dump_symbol_code(&self, file: &mut File, symbol: Box<dyn Symbol>) -> Result<()>{
         let name = symbol.get_name();
-        match symbol.get_value() {
-            FuncDecl(args, expr) => {
-                write!(file, "fn {}", name)?;
-                writeln!(file, "({}) {{", self.dump_args( &args))?;
-                writeln!(file, "\t{}", self.dump_expr(&expr))?;
-                writeln!(file, "}}")?;
-            }
-            sym => {
-                write!(file, "/* {:#?} */", sym)?;
-            },
-        }
         Ok(())
     }
 
@@ -91,6 +79,8 @@ impl RustTranspiler {
             s => format!("/* {:?} */", s)
         }
     }
+
+ */
 }
 
 impl Transpiler for RustTranspiler {
@@ -99,9 +89,9 @@ impl Transpiler for RustTranspiler {
         Ok(())
     }
 
-    fn dump(&mut self, module: &Module) -> Result<()> {
+    fn dump(&mut self, module: &dyn Scope) -> Result<()> {
         match &self.current_file {
-            None => Err(Error::new(CodeGenError(format!("no output file for module: {}", module.get_name())))),
+            None => Err(Error::new(CodeGenError(format!("no output file for module: {}", module.scope_name())))),
             Some(path) => self.dump_code(path, module)
         }
     }

@@ -1,9 +1,9 @@
 pub mod transpilers;
 
-use crate::symbols::module::Module;
 use anyhow::Result;
+use crate::symbols::scopes::Scope;
 
 pub trait CodeGenerator {
 
-    fn process(&mut self, module: &Module) -> Result<()>;
+    fn process(&mut self, module: &dyn Scope) -> Result<()>;
 }

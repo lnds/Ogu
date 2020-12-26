@@ -1,11 +1,24 @@
 use crate::symbols::Symbol;
 use crate::codegen::CodeGenerator;
 use anyhow::Result;
+use std::fmt::{Debug, Formatter};
 
 pub trait Scope {
     fn scope_name(&self) -> &str;
-    fn define(&mut self, sym: Symbol) -> Option<Symbol>;
-    fn resolve(&self, name: &str) -> Option<Symbol>;
-    fn dump(&self);
+    fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>>;
+    fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>>;
     fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<()>;
+    fn get_symbols(&self) -> Vec<Box<dyn Symbol>>;
+}
+
+
+impl Debug for Scope {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        writeln!(f, "Scope {} {{ ", self.scope_name())?;
+        for sym in self.get_symbols().iter() {
+            writeln!(f, "{:?}", sym)?;
+        }
+        writeln!(f, "}}")?;
+        Ok(())
+    }
 }

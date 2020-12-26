@@ -1,14 +1,42 @@
-pub(crate) mod exprs;
-pub(crate) mod module;
 pub mod scopes;
+pub(crate) mod module;
 pub(crate) mod sym_table;
-pub(crate) mod types;
-pub(crate) mod values;
+pub(crate) mod macros;
 
 use crate::backend::errors::OguError;
-use crate::symbols::exprs::Expr;
-use crate::symbols::types::Type;
 use anyhow::{Context, Error, Result};
+use crate::types::Type;
+use std::fmt::{Debug, Formatter};
+
+pub trait Symbol : SymbolClone {
+    fn get_name(&self) -> String;
+    fn get_type(&self)  -> Box<dyn Type>;
+}
+
+pub trait SymbolClone {
+    fn clone_box(&self) -> Box<dyn Symbol>;
+}
+
+impl<T> SymbolClone for T
+where T: 'static + Symbol + Clone,
+{
+    fn clone_box(&self) -> Box<dyn Symbol> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn Symbol> {
+    fn clone(&self) -> Box<dyn Symbol> {
+        self.clone_box()
+    }
+}
+
+impl Debug for dyn Symbol {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "Symbol {{ name: {}, type: {} }}", self.get_name(), self.get_type().get_name())?;
+        Ok(())
+    }
+}
 
 pub(crate) fn raise_symbol_table_error<T>(msg: &str, symbol: String, module: String) -> Result<T> {
     Err(Error::new(OguError::SymbolTableError(msg.to_string()))).context(format!(
@@ -17,48 +45,3 @@ pub(crate) fn raise_symbol_table_error<T>(msg: &str, symbol: String, module: Str
     ))
 }
 
-#[derive(Debug, Clone)]
-pub struct Symbol {
-    name: String,
-    value: SymbolValue,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) enum SymbolValue {
-    Unit,
-    Ref(String),
-    Macro(Type, usize),
-    Date(String),
-    Int(String),
-    Str(String),
-    BinExpr(Expr, Box<SymbolValue>, Box<SymbolValue>),
-    FuncDecl(Box<SymbolValue>, Box<SymbolValue>),
-    FuncCall(Box<SymbolValue>, Box<SymbolValue>),
-    Tuple(Box<SymbolValue>),
-    Seq(Vec<SymbolValue>),
-}
-
-impl Symbol {
-    pub(crate) fn new(name: &str, value: SymbolValue) -> Self {
-        Symbol {
-            name: name.to_string(),
-            value,
-        }
-    }
-
-    pub(crate) fn get_name(&self) -> String {
-        self.name.to_string()
-    }
-
-    pub(crate) fn get_value(&self) -> SymbolValue {
-        self.value.clone()
-    }
-}
-
-pub(crate) struct Macro {}
-
-impl Macro {
-    pub fn make(name: &str, ty: Type, args: usize) -> Symbol {
-        Symbol::new(name, SymbolValue::Macro(ty, args))
-    }
-}

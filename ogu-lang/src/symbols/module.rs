@@ -1,19 +1,14 @@
-use crate::parser::ast::expressions::args::{Arg, Args};
-use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::module::body::Declaration;
 use crate::parser::ast::module::ModuleAst;
-use crate::symbols::exprs::{Expr, Func};
 use crate::symbols::scopes::Scope;
-use crate::symbols::values::{Date, Int, Str};
-use crate::symbols::{raise_symbol_table_error, Symbol, SymbolValue};
 use anyhow::Result;
 use std::collections::HashMap;
 use crate::codegen::CodeGenerator;
-use crate::parser::ast::expressions::guards::Guard;
+use crate::symbols::Symbol;
 
 pub struct Module {
     name: String,
-    symbols: HashMap<String, Symbol>,
+    symbols: HashMap<String, Box<dyn Symbol>>,
 }
 
 impl Module {
@@ -32,11 +27,11 @@ impl Module {
         self.name.clone()
     }
 
-    pub(crate) fn get_symbols(&self) -> Vec<Symbol> {
-        self.symbols.values().cloned().collect()
-    }
 
     fn match_decl(decl: &Declaration, module: &mut Module, compiler: &dyn Scope) -> Result<()> {
+        Ok(())
+        //todo!();
+        /*
         macro_rules! check_or_define {
             ($t:ty, $name:ident, $v: expr) => {
                 if module.resolve($name).is_some() {
@@ -96,8 +91,11 @@ impl Module {
             }
         };
         Ok(())
+
+         */
     }
 
+    /*
     fn check_expr(
         expr: &Expression,
         module: &mut Module,
@@ -163,6 +161,8 @@ impl Module {
             )
         }
     }
+
+     */
 }
 
 impl<'a> Scope for Module {
@@ -170,21 +170,19 @@ impl<'a> Scope for Module {
         &self.name
     }
 
-    fn define(&mut self, sym: Symbol) -> Option<Symbol> {
+    fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>> {
         self.symbols.insert(sym.get_name(), sym)
     }
 
-    fn resolve(&self, name: &str) -> Option<Symbol> {
+    fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
         self.symbols.get(name).cloned()
-    }
-
-    fn dump(&self) {
-        println!("Module Scope: {}", self.scope_name());
-        println!("Symbols:");
-        println!("{:#?}", self.symbols);
     }
 
     fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<()> {
         generator.process(self)
+    }
+
+    fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
+        self.symbols.values().cloned().collect()
     }
 }

@@ -1,9 +1,7 @@
 use crate::codegen::CodeGenerator;
 use crate::symbols::scopes::Scope;
 use crate::backend::params::Params;
-use crate::symbols::{Macro, Symbol};
 use crate::symbols::sym_table::SymbolTable;
-use crate::symbols::types::Type;
 use anyhow::Result;
 use std::path::PathBuf;
 use crate::lexer::Lexer;
@@ -11,6 +9,9 @@ use crate::lexer::tokens::Token;
 use crate::parser::Parser;
 use crate::parser::ast::module::ModuleAst;
 use crate::symbols::module::Module;
+use crate::types::basic::BasicType;
+use crate::symbols::macros::MacroSym;
+use crate::symbols::Symbol;
 
 pub struct Compiler {
     show_tokens: bool,
@@ -22,8 +23,8 @@ pub struct Compiler {
 impl Compiler {
     pub fn new(params: &Params) -> Self {
         let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
-        symbol_table.define(Macro::make("println!", Type::Unit, 1));
-        symbol_table.define(Macro::make("print!", Type::Unit, 1));
+        symbol_table.define(MacroSym::new("println!", BasicType::Unit));
+        symbol_table.define(MacroSym::new("print!", BasicType::Unit));
         Compiler {
             show_tokens: params.tokens,
             show_ast: params.print,
@@ -38,18 +39,12 @@ impl Scope for Compiler {
         "_compiler"
     }
 
-    fn define(&mut self, _: Symbol) -> Option<Symbol> {
-        unimplemented!()
+    fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>> {
+        self.ogu_scope.define(sym)
     }
 
-    fn resolve(&self, name: &str) -> Option<Symbol> {
+    fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
         self.ogu_scope.resolve(name)
-    }
-
-    fn dump(&self) {
-        for scope in self.scopes.iter() {
-            scope.dump();
-        }
     }
 
     fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<()> {
@@ -57,6 +52,15 @@ impl Scope for Compiler {
             scope.gen_code(generator)?;
         }
         Ok(())
+    }
+
+    fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
+        let mut result = vec![];
+        result.append(&mut self.ogu_scope.get_symbols());
+        for scope in self.scopes.iter() {
+            result.append(&mut scope.get_symbols());
+        }
+        result
     }
 }
 
@@ -85,4 +89,11 @@ impl Compiler {
         Ok(Box::new(Module::new(&module, self)?))
     }
 
+    /// dumps symbols
+    pub fn dump(&self) {
+        println!("Symbols:");
+        for sym in self.get_symbols().iter() {
+            println!("\t{:#?}", sym)
+        }
+    }
 }

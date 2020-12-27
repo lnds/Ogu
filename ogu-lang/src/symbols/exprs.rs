@@ -63,6 +63,7 @@ impl ExprSymEnum {
                 writeln!(file, "{}", fmt.format_func_call(&f_call, &f_args))?;
             }
             ExprSymEnum::Add(l, r) => {
+                println!("ADD l={:?}, r = {:?}", l, r);
                 let ls = l.expr.format(fmt);
                 let rs = l.expr.format(fmt);
                 writeln!(file, "{} + {}", ls, rs)?;

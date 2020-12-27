@@ -3,4 +3,4 @@ a = 10
 
 a1 = a + 1
 
-main () = (println! "a = {} a1 = {}" a a1)
+main () = println! "a = {} a1 = {}" a a1

@@ -59,7 +59,7 @@ pub(crate) struct HandleGuard<'a>(
 #[derive(Debug, Clone)]
 pub(crate) enum Expression<'a> {
     Identifier(&'a str),
-    QualifedIdentifier(&'a str, Vec<&'a str>),
+    QualifiedIdentifier(&'a str, Vec<&'a str>),
     TypeIdentifier(&'a str),
     StringLiteral(&'a str),
     LargeStringLiteral(Option<String>),
@@ -765,16 +765,16 @@ impl<'a> Expression<'a> {
         if is_func_call_end_symbol(parser.get_token(pos)) {
             Ok((expr, pos))
         } else {
-            let (arg, new_pos) = Expression::parse_primary_expr(parser, pos)?;
-            if is_func_call_end_symbol(parser.get_token(new_pos)) {
-                Ok((
-                    Expression::FuncCallExpr(Box::new(expr), Box::new(arg)),
-                    new_pos,
-                ))
-            } else {
-                let (arg, pos) = Expression::parse_func_call_expr(parser, pos)?;
-                Ok((Expression::FuncCallExpr(Box::new(expr), Box::new(arg)), pos))
-            }
+            Expression::parse_func_call_arg(parser, pos, expr)
+        }
+    }
+
+    fn parse_func_call_arg(parser: &'a Parser<'a>, pos: usize, expr: Expression<'a>) -> ParseResult<'a> {
+        if is_func_call_end_symbol(parser.get_token(pos)) {
+            Ok((expr, pos))
+        } else {
+            let (arg, pos) = Expression::parse_prim_expr(parser, pos)?;
+            Expression::parse_func_call_arg(parser, pos, Expression::FuncCallExpr(Box::new(expr), Box::new(arg)))
         }
     }
 
@@ -794,7 +794,7 @@ impl<'a> Expression<'a> {
                 let (expr, pos) = if fields.is_empty() {
                     (Expression::Identifier(id), pos)
                 } else {
-                    (Expression::QualifedIdentifier(id, fields), pos)
+                    (Expression::QualifiedIdentifier(id, fields), pos)
                 };
                 if parser.peek(pos, Lexeme::Dollar) {
                     let pos = consume_symbol(parser, pos, Lexeme::Dollar)?;

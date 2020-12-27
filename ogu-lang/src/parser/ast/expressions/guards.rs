@@ -16,9 +16,12 @@ pub(crate) type GuardVec<'a> = Vec<Guard<'a>>;
 
 impl<'a> Guard<'a> {
     pub fn guards_to_cond(guards: &[Guard<'a>]) -> Expression<'a> {
-        let mut pairs : Vec<(Option<Expression<'a>>, Expression<'a>)>= vec![];
+        let mut pairs: Vec<(Option<Expression<'a>>, Expression<'a>)> = vec![];
         for guard in guards.iter() {
-            pairs.push((guard.0.as_ref().map(|e| e.deref().clone()), guard.1.deref().clone()));
+            pairs.push((
+                guard.0.as_ref().map(|e| e.deref().clone()),
+                guard.1.deref().clone(),
+            ));
         }
         Expression::CondExpr(pairs)
     }

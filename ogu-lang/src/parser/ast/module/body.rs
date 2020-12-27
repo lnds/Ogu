@@ -123,8 +123,8 @@ pub(crate) struct BodyAst<'a> {
 type DeclParseResult<'a> = Result<Option<(Declaration<'a>, usize)>>;
 
 impl<'a> BodyAst<'a> {
-    pub(crate) fn get_decls(&mut self) -> Vec<Declaration<'a>> {
-        self.declarations.clone()
+    pub(crate) fn get_decls(self) -> Vec<Declaration<'a>> {
+        self.declarations.to_vec()
     }
 
     pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<BodyAst<'a>> {

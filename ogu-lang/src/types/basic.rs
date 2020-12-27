@@ -3,9 +3,8 @@ use crate::types::Type;
 #[derive(Clone)]
 pub(crate) enum BasicType {
     Unit,
-    Primitive(String)
+    Primitive(String),
 }
-
 
 impl Type for BasicType {
     fn get_name(&self) -> String {
@@ -14,5 +13,4 @@ impl Type for BasicType {
             BasicType::Primitive(s) => s.clone(),
         }
     }
-
 }

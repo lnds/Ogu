@@ -1,17 +1,17 @@
-use crate::codegen::CodeGenerator;
-use crate::symbols::scopes::Scope;
 use crate::backend::params::Params;
+use crate::codegen::CodeGenerator;
+use crate::lexer::tokens::Token;
+use crate::lexer::Lexer;
+use crate::parser::ast::module::ModuleAst;
+use crate::parser::Parser;
+use crate::symbols::macros::MacroSym;
+use crate::symbols::module::Module;
+use crate::symbols::scopes::Scope;
 use crate::symbols::sym_table::SymbolTable;
+use crate::symbols::Symbol;
+use crate::types::basic::BasicType;
 use anyhow::Result;
 use std::path::PathBuf;
-use crate::lexer::Lexer;
-use crate::lexer::tokens::Token;
-use crate::parser::Parser;
-use crate::parser::ast::module::ModuleAst;
-use crate::symbols::module::Module;
-use crate::types::basic::BasicType;
-use crate::symbols::macros::MacroSym;
-use crate::symbols::Symbol;
 
 pub struct Compiler {
     show_tokens: bool,
@@ -92,8 +92,9 @@ impl Compiler {
     /// dumps symbols
     pub fn dump(&self) {
         println!("Symbols:");
-        for sym in self.get_symbols().iter() {
-            println!("\t{:#?}", sym)
+        println!("{:#?}", self.ogu_scope);
+        for scope in self.scopes.iter() {
+            println!("{:#?}", scope)
         }
     }
 }

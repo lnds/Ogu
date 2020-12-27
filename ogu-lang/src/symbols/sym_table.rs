@@ -1,8 +1,8 @@
+use crate::codegen::CodeGenerator;
 use crate::symbols::scopes::Scope;
 use crate::symbols::Symbol;
-use std::collections::HashMap;
-use crate::codegen::CodeGenerator;
 use anyhow::Result;
+use std::collections::HashMap;
 
 pub(crate) struct SymbolTable {
     name: String,

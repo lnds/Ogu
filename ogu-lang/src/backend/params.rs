@@ -11,7 +11,7 @@ pub struct Params {
     pub banner: bool,
 
     #[structopt(short, long)]
-    pub clean : bool,
+    pub clean: bool,
 
     /// print TOKENS
     #[structopt(short, long)]
@@ -29,8 +29,11 @@ pub struct Params {
     #[structopt(short, long)]
     pub rust: bool,
 
-
-    #[structopt(parse(from_os_str), help = "ogu modules...", required_if("clean", "false"))]
+    #[structopt(
+        parse(from_os_str),
+        help = "ogu modules...",
+        required_if("clean", "false")
+    )]
     pub files: Vec<PathBuf>,
 
     #[structopt(

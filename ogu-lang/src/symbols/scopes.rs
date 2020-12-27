@@ -1,5 +1,5 @@
-use crate::symbols::Symbol;
 use crate::codegen::CodeGenerator;
+use crate::symbols::Symbol;
 use anyhow::Result;
 use std::fmt::{Debug, Formatter};
 
@@ -11,12 +11,11 @@ pub trait Scope {
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>>;
 }
 
-
-impl Debug for Scope {
+impl Debug for dyn Scope {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "Scope {} {{ ", self.scope_name())?;
         for sym in self.get_symbols().iter() {
-            writeln!(f, "{:?}", sym)?;
+            writeln!(f, "\t{:?}", sym)?;
         }
         writeln!(f, "}}")?;
         Ok(())

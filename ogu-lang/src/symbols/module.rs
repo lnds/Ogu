@@ -1,10 +1,10 @@
+use crate::codegen::CodeGenerator;
 use crate::parser::ast::module::body::Declaration;
 use crate::parser::ast::module::ModuleAst;
 use crate::symbols::scopes::Scope;
+use crate::symbols::Symbol;
 use anyhow::Result;
 use std::collections::HashMap;
-use crate::codegen::CodeGenerator;
-use crate::symbols::Symbol;
 
 pub struct Module {
     name: String,
@@ -17,18 +17,15 @@ impl Module {
             name: module_ast.get_module_name(),
             symbols: HashMap::new(),
         };
-        for decl in module_ast.body.declarations.iter() {
-            Module::match_decl(decl, &mut module, compiler)?;
+        for decl in module_ast.get_decls().iter() {
+            Module::define_decl(decl, &mut module, compiler)?;
         }
         Ok(module)
     }
 
-    pub(crate) fn get_name(&self) -> String {
-        self.name.clone()
-    }
-
-
-    fn match_decl(decl: &Declaration, module: &mut Module, compiler: &dyn Scope) -> Result<()> {
+    fn define_decl(decl: &Declaration, module: &mut Module, compiler: &dyn Scope) -> Result<()> {
+        let sym = decl.clone().into();
+        module.define(sym);
         Ok(())
         //todo!();
         /*

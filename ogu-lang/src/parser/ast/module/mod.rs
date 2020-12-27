@@ -52,8 +52,8 @@ impl<'a> ModuleAst<'a> {
         }
     }
 
-    pub(crate) fn get_decls(&mut self) -> Vec<Declaration> {
-        self.body.get_decls()
+    pub(crate) fn get_decls(&self) -> Vec<Declaration> {
+        self.body.declarations.to_vec()
     }
 }
 

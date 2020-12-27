@@ -1,17 +1,18 @@
+use crate::backend::errors::OguError::CodeGenError;
+use crate::codegen::transpilers::{Formatter, Transpiler};
+use crate::codegen::CodeGenerator;
+use crate::symbols::scopes::Scope;
+use crate::types::Type;
+use anyhow::{Error, Result};
+use std::fs::File;
+use std::io::Write;
 use std::path::PathBuf;
 use std::{env, fs};
-use crate::codegen::CodeGenerator;
-use anyhow::{Result, Error};
-use crate::symbols::module::Module;
-use crate::codegen::transpilers::Transpiler;
-use std::fs::File;
-use crate::backend::errors::OguError::CodeGenError;
-use std::io::Write;
-use crate::symbols::scopes::Scope;
 
 pub struct RustTranspiler {
     outputdir: PathBuf,
     current_file: Option<PathBuf>,
+    formatter: Box<dyn Formatter>,
 }
 
 impl RustTranspiler {
@@ -19,6 +20,7 @@ impl RustTranspiler {
         Ok(RustTranspiler {
             outputdir: RustTranspiler::det_outputdir()?,
             current_file: None,
+            formatter: RustFormatter::new(),
         })
     }
 
@@ -47,40 +49,19 @@ impl CodeGenerator for RustTranspiler {
     }
 }
 
-
 impl RustTranspiler {
     fn dump_code(&self, path: &PathBuf, module: &dyn Scope) -> Result<()> {
         let mut file = File::create(path)?;
-        writeln!(file, "// ogu generated code from module: {}.ogu", module.scope_name())?;
-        for sym in module.get_symbols().iter() {
-           // self.dump_symbol_code(&mut file, sym)?;
+        writeln!(
+            file,
+            "// ogu generated code from module: {}.ogu",
+            module.scope_name()
+        )?;
+        for sym in module.get_symbols().iter().map(|s| s.get_symbol_writer()) {
+            sym.write_symbol(&self.formatter, &mut file);
         }
         Ok(())
     }
-/*
-    fn dump_symbol_code(&self, file: &mut File, symbol: Box<dyn Symbol>) -> Result<()>{
-        let name = symbol.get_name();
-        Ok(())
-    }
-
-    fn dump_args(&self,  val: &SymbolValue) -> String {
-        match val {
-            SymbolValue::Unit => String::new(),
-            s => format!("{:?}", s)
-        }
-    }
-
-    fn dump_expr(&self, expr: &SymbolValue) -> String {
-        match expr {
-            Ref(id) => id.to_string(),
-            Str(s) => format!("\"{}\"", s.to_string()),
-            FuncCall(f, a ) =>
-                format!("{} ({})", self.dump_expr(&f), self.dump_expr(&a)),
-            s => format!("/* {:?} */", s)
-        }
-    }
-
- */
 }
 
 impl Transpiler for RustTranspiler {
@@ -91,8 +72,36 @@ impl Transpiler for RustTranspiler {
 
     fn dump(&mut self, module: &dyn Scope) -> Result<()> {
         match &self.current_file {
-            None => Err(Error::new(CodeGenError(format!("no output file for module: {}", module.scope_name())))),
-            Some(path) => self.dump_code(path, module)
+            None => Err(Error::new(CodeGenError(format!(
+                "no output file for module: {}",
+                module.scope_name()
+            )))),
+            Some(path) => self.dump_code(path, module),
         }
     }
+}
+
+struct RustFormatter {}
+
+impl RustFormatter {
+    fn new() -> Box<Self> {
+        Box::new(RustFormatter {})
+    }
+}
+
+impl Formatter for RustFormatter {
+    fn format_func_header(&self, name: String, args: String, ty: Option<String>) -> String {
+        match ty {
+            None => format!("fn {} ({})", name, args),
+            Some(t) => format!("fn {} ({}) -> {}", name, args, t)
+        }
+    }
+
+    fn format_type(&self, ty: Option<Box<dyn Type>>) -> Option<String> {
+        match ty {
+            None => None,
+            Some(ty) => todo!()
+        }
+    }
+
 }

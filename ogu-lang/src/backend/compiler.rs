@@ -12,6 +12,7 @@ use crate::symbols::Symbol;
 use crate::types::basic::BasicType;
 use anyhow::Result;
 use std::path::PathBuf;
+use crate::symbols::decls::types::TypeAliasSym;
 
 #[derive(Clone)]
 pub struct Compiler {
@@ -26,6 +27,7 @@ impl Compiler {
         let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
         symbol_table.define(MacroSym::new("println!", BasicType::Unit));
         symbol_table.define(MacroSym::new("print!", BasicType::Unit));
+        symbol_table.define(TypeAliasSym::new("Int", BasicType::primitive("i64")));
         Box::new(Compiler {
             show_tokens: params.tokens,
             show_ast: params.print,

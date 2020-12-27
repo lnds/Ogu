@@ -243,7 +243,7 @@ pub(crate) enum Lexeme<'a> {
     String(&'a str),
     #[regex(r#"f"([^"]*)""#, priority = 20, callback = extract_f_string)]
     FormatString(&'a str),
-    #[regex(r"[\+\-]?[0-9]+[N]?", priority = 2000, callback = extract_slice)]
+    #[regex(r"[\+\-]?[0-9]+[N|i8|i16|i32|i128|isize|u8|u16|u32|u64|u128|usize]?", priority = 2000, callback = extract_slice)]
     Integer(&'a str),
     #[regex(r"[\+\-]?[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?[M]?", priority = 2000, callback = extract_slice)]
     Float(&'a str),

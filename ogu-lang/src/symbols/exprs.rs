@@ -1,8 +1,6 @@
 use crate::codegen::transpilers::{SymbolWriter, Formatter};
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::expression::Expression::{
-    FuncCallExpr, Identifier, StringLiteral,
-};
+use crate::parser::ast::expressions::expression::Expression::{FuncCallExpr, Identifier, StringLiteral, IntegerLiteral};
 use crate::symbols::scopes::Scope;
 use crate::symbols::{raise_symbol_table_error, Symbol};
 use crate::types::basic::BasicType;
@@ -37,6 +35,7 @@ enum ExprSymEnum {
     Void,
     Id(String),
     Str(String),
+    Int(String),
     FuncCall(Box<ExprSym>, Box<ExprSym>),
 }
 
@@ -47,7 +46,8 @@ impl ExprSymEnum {
             ExprSymEnum::Void => String::new(),
             ExprSymEnum::Id(s) => s.clone(),
             ExprSymEnum::Str(s) => s.clone(),
-            ExprSymEnum::FuncCall(e, _) => e.get_name()
+            ExprSymEnum::FuncCall(e, _) => e.get_name(),
+            ExprSymEnum::Int(e) => e.clone()
         }
     }
 
@@ -84,6 +84,7 @@ impl<'a> From<Expression<'a>> for Box<ExprSym> {
             FuncCallExpr(id, expr) => ExprSym::new(ExprSymEnum::FuncCall(id.into(), expr.into())),
             Identifier(id) => ExprSym::new(ExprSymEnum::Id(id.to_string())),
             StringLiteral(s) => ExprSym::new(ExprSymEnum::Str(s.to_string())),
+            IntegerLiteral(s) => ExprSym::new(ExprSymEnum::Int(s.to_string())),
             _e => {
                 println!("not implemented from for {:?}", _e);
                 todo!()

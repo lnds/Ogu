@@ -7,6 +7,13 @@ pub(crate) enum BasicType {
     Str,
 }
 
+impl BasicType {
+
+    pub fn primitive(ty: &str) -> Box<BasicType> {
+        Box::new(BasicType::Primitive(ty.to_string()))
+    }
+}
+
 impl Type for BasicType {
     fn get_name(&self) -> String {
         match self {

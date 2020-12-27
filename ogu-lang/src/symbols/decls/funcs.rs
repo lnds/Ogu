@@ -66,7 +66,7 @@ impl SymbolWriter for FunctionSym {
         let args = String::new();
         let header = fmt.format_func_header(self.get_name(), args, func_type);
         writeln!(file, "{} {{", header)?;
-        self.expr.write_symbol(fmt, file);
+        self.expr.write_symbol(fmt, file)?;
         writeln!(file, "}}")?;
         Ok(())
     }
@@ -91,7 +91,7 @@ impl Symbol for ArgSym {
         unimplemented!()
     }
 
-    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         unimplemented!()
     }
 }

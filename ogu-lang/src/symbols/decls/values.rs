@@ -1,0 +1,52 @@
+use crate::symbols::exprs::ExprSym;
+use crate::types::Type;
+use anyhow::Result;
+use crate::parser::ast::expressions::expression::Expression;
+use crate::symbols::Symbol;
+use crate::codegen::transpilers::SymbolWriter;
+use crate::symbols::scopes::Scope;
+
+#[derive(Clone, Debug)]
+pub(crate) struct ValueSym {
+    name: String,
+    expr: Box<ExprSym>,
+    ty: Option<Box<dyn Type>>,
+}
+
+impl ValueSym {
+    pub(crate) fn new(name: &str, expr: Expression) -> Box<Self> {
+        let expr : Box<ExprSym> = expr.into();
+        let ty : Option<Box<dyn Type>> = expr.get_type();
+        Box::new(ValueSym {
+            name: name.to_string(),
+            expr,
+            ty,
+        })
+    }
+
+}
+
+impl Symbol for ValueSym {
+    fn get_name(&self) -> String {
+        self.name.to_string()
+    }
+
+    fn get_type(&self) -> Option<Box<dyn Type>> {
+        self.ty.clone()
+    }
+
+    fn get_symbol_writer(&self) -> Box<dyn SymbolWriter> {
+        unimplemented!()
+    }
+
+    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
+        let sym_expr = self.expr.solve_type(scope)?;
+        Ok(Box::new(
+            ValueSym {
+                name: self.name.clone(),
+                expr: self.expr.clone(),
+                ty: sym_expr.get_type()
+            }
+        ))
+    }
+}

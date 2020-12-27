@@ -8,8 +8,28 @@ pub(crate) type LineNumber = usize;
 
 pub(crate) type IndentStack = Vec<LineCount>;
 
+
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct Token<'a> {
+    pub(crate) lexeme: Lexeme<'a>,
+    pub(crate) line: LineCount,
+    pub(crate) col: LineWidth,
+}
+
+impl<'a> Token<'a> {
+    pub(crate) fn new(lexeme: Lexeme<'a>, line: LineCount, col: LineWidth) -> Self {
+        Token {
+            lexeme,
+            line,
+            col,
+        }
+    }
+}
+
+pub(crate) type TokenList<'a> = Vec<Token<'a>>;
+
 #[derive(Logos, Debug, Clone, Copy, PartialEq)]
-pub(crate) enum Token<'a> {
+pub(crate) enum Lexeme<'a> {
     Indent,
     Dedent,
     LargeString(usize),
@@ -47,6 +67,10 @@ pub(crate) enum Token<'a> {
     Extends,
     #[token("extern", priority = 2000)]
     Extern,
+    #[token("f32", priority = 2000)]
+    TyF32,
+    #[token("f64", priority = 2000)]
+    TyF64,
     #[token("for", priority = 2000)]
     For,
     #[token("from", priority = 2000)]
@@ -233,437 +257,419 @@ pub(crate) enum Token<'a> {
     Char(&'a str),
 }
 
-impl<'a> Token<'a> {
+impl<'a> Lexeme<'a> {
     pub(crate) fn is_open_paren(&self) -> bool {
         matches!(
             *self,
-            Token::LeftParen
-                | Token::LeftBracket
-                | Token::LeftCurly
-                | Token::LeftCurlyCurly
-                | Token::HashCurly
-                | Token::DollarCurly
+            Lexeme::LeftParen
+                | Lexeme::LeftBracket
+                | Lexeme::LeftCurly
+                | Lexeme::LeftCurlyCurly
+                | Lexeme::HashCurly
+                | Lexeme::DollarCurly
         )
     }
 
     pub(crate) fn is_close_paren(&self) -> bool {
         matches!(
             *self,
-            Token::RightParen | Token::RightBracket | Token::RightCurly | Token::RightCurlyCurly
+            Lexeme::RightParen | Lexeme::RightBracket | Lexeme::RightCurly | Lexeme::RightCurlyCurly
         )
     }
 }
 
-impl<'a> Display for Token<'a> {
+impl<'a> Display for Lexeme<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         write!(f, "{:?}", self)
     }
 }
 
-fn extract_string<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Option<&'a str> {
+fn extract_string<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
     Some(&slice[1..slice.len() - 1])
 }
 
-fn extract_f_string<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Option<&'a str> {
+fn extract_f_string<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
     Some(&slice[2..slice.len() - 1])
 }
 
-fn extract_slice<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Option<&'a str> {
+fn extract_slice<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
     Some(slice)
 }
 
-fn extract_regex<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Option<&'a str> {
+fn extract_regex<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> Option<&'a str> {
     let slice = lex.slice();
     Some(&slice[2..slice.len() - 2])
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct TokenContext<'a> {
-    pub(crate) token: Token<'a>,
-    pub(crate) line: LineCount,
-    pub(crate) col: LineWidth,
-}
-
-impl<'a> TokenContext<'a> {
-    pub(crate) fn new(symbol: Token<'a>, line: LineCount, col: LineWidth) -> Self {
-        TokenContext {
-            token: symbol,
-            line,
-            col,
-        }
-    }
-}
-
-pub(crate) type TokenContextList<'a> = Vec<TokenContext<'a>>;
-
 #[cfg(test)]
 mod test_tokens {
-    use crate::lexer::tokens::Token;
+    use crate::lexer::tokens::Lexeme;
     use logos::Logos;
 
     #[test]
     fn test_symbols() {
-        let mut lex = Token::lexer("(a+b)");
-        assert_eq!(lex.next(), Some(Token::LeftParen));
-        assert_eq!(lex.next(), Some(Token::Id("a+b")));
+        let mut lex = Lexeme::lexer("(a+b)");
+        assert_eq!(lex.next(), Some(Lexeme::LeftParen));
+        assert_eq!(lex.next(), Some(Lexeme::Id("a+b")));
         assert_eq!(lex.slice(), "a+b");
-        assert_eq!(lex.next(), Some(Token::RightParen));
+        assert_eq!(lex.next(), Some(Lexeme::RightParen));
     }
 
     #[test]
     fn test_opers() {
-        let mut lex = Token::lexer("(a + b)");
-        assert_eq!(lex.next(), Some(Token::LeftParen));
-        assert_eq!(lex.next(), Some(Token::Id("a")));
+        let mut lex = Lexeme::lexer("(a + b)");
+        assert_eq!(lex.next(), Some(Lexeme::LeftParen));
+        assert_eq!(lex.next(), Some(Lexeme::Id("a")));
         assert_eq!(lex.slice(), "a");
-        assert_eq!(lex.next(), Some(Token::Plus));
-        assert_eq!(lex.next(), Some(Token::Id("b")));
+        assert_eq!(lex.next(), Some(Lexeme::Plus));
+        assert_eq!(lex.next(), Some(Lexeme::Id("b")));
         assert_eq!(lex.slice(), "b");
-        assert_eq!(lex.next(), Some(Token::RightParen));
+        assert_eq!(lex.next(), Some(Lexeme::RightParen));
     }
 
     #[test]
     fn test_string() {
-        let mut lex = Token::lexer("\"ab\" ++ \"cd\"");
-        assert_eq!(lex.next(), Some(Token::String("ab")));
-        assert_eq!(lex.next(), Some(Token::PlusPlus));
-        assert_eq!(lex.next(), Some(Token::String("cd")));
+        let mut lex = Lexeme::lexer("\"ab\" ++ \"cd\"");
+        assert_eq!(lex.next(), Some(Lexeme::String("ab")));
+        assert_eq!(lex.next(), Some(Lexeme::PlusPlus));
+        assert_eq!(lex.next(), Some(Lexeme::String("cd")));
     }
 
     #[test]
     fn test_comments() {
-        let mut lex = Token::lexer("ab ++ cd -- with comments");
-        assert_eq!(lex.next(), Some(Token::Id("ab")));
-        assert_eq!(lex.next(), Some(Token::PlusPlus));
-        assert_eq!(lex.next(), Some(Token::Id("cd")));
+        let mut lex = Lexeme::lexer("ab ++ cd -- with comments");
+        assert_eq!(lex.next(), Some(Lexeme::Id("ab")));
+        assert_eq!(lex.next(), Some(Lexeme::PlusPlus));
+        assert_eq!(lex.next(), Some(Lexeme::Id("cd")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_ids() {
-        let mut lex = Token::lexer("a.b");
-        assert_eq!(lex.next(), Some(Token::Id("a")));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("b")));
+        let mut lex = Lexeme::lexer("a.b");
+        assert_eq!(lex.next(), Some(Lexeme::Id("a")));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("b")));
         assert_eq!(lex.next(), None);
-        let mut lex = Token::lexer("Type.b");
-        assert_eq!(lex.next(), Some(Token::TypeId("Type")));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("b")));
+        let mut lex = Lexeme::lexer("Type.b");
+        assert_eq!(lex.next(), Some(Lexeme::TypeId("Type")));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("b")));
         assert_eq!(lex.next(), None);
-        let mut lex = Token::lexer("Type.a+b");
-        assert_eq!(lex.next(), Some(Token::TypeId("Type")));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("a+b")));
-        assert_eq!(lex.next(), None);
-
-        let mut lex = Token::lexer("Type.**weird-id**");
-        assert_eq!(lex.next(), Some(Token::TypeId("Type")));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("**weird-id**")));
+        let mut lex = Lexeme::lexer("Type.a+b");
+        assert_eq!(lex.next(), Some(Lexeme::TypeId("Type")));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("a+b")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("Type.**weird-id**.name.$value.bang!.question?");
-        assert_eq!(lex.next(), Some(Token::TypeId("Type")));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("**weird-id**")));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("name")));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("$value")));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("bang!")));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("question?")));
+        let mut lex = Lexeme::lexer("Type.**weird-id**");
+        assert_eq!(lex.next(), Some(Lexeme::TypeId("Type")));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("**weird-id**")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("id lost+found");
-        assert_eq!(lex.next(), Some(Token::Id("id")));
-        assert_eq!(lex.next(), Some(Token::Id("lost+found")));
+        let mut lex = Lexeme::lexer("Type.**weird-id**.name.$value.bang!.question?");
+        assert_eq!(lex.next(), Some(Lexeme::TypeId("Type")));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("**weird-id**")));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("name")));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("$value")));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("bang!")));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("question?")));
+        assert_eq!(lex.next(), None);
+
+        let mut lex = Lexeme::lexer("id lost+found");
+        assert_eq!(lex.next(), Some(Lexeme::Id("id")));
+        assert_eq!(lex.next(), Some(Lexeme::Id("lost+found")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_keywords() {
-        let mut lex = Token::lexer("as case cond do derive eager effect elif else");
-        assert_eq!(lex.next(), Some(Token::As));
-        assert_eq!(lex.next(), Some(Token::Case));
-        assert_eq!(lex.next(), Some(Token::Cond));
-        assert_eq!(lex.next(), Some(Token::Do));
-        assert_eq!(lex.next(), Some(Token::Derive));
-        assert_eq!(lex.next(), Some(Token::Eager));
-        assert_eq!(lex.next(), Some(Token::Effect));
-        assert_eq!(lex.next(), Some(Token::Elif));
-        assert_eq!(lex.next(), Some(Token::Else));
+        let mut lex = Lexeme::lexer("as case cond do derive eager effect elif else");
+        assert_eq!(lex.next(), Some(Lexeme::As));
+        assert_eq!(lex.next(), Some(Lexeme::Case));
+        assert_eq!(lex.next(), Some(Lexeme::Cond));
+        assert_eq!(lex.next(), Some(Lexeme::Do));
+        assert_eq!(lex.next(), Some(Lexeme::Derive));
+        assert_eq!(lex.next(), Some(Lexeme::Eager));
+        assert_eq!(lex.next(), Some(Lexeme::Effect));
+        assert_eq!(lex.next(), Some(Lexeme::Elif));
+        assert_eq!(lex.next(), Some(Lexeme::Else));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("exposing extends extern for from if handle handler in is lazy");
-        assert_eq!(lex.next(), Some(Token::Exposing));
-        assert_eq!(lex.next(), Some(Token::Extends));
-        assert_eq!(lex.next(), Some(Token::Extern));
-        assert_eq!(lex.next(), Some(Token::For));
-        assert_eq!(lex.next(), Some(Token::From));
-        assert_eq!(lex.next(), Some(Token::If));
-        assert_eq!(lex.next(), Some(Token::Handle));
-        assert_eq!(lex.next(), Some(Token::Handler));
-        assert_eq!(lex.next(), Some(Token::In));
-        assert_eq!(lex.next(), Some(Token::Is));
-        assert_eq!(lex.next(), Some(Token::Lazy));
+        let mut lex = Lexeme::lexer("exposing extends extern for from if handle handler in is lazy");
+        assert_eq!(lex.next(), Some(Lexeme::Exposing));
+        assert_eq!(lex.next(), Some(Lexeme::Extends));
+        assert_eq!(lex.next(), Some(Lexeme::Extern));
+        assert_eq!(lex.next(), Some(Lexeme::For));
+        assert_eq!(lex.next(), Some(Lexeme::From));
+        assert_eq!(lex.next(), Some(Lexeme::If));
+        assert_eq!(lex.next(), Some(Lexeme::Handle));
+        assert_eq!(lex.next(), Some(Lexeme::Handler));
+        assert_eq!(lex.next(), Some(Lexeme::In));
+        assert_eq!(lex.next(), Some(Lexeme::Is));
+        assert_eq!(lex.next(), Some(Lexeme::Lazy));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer(
+        let mut lex = Lexeme::lexer(
             "let loop macro module not of otherwise perform primitive repeat recur reify resume return then trait try until",
         );
-        assert_eq!(lex.next(), Some(Token::Let));
-        assert_eq!(lex.next(), Some(Token::Loop));
-        assert_eq!(lex.next(), Some(Token::Macro));
-        assert_eq!(lex.next(), Some(Token::Module));
-        assert_eq!(lex.next(), Some(Token::Not));
-        assert_eq!(lex.next(), Some(Token::Of));
-        assert_eq!(lex.next(), Some(Token::Otherwise));
-        assert_eq!(lex.next(), Some(Token::Perform));
-        assert_eq!(lex.next(), Some(Token::Primitive));
-        assert_eq!(lex.next(), Some(Token::Repeat));
-        assert_eq!(lex.next(), Some(Token::Recur));
-        assert_eq!(lex.next(), Some(Token::Reify));
-        assert_eq!(lex.next(), Some(Token::Resume));
-        assert_eq!(lex.next(), Some(Token::Return));
-        assert_eq!(lex.next(), Some(Token::Then));
-        assert_eq!(lex.next(), Some(Token::Trait));
-        assert_eq!(lex.next(), Some(Token::Try));
-        assert_eq!(lex.next(), Some(Token::Until));
+        assert_eq!(lex.next(), Some(Lexeme::Let));
+        assert_eq!(lex.next(), Some(Lexeme::Loop));
+        assert_eq!(lex.next(), Some(Lexeme::Macro));
+        assert_eq!(lex.next(), Some(Lexeme::Module));
+        assert_eq!(lex.next(), Some(Lexeme::Not));
+        assert_eq!(lex.next(), Some(Lexeme::Of));
+        assert_eq!(lex.next(), Some(Lexeme::Otherwise));
+        assert_eq!(lex.next(), Some(Lexeme::Perform));
+        assert_eq!(lex.next(), Some(Lexeme::Primitive));
+        assert_eq!(lex.next(), Some(Lexeme::Repeat));
+        assert_eq!(lex.next(), Some(Lexeme::Recur));
+        assert_eq!(lex.next(), Some(Lexeme::Reify));
+        assert_eq!(lex.next(), Some(Lexeme::Resume));
+        assert_eq!(lex.next(), Some(Lexeme::Return));
+        assert_eq!(lex.next(), Some(Lexeme::Then));
+        assert_eq!(lex.next(), Some(Lexeme::Trait));
+        assert_eq!(lex.next(), Some(Lexeme::Try));
+        assert_eq!(lex.next(), Some(Lexeme::Until));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("type where with yield");
-        assert_eq!(lex.next(), Some(Token::Type));
-        assert_eq!(lex.next(), Some(Token::Where));
-        assert_eq!(lex.next(), Some(Token::With));
-        assert_eq!(lex.next(), Some(Token::Yield));
+        let mut lex = Lexeme::lexer("type where with yield");
+        assert_eq!(lex.next(), Some(Lexeme::Type));
+        assert_eq!(lex.next(), Some(Lexeme::Where));
+        assert_eq!(lex.next(), Some(Lexeme::With));
+        assert_eq!(lex.next(), Some(Lexeme::Yield));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_ops() {
-        let mut lex = Token::lexer("&&  @ -> = <- : , >>");
-        assert_eq!(lex.next(), Some(Token::And));
-        assert_eq!(lex.next(), Some(Token::Arroba));
-        assert_eq!(lex.next(), Some(Token::Arrow));
-        assert_eq!(lex.next(), Some(Token::Assign));
-        assert_eq!(lex.next(), Some(Token::BackArrow));
-        assert_eq!(lex.next(), Some(Token::Colon));
-        assert_eq!(lex.next(), Some(Token::Comma));
-        assert_eq!(lex.next(), Some(Token::ComposeForward));
+        let mut lex = Lexeme::lexer("&&  @ -> = <- : , >>");
+        assert_eq!(lex.next(), Some(Lexeme::And));
+        assert_eq!(lex.next(), Some(Lexeme::Arroba));
+        assert_eq!(lex.next(), Some(Lexeme::Arrow));
+        assert_eq!(lex.next(), Some(Lexeme::Assign));
+        assert_eq!(lex.next(), Some(Lexeme::BackArrow));
+        assert_eq!(lex.next(), Some(Lexeme::Colon));
+        assert_eq!(lex.next(), Some(Lexeme::Comma));
+        assert_eq!(lex.next(), Some(Lexeme::ComposeForward));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("<< :: / // $ ... ..< .. . ");
-        assert_eq!(lex.next(), Some(Token::ComposeBackward));
-        assert_eq!(lex.next(), Some(Token::Cons));
-        assert_eq!(lex.next(), Some(Token::Div));
-        assert_eq!(lex.next(), Some(Token::DivDiv));
-        assert_eq!(lex.next(), Some(Token::Dollar));
-        assert_eq!(lex.next(), Some(Token::DotDotDot));
-        assert_eq!(lex.next(), Some(Token::DotDotLess));
-        assert_eq!(lex.next(), Some(Token::DotDot));
-        assert_eq!(lex.next(), Some(Token::Dot));
+        let mut lex = Lexeme::lexer("<< :: / // $ ... ..< .. . ");
+        assert_eq!(lex.next(), Some(Lexeme::ComposeBackward));
+        assert_eq!(lex.next(), Some(Lexeme::Cons));
+        assert_eq!(lex.next(), Some(Lexeme::Div));
+        assert_eq!(lex.next(), Some(Lexeme::DivDiv));
+        assert_eq!(lex.next(), Some(Lexeme::Dollar));
+        assert_eq!(lex.next(), Some(Lexeme::DotDotDot));
+        assert_eq!(lex.next(), Some(Lexeme::DotDotLess));
+        assert_eq!(lex.next(), Some(Lexeme::DotDot));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("== >= > | \\ <= [ { {{ #{ (");
-        assert_eq!(lex.next(), Some(Token::Equal));
-        assert_eq!(lex.next(), Some(Token::GreaterOrEqual));
-        assert_eq!(lex.next(), Some(Token::Greater));
-        assert_eq!(lex.next(), Some(Token::Guard));
-        assert_eq!(lex.next(), Some(Token::Lambda));
-        assert_eq!(lex.next(), Some(Token::LessThanOrEqual));
-        assert_eq!(lex.next(), Some(Token::LeftBracket));
-        assert_eq!(lex.next(), Some(Token::LeftCurly));
-        assert_eq!(lex.next(), Some(Token::LeftCurlyCurly));
-        assert_eq!(lex.next(), Some(Token::HashCurly));
-        assert_eq!(lex.next(), Some(Token::LeftParen));
+        let mut lex = Lexeme::lexer("== >= > | \\ <= [ { {{ #{ (");
+        assert_eq!(lex.next(), Some(Lexeme::Equal));
+        assert_eq!(lex.next(), Some(Lexeme::GreaterOrEqual));
+        assert_eq!(lex.next(), Some(Lexeme::Greater));
+        assert_eq!(lex.next(), Some(Lexeme::Guard));
+        assert_eq!(lex.next(), Some(Lexeme::Lambda));
+        assert_eq!(lex.next(), Some(Lexeme::LessThanOrEqual));
+        assert_eq!(lex.next(), Some(Lexeme::LeftBracket));
+        assert_eq!(lex.next(), Some(Lexeme::LeftCurly));
+        assert_eq!(lex.next(), Some(Lexeme::LeftCurlyCurly));
+        assert_eq!(lex.next(), Some(Lexeme::HashCurly));
+        assert_eq!(lex.next(), Some(Lexeme::LeftParen));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("< ~ =~ - % * /= || <|");
-        assert_eq!(lex.next(), Some(Token::LessThan));
-        assert_eq!(lex.next(), Some(Token::Match));
-        assert_eq!(lex.next(), Some(Token::Matches));
-        assert_eq!(lex.next(), Some(Token::Minus));
-        assert_eq!(lex.next(), Some(Token::Mod));
-        assert_eq!(lex.next(), Some(Token::Mult));
-        assert_eq!(lex.next(), Some(Token::NotEqual));
-        assert_eq!(lex.next(), Some(Token::Or));
-        assert_eq!(lex.next(), Some(Token::PipeLeft));
+        let mut lex = Lexeme::lexer("< ~ =~ - % * /= || <|");
+        assert_eq!(lex.next(), Some(Lexeme::LessThan));
+        assert_eq!(lex.next(), Some(Lexeme::Match));
+        assert_eq!(lex.next(), Some(Lexeme::Matches));
+        assert_eq!(lex.next(), Some(Lexeme::Minus));
+        assert_eq!(lex.next(), Some(Lexeme::Mod));
+        assert_eq!(lex.next(), Some(Lexeme::Mult));
+        assert_eq!(lex.next(), Some(Lexeme::NotEqual));
+        assert_eq!(lex.next(), Some(Lexeme::Or));
+        assert_eq!(lex.next(), Some(Lexeme::PipeLeft));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("|> + ++ ^ ? ] } }} )");
-        assert_eq!(lex.next(), Some(Token::PipeRight));
-        assert_eq!(lex.next(), Some(Token::Plus));
-        assert_eq!(lex.next(), Some(Token::PlusPlus));
-        assert_eq!(lex.next(), Some(Token::Pow));
-        assert_eq!(lex.next(), Some(Token::Question));
-        assert_eq!(lex.next(), Some(Token::RightBracket));
-        assert_eq!(lex.next(), Some(Token::RightCurly));
-        assert_eq!(lex.next(), Some(Token::RightCurlyCurly));
-        assert_eq!(lex.next(), Some(Token::RightParen));
+        let mut lex = Lexeme::lexer("|> + ++ ^ ? ] } }} )");
+        assert_eq!(lex.next(), Some(Lexeme::PipeRight));
+        assert_eq!(lex.next(), Some(Lexeme::Plus));
+        assert_eq!(lex.next(), Some(Lexeme::PlusPlus));
+        assert_eq!(lex.next(), Some(Lexeme::Pow));
+        assert_eq!(lex.next(), Some(Lexeme::Question));
+        assert_eq!(lex.next(), Some(Lexeme::RightBracket));
+        assert_eq!(lex.next(), Some(Lexeme::RightCurly));
+        assert_eq!(lex.next(), Some(Lexeme::RightCurlyCurly));
+        assert_eq!(lex.next(), Some(Lexeme::RightParen));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_literals() {
-        let mut lex = Token::lexer("2 + 2");
-        assert_eq!(lex.next(), Some(Token::Integer("2")));
-        assert_eq!(lex.next(), Some(Token::Plus));
-        assert_eq!(lex.next(), Some(Token::Integer("2")));
+        let mut lex = Lexeme::lexer("2 + 2");
+        assert_eq!(lex.next(), Some(Lexeme::Integer("2")));
+        assert_eq!(lex.next(), Some(Lexeme::Plus));
+        assert_eq!(lex.next(), Some(Lexeme::Integer("2")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("1234567890 123.4567890");
-        assert_eq!(lex.next(), Some(Token::Integer("1234567890")));
-        assert_eq!(lex.next(), Some(Token::Float("123.4567890")));
+        let mut lex = Lexeme::lexer("1234567890 123.4567890");
+        assert_eq!(lex.next(), Some(Lexeme::Integer("1234567890")));
+        assert_eq!(lex.next(), Some(Lexeme::Float("123.4567890")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("12/34 1/3 2.45E10 3.4e-20");
-        assert_eq!(lex.next(), Some(Token::Ratio("12/34")));
-        assert_eq!(lex.next(), Some(Token::Ratio("1/3")));
-        assert_eq!(lex.next(), Some(Token::Float("2.45E10")));
-        assert_eq!(lex.next(), Some(Token::Float("3.4e-20")));
+        let mut lex = Lexeme::lexer("12/34 1/3 2.45E10 3.4e-20");
+        assert_eq!(lex.next(), Some(Lexeme::Ratio("12/34")));
+        assert_eq!(lex.next(), Some(Lexeme::Ratio("1/3")));
+        assert_eq!(lex.next(), Some(Lexeme::Float("2.45E10")));
+        assert_eq!(lex.next(), Some(Lexeme::Float("3.4e-20")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("-1/4 +1/4 -0.4 +0.4 +32 -32 .333 -.455");
-        assert_eq!(lex.next(), Some(Token::Ratio("-1/4")));
-        assert_eq!(lex.next(), Some(Token::Ratio("+1/4")));
-        assert_eq!(lex.next(), Some(Token::Float("-0.4")));
-        assert_eq!(lex.next(), Some(Token::Float("+0.4")));
-        assert_eq!(lex.next(), Some(Token::Integer("+32")));
-        assert_eq!(lex.next(), Some(Token::Integer("-32")));
-        assert_eq!(lex.next(), Some(Token::Float(".333")));
-        assert_eq!(lex.next(), Some(Token::Float("-.455")));
+        let mut lex = Lexeme::lexer("-1/4 +1/4 -0.4 +0.4 +32 -32 .333 -.455");
+        assert_eq!(lex.next(), Some(Lexeme::Ratio("-1/4")));
+        assert_eq!(lex.next(), Some(Lexeme::Ratio("+1/4")));
+        assert_eq!(lex.next(), Some(Lexeme::Float("-0.4")));
+        assert_eq!(lex.next(), Some(Lexeme::Float("+0.4")));
+        assert_eq!(lex.next(), Some(Lexeme::Integer("+32")));
+        assert_eq!(lex.next(), Some(Lexeme::Integer("-32")));
+        assert_eq!(lex.next(), Some(Lexeme::Float(".333")));
+        assert_eq!(lex.next(), Some(Lexeme::Float("-.455")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("2.4M 200N");
-        assert_eq!(lex.next(), Some(Token::Float("2.4M")));
-        assert_eq!(lex.next(), Some(Token::Integer("200N")));
+        let mut lex = Lexeme::lexer("2.4M 200N");
+        assert_eq!(lex.next(), Some(Lexeme::Float("2.4M")));
+        assert_eq!(lex.next(), Some(Lexeme::Integer("200N")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_ranges() {
-        let mut lex = Token::lexer("a..b");
-        assert_eq!(lex.next(), Some(Token::Id("a")));
-        assert_eq!(lex.next(), Some(Token::DotDot));
-        assert_eq!(lex.next(), Some(Token::Id("b")));
+        let mut lex = Lexeme::lexer("a..b");
+        assert_eq!(lex.next(), Some(Lexeme::Id("a")));
+        assert_eq!(lex.next(), Some(Lexeme::DotDot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("b")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("1..2");
-        assert_eq!(lex.next(), Some(Token::Integer("1")));
-        assert_eq!(lex.next(), Some(Token::DotDot));
-        assert_eq!(lex.next(), Some(Token::Integer("2")));
+        let mut lex = Lexeme::lexer("1..2");
+        assert_eq!(lex.next(), Some(Lexeme::Integer("1")));
+        assert_eq!(lex.next(), Some(Lexeme::DotDot));
+        assert_eq!(lex.next(), Some(Lexeme::Integer("2")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("1..<2");
-        assert_eq!(lex.next(), Some(Token::Integer("1")));
-        assert_eq!(lex.next(), Some(Token::DotDotLess));
-        assert_eq!(lex.next(), Some(Token::Integer("2")));
+        let mut lex = Lexeme::lexer("1..<2");
+        assert_eq!(lex.next(), Some(Lexeme::Integer("1")));
+        assert_eq!(lex.next(), Some(Lexeme::DotDotLess));
+        assert_eq!(lex.next(), Some(Lexeme::Integer("2")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("1...");
-        assert_eq!(lex.next(), Some(Token::Integer("1")));
-        assert_eq!(lex.next(), Some(Token::DotDotDot));
+        let mut lex = Lexeme::lexer("1...");
+        assert_eq!(lex.next(), Some(Lexeme::Integer("1")));
+        assert_eq!(lex.next(), Some(Lexeme::DotDotDot));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("1.4..3.4");
-        assert_eq!(lex.next(), Some(Token::Float("1.4")));
-        assert_eq!(lex.next(), Some(Token::DotDot));
-        assert_eq!(lex.next(), Some(Token::Float("3.4")));
+        let mut lex = Lexeme::lexer("1.4..3.4");
+        assert_eq!(lex.next(), Some(Lexeme::Float("1.4")));
+        assert_eq!(lex.next(), Some(Lexeme::DotDot));
+        assert_eq!(lex.next(), Some(Lexeme::Float("3.4")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_indent() {
-        let mut lex = Token::lexer("  a");
-        assert_eq!(lex.next(), Some(Token::Id("a")));
+        let mut lex = Lexeme::lexer("  a");
+        assert_eq!(lex.next(), Some(Lexeme::Id("a")));
     }
 
     #[test]
     fn test_some_expressions() {
-        let mut lex = Token::lexer("\"a b c d\" |> .toUpperCase |> .split \" \" |> first");
-        assert_eq!(lex.next(), Some(Token::String("a b c d")));
-        assert_eq!(lex.next(), Some(Token::PipeRight));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("toUpperCase")));
-        assert_eq!(lex.next(), Some(Token::PipeRight));
-        assert_eq!(lex.next(), Some(Token::Dot));
-        assert_eq!(lex.next(), Some(Token::Id("split")));
-        assert_eq!(lex.next(), Some(Token::String(" ")));
-        assert_eq!(lex.next(), Some(Token::PipeRight));
-        assert_eq!(lex.next(), Some(Token::Id("first")));
+        let mut lex = Lexeme::lexer("\"a b c d\" |> .toUpperCase |> .split \" \" |> first");
+        assert_eq!(lex.next(), Some(Lexeme::String("a b c d")));
+        assert_eq!(lex.next(), Some(Lexeme::PipeRight));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("toUpperCase")));
+        assert_eq!(lex.next(), Some(Lexeme::PipeRight));
+        assert_eq!(lex.next(), Some(Lexeme::Dot));
+        assert_eq!(lex.next(), Some(Lexeme::Id("split")));
+        assert_eq!(lex.next(), Some(Lexeme::String(" ")));
+        assert_eq!(lex.next(), Some(Lexeme::PipeRight));
+        assert_eq!(lex.next(), Some(Lexeme::Id("first")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_dates() {
-        let mut lex = Token::lexer("#2017-02-26");
-        assert_eq!(lex.next(), Some(Token::IsoDate("#2017-02-26")));
-        let mut lex = Token::lexer("#2017-02-26T23:50");
-        assert_eq!(lex.next(), Some(Token::IsoDate("#2017-02-26T23:50")));
-        let mut lex = Token::lexer("#2017-02-26T23:50:30");
-        assert_eq!(lex.next(), Some(Token::IsoDate("#2017-02-26T23:50:30")));
-        let mut lex = Token::lexer("#2017-02-26T23:50:30.120");
-        assert_eq!(lex.next(), Some(Token::IsoDate("#2017-02-26T23:50:30.120")));
-        let mut lex = Token::lexer("#2017-02-26T23:50:30.120Z");
+        let mut lex = Lexeme::lexer("#2017-02-26");
+        assert_eq!(lex.next(), Some(Lexeme::IsoDate("#2017-02-26")));
+        let mut lex = Lexeme::lexer("#2017-02-26T23:50");
+        assert_eq!(lex.next(), Some(Lexeme::IsoDate("#2017-02-26T23:50")));
+        let mut lex = Lexeme::lexer("#2017-02-26T23:50:30");
+        assert_eq!(lex.next(), Some(Lexeme::IsoDate("#2017-02-26T23:50:30")));
+        let mut lex = Lexeme::lexer("#2017-02-26T23:50:30.120");
+        assert_eq!(lex.next(), Some(Lexeme::IsoDate("#2017-02-26T23:50:30.120")));
+        let mut lex = Lexeme::lexer("#2017-02-26T23:50:30.120Z");
         assert_eq!(
             lex.next(),
-            Some(Token::IsoDate("#2017-02-26T23:50:30.120Z"))
+            Some(Lexeme::IsoDate("#2017-02-26T23:50:30.120Z"))
         );
-        let mut lex = Token::lexer("#2017-02-26T23:50:30.120-3");
+        let mut lex = Lexeme::lexer("#2017-02-26T23:50:30.120-3");
         assert_eq!(
             lex.next(),
-            Some(Token::IsoDate("#2017-02-26T23:50:30.120-3"))
+            Some(Lexeme::IsoDate("#2017-02-26T23:50:30.120-3"))
         );
-        let mut lex = Token::lexer("#2017-02-26T23:50:30.120+3");
+        let mut lex = Lexeme::lexer("#2017-02-26T23:50:30.120+3");
         assert_eq!(
             lex.next(),
-            Some(Token::IsoDate("#2017-02-26T23:50:30.120+3"))
+            Some(Lexeme::IsoDate("#2017-02-26T23:50:30.120+3"))
         );
-        let mut lex = Token::lexer("#2017-02-26T23:50:30.120+3:30");
+        let mut lex = Lexeme::lexer("#2017-02-26T23:50:30.120+3:30");
         assert_eq!(
             lex.next(),
-            Some(Token::IsoDate("#2017-02-26T23:50:30.120+3:30"))
+            Some(Lexeme::IsoDate("#2017-02-26T23:50:30.120+3:30"))
         );
     }
 
     #[test]
     fn test_regex() {
-        let mut lex = Token::lexer("\"aaabbb\" =~ #/(a|b)+/#");
-        assert_eq!(lex.next(), Some(Token::String("aaabbb")));
-        assert_eq!(lex.next(), Some(Token::Matches));
-        assert_eq!(lex.next(), Some(Token::RegExp("(a|b)+")));
+        let mut lex = Lexeme::lexer("\"aaabbb\" =~ #/(a|b)+/#");
+        assert_eq!(lex.next(), Some(Lexeme::String("aaabbb")));
+        assert_eq!(lex.next(), Some(Lexeme::Matches));
+        assert_eq!(lex.next(), Some(Lexeme::RegExp("(a|b)+")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Token::lexer("\"aaabbb\" =~ #`(a|b|/)+`#");
-        assert_eq!(lex.next(), Some(Token::String("aaabbb")));
-        assert_eq!(lex.next(), Some(Token::Matches));
+        let mut lex = Lexeme::lexer("\"aaabbb\" =~ #`(a|b|/)+`#");
+        assert_eq!(lex.next(), Some(Lexeme::String("aaabbb")));
+        assert_eq!(lex.next(), Some(Lexeme::Matches));
 
-        assert_eq!(lex.next(), Some(Token::RegExp("(a|b|/)+")));
+        assert_eq!(lex.next(), Some(Lexeme::RegExp("(a|b|/)+")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_strings() {
-        let mut lex = Token::lexer("msj = f\"\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): \"");
-        assert_eq!(lex.next(), Some(Token::Id("msj")));
-        assert_eq!(lex.next(), Some(Token::Assign));
-        assert_eq!(lex.next(), Some(Token::FormatString("\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): ")));
+        let mut lex = Lexeme::lexer("msj = f\"\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): \"");
+        assert_eq!(lex.next(), Some(Lexeme::Id("msj")));
+        assert_eq!(lex.next(), Some(Lexeme::Assign));
+        assert_eq!(lex.next(), Some(Lexeme::FormatString("\nIngrese su apuesta (min: ${apuesta-minima}, max: ${pozo}, 0 para finalizar juego): ")));
         assert_eq!(lex.next(), None);
     }
 
     #[test]
     fn test_chars() {
-        let mut lex = Token::lexer("'a' 'b' '\\n' '\\u3829'");
-        assert_eq!(lex.next(), Some(Token::Char("a")));
-        assert_eq!(lex.next(), Some(Token::Char("b")));
-        assert_eq!(lex.next(), Some(Token::Char("\\n")));
-        assert_eq!(lex.next(), Some(Token::Char("\\u3829")));
+        let mut lex = Lexeme::lexer("'a' 'b' '\\n' '\\u3829'");
+        assert_eq!(lex.next(), Some(Lexeme::Char("a")));
+        assert_eq!(lex.next(), Some(Lexeme::Char("b")));
+        assert_eq!(lex.next(), Some(Lexeme::Char("\\n")));
+        assert_eq!(lex.next(), Some(Lexeme::Char("\\u3829")));
         assert_eq!(lex.next(), None);
     }
+
 }

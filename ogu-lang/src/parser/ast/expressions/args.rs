@@ -1,4 +1,4 @@
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
@@ -41,11 +41,11 @@ impl<'a> Arg<'a> {
     fn parse_arg(parser: &'a Parser<'a>, pos: usize) -> Result<Option<(Arg<'a>, usize)>> {
         match parser.get_token(pos) {
             None => Ok(None),
-            Some(Token::LeftParen) => Arg::parse_tuple(parser, pos),
-            Some(Token::Assign) => Ok(None),
-            Some(Token::NewLine) => Ok(None),
-            Some(Token::Guard) => Ok(None),
-            Some(Token::Id(id)) => Ok(Some((Arg::Simple(id), pos + 1))),
+            Some(Lexeme::LeftParen) => Arg::parse_tuple(parser, pos),
+            Some(Lexeme::Assign) => Ok(None),
+            Some(Lexeme::NewLine) => Ok(None),
+            Some(Lexeme::Guard) => Ok(None),
+            Some(Lexeme::Id(id)) => Ok(Some((Arg::Simple(id), pos + 1))),
             _ => {
                 let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
                 if let Expression::Identifier(id) = expr {
@@ -58,10 +58,10 @@ impl<'a> Arg<'a> {
     }
 
     fn parse_tuple(parser: &'a Parser<'a>, pos: usize) -> Result<Option<(Arg<'a>, usize)>> {
-        if parser.peek(pos + 1, Token::RightParen) {
+        if parser.peek(pos + 1, Lexeme::RightParen) {
             return Ok(Some((Arg::Tuple(vec![]), pos + 2)));
         }
-        let mut pos = consume_symbol(parser, pos, Token::LeftParen)?;
+        let mut pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
         let mut args = vec![];
         match Arg::parse_arg(parser, pos)? {
             Some((arg, new_pos)) => {
@@ -72,8 +72,8 @@ impl<'a> Arg<'a> {
                 return raise_parser_error("unexpected token parsing tuple", parser, pos, true);
             }
         }
-        while !parser.peek(pos, Token::RightParen) {
-            if !parser.peek(pos, Token::Comma) {
+        while !parser.peek(pos, Lexeme::RightParen) {
+            if !parser.peek(pos, Lexeme::Comma) {
                 return raise_parser_error("Expecting ','", parser, pos, true);
             }
             match Arg::parse_arg(parser, pos + 1)? {

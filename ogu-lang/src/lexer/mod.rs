@@ -10,9 +10,9 @@ use std::path::PathBuf;
 
 use crate::backend::errors::OguError;
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::Token::NewLine;
+use crate::lexer::tokens::Lexeme::NewLine;
 use crate::lexer::tokens::{
-    IndentStack, LineCount, LineNumber, LineWidth, Token, TokenContext, TokenContextList,
+    IndentStack, LineCount, LineNumber, LineWidth, Lexeme, Token, TokenList,
 };
 
 type Line = (LineCount, String);
@@ -66,7 +66,7 @@ impl<'a> Lexer {
         Ok((TokenStream::new(tokens), large_strings))
     }
 
-    fn map_lines(&'a mut self, mut large_strings: &mut Vec<String>) -> TokenContextList<'a> {
+    fn map_lines(&'a mut self, mut large_strings: &mut Vec<String>) -> TokenList<'a> {
         let mut tokens = vec![];
         let mut indent_stack = vec![0];
         let mut large_string = String::new();
@@ -88,8 +88,8 @@ impl<'a> Lexer {
                     break;
                 }
                 indent_stack.pop();
-                tokens.push(TokenContext {
-                    token: Token::Dedent,
+                tokens.push(Token {
+                    lexeme: Lexeme::Dedent,
                     line: line_num,
                     col: 0,
                 });
@@ -123,7 +123,7 @@ fn scan_line<'a>(
     large_string: &mut String,
     mut indent_stack: &mut IndentStack,
     large_strings: &mut Vec<String>,
-) -> TokenContextList<'a> {
+) -> TokenList<'a> {
     let line_len = text.len();
     let text = text.trim_start();
 
@@ -145,11 +145,11 @@ fn scan_line<'a>(
         large_string.push('\n');
         if rest.contains("\"\"\"") {
             large_strings.push(large_string.clone());
-            line_tokens.push((Token::LargeString(large_strings.len() - 1), 0));
+            line_tokens.push((Lexeme::LargeString(large_strings.len() - 1), 0));
             large_string.clear();
-            Token::lexer(&rest[3..])
+            Lexeme::lexer(&rest[3..])
         } else {
-            Token::lexer(rest)
+            Lexeme::lexer(rest)
         }
     } else {
         if !rest.is_empty() {
@@ -159,7 +159,7 @@ fn scan_line<'a>(
             }
             in_string = true;
         }
-        Token::lexer(text)
+        Lexeme::lexer(text)
     };
 
     for (tok, span) in lexer.spanned() {
@@ -167,7 +167,7 @@ fn scan_line<'a>(
             *paren_level += 1;
         } else if tok.is_close_paren() {
             if *paren_level == 0 {
-                line_tokens.push((Token::Error, 0));
+                line_tokens.push((Lexeme::Error, 0));
             } else {
                 *paren_level -= 1;
             }
@@ -179,20 +179,20 @@ fn scan_line<'a>(
     }
     line_tokens
         .iter()
-        .map(|(s, col)| TokenContext::new(*s, *line_number + 1, *col))
-        .collect::<TokenContextList<'a>>()
+        .map(|(s, col)| Token::new(*s, *line_number + 1, *col))
+        .collect::<TokenList<'a>>()
 }
 
 fn scan_indentation<'a>(
     start_pos: LineCount,
     indent_stack: &mut IndentStack,
-) -> Vec<(Token<'a>, LineWidth)> {
+) -> Vec<(Lexeme<'a>, LineWidth)> {
     match indent_stack.last() {
         None => vec![],
         Some(&pos) => {
             if start_pos > pos {
                 indent_stack.push(start_pos);
-                return vec![(Token::Indent, start_pos)];
+                return vec![(Lexeme::Indent, start_pos)];
             }
             if start_pos < pos {
                 let indent_length = indent_stack.len();
@@ -202,7 +202,7 @@ fn scan_indentation<'a>(
                     }
                     indent_stack.pop();
                 }
-                vec![(Token::Dedent, pos); indent_length - indent_stack.len()]
+                vec![(Lexeme::Dedent, pos); indent_length - indent_stack.len()]
             } else {
                 vec![]
             }
@@ -212,7 +212,7 @@ fn scan_indentation<'a>(
 
 #[cfg(test)]
 mod test_lexer {
-    use crate::lexer::tokens::{Token, TokenContext};
+    use crate::lexer::tokens::{Lexeme, Token};
     use crate::lexer::{Lexer, LexerSource};
     use std::path::PathBuf;
     use walkdir::{DirEntry, WalkDir};
@@ -236,96 +236,96 @@ mod test_lexer {
         let mut iter = stream.iter();
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("func"),
+            Some(&Token {
+                lexeme: Lexeme::Id("func"),
                 line: 1,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Assign,
+            Some(&Token {
+                lexeme: Lexeme::Assign,
                 line: 1,
                 col: 6
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::NewLine,
+            Some(&Token {
+                lexeme: Lexeme::NewLine,
                 line: 1,
                 col: 6
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Indent,
+            Some(&Token {
+                lexeme: Lexeme::Indent,
                 line: 2,
                 col: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("this"),
+            Some(&Token {
+                lexeme: Lexeme::Id("this"),
                 line: 2,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Is,
+            Some(&Token {
+                lexeme: Lexeme::Is,
                 line: 2,
                 col: 6
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("a"),
+            Some(&Token {
+                lexeme: Lexeme::Id("a"),
                 line: 2,
                 col: 9
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("function"),
+            Some(&Token {
+                lexeme: Lexeme::Id("function"),
                 line: 2,
                 col: 11
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::NewLine,
+            Some(&Token {
+                lexeme: Lexeme::NewLine,
                 line: 2,
                 col: 18
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Dedent,
+            Some(&Token {
+                lexeme: Lexeme::Dedent,
                 line: 3,
                 col: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("end"),
+            Some(&Token {
+                lexeme: Lexeme::Id("end"),
                 line: 3,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::NewLine,
+            Some(&Token {
+                lexeme: Lexeme::NewLine,
                 line: 3,
                 col: 3
             })
@@ -342,168 +342,168 @@ mod test_lexer {
         let mut iter = stream.iter();
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("func"),
+            Some(&Token {
+                lexeme: Lexeme::Id("func"),
                 line: 1,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Assign,
+            Some(&Token {
+                lexeme: Lexeme::Assign,
                 line: 1,
                 col: 6
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::LeftParen,
+            Some(&Token {
+                lexeme: Lexeme::LeftParen,
                 line: 1,
                 col: 8
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Integer("1"),
+            Some(&Token {
+                lexeme: Lexeme::Integer("1"),
                 line: 1,
                 col: 9
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Comma,
+            Some(&Token {
+                lexeme: Lexeme::Comma,
                 line: 1,
                 col: 10
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Integer("2"),
+            Some(&Token {
+                lexeme: Lexeme::Integer("2"),
                 line: 2,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Comma,
+            Some(&Token {
+                lexeme: Lexeme::Comma,
                 line: 2,
                 col: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Integer("3"),
+            Some(&Token {
+                lexeme: Lexeme::Integer("3"),
                 line: 2,
                 col: 4
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Comma,
+            Some(&Token {
+                lexeme: Lexeme::Comma,
                 line: 2,
                 col: 5
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Integer("4"),
+            Some(&Token {
+                lexeme: Lexeme::Integer("4"),
                 line: 2,
                 col: 7
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::RightParen,
+            Some(&Token {
+                lexeme: Lexeme::RightParen,
                 line: 2,
                 col: 8
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::NewLine,
+            Some(&Token {
+                lexeme: Lexeme::NewLine,
                 line: 2,
                 col: 8
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Indent,
+            Some(&Token {
+                lexeme: Lexeme::Indent,
                 line: 3,
                 col: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("this"),
+            Some(&Token {
+                lexeme: Lexeme::Id("this"),
                 line: 3,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Is,
+            Some(&Token {
+                lexeme: Lexeme::Is,
                 line: 3,
                 col: 6
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("a"),
+            Some(&Token {
+                lexeme: Lexeme::Id("a"),
                 line: 3,
                 col: 9
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("function"),
+            Some(&Token {
+                lexeme: Lexeme::Id("function"),
                 line: 3,
                 col: 11
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::NewLine,
+            Some(&Token {
+                lexeme: Lexeme::NewLine,
                 line: 3,
                 col: 18
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Dedent,
+            Some(&Token {
+                lexeme: Lexeme::Dedent,
                 line: 4,
                 col: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("end"),
+            Some(&Token {
+                lexeme: Lexeme::Id("end"),
                 line: 4,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::NewLine,
+            Some(&Token {
+                lexeme: Lexeme::NewLine,
                 line: 4,
                 col: 3
             })
@@ -520,184 +520,184 @@ mod test_lexer {
         let mut iter = stream.iter();
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("func"),
+            Some(&Token {
+                lexeme: Lexeme::Id("func"),
                 line: 1,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Assign,
+            Some(&Token {
+                lexeme: Lexeme::Assign,
                 line: 1,
                 col: 6,
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::LeftParen,
+            Some(&Token {
+                lexeme: Lexeme::LeftParen,
                 line: 1,
                 col: 8,
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Integer("1"),
+            Some(&Token {
+                lexeme: Lexeme::Integer("1"),
                 line: 1,
                 col: 9
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Comma,
+            Some(&Token {
+                lexeme: Lexeme::Comma,
                 line: 1,
                 col: 10
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Integer("2"),
+            Some(&Token {
+                lexeme: Lexeme::Integer("2"),
                 line: 2,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Comma,
+            Some(&Token {
+                lexeme: Lexeme::Comma,
                 line: 2,
                 col: 2,
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Integer("3"),
+            Some(&Token {
+                lexeme: Lexeme::Integer("3"),
                 line: 2,
                 col: 4
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Comma,
+            Some(&Token {
+                lexeme: Lexeme::Comma,
                 line: 2,
                 col: 5
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Integer("4"),
+            Some(&Token {
+                lexeme: Lexeme::Integer("4"),
                 line: 2,
                 col: 7
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::RightParen,
+            Some(&Token {
+                lexeme: Lexeme::RightParen,
                 line: 2,
                 col: 8
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Error,
+            Some(&Token {
+                lexeme: Lexeme::Error,
                 line: 2,
                 col: 0
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::RightParen,
+            Some(&Token {
+                lexeme: Lexeme::RightParen,
                 line: 2,
                 col: 9
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::NewLine,
+            Some(&Token {
+                lexeme: Lexeme::NewLine,
                 line: 2,
                 col: 9
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Indent,
+            Some(&Token {
+                lexeme: Lexeme::Indent,
                 line: 3,
                 col: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("this"),
+            Some(&Token {
+                lexeme: Lexeme::Id("this"),
                 line: 3,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Is,
+            Some(&Token {
+                lexeme: Lexeme::Is,
                 line: 3,
                 col: 6
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("a"),
+            Some(&Token {
+                lexeme: Lexeme::Id("a"),
                 line: 3,
                 col: 9
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("function"),
+            Some(&Token {
+                lexeme: Lexeme::Id("function"),
                 line: 3,
                 col: 11
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::NewLine,
+            Some(&Token {
+                lexeme: Lexeme::NewLine,
                 line: 3,
                 col: 18
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Dedent,
+            Some(&Token {
+                lexeme: Lexeme::Dedent,
                 line: 4,
                 col: 2
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::Id("end"),
+            Some(&Token {
+                lexeme: Lexeme::Id("end"),
                 line: 4,
                 col: 1
             })
         );
         assert_eq!(
             iter.next(),
-            Some(&TokenContext {
-                token: Token::NewLine,
+            Some(&Token {
+                lexeme: Lexeme::NewLine,
                 line: 4,
                 col: 3
             })
@@ -731,7 +731,7 @@ mod test_lexer {
 
     #[test]
     fn scan_demos() {
-        for entry in WalkDir::new("./demos/") {
+        for entry in WalkDir::new("../demos/") {
             let entry = entry.unwrap();
             if entry.file_type().is_file() {
                 let path = entry.path();

@@ -1,4 +1,4 @@
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::Lexeme;
 use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
 
@@ -10,7 +10,7 @@ pub(crate) enum Exposing<'a> {
 
 impl<'a> Exposing<'a> {
     pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> Result<(Option<Self>, usize)> {
-        if parser.peek(pos, Token::Exposing) {
+        if parser.peek(pos, Lexeme::Exposing) {
             Exposing::exposing(parser, pos + 1)
         } else {
             Ok((None, pos))
@@ -18,13 +18,13 @@ impl<'a> Exposing<'a> {
     }
 
     fn exposing(parser: &'a Parser<'a>, pos: usize) -> Result<(Option<Exposing<'a>>, usize)> {
-        let pos = consume_symbol(parser, pos, Token::LeftParen)?;
-        let (expo, pos) = if parser.peek(pos, Token::DotDot) {
+        let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
+        let (expo, pos) = if parser.peek(pos, Lexeme::DotDot) {
             (Exposing::All, pos + 1)
         } else {
             Exposing::exposing_ids(parser, pos)?
         };
-        if !parser.peek(pos, Token::RightParen) {
+        if !parser.peek(pos, Lexeme::RightParen) {
             return raise_parser_error("expecting ')' in exposing clause", parser, pos, false);
         }
         Ok((Some(expo), pos + 1))
@@ -35,11 +35,11 @@ impl<'a> Exposing<'a> {
         let mut pos = pos;
         loop {
             match parser.get_token(pos) {
-                Some(Token::Id(s)) => {
+                Some(Lexeme::Id(s)) => {
                     ids.push(s);
                     pos += 1;
                 }
-                Some(Token::TypeId(s)) => {
+                Some(Lexeme::TypeId(s)) => {
                     ids.push(s);
                     pos += 1;
                 }
@@ -52,7 +52,7 @@ impl<'a> Exposing<'a> {
                     );
                 }
             };
-            if !parser.peek(pos, Token::Comma) {
+            if !parser.peek(pos, Lexeme::Comma) {
                 break;
             } else {
                 pos += 1;

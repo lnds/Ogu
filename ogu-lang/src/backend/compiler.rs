@@ -1,6 +1,6 @@
 use crate::backend::params::Params;
 use crate::codegen::CodeGenerator;
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::Lexeme;
 use crate::lexer::Lexer;
 use crate::parser::ast::module::ModuleAst;
 use crate::parser::Parser;
@@ -79,7 +79,7 @@ impl Compiler {
         println!("parsing {:?}", &path);
         let (tokens, strs) = lexer.scan()?;
         if self.show_tokens {
-            let syms: Vec<Token> = tokens.iter().map(|t| t.token).collect();
+            let syms: Vec<Lexeme> = tokens.iter().map(|t| t.lexeme).collect();
             println!("TOKENS = {:?}", syms);
         }
         let parser = Parser::new(tokens.to_owned(), strs.to_vec())?;

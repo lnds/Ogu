@@ -1,4 +1,4 @@
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::{
     consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent, Parser,
@@ -35,11 +35,11 @@ pub(crate) fn parse_guards<'a>(
     let (guard, mut pos) = parse_guard(parser, pos)?;
     let mut guards = vec![guard];
     let mut inner_indent = false;
-    if parser.peek(pos, Token::Indent) && parser.peek(pos + 1, Token::Guard) {
-        pos = consume_symbol(parser, pos, Token::Indent)?;
+    if parser.peek(pos, Lexeme::Indent) && parser.peek(pos + 1, Lexeme::Guard) {
+        pos = consume_symbol(parser, pos, Lexeme::Indent)?;
         inner_indent = true;
     }
-    while parser.peek(pos, Token::Guard) {
+    while parser.peek(pos, Lexeme::Guard) {
         let (guard, new_pos) = parse_guard(parser, pos)?;
         guards.push(guard);
         pos = parser.skip_nl(new_pos);
@@ -54,14 +54,14 @@ pub(crate) fn parse_guards<'a>(
 }
 
 fn parse_guard<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(Guard<'a>, usize)> {
-    let pos = consume_symbol(parser, pos, Token::Guard)?;
-    let (guard, pos) = if parser.peek(pos, Token::Otherwise) {
+    let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
+    let (guard, pos) = if parser.peek(pos, Lexeme::Otherwise) {
         (None, pos + 1)
     } else {
         let (expr, new_pos) = Expression::parse(parser, pos)?;
         (Some(Box::new(expr)), new_pos)
     };
-    let pos = consume_symbol(parser, pos, Token::Assign)?;
+    let pos = consume_symbol(parser, pos, Lexeme::Assign)?;
     let pos = parser.skip_nl(pos);
     let (guard_value, pos) = Expression::parse(parser, pos)?;
     let pos = parser.skip_nl(pos);

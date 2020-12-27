@@ -1,4 +1,4 @@
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::ModuleName;
 use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
@@ -26,14 +26,14 @@ impl<'a> Import<'a> {
     }
 
     fn parse_import(parser: &'a Parser<'a>, pos: usize) -> Result<Option<(Import<'a>, usize)>> {
-        if !parser.peek(pos, Token::Import) {
+        if !parser.peek(pos, Lexeme::Import) {
             Ok(None)
         } else {
-            let pos = consume_symbol(parser, pos, Token::Import)?;
+            let pos = consume_symbol(parser, pos, Lexeme::Import)?;
             let (mod_name, pos) = Self::parse_module_name(parser, pos)?;
 
-            let (alias, pos) = if parser.peek(pos, Token::As) {
-                let pos = consume_symbol(parser, pos, Token::As)?;
+            let (alias, pos) = if parser.peek(pos, Lexeme::As) {
+                let pos = consume_symbol(parser, pos, Lexeme::As)?;
                 let (m, pos) = Self::parse_module_name(parser, pos)?;
                 (Some(m), pos)
             } else {

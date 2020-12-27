@@ -1,4 +1,4 @@
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::consume_ids_sep_by;
 use crate::parser::ast::expressions::expression::Expression;
@@ -25,11 +25,11 @@ impl<'a> Equation<'a> {
         pos: usize,
         inner: bool,
     ) -> Result<(Equation<'a>, usize)> {
-        if let Some(Token::Id(id)) = parser.get_token(pos) {
+        if let Some(Lexeme::Id(id)) = parser.get_token(pos) {
             Equation::parse_func_or_val(id, parser, pos + 1)
         } else if inner {
             let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
-            if parser.peek(pos, Token::Assign) {
+            if parser.peek(pos, Lexeme::Assign) {
                 Equation::parse_lval_no_guards(expr, parser, pos + 1)
             } else {
                 Equation::parse_lval_guards(expr, parser, pos)
@@ -43,26 +43,26 @@ impl<'a> Equation<'a> {
         parser: &'a Parser<'a>,
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
-        Equation::parse_value_assign2(parser, pos, Token::BackArrow, Token::Assign)
+        Equation::parse_value_assign2(parser, pos, Lexeme::BackArrow, Lexeme::Assign)
     }
 
     pub(crate) fn parse_back_arrow_eq(
         parser: &'a Parser<'a>,
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
-        Equation::parse_value_assign(parser, pos, Token::BackArrow)
+        Equation::parse_value_assign(parser, pos, Lexeme::BackArrow)
     }
 
     pub(crate) fn parse_value(parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
-        Equation::parse_value_assign(parser, pos, Token::Assign)
+        Equation::parse_value_assign(parser, pos, Lexeme::Assign)
     }
 
     fn parse_value_assign(
         parser: &'a Parser<'a>,
         pos: usize,
-        symbol: Token,
+        symbol: Lexeme,
     ) -> Result<(Equation<'a>, usize)> {
-        if let Some(Token::Id(id)) = parser.get_token(pos) {
+        if let Some(Lexeme::Id(id)) = parser.get_token(pos) {
             let pos = consume_symbol(parser, pos + 1, symbol)?;
             Equation::parse_val(id, parser, pos)
         } else {
@@ -76,10 +76,10 @@ impl<'a> Equation<'a> {
     fn parse_value_assign2(
         parser: &'a Parser<'a>,
         pos: usize,
-        symbol1: Token,
-        symbol2: Token,
+        symbol1: Lexeme,
+        symbol2: Lexeme,
     ) -> Result<(Equation<'a>, usize)> {
-        if let Some(Token::Id(id)) = parser.get_token(pos) {
+        if let Some(Lexeme::Id(id)) = parser.get_token(pos) {
             let pos = pos + 1;
             let pos = if parser.peek(pos, symbol1) {
                 consume_symbol(parser, pos, symbol1)?
@@ -87,10 +87,10 @@ impl<'a> Equation<'a> {
                 consume_symbol(parser, pos, symbol2)?
             };
             Equation::parse_val(id, parser, pos)
-        } else if parser.peek(pos, Token::LeftParen) {
-            let pos = consume_symbol(parser, pos, Token::LeftParen)?;
-            let (ids, pos) = consume_ids_sep_by(parser, pos, Token::Comma)?;
-            let pos = consume_symbol(parser, pos, Token::RightParen)?;
+        } else if parser.peek(pos, Lexeme::LeftParen) {
+            let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
+            let (ids, pos) = consume_ids_sep_by(parser, pos, Lexeme::Comma)?;
+            let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
             let pos = if parser.peek(pos, symbol1) {
                 consume_symbol(parser, pos, symbol1)?
             } else {
@@ -108,7 +108,7 @@ impl<'a> Equation<'a> {
         parser: &'a Parser<'a>,
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
-        if parser.peek(pos, Token::Assign) {
+        if parser.peek(pos, Lexeme::Assign) {
             Equation::parse_val(name, parser, pos + 1)
         } else {
             Equation::parse_func(name, parser, pos)
@@ -132,7 +132,7 @@ impl<'a> Equation<'a> {
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
         let (args, pos) = Arg::parse(parser, pos)?;
-        if parser.peek(pos, Token::Assign) {
+        if parser.peek(pos, Lexeme::Assign) {
             Equation::parse_func_no_guards(name, args, parser, pos + 1)
         } else {
             Equation::parse_func_guards(name, args, parser, pos)

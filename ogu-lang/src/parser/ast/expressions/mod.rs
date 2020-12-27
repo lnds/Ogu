@@ -4,20 +4,20 @@ pub mod args;
 pub mod equations;
 pub mod guards;
 
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::expression::{Expression, ParseResult};
 use crate::parser::{raise_parser_error, Parser};
 use anyhow::Result;
 
-pub struct LeftAssocExpr<'a>(Token<'a>, Box<Expression<'a>>, Box<Expression<'a>>);
+pub struct LeftAssocExpr<'a>(Lexeme<'a>, Box<Expression<'a>>, Box<Expression<'a>>);
 
-pub struct RightAssocExpr<'a>(Token<'a>, Box<Expression<'a>>, Box<Expression<'a>>);
+pub struct RightAssocExpr<'a>(Lexeme<'a>, Box<Expression<'a>>, Box<Expression<'a>>);
 
 // 1 + 2 + 3 => (1 + 2) + 3
 pub(crate) fn parse_left_assoc_expr<'a>(
     parser: &'a Parser<'a>,
     pos: usize,
-    op: Token,
+    op: Lexeme,
     next_level: fn(&'a Parser<'a>, usize) -> ParseResult<'a>,
     build: fn(Expression<'a>, Expression<'a>) -> Expression<'a>,
 ) -> Result<(Expression<'a>, usize)> {
@@ -32,7 +32,7 @@ pub(crate) fn parse_left_assoc_expr<'a>(
 pub(crate) fn consume_left_args<'a>(
     parser: &'a Parser<'a>,
     pos: usize,
-    op: Token,
+    op: Lexeme,
     next_level: fn(&'a Parser<'a>, usize) -> ParseResult<'a>,
     left_expr: Expression<'a>,
     build: fn(Expression<'a>, Expression<'a>) -> Expression<'a>,
@@ -49,7 +49,7 @@ pub(crate) fn consume_left_args<'a>(
 pub(crate) fn parse_right_assoc_expr<'a>(
     parser: &'a Parser<'a>,
     pos: usize,
-    op: Token,
+    op: Lexeme,
     next_level: fn(&'a Parser<'a>, usize) -> ParseResult<'a>,
     build: fn(Expression<'a>, Expression<'a>) -> Result<Expression<'a>>,
 ) -> ParseResult<'a> {
@@ -64,7 +64,7 @@ pub(crate) fn parse_right_assoc_expr<'a>(
 pub(crate) fn consume_right_args<'a>(
     parser: &'a Parser<'a>,
     pos: usize,
-    op: Token,
+    op: Lexeme,
     next_level: fn(&'a Parser<'a>, usize) -> ParseResult<'a>,
     base_expr: Expression<'a>,
     build: fn(Expression<'a>, Expression<'a>) -> Result<Expression<'a>>,
@@ -80,7 +80,7 @@ pub(crate) fn consume_right_args<'a>(
 pub(crate) fn consume_exprs_sep_by<'a>(
     parser: &'a Parser<'a>,
     pos: usize,
-    symbol: Token,
+    symbol: Lexeme,
 ) -> Result<(Vec<Expression<'a>>, usize)> {
     let mut result = vec![];
     let (expr, mut pos) = Expression::parse(parser, pos)?;
@@ -110,7 +110,7 @@ pub(crate) fn consume_args<'a>(
 pub(crate) fn consume_ids_sep_by<'a>(
     parser: &'a Parser<'a>,
     pos: usize,
-    symbol: Token,
+    symbol: Lexeme,
 ) -> Result<(Vec<&'a str>, usize)> {
     let mut result = vec![];
     let (id, mut pos) = consume_id(parser, pos)?;
@@ -124,124 +124,124 @@ pub(crate) fn consume_ids_sep_by<'a>(
 }
 
 pub(crate) fn consume_id<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(&'a str, usize)> {
-    if let Some(Token::Id(id)) = parser.get_token(pos) {
+    if let Some(Lexeme::Id(id)) = parser.get_token(pos) {
         Ok((id, pos + 1))
     } else {
         raise_parser_error("Expecting identifier", parser, pos, true)
     }
 }
 
-pub(crate) fn is_literal(symbol: Token) -> bool {
-    matches!(symbol, Token::Integer(_)
-        |Token::Float(_)
-        |Token::String(_)
-        |Token::LargeString(_)
-        |Token::FormatString(_) 
-        |Token::RegExp(_)
-        |Token::Char(_)
-        |Token::IsoDate(_))
+pub(crate) fn is_literal(symbol: Lexeme) -> bool {
+    matches!(symbol, Lexeme::Integer(_)
+        |Lexeme::Float(_)
+        |Lexeme::String(_)
+        |Lexeme::LargeString(_)
+        |Lexeme::FormatString(_)
+        |Lexeme::RegExp(_)
+        |Lexeme::Char(_)
+        |Lexeme::IsoDate(_))
 }
 
-pub(crate) fn is_basic_op(symbol: Token) -> bool {
+pub(crate) fn is_basic_op(symbol: Lexeme) -> bool {
     matches!(
         symbol,
-        Token::Cons
-            | Token::Plus
-            | Token::PlusPlus
-            | Token::Mult
-            | Token::Div
-            | Token::DivDiv
-            | Token::Minus
-            | Token::Mod
-            | Token::Pow
-            | Token::And
-            | Token::Or
-            | Token::Equal
-            | Token::NotEqual
-            | Token::Not
-            | Token::LessThan
-            | Token::LessThanOrEqual
-            | Token::Greater
-            | Token::GreaterOrEqual
+        Lexeme::Cons
+            | Lexeme::Plus
+            | Lexeme::PlusPlus
+            | Lexeme::Mult
+            | Lexeme::Div
+            | Lexeme::DivDiv
+            | Lexeme::Minus
+            | Lexeme::Mod
+            | Lexeme::Pow
+            | Lexeme::And
+            | Lexeme::Or
+            | Lexeme::Equal
+            | Lexeme::NotEqual
+            | Lexeme::Not
+            | Lexeme::LessThan
+            | Lexeme::LessThanOrEqual
+            | Lexeme::Greater
+            | Lexeme::GreaterOrEqual
     )
 }
 
-pub(crate) fn is_func_call_end_symbol(symbol: Option<Token>) -> bool {
+pub(crate) fn is_func_call_end_symbol(symbol: Option<Lexeme>) -> bool {
     match symbol {
         None => true,
-        Some(Token::Error) => true,
+        Some(Lexeme::Error) => true,
         Some(sym) => matches!(
             sym,
-            Token::NewLine
-                | Token::Arroba
-                | Token::Arrow
-                | Token::BackArrow
-                | Token::Indent
-                | Token::Dedent
-                | Token::Assign
-                | Token::Dollar
-                | Token::DollarCurly
-                | Token::Comma
-                | Token::Cond
-                | Token::Case
-                | Token::Dot
-                | Token::DotDot
-                | Token::DotDotDot
-                | Token::Cons
-                | Token::FatArrow
-                | Token::Let
-                | Token::Loop
-                | Token::Do
-                | Token::Then
-                | Token::Else
-                | Token::Elif
-                | Token::Of
-                | Token::Return
-                | Token::Recur
-                | Token::Yield
-                | Token::RightParen
-                | Token::In
-                | Token::RightBracket
-                | Token::RightCurly
-                | Token::RightCurlyCurly
-                | Token::Where
-                | Token::With
-                | Token::While
-                | Token::Until
-                | Token::PipeLeft
-                | Token::Perform
-                | Token::PipeRight
-                | Token::ComposeForward
-                | Token::ComposeBackward
-                | Token::Pow
-                | Token::Plus
-                | Token::PlusPlus
-                | Token::Mult
-                | Token::Minus
-                | Token::Div
-                | Token::DivDiv
-                | Token::Mod
-                | Token::And
-                | Token::Or
-                | Token::Not
-                | Token::Equal
-                | Token::NotEqual
-                | Token::Guard
-                | Token::GreaterOrEqual
-                | Token::Greater
-                | Token::LessThan
-                | Token::LessThanOrEqual
-                | Token::Type
-                | Token::Trait
-                | Token::Try
-                | Token::Alias
-                | Token::SemiColon
-                | Token::Colon
-                | Token::Derive
-                | Token::Extends
-                | Token::Reify
-                | Token::Otherwise
-                | Token::Error
+            Lexeme::NewLine
+                | Lexeme::Arroba
+                | Lexeme::Arrow
+                | Lexeme::BackArrow
+                | Lexeme::Indent
+                | Lexeme::Dedent
+                | Lexeme::Assign
+                | Lexeme::Dollar
+                | Lexeme::DollarCurly
+                | Lexeme::Comma
+                | Lexeme::Cond
+                | Lexeme::Case
+                | Lexeme::Dot
+                | Lexeme::DotDot
+                | Lexeme::DotDotDot
+                | Lexeme::Cons
+                | Lexeme::FatArrow
+                | Lexeme::Let
+                | Lexeme::Loop
+                | Lexeme::Do
+                | Lexeme::Then
+                | Lexeme::Else
+                | Lexeme::Elif
+                | Lexeme::Of
+                | Lexeme::Return
+                | Lexeme::Recur
+                | Lexeme::Yield
+                | Lexeme::RightParen
+                | Lexeme::In
+                | Lexeme::RightBracket
+                | Lexeme::RightCurly
+                | Lexeme::RightCurlyCurly
+                | Lexeme::Where
+                | Lexeme::With
+                | Lexeme::While
+                | Lexeme::Until
+                | Lexeme::PipeLeft
+                | Lexeme::Perform
+                | Lexeme::PipeRight
+                | Lexeme::ComposeForward
+                | Lexeme::ComposeBackward
+                | Lexeme::Pow
+                | Lexeme::Plus
+                | Lexeme::PlusPlus
+                | Lexeme::Mult
+                | Lexeme::Minus
+                | Lexeme::Div
+                | Lexeme::DivDiv
+                | Lexeme::Mod
+                | Lexeme::And
+                | Lexeme::Or
+                | Lexeme::Not
+                | Lexeme::Equal
+                | Lexeme::NotEqual
+                | Lexeme::Guard
+                | Lexeme::GreaterOrEqual
+                | Lexeme::Greater
+                | Lexeme::LessThan
+                | Lexeme::LessThanOrEqual
+                | Lexeme::Type
+                | Lexeme::Trait
+                | Lexeme::Try
+                | Lexeme::Alias
+                | Lexeme::SemiColon
+                | Lexeme::Colon
+                | Lexeme::Derive
+                | Lexeme::Extends
+                | Lexeme::Reify
+                | Lexeme::Otherwise
+                | Lexeme::Error
         ),
     }
 }
@@ -249,27 +249,27 @@ pub(crate) fn is_func_call_end_symbol(symbol: Option<Token>) -> bool {
 pub(crate) fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
     let LeftAssocExpr(sym, left, right) = la_expr;
     match sym {
-        Token::PipeRight => Expression::FuncCallExpr(right, left),
-        Token::Or => Expression::OrExpr(left, right),
-        Token::And => Expression::AndExpr(left, right),
-        Token::LessThan => Expression::LtExpr(left, right),
-        Token::LessThanOrEqual => Expression::LeExpr(left, right),
-        Token::Greater => Expression::GtExpr(left, right),
-        Token::GreaterOrEqual => Expression::GeExpr(left, right),
-        Token::Equal => Expression::EqExpr(left, right),
-        Token::NotEqual => Expression::NeExpr(left, right),
-        Token::Plus => Expression::AddExpr(left, right),
-        Token::PlusPlus => Expression::ConcatExpr(left, right),
-        Token::Minus => Expression::SubExpr(left, right),
-        Token::Mult => Expression::MulExpr(left, right),
-        Token::Div => Expression::DivExpr(left, right),
-        Token::DivDiv => Expression::IntDivExpr(left, right),
-        Token::Mod => Expression::ModExpr(left, right),
-        Token::ComposeBackward => Expression::ComposeBckExpr(left, right),
-        Token::Matches => Expression::MatchesExpr(left, right),
-        Token::NotMatches => Expression::NoMatchesExpr(left, right),
-        Token::Match => Expression::ReMatchExpr(left, right),
-        Token::Arroba => Expression::IndexExpr(left, right),
+        Lexeme::PipeRight => Expression::FuncCallExpr(right, left),
+        Lexeme::Or => Expression::OrExpr(left, right),
+        Lexeme::And => Expression::AndExpr(left, right),
+        Lexeme::LessThan => Expression::LtExpr(left, right),
+        Lexeme::LessThanOrEqual => Expression::LeExpr(left, right),
+        Lexeme::Greater => Expression::GtExpr(left, right),
+        Lexeme::GreaterOrEqual => Expression::GeExpr(left, right),
+        Lexeme::Equal => Expression::EqExpr(left, right),
+        Lexeme::NotEqual => Expression::NeExpr(left, right),
+        Lexeme::Plus => Expression::AddExpr(left, right),
+        Lexeme::PlusPlus => Expression::ConcatExpr(left, right),
+        Lexeme::Minus => Expression::SubExpr(left, right),
+        Lexeme::Mult => Expression::MulExpr(left, right),
+        Lexeme::Div => Expression::DivExpr(left, right),
+        Lexeme::DivDiv => Expression::IntDivExpr(left, right),
+        Lexeme::Mod => Expression::ModExpr(left, right),
+        Lexeme::ComposeBackward => Expression::ComposeBckExpr(left, right),
+        Lexeme::Matches => Expression::MatchesExpr(left, right),
+        Lexeme::NotMatches => Expression::NoMatchesExpr(left, right),
+        Lexeme::Match => Expression::ReMatchExpr(left, right),
+        Lexeme::Arroba => Expression::IndexExpr(left, right),
         sym => {
             println!("TODO {:?}", sym);
             todo!()
@@ -280,11 +280,11 @@ pub(crate) fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
 pub(crate) fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expression> {
     let RightAssocExpr(sym, left, right) = ra_expr;
     match sym {
-        Token::Cons => Ok(Expression::ConsExpr(left, right)),
-        Token::Pow => Ok(Expression::PowExpr(left, right)),
-        Token::Dollar => Ok(Expression::FuncCallExpr(left, right)),
-        Token::ComposeForward => Ok(Expression::ComposeFwdExpr(left, right)),
-        Token::PipeLeft => Ok(Expression::FuncCallExpr(left, right)),
+        Lexeme::Cons => Ok(Expression::ConsExpr(left, right)),
+        Lexeme::Pow => Ok(Expression::PowExpr(left, right)),
+        Lexeme::Dollar => Ok(Expression::FuncCallExpr(left, right)),
+        Lexeme::ComposeForward => Ok(Expression::ComposeFwdExpr(left, right)),
+        Lexeme::PipeLeft => Ok(Expression::FuncCallExpr(left, right)),
         _ => todo!(),
     }
 }

@@ -1,5 +1,5 @@
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::{LineNumber, LineWidth, Token};
+use crate::lexer::tokens::{LineNumber, LineWidth, Lexeme};
 
 use crate::backend::errors::OguError;
 use anyhow::{Error, Result};
@@ -20,20 +20,20 @@ impl<'a> Parser<'a> {
         })
     }
 
-    pub(crate) fn peek(&self, pos: usize, symbol: Token) -> bool {
+    pub(crate) fn peek(&self, pos: usize, symbol: Lexeme) -> bool {
         match self.tokens.peek(pos) {
             None => false,
-            Some(tok) => tok.token == symbol,
+            Some(tok) => tok.lexeme == symbol,
         }
     }
 
-    pub(crate) fn get_token(&self, pos: usize) -> Option<Token> {
-        self.tokens.peek(pos).map(|t| t.token)
+    pub(crate) fn get_token(&self, pos: usize) -> Option<Lexeme> {
+        self.tokens.peek(pos).map(|t| t.lexeme)
     }
 
     pub(crate) fn skip_nl(&self, pos: usize) -> usize {
         match self.get_token(pos) {
-            Some(Token::NewLine) => self.skip_nl(pos + 1),
+            Some(Lexeme::NewLine) => self.skip_nl(pos + 1),
             _ => pos,
         }
     }
@@ -47,7 +47,7 @@ impl<'a> Parser<'a> {
     }
 }
 
-pub(crate) fn consume_symbol(parser: &Parser, pos: usize, token: Token) -> Result<usize> {
+pub(crate) fn consume_symbol(parser: &Parser, pos: usize, token: Lexeme) -> Result<usize> {
     if !parser.peek(pos, token) {
         raise_parser_error(&format!("Expecting {:?}", token), parser, pos, true)
     } else {
@@ -55,7 +55,7 @@ pub(crate) fn consume_symbol(parser: &Parser, pos: usize, token: Token) -> Resul
     }
 }
 
-pub(crate) fn consume_opt_symbol(parser: &Parser, pos: usize, token: Token) -> Result<usize> {
+pub(crate) fn consume_opt_symbol(parser: &Parser, pos: usize, token: Lexeme) -> Result<usize> {
     if parser.peek(pos, token) {
         consume_symbol(parser, pos, token)
     } else {
@@ -65,7 +65,7 @@ pub(crate) fn consume_opt_symbol(parser: &Parser, pos: usize, token: Token) -> R
 
 pub(crate) fn parse_opt_indent<'a>(parser: &'a Parser<'a>, pos: usize) -> (bool, usize) {
     let pos = parser.skip_nl(pos);
-    if parser.peek(pos, Token::Indent) {
+    if parser.peek(pos, Lexeme::Indent) {
         (true, pos + 1)
     } else {
         (false, pos)
@@ -79,7 +79,7 @@ pub(crate) fn parse_opt_dedent<'a>(
 ) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
-        pos = consume_symbol(parser, pos, Token::Dedent)?;
+        pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
     }
     Ok(pos)
 }
@@ -91,9 +91,9 @@ pub(crate) fn parse_opt_where_or_dedent(
 ) -> Result<usize> {
     let mut pos = parser.skip_nl(pos);
     if in_indent {
-        if parser.peek(pos, Token::Dedent) {
-            pos = consume_symbol(parser, pos, Token::Dedent)?;
-        } else if !parser.peek(pos, Token::Where) {
+        if parser.peek(pos, Lexeme::Dedent) {
+            pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
+        } else if !parser.peek(pos, Lexeme::Where) {
             return raise_parser_error("Expecting 'where'", parser, pos, true);
         }
     }
@@ -102,11 +102,11 @@ pub(crate) fn parse_opt_where_or_dedent(
 
 pub(crate) fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
     let pos = parser.skip_nl(pos);
-    if parser.peek(pos, Token::Where) {
+    if parser.peek(pos, Lexeme::Where) {
         Some(pos)
-    } else if parser.peek(pos, Token::Indent) {
+    } else if parser.peek(pos, Lexeme::Indent) {
         let pos = parser.skip_nl(pos + 1);
-        if parser.peek(pos, Token::Where) {
+        if parser.peek(pos, Lexeme::Where) {
             Some(pos)
         } else {
             None
@@ -118,14 +118,14 @@ pub(crate) fn look_ahead_where(parser: &Parser, pos: usize) -> Option<usize> {
 
 pub(crate) fn consume_string<'a>(parser: &'a Parser, pos: usize) -> Result<(&'a str, usize)> {
     match parser.get_token(pos) {
-        Some(Token::String(s)) => Ok((s, pos + 1)),
+        Some(Lexeme::String(s)) => Ok((s, pos + 1)),
         _ => raise_parser_error("Expecting an string", parser, pos, true),
     }
 }
 
 pub(crate) fn consume_type_id<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(&'a str, usize)> {
     match parser.get_token(pos) {
-        Some(Token::TypeId(type_id)) => Ok((type_id, pos + 1)),
+        Some(Lexeme::TypeId(type_id)) => Ok((type_id, pos + 1)),
         _ => raise_parser_error("expecting a type identifier", parser, pos, true),
     }
 }
@@ -136,8 +136,8 @@ pub(crate) fn consume_qualified_type_id<'a>(
 ) -> Result<(&'a str, Vec<&'a str>, usize)> {
     let (t_id, mut pos) = consume_type_id(parser, pos)?;
     let mut names = vec![];
-    while parser.peek(pos, Token::Dot) {
-        pos = consume_symbol(parser, pos, Token::Dot)?;
+    while parser.peek(pos, Lexeme::Dot) {
+        pos = consume_symbol(parser, pos, Lexeme::Dot)?;
         let (t_id, new_pos) = consume_type_id(parser, pos)?;
         names.push(t_id);
         pos = new_pos;
@@ -147,7 +147,7 @@ pub(crate) fn consume_qualified_type_id<'a>(
 
 pub(crate) fn consume_id<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(&'a str, usize)> {
     match parser.get_token(pos) {
-        Some(Token::Id(id)) => Ok((id, pos + 1)),
+        Some(Lexeme::Id(id)) => Ok((id, pos + 1)),
         _ => raise_parser_error("Expecting identifier", parser, pos, true),
     }
 }
@@ -168,7 +168,7 @@ pub(crate) fn raise_parser_error<T>(
             "Error {} {}, token found = {}",
             msg,
             position,
-            parser.get_token(pos).unwrap_or(Token::Error)
+            parser.get_token(pos).unwrap_or(Lexeme::Error)
         )))
     } else {
         Err(Error::new(OguError::ParserError).context(format!("Error: {} {}", msg, position)))

@@ -1,4 +1,4 @@
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression::TryHandleExpr;
 use crate::parser::ast::expressions::{
@@ -174,10 +174,10 @@ pub(crate) enum LambdaArg<'a> {
 impl<'a> Expression<'a> {
     pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, mut pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
-        if parser.peek(pos, Token::SemiColon) {
+        if parser.peek(pos, Lexeme::SemiColon) {
             let mut exprs = vec![expr];
-            while parser.peek(pos, Token::SemiColon) {
-                pos = consume_symbol(parser, pos, Token::SemiColon)?;
+            while parser.peek(pos, Lexeme::SemiColon) {
+                pos = consume_symbol(parser, pos, Lexeme::SemiColon)?;
                 pos = parser.skip_nl(pos);
                 let (expr, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
                 pos = parser.skip_nl(new_pos);
@@ -191,49 +191,49 @@ impl<'a> Expression<'a> {
 
     parse_left_assoc!(
         parse_pipe_func_call_expr,
-        Token::PipeRight,
+        Lexeme::PipeRight,
         Expression::parse_backpipe_func_call_expr
     );
 
     parse_right_assoc!(
         parse_backpipe_func_call_expr,
-        Token::PipeLeft,
+        Lexeme::PipeLeft,
         Expression::parse_control_expr
     );
 
     parse_right_assoc!(
         parse_dollar_func_call_expr,
-        Token::Dollar,
+        Lexeme::Dollar,
         Expression::parse_pipe_func_call_expr
     );
 
     pub(crate) fn parse_control_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             None => raise_parser_error("Expecting an expression but found EOF", parser, pos, false),
-            Some(Token::Cond) => Expression::parse_cond(parser, pos),
-            Some(Token::Case) => Expression::parse_case(parser, pos),
-            Some(Token::Do) => Expression::parse_do(parser, pos),
-            Some(Token::Try) => Expression::parse_try_expr(parser, pos),
-            Some(Token::Let) => Expression::parse_let(parser, pos),
-            Some(Token::For) => Expression::parse_loop(parser, pos),
-            Some(Token::Loop) => Expression::parse_loop(parser, pos),
-            Some(Token::If) => Expression::parse_if(parser, pos),
-            Some(Token::Repeat) => Expression::parse_repeat(parser, pos),
-            Some(Token::Recur) => Expression::parse_recur(parser, pos),
-            Some(Token::Resume) => Expression::parse_resume_expr(parser, pos),
-            Some(Token::Reify) => Expression::parse_reify(parser, pos),
+            Some(Lexeme::Cond) => Expression::parse_cond(parser, pos),
+            Some(Lexeme::Case) => Expression::parse_case(parser, pos),
+            Some(Lexeme::Do) => Expression::parse_do(parser, pos),
+            Some(Lexeme::Try) => Expression::parse_try_expr(parser, pos),
+            Some(Lexeme::Let) => Expression::parse_let(parser, pos),
+            Some(Lexeme::For) => Expression::parse_loop(parser, pos),
+            Some(Lexeme::Loop) => Expression::parse_loop(parser, pos),
+            Some(Lexeme::If) => Expression::parse_if(parser, pos),
+            Some(Lexeme::Repeat) => Expression::parse_repeat(parser, pos),
+            Some(Lexeme::Recur) => Expression::parse_recur(parser, pos),
+            Some(Lexeme::Resume) => Expression::parse_resume_expr(parser, pos),
+            Some(Lexeme::Reify) => Expression::parse_reify(parser, pos),
             _ => Expression::parse_lambda_expr(parser, pos),
         }
     }
 
     pub(crate) fn parse_cond(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Cond)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Cond)?;
         let pos = parser.skip_nl(pos);
-        let mut pos = consume_symbol(parser, pos, Token::Indent)?;
+        let mut pos = consume_symbol(parser, pos, Lexeme::Indent)?;
         let mut conds = vec![];
-        while !parser.peek(pos, Token::Dedent) {
+        while !parser.peek(pos, Lexeme::Dedent) {
             let (cond, new_pos) = Expression::parse_opt_otherwise(parser, pos)?;
-            pos = consume_symbol(parser, new_pos, Token::Arrow)?;
+            pos = consume_symbol(parser, new_pos, Lexeme::Arrow)?;
             let (in_indent, new_pos) = parse_opt_indent(parser, pos);
             let (value, new_pos) = Expression::parse(parser, new_pos)?;
             pos = parse_opt_dedent(parser, new_pos, in_indent)?;
@@ -245,7 +245,7 @@ impl<'a> Expression<'a> {
                 conds.push((cond, value));
             }
         }
-        let pos = consume_symbol(parser, pos, Token::Dedent)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
         Ok((Expression::CondExpr(conds), pos))
     }
 
@@ -253,8 +253,8 @@ impl<'a> Expression<'a> {
         parser: &'a Parser<'a>,
         pos: usize,
     ) -> Result<(Option<Expression<'a>>, usize)> {
-        if parser.peek(pos, Token::Otherwise) {
-            Ok((None, consume_symbol(parser, pos, Token::Otherwise)?))
+        if parser.peek(pos, Lexeme::Otherwise) {
+            Ok((None, consume_symbol(parser, pos, Lexeme::Otherwise)?))
         } else {
             let (c, p) = Expression::parse_logical_expr(parser, pos)?;
             Ok((Some(c), p))
@@ -262,15 +262,15 @@ impl<'a> Expression<'a> {
     }
 
     pub(crate) fn parse_case(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Case)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Case)?;
         let (match_expr, pos) = Expression::parse_logical_expr(parser, pos)?;
-        let pos = consume_symbol(parser, pos, Token::Of)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Of)?;
         let pos = parser.skip_nl(pos);
-        let mut pos = consume_symbol(parser, pos, Token::Indent)?;
+        let mut pos = consume_symbol(parser, pos, Lexeme::Indent)?;
         let mut matches = vec![];
-        while !parser.peek(pos, Token::Dedent) {
+        while !parser.peek(pos, Lexeme::Dedent) {
             let (cond, new_pos) = Expression::parse_opt_otherwise(parser, pos)?;
-            pos = consume_symbol(parser, new_pos, Token::Arrow)?;
+            pos = consume_symbol(parser, new_pos, Lexeme::Arrow)?;
             let (in_indent, new_pos) = parse_opt_indent(parser, pos);
             let (value, new_pos) = Expression::parse(parser, new_pos)?;
             pos = parse_opt_dedent(parser, new_pos, in_indent)?;
@@ -282,37 +282,37 @@ impl<'a> Expression<'a> {
                 matches.push((cond, value));
             }
         }
-        let pos = consume_symbol(parser, pos, Token::Dedent)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
         Ok((Expression::CaseExpr(Box::new(match_expr), matches), pos))
     }
 
     pub(crate) fn parse_reify(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Reify)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Reify)?;
         let (type_id, pos) = consume_type_id(parser, pos)?;
         let (indent, pos) = parse_opt_indent(parser, pos);
-        let pos = consume_symbol(parser, pos, Token::Where)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Where)?;
         let pos = parser.skip_nl(pos);
-        let pos = consume_symbol(parser, pos, Token::Indent)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Indent)?;
         let (eq, mut pos) = Equation::parse(parser, pos, true)?;
         let mut eqs = vec![eq];
         pos = parser.skip_nl(pos);
-        while !parser.peek(pos, Token::Dedent) {
+        while !parser.peek(pos, Lexeme::Dedent) {
             let (eq, new_pos) = Equation::parse(parser, pos, true)?;
             eqs.push(eq);
             pos = parser.skip_nl(new_pos);
         }
-        let pos = consume_symbol(parser, pos, Token::Dedent)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
         Ok((Expression::ReifyExpr(type_id, eqs), pos))
     }
 
     pub(crate) fn parse_lambda_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        if !parser.peek(pos, Token::Lambda) {
+        if !parser.peek(pos, Lexeme::Lambda) {
             Expression::parse_logical_expr(parser, pos)
         } else {
-            let pos = consume_symbol(parser, pos, Token::Lambda)?;
+            let pos = consume_symbol(parser, pos, Lexeme::Lambda)?;
             let (args, pos) = Expression::parse_lambda_args(parser, pos)?;
-            let pos = consume_symbol(parser, pos, Token::Arrow)?;
+            let pos = consume_symbol(parser, pos, Lexeme::Arrow)?;
             let pos = parser.skip_nl(pos); // skip arrow
             let (expr, pos) = Expression::parse_control_expr(parser, pos)?;
             Ok((Expression::LambdaExpr(args, Box::new(expr)), pos))
@@ -326,7 +326,7 @@ impl<'a> Expression<'a> {
         let mut args = vec![];
         let (arg, mut pos) = Expression::parse_lambda_arg(parser, pos)?;
         args.push(arg);
-        while !parser.peek(pos, Token::Arrow) {
+        while !parser.peek(pos, Lexeme::Arrow) {
             let (arg, new_pos) = Expression::parse_lambda_arg(parser, pos)?;
             args.push(arg);
             pos = new_pos;
@@ -336,12 +336,12 @@ impl<'a> Expression<'a> {
 
     fn parse_lambda_arg(parser: &'a Parser<'a>, pos: usize) -> Result<(LambdaArg<'a>, usize)> {
         match parser.get_token(pos) {
-            Some(Token::LeftParen) => {
-                let (ids, pos) = consume_ids_sep_by(parser, pos + 1, Token::Comma)?;
-                let pos = consume_symbol(parser, pos, Token::RightParen)?;
+            Some(Lexeme::LeftParen) => {
+                let (ids, pos) = consume_ids_sep_by(parser, pos + 1, Lexeme::Comma)?;
+                let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
                 Ok((LambdaArg::Tuple(ids), pos))
             }
-            Some(Token::Id(id)) => Ok((LambdaArg::Simple(id.to_string()), pos + 1)),
+            Some(Lexeme::Id(id)) => Ok((LambdaArg::Simple(id.to_string()), pos + 1)),
             _ => raise_parser_error("Expecting lambda arg", parser, pos, true),
         }
     }
@@ -352,13 +352,13 @@ impl<'a> Expression<'a> {
 
     parse_left_assoc!(
         parse_logical_or_expr,
-        Token::Or,
+        Lexeme::Or,
         Expression::parse_logical_and_expr
     );
 
     parse_left_assoc!(
         parse_logical_and_expr,
-        Token::And,
+        Lexeme::And,
         Expression::parse_comparative_expr
     );
 
@@ -366,25 +366,25 @@ impl<'a> Expression<'a> {
         Expression::parse_lt_expr(parser, pos)
     }
 
-    parse_left_assoc!(parse_lt_expr, Token::LessThan, Expression::parse_le_expr);
+    parse_left_assoc!(parse_lt_expr, Lexeme::LessThan, Expression::parse_le_expr);
 
     parse_left_assoc!(
         parse_le_expr,
-        Token::LessThanOrEqual,
+        Lexeme::LessThanOrEqual,
         Expression::parse_gt_expr
     );
 
-    parse_left_assoc!(parse_gt_expr, Token::Greater, Expression::parse_ge_expr);
+    parse_left_assoc!(parse_gt_expr, Lexeme::Greater, Expression::parse_ge_expr);
 
     parse_left_assoc!(
         parse_ge_expr,
-        Token::GreaterOrEqual,
+        Lexeme::GreaterOrEqual,
         Expression::parse_eq_expr
     );
 
-    parse_left_assoc!(parse_eq_expr, Token::Equal, Expression::parse_ne_expr);
+    parse_left_assoc!(parse_eq_expr, Lexeme::Equal, Expression::parse_ne_expr);
 
-    parse_left_assoc!(parse_ne_expr, Token::NotEqual, Expression::parse_regex_expr);
+    parse_left_assoc!(parse_ne_expr, Lexeme::NotEqual, Expression::parse_regex_expr);
 
     fn parse_regex_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         Expression::parse_matches_expr(parser, pos)
@@ -392,146 +392,146 @@ impl<'a> Expression<'a> {
 
     parse_left_assoc!(
         parse_matches_expr,
-        Token::Matches,
+        Lexeme::Matches,
         Expression::parse_nomatch_expr
     );
 
     parse_left_assoc!(
         parse_nomatch_expr,
-        Token::NotMatches,
+        Lexeme::NotMatches,
         Expression::parse_rematch_expr
     );
 
     parse_left_assoc!(
         parse_rematch_expr,
-        Token::Match,
+        Lexeme::Match,
         Expression::parse_cons_expr
     );
 
-    parse_right_assoc!(parse_cons_expr, Token::Cons, Expression::parse_add_expr);
+    parse_right_assoc!(parse_cons_expr, Lexeme::Cons, Expression::parse_add_expr);
 
-    parse_left_assoc!(parse_add_expr, Token::Plus, Expression::parse_sub_expr);
+    parse_left_assoc!(parse_add_expr, Lexeme::Plus, Expression::parse_sub_expr);
 
-    parse_left_assoc!(parse_sub_expr, Token::Minus, Expression::parse_concat_expr);
+    parse_left_assoc!(parse_sub_expr, Lexeme::Minus, Expression::parse_concat_expr);
 
     parse_left_assoc!(
         parse_concat_expr,
-        Token::PlusPlus,
+        Lexeme::PlusPlus,
         Expression::parse_mult_expr
     );
 
-    parse_left_assoc!(parse_mult_expr, Token::Mult, Expression::parse_div_expr);
+    parse_left_assoc!(parse_mult_expr, Lexeme::Mult, Expression::parse_div_expr);
 
-    parse_left_assoc!(parse_div_expr, Token::Div, Expression::parse_int_div_expr);
+    parse_left_assoc!(parse_div_expr, Lexeme::Div, Expression::parse_int_div_expr);
 
     parse_left_assoc!(
         parse_int_div_expr,
-        Token::DivDiv,
+        Lexeme::DivDiv,
         Expression::parse_mod_expr
     );
 
-    parse_left_assoc!(parse_mod_expr, Token::Mod, Expression::parse_pow_expr);
+    parse_left_assoc!(parse_mod_expr, Lexeme::Mod, Expression::parse_pow_expr);
 
     parse_right_assoc!(
         parse_pow_expr,
-        Token::Pow,
+        Lexeme::Pow,
         Expression::parse_compose_fwd_expr
     );
 
     parse_right_assoc!(
         parse_compose_fwd_expr,
-        Token::ComposeForward,
+        Lexeme::ComposeForward,
         Expression::parse_compose_bck_expr
     );
 
     parse_left_assoc!(
         parse_compose_bck_expr,
-        Token::ComposeBackward,
+        Lexeme::ComposeBackward,
         Expression::parse_postfix_expr
     );
 
     parse_left_assoc!(
         parse_postfix_expr,
-        Token::Arroba,
+        Lexeme::Arroba,
         Expression::parse_primary_expr
     );
 
     pub(crate) fn parse_primary_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
-            Some(Token::LeftBracket) => Expression::parse_list_expr(parser, pos),
-            Some(Token::LeftCurly) => Expression::parse_record_expr(parser, pos),
-            Some(Token::LeftCurlyCurly) => Expression::parse_macro_expand_expr(parser, pos),
-            Some(Token::HashCurly) => Expression::parse_dict_expr(parser, pos),
-            Some(Token::DollarCurly) => Expression::parse_set_expr(parser, pos),
-            Some(Token::Lazy) => Expression::parse_lazy_expr(parser, pos),
-            Some(Token::Yield) => Expression::parse_yield_expr(parser, pos),
-            Some(Token::Perform) => Expression::parse_perform(parser, pos),
-            Some(Token::Not) => Expression::parse_not_expr(parser, pos),
+            Some(Lexeme::LeftBracket) => Expression::parse_list_expr(parser, pos),
+            Some(Lexeme::LeftCurly) => Expression::parse_record_expr(parser, pos),
+            Some(Lexeme::LeftCurlyCurly) => Expression::parse_macro_expand_expr(parser, pos),
+            Some(Lexeme::HashCurly) => Expression::parse_dict_expr(parser, pos),
+            Some(Lexeme::DollarCurly) => Expression::parse_set_expr(parser, pos),
+            Some(Lexeme::Lazy) => Expression::parse_lazy_expr(parser, pos),
+            Some(Lexeme::Yield) => Expression::parse_yield_expr(parser, pos),
+            Some(Lexeme::Perform) => Expression::parse_perform(parser, pos),
+            Some(Lexeme::Not) => Expression::parse_not_expr(parser, pos),
             Some(sym) if is_literal(sym) => Expression::parse_literal_expr(parser, pos),
-            Some(Token::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
+            Some(Lexeme::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
             _ => Expression::parse_func_call_expr(parser, pos),
         }
     }
 
     fn parse_macro_expand_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::LeftCurlyCurly)?;
+        let pos = consume_symbol(parser, pos, Lexeme::LeftCurlyCurly)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
-        let pos = consume_symbol(parser, pos, Token::RightCurlyCurly)?;
+        let pos = consume_symbol(parser, pos, Lexeme::RightCurlyCurly)?;
         Ok((Expression::MacroExpandExpr(Box::new(expr)), pos))
     }
 
     fn parse_paren_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::LeftParen)?;
+        let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
         match parser.get_token(pos) {
-            Some(Token::RightParen) => Ok((Expression::Unit, pos + 1)),
+            Some(Lexeme::RightParen) => Ok((Expression::Unit, pos + 1)),
             Some(op) if is_basic_op(op) => {
-                let (opt_expr, pos) = if parser.peek(pos + 1, Token::RightParen) {
+                let (opt_expr, pos) = if parser.peek(pos + 1, Lexeme::RightParen) {
                     (None, pos + 1)
                 } else {
                     let (expr, pos) = Expression::parse_lambda_expr(parser, pos + 1)?;
                     (Some(Box::new(expr)), pos)
                 };
-                let pos = consume_symbol(parser, pos, Token::RightParen)?;
+                let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
                 match op {
-                    Token::Cons => Ok((Expression::UnaryCons(opt_expr), pos)),
-                    Token::Plus => Ok((Expression::UnaryAdd(opt_expr), pos)),
-                    Token::PlusPlus => Ok((Expression::UnaryConcat(opt_expr), pos)),
-                    Token::Minus => Ok((Expression::UnarySub(opt_expr), pos)),
-                    Token::Mult => Ok((Expression::UnaryMul(opt_expr), pos)),
-                    Token::Pow => Ok((Expression::UnaryPow(opt_expr), pos)),
-                    Token::Div => Ok((Expression::UnaryDiv(opt_expr), pos)),
-                    Token::Mod => Ok((Expression::UnaryMod(opt_expr), pos)),
-                    Token::And => Ok((Expression::UnaryAnd(opt_expr), pos)),
-                    Token::Or => Ok((Expression::UnaryOr(opt_expr), pos)),
-                    Token::Not => Ok((Expression::UnaryNot(opt_expr), pos)),
-                    Token::Equal => Ok((Expression::UnaryEq(opt_expr), pos)),
-                    Token::NotEqual => Ok((Expression::UnaryNotEq(opt_expr), pos)),
-                    Token::Greater => Ok((Expression::UnaryGt(opt_expr), pos)),
-                    Token::GreaterOrEqual => Ok((Expression::UnaryGe(opt_expr), pos)),
-                    Token::LessThan => Ok((Expression::UnaryLt(opt_expr), pos)),
-                    Token::LessThanOrEqual => Ok((Expression::UnaryLe(opt_expr), pos)),
+                    Lexeme::Cons => Ok((Expression::UnaryCons(opt_expr), pos)),
+                    Lexeme::Plus => Ok((Expression::UnaryAdd(opt_expr), pos)),
+                    Lexeme::PlusPlus => Ok((Expression::UnaryConcat(opt_expr), pos)),
+                    Lexeme::Minus => Ok((Expression::UnarySub(opt_expr), pos)),
+                    Lexeme::Mult => Ok((Expression::UnaryMul(opt_expr), pos)),
+                    Lexeme::Pow => Ok((Expression::UnaryPow(opt_expr), pos)),
+                    Lexeme::Div => Ok((Expression::UnaryDiv(opt_expr), pos)),
+                    Lexeme::Mod => Ok((Expression::UnaryMod(opt_expr), pos)),
+                    Lexeme::And => Ok((Expression::UnaryAnd(opt_expr), pos)),
+                    Lexeme::Or => Ok((Expression::UnaryOr(opt_expr), pos)),
+                    Lexeme::Not => Ok((Expression::UnaryNot(opt_expr), pos)),
+                    Lexeme::Equal => Ok((Expression::UnaryEq(opt_expr), pos)),
+                    Lexeme::NotEqual => Ok((Expression::UnaryNotEq(opt_expr), pos)),
+                    Lexeme::Greater => Ok((Expression::UnaryGt(opt_expr), pos)),
+                    Lexeme::GreaterOrEqual => Ok((Expression::UnaryGe(opt_expr), pos)),
+                    Lexeme::LessThan => Ok((Expression::UnaryLt(opt_expr), pos)),
+                    Lexeme::LessThanOrEqual => Ok((Expression::UnaryLe(opt_expr), pos)),
                     _ => raise_parser_error("Expecting an operator", parser, pos, true),
                 }
             }
             Some(_) => {
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
-                if parser.peek(pos, Token::RightParen) {
+                if parser.peek(pos, Lexeme::RightParen) {
                     Ok((expr, pos + 1))
-                } else if parser.peek(pos, Token::Comma) {
+                } else if parser.peek(pos, Lexeme::Comma) {
                     let mut exprs = vec![expr];
                     let mut pos = pos;
-                    while parser.peek(pos, Token::Comma) {
-                        pos = consume_symbol(parser, pos, Token::Comma)?;
+                    while parser.peek(pos, Lexeme::Comma) {
+                        pos = consume_symbol(parser, pos, Lexeme::Comma)?;
                         pos = parser.skip_nl(pos);
                         let (expr, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
                         pos = new_pos;
                         exprs.push(expr);
                     }
-                    pos = consume_symbol(parser, pos, Token::RightParen)?;
+                    pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
                     Ok((Expression::TupleExpr(exprs), pos))
                 } else {
                     let (arg, pos) = Expression::parse_prim_expr(parser, pos)?;
-                    let pos = consume_symbol(parser, pos, Token::RightParen)?;
+                    let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
                     Ok((Expression::FuncCallExpr(Box::new(expr), Box::new(arg)), pos))
                 }
             }
@@ -540,45 +540,45 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_list_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::LeftBracket)?;
+        let pos = consume_symbol(parser, pos, Lexeme::LeftBracket)?;
         match parser.get_token(pos) {
-            Some(Token::RightBracket) => Ok((Expression::EmptyList, pos + 1)),
+            Some(Lexeme::RightBracket) => Ok((Expression::EmptyList, pos + 1)),
             Some(_) => {
-                let (exprs, pos) = consume_exprs_sep_by(parser, pos, Token::Comma)?;
-                if parser.peek(pos, Token::RightBracket) {
+                let (exprs, pos) = consume_exprs_sep_by(parser, pos, Lexeme::Comma)?;
+                if parser.peek(pos, Lexeme::RightBracket) {
                     Ok((Expression::ListExpr(exprs), pos + 1))
-                } else if parser.peek(pos, Token::DotDotDot) {
-                    let pos = consume_symbol(parser, pos + 1, Token::RightBracket)?;
+                } else if parser.peek(pos, Lexeme::DotDotDot) {
+                    let pos = consume_symbol(parser, pos + 1, Lexeme::RightBracket)?;
                     Ok((Expression::RangeInfExpr(exprs), pos))
-                } else if parser.peek(pos, Token::DotDot) {
+                } else if parser.peek(pos, Lexeme::DotDot) {
                     let (expr, pos) = Expression::parse(parser, pos + 1)?;
-                    if parser.peek(pos, Token::RightBracket) {
+                    if parser.peek(pos, Lexeme::RightBracket) {
                         return Ok((Expression::RangeExpr(exprs, Box::new(expr)), pos + 1));
                     }
                     todo!()
-                } else if parser.peek(pos, Token::DotDotLess) {
+                } else if parser.peek(pos, Lexeme::DotDotLess) {
                     let (expr, pos) = Expression::parse(parser, pos + 1)?;
-                    if parser.peek(pos, Token::RightBracket) {
+                    if parser.peek(pos, Lexeme::RightBracket) {
                         return Ok((Expression::RangeOpenExpr(exprs, Box::new(expr)), pos + 1));
                     }
                     todo!()
-                } else if parser.peek(pos, Token::Guard) {
-                    let pos = consume_symbol(parser, pos, Token::Guard)?;
+                } else if parser.peek(pos, Lexeme::Guard) {
+                    let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
                     let (eq, mut pos) = Equation::parse_back_arrow_eq(parser, pos)?;
                     let mut eqs = vec![];
                     let mut guards = vec![];
                     let mut lets = vec![];
                     eqs.push(eq);
-                    while parser.peek(pos, Token::Comma) {
-                        pos = consume_symbol(parser, pos, Token::Comma)?;
+                    while parser.peek(pos, Lexeme::Comma) {
+                        pos = consume_symbol(parser, pos, Lexeme::Comma)?;
                         match Equation::parse_back_arrow_eq(parser, pos) {
                             Ok((eq, new_pos)) => {
                                 eqs.push(eq);
                                 pos = new_pos;
                             }
                             Err(_) => {
-                                if parser.peek(pos, Token::Let) {
-                                    pos = consume_symbol(parser, pos, Token::Let)?;
+                                if parser.peek(pos, Lexeme::Let) {
+                                    pos = consume_symbol(parser, pos, Lexeme::Let)?;
                                     let (eq, new_pos) = Equation::parse_value(parser, pos)?;
                                     lets.push(eq);
                                     pos = new_pos;
@@ -591,7 +591,7 @@ impl<'a> Expression<'a> {
                             }
                         }
                     }
-                    pos = consume_symbol(parser, pos, Token::RightBracket)?;
+                    pos = consume_symbol(parser, pos, Lexeme::RightBracket)?;
                     Ok((
                         Expression::ListByComprehension(exprs, eqs, guards, lets),
                         pos,
@@ -605,89 +605,89 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_record_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let mut pos = consume_symbol(parser, pos, Token::LeftCurly)?;
+        let mut pos = consume_symbol(parser, pos, Lexeme::LeftCurly)?;
         let mut pairs = vec![];
-        while !parser.peek(pos, Token::RightCurly) {
+        while !parser.peek(pos, Lexeme::RightCurly) {
             let (field, new_pos) = consume_id(parser, pos)?;
-            pos = consume_symbol(parser, new_pos, Token::Assign)?;
+            pos = consume_symbol(parser, new_pos, Lexeme::Assign)?;
             let (val, new_pos) = Expression::parse(parser, pos)?;
-            if parser.peek(new_pos, Token::Comma) {
-                pos = consume_symbol(parser, new_pos, Token::Comma)?;
+            if parser.peek(new_pos, Lexeme::Comma) {
+                pos = consume_symbol(parser, new_pos, Lexeme::Comma)?;
             } else {
                 pos = new_pos;
             }
             pairs.push((field, val));
         }
-        pos = consume_symbol(parser, pos, Token::RightCurly)?;
+        pos = consume_symbol(parser, pos, Lexeme::RightCurly)?;
         Ok((Expression::RecordExpr(pairs), pos))
     }
 
     fn parse_dict_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let mut pos = consume_symbol(parser, pos, Token::HashCurly)?;
+        let mut pos = consume_symbol(parser, pos, Lexeme::HashCurly)?;
         let mut pairs = vec![];
-        while !parser.peek(pos, Token::RightCurly) {
+        while !parser.peek(pos, Lexeme::RightCurly) {
             let (key, new_pos) = Expression::parse_primary_expr(parser, pos)?;
 
-            pos = consume_symbol(parser, new_pos, Token::FatArrow)?;
+            pos = consume_symbol(parser, new_pos, Lexeme::FatArrow)?;
             let (val, new_pos) = Expression::parse_primary_expr(parser, pos)?;
-            if parser.peek(new_pos, Token::Comma) {
-                pos = consume_symbol(parser, new_pos, Token::Comma)?;
+            if parser.peek(new_pos, Lexeme::Comma) {
+                pos = consume_symbol(parser, new_pos, Lexeme::Comma)?;
             } else {
                 pos = new_pos;
             }
             pairs.push((key, val));
         }
-        pos = consume_symbol(parser, pos, Token::RightCurly)?;
+        pos = consume_symbol(parser, pos, Lexeme::RightCurly)?;
         Ok((Expression::DictExpr(pairs), pos))
     }
 
     fn parse_set_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let mut pos = consume_symbol(parser, pos, Token::DollarCurly)?;
+        let mut pos = consume_symbol(parser, pos, Lexeme::DollarCurly)?;
         let mut elems = vec![];
-        while !parser.peek(pos, Token::RightCurly) {
+        while !parser.peek(pos, Lexeme::RightCurly) {
             let (val, new_pos) = Expression::parse_primary_expr(parser, pos)?;
-            if parser.peek(new_pos, Token::Comma) {
-                pos = consume_symbol(parser, new_pos, Token::Comma)?;
+            if parser.peek(new_pos, Lexeme::Comma) {
+                pos = consume_symbol(parser, new_pos, Lexeme::Comma)?;
             } else {
                 pos = new_pos;
             }
             elems.push(val);
         }
-        pos = consume_symbol(parser, pos, Token::RightCurly)?;
+        pos = consume_symbol(parser, pos, Lexeme::RightCurly)?;
         Ok((Expression::SetExpr(elems), pos))
     }
 
     fn parse_lazy_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Lazy)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Lazy)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
         Ok((Expression::LazyExpr(Box::new(expr)), pos))
     }
 
     fn parse_yield_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Yield)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Yield)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
         Ok((Expression::YieldExpr(Box::new(expr)), pos))
     }
 
     fn parse_not_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Not)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Not)?;
         let (expr, pos) = Expression::parse(parser, pos)?;
         Ok((Expression::NotExpr(Box::new(expr)), pos))
     }
 
     fn parse_literal_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
-            Some(Token::LargeString(index)) => Ok((
+            Some(Lexeme::LargeString(index)) => Ok((
                 Expression::LargeStringLiteral(parser.get_large_string(index)),
                 pos + 1,
             )),
-            Some(Token::String(str)) => Ok((Expression::StringLiteral(str), pos + 1)),
-            Some(Token::Integer(int)) => Ok((Expression::IntegerLiteral(int), pos + 1)),
-            Some(Token::Float(float)) => Ok((Expression::FloatLiteral(float), pos + 1)),
-            Some(Token::IsoDate(date)) => Ok((Expression::DateLiteral(date), pos + 1)),
-            Some(Token::FormatString(f_str)) => Ok((Expression::FormatString(f_str), pos + 1)),
-            Some(Token::Char(chr)) => Ok((Expression::CharLiteral(chr), pos + 1)),
-            Some(Token::RegExp(expr)) => Ok((Expression::RegexpLiteral(expr), pos + 1)),
+            Some(Lexeme::String(str)) => Ok((Expression::StringLiteral(str), pos + 1)),
+            Some(Lexeme::Integer(int)) => Ok((Expression::IntegerLiteral(int), pos + 1)),
+            Some(Lexeme::Float(float)) => Ok((Expression::FloatLiteral(float), pos + 1)),
+            Some(Lexeme::IsoDate(date)) => Ok((Expression::DateLiteral(date), pos + 1)),
+            Some(Lexeme::FormatString(f_str)) => Ok((Expression::FormatString(f_str), pos + 1)),
+            Some(Lexeme::Char(chr)) => Ok((Expression::CharLiteral(chr), pos + 1)),
+            Some(Lexeme::RegExp(expr)) => Ok((Expression::RegexpLiteral(expr), pos + 1)),
             sym => {
                 println!("parse literal sym = {:?}", sym);
                 todo!()
@@ -697,16 +697,16 @@ impl<'a> Expression<'a> {
 
     fn parse_ctor_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
-            Some(Token::TypeId(tid)) => {
+            Some(Lexeme::TypeId(tid)) => {
                 let type_id = tid.to_string();
-                let mut pos = consume_symbol(parser, pos, Token::TypeId(tid))?;
+                let mut pos = consume_symbol(parser, pos, Lexeme::TypeId(tid))?;
                 let mut q_ids = vec![];
-                if parser.peek(pos, Token::Dot) {
-                    while parser.peek(pos, Token::Dot) {
-                        pos = consume_symbol(parser, pos, Token::Dot)?;
+                if parser.peek(pos, Lexeme::Dot) {
+                    while parser.peek(pos, Lexeme::Dot) {
+                        pos = consume_symbol(parser, pos, Lexeme::Dot)?;
                         match parser.get_token(pos) {
-                            Some(Token::Id(id)) => q_ids.push(Expression::Identifier(id)),
-                            Some(Token::TypeId(tid)) => q_ids.push(Expression::TypeIdentifier(tid)),
+                            Some(Lexeme::Id(id)) => q_ids.push(Expression::Identifier(id)),
+                            Some(Lexeme::TypeId(tid)) => q_ids.push(Expression::TypeIdentifier(tid)),
                             _ => break,
                         }
                         pos += 1;
@@ -725,16 +725,16 @@ impl<'a> Expression<'a> {
     }
 
     pub(crate) fn parse_recur(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Recur)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Recur)?;
         let (args, pos) = consume_args(parser, pos)?;
         Ok((Expression::RecurExpr(args), pos))
     }
 
     pub(crate) fn parse_perform(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Perform)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Perform)?;
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
-        if parser.peek(pos, Token::With) {
-            let pos = consume_symbol(parser, pos, Token::With)?;
+        if parser.peek(pos, Lexeme::With) {
+            let pos = consume_symbol(parser, pos, Lexeme::With)?;
             let (context, pos) = Expression::parse_prim_expr(parser, pos)?;
             Ok((
                 Expression::PerformExpr(Box::new(expr), None, Some(Box::new(context))),
@@ -742,8 +742,8 @@ impl<'a> Expression<'a> {
             ))
         } else if !is_func_call_end_symbol(parser.get_token(pos)) {
             let (args, pos) = consume_args(parser, pos)?;
-            if parser.peek(pos, Token::With) {
-                let pos = consume_symbol(parser, pos, Token::With)?;
+            if parser.peek(pos, Lexeme::With) {
+                let pos = consume_symbol(parser, pos, Lexeme::With)?;
                 let (context, pos) = Expression::parse_prim_expr(parser, pos)?;
                 Ok((
                     Expression::PerformExpr(Box::new(expr), Some(args), Some(Box::new(context))),
@@ -780,13 +780,13 @@ impl<'a> Expression<'a> {
 
     fn parse_prim_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
-            Some(Token::LeftParen) => Expression::parse_paren_expr(parser, pos),
+            Some(Lexeme::LeftParen) => Expression::parse_paren_expr(parser, pos),
 
-            Some(Token::Id(_)) => {
+            Some(Lexeme::Id(_)) => {
                 let (id, mut pos) = consume_id(parser, pos)?;
                 let mut fields = vec![];
-                while parser.peek(pos, Token::Dot) {
-                    pos = consume_symbol(parser, pos, Token::Dot)?;
+                while parser.peek(pos, Lexeme::Dot) {
+                    pos = consume_symbol(parser, pos, Lexeme::Dot)?;
                     let (id, new_pos) = consume_id(parser, pos)?;
                     fields.push(id);
                     pos = new_pos;
@@ -796,8 +796,8 @@ impl<'a> Expression<'a> {
                 } else {
                     (Expression::QualifedIdentifier(id, fields), pos)
                 };
-                if parser.peek(pos, Token::Dollar) {
-                    let pos = consume_symbol(parser, pos, Token::Dollar)?;
+                if parser.peek(pos, Lexeme::Dollar) {
+                    let pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
                     let (arg, pos) = Expression::parse(parser, pos)?;
                     Ok((Expression::FuncCallExpr(Box::new(expr), Box::new(arg)), pos))
                 } else {
@@ -812,22 +812,22 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_let(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Let)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Let)?;
         let (indent, pos) = parse_opt_indent(parser, pos);
         let mut equations = vec![];
         let (equation, pos) = Expression::parse_let_equation(parser, pos)?;
         equations.push(equation);
-        let pos = consume_opt_symbol(parser, pos, Token::Comma)?;
+        let pos = consume_opt_symbol(parser, pos, Lexeme::Comma)?;
         let mut pos = parser.skip_nl(pos);
-        while !parser.peek(pos, Token::Dedent) && !parser.peek(pos, Token::In) {
+        while !parser.peek(pos, Lexeme::Dedent) && !parser.peek(pos, Lexeme::In) {
             let (equation, new_pos) = Expression::parse_let_equation(parser, pos)?;
             equations.push(equation);
-            pos = consume_opt_symbol(parser, new_pos, Token::Comma)?;
+            pos = consume_opt_symbol(parser, new_pos, Lexeme::Comma)?;
             pos = parser.skip_nl(pos);
         }
         let pos = parse_opt_dedent(parser, pos, indent)?;
         let pos = parser.skip_nl(pos);
-        let pos = consume_symbol(parser, pos, Token::In)?;
+        let pos = consume_symbol(parser, pos, Lexeme::In)?;
         let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
@@ -843,30 +843,30 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_loop(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let (for_part, pos) = if parser.peek(pos, Token::For) {
+        let (for_part, pos) = if parser.peek(pos, Lexeme::For) {
             let (eqs, pos) = Expression::parse_for(parser, pos)?;
             (Some(eqs), pos)
         } else {
             (None, pos)
         };
         let pos = parser.skip_nl(pos);
-        let (opt_while_or_until_part, pos) = if parser.peek(pos, Token::While) {
+        let (opt_while_or_until_part, pos) = if parser.peek(pos, Lexeme::While) {
             let (while_part, pos) = Expression::parse_while(parser, pos)?;
             (Some(while_part), pos)
-        } else if parser.peek(pos, Token::Until) {
+        } else if parser.peek(pos, Lexeme::Until) {
             let (until_part, pos) = Expression::parse_until(parser, pos)?;
             (Some(until_part), pos)
         } else {
             (None, pos)
         };
         let pos = parser.skip_nl(pos);
-        let pos = consume_symbol(parser, pos, Token::Loop)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Loop)?;
         let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (loop_body, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
-        if parser.peek(pos, Token::Return) {
-            let pos = consume_symbol(parser, pos, Token::Return)?;
+        if parser.peek(pos, Lexeme::Return) {
+            let pos = consume_symbol(parser, pos, Lexeme::Return)?;
             let pos = parser.skip_nl(pos);
             let (indent, pos) = parse_opt_indent(parser, pos);
             let (expr, pos) = Expression::parse(parser, pos)?;
@@ -889,16 +889,16 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_for(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<Equation<'a>>, usize)> {
-        let pos = consume_symbol(parser, pos, Token::For)?;
+        let pos = consume_symbol(parser, pos, Lexeme::For)?;
         let (indent, pos) = parse_opt_indent(parser, pos);
         let mut eqs = vec![];
         let (eq, mut pos) = Equation::parse_back_arrow_or_assign_eq(parser, pos)?;
         eqs.push(eq);
-        while parser.peek(pos, Token::NewLine) || parser.peek(pos, Token::Comma) {
+        while parser.peek(pos, Lexeme::NewLine) || parser.peek(pos, Lexeme::Comma) {
             pos = parser.skip_nl(pos + 1);
             if matches!(
                 parser.get_token(pos),
-                Some(Token::Loop) | Some(Token::While) | Some(Token::Until) | Some(Token::Dedent)
+                Some(Lexeme::Loop) | Some(Lexeme::While) | Some(Lexeme::Until) | Some(Lexeme::Dedent)
             ) {
                 break;
             }
@@ -911,27 +911,27 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_while(parser: &'a Parser<'a>, pos: usize) -> Result<(LoopCond<'a>, usize)> {
-        let pos = consume_symbol(parser, pos, Token::While)?;
+        let pos = consume_symbol(parser, pos, Lexeme::While)?;
         let (expr, pos) = Expression::parse_logical_expr(parser, pos)?;
         Ok((LoopCond::WhileExpr(Box::new(expr)), pos))
     }
 
     fn parse_until(parser: &'a Parser<'a>, pos: usize) -> Result<(LoopCond<'a>, usize)> {
-        let pos = consume_symbol(parser, pos, Token::Until)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Until)?;
         let (expr, pos) = Expression::parse_logical_expr(parser, pos)?;
         Ok((LoopCond::UntilExpr(Box::new(expr)), pos))
     }
 
     fn parse_repeat(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Repeat)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Repeat)?;
         let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr, mut pos) = Expression::parse_recur_expr(parser, pos)?;
         pos = parser.skip_nl(pos);
         let mut exprs = vec![];
         exprs.push(expr);
-        while parser.peek(pos, Token::Comma) {
-            pos = consume_symbol(parser, pos, Token::Comma)?;
+        while parser.peek(pos, Lexeme::Comma) {
+            pos = consume_symbol(parser, pos, Lexeme::Comma)?;
             pos = parser.skip_nl(pos);
             let (in_indent, new_pos) = parse_opt_indent(parser, pos);
             let (expr, new_pos) = Expression::parse_recur_expr(parser, new_pos)?;
@@ -945,10 +945,10 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_recur_expr(parser: &'a Parser<'a>, pos: usize) -> Result<(RecurValue<'a>, usize)> {
-        if parser.peek(pos, Token::Let) {
-            let pos = consume_symbol(parser, pos, Token::Let)?;
+        if parser.peek(pos, Lexeme::Let) {
+            let pos = consume_symbol(parser, pos, Lexeme::Let)?;
             let (id, pos) = consume_id(parser, pos)?;
-            let pos = consume_symbol(parser, pos, Token::Assign)?;
+            let pos = consume_symbol(parser, pos, Lexeme::Assign)?;
             let (expr, pos) = Expression::parse(parser, pos)?;
             Ok((RecurValue::Var(id, expr), pos))
         } else {
@@ -958,21 +958,21 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_if(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        Expression::parse_inner_if(parser, pos, Token::If)
+        Expression::parse_inner_if(parser, pos, Lexeme::If)
     }
 
-    fn parse_inner_if(parser: &'a Parser<'a>, pos: usize, if_symbol: Token) -> ParseResult<'a> {
+    fn parse_inner_if(parser: &'a Parser<'a>, pos: usize, if_symbol: Lexeme) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, if_symbol)?;
         let (cond, pos) = Expression::parse(parser, pos)?;
-        let pos = consume_symbol(parser, pos, Token::Then)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Then)?;
         let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (then_expr, pos) = Expression::parse(parser, pos)?;
         let pos = parser.skip_nl(pos);
         let pos = parse_opt_dedent(parser, pos, indent)?;
         let pos = parser.skip_nl(pos);
-        if parser.peek(pos, Token::Else) {
-            let pos = consume_symbol(parser, pos, Token::Else)?;
+        if parser.peek(pos, Lexeme::Else) {
+            let pos = consume_symbol(parser, pos, Lexeme::Else)?;
             let pos = parser.skip_nl(pos);
             let (indent, pos) = parse_opt_indent(parser, pos);
             let (else_expr, pos) = Expression::parse(parser, pos)?;
@@ -982,7 +982,7 @@ impl<'a> Expression<'a> {
                 pos,
             ))
         } else {
-            let (elif_expr, pos) = Expression::parse_inner_if(parser, pos, Token::Elif)?;
+            let (elif_expr, pos) = Expression::parse_inner_if(parser, pos, Lexeme::Elif)?;
             Ok((
                 Expression::IfExpr(Box::new(cond), Box::new(then_expr), Box::new(elif_expr)),
                 pos,
@@ -991,29 +991,29 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_do(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Do)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Do)?;
         let pos = parser.skip_nl(pos);
-        let pos = consume_symbol(parser, pos, Token::Indent)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Indent)?;
         let mut exprs = vec![];
         let pos = parser.skip_nl(pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
         let mut pos = parser.skip_nl(pos);
         exprs.push(expr);
-        while !parser.peek(pos, Token::Dedent) {
+        while !parser.peek(pos, Lexeme::Dedent) {
             let (expr, new_pos) = Expression::parse(parser, pos)?;
             pos = parser.skip_nl(new_pos);
             exprs.push(expr);
         }
-        let pos = consume_symbol(parser, pos, Token::Dedent)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
         Ok((Expression::DoExpr(exprs), pos))
     }
 
     fn parse_try_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Try)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Try)?;
         let (in_indent, pos) = parse_opt_indent(parser, pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, in_indent)?;
-        let pos = consume_symbol(parser, pos, Token::Handle)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Handle)?;
         let pos = parser.skip_nl(pos);
         let (in_indent, pos) = parse_opt_indent(parser, pos);
         let (handles, pos) = Expression::parse_handle_guards(parser, pos)?;
@@ -1027,7 +1027,7 @@ impl<'a> Expression<'a> {
     ) -> Result<(Vec<HandleGuard<'a>>, usize)> {
         let mut handles = vec![];
         let mut pos = pos;
-        while parser.peek(pos, Token::Guard) {
+        while parser.peek(pos, Lexeme::Guard) {
             let (handle, new_pos) = Expression::parse_handle_guard(parser, pos)?;
             pos = parser.skip_nl(new_pos);
             handles.push(handle);
@@ -1037,16 +1037,16 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_handle_guard(parser: &'a Parser<'a>, pos: usize) -> Result<(HandleGuard<'a>, usize)> {
-        let pos = consume_symbol(parser, pos, Token::Guard)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
-        let (ctx, args, pos) = if parser.peek(pos, Token::With) {
-            let pos = consume_symbol(parser, pos, Token::With)?;
+        let (ctx, args, pos) = if parser.peek(pos, Lexeme::With) {
+            let pos = consume_symbol(parser, pos, Lexeme::With)?;
             let (args, pos) = Expression::parse_args_before_arrow(parser, pos)?;
             (None, if args.is_empty() { None } else { Some(args) }, pos)
-        } else if !parser.peek(pos, Token::Arrow) && !parser.peek(pos, Token::NewLine) {
+        } else if !parser.peek(pos, Lexeme::Arrow) && !parser.peek(pos, Lexeme::NewLine) {
             let (ctx, pos) = Expression::parse(parser, pos)?;
-            if parser.peek(pos, Token::With) {
-                let pos = consume_symbol(parser, pos, Token::With)?;
+            if parser.peek(pos, Lexeme::With) {
+                let pos = consume_symbol(parser, pos, Lexeme::With)?;
                 let (args, pos) = Expression::parse_args_before_arrow(parser, pos)?;
                 (
                     Some(ctx),
@@ -1059,8 +1059,8 @@ impl<'a> Expression<'a> {
         } else {
             (None, None, pos)
         };
-        if parser.peek(pos, Token::Arrow) {
-            let pos = consume_symbol(parser, pos, Token::Arrow)?;
+        if parser.peek(pos, Lexeme::Arrow) {
+            let pos = consume_symbol(parser, pos, Lexeme::Arrow)?;
             let (resume_expr, pos) = Expression::parse(parser, pos)?;
             let pos = parser.skip_nl(pos);
             Ok((HandleGuard(expr, ctx, args, Some(resume_expr)), pos))
@@ -1076,7 +1076,7 @@ impl<'a> Expression<'a> {
     ) -> Result<(Vec<&'a str>, usize)> {
         let mut args = vec![];
         let mut pos = pos;
-        while !parser.peek(pos, Token::Arrow) {
+        while !parser.peek(pos, Lexeme::Arrow) {
             let (arg, new_pos) = consume_id(parser, pos)?;
             args.push(arg);
             pos = new_pos;
@@ -1085,17 +1085,17 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_resume_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Token::Resume)?;
+        let pos = consume_symbol(parser, pos, Lexeme::Resume)?;
         if is_func_call_end_symbol(parser.get_token(pos)) {
             Ok((Expression::ResumeExpr(None, None), pos))
-        } else if parser.peek(pos, Token::With) {
-            let pos = consume_symbol(parser, pos, Token::With)?;
+        } else if parser.peek(pos, Lexeme::With) {
+            let pos = consume_symbol(parser, pos, Lexeme::With)?;
             let (args, pos) = consume_args(parser, pos)?;
             Ok((Expression::ResumeExpr(None, Some(args)), pos))
         } else {
             let (new_ctx, pos) = Expression::parse_primary_expr(parser, pos)?;
-            if parser.peek(pos, Token::With) {
-                let pos = consume_symbol(parser, pos, Token::With)?;
+            if parser.peek(pos, Lexeme::With) {
+                let pos = consume_symbol(parser, pos, Lexeme::With)?;
                 let (args, pos) = consume_args(parser, pos)?;
                 Ok((
                     Expression::ResumeExpr(Some(Box::new(new_ctx)), Some(args)),

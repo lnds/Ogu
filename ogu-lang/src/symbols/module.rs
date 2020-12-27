@@ -34,8 +34,12 @@ impl Module {
 
     pub(crate) fn solve_symbols_types(&self) -> Result<HashMap<String, Box<dyn Symbol>>> {
         let mut symbols = HashMap::new();
+        println!("solve symbol types");
         for (name, sym) in self.symbols.iter() {
-            symbols.insert(name.clone(), sym.solve_type(self)?);
+            println!("solve type for {} <- {:?}", name, sym);
+            let result = sym.solve_type(self)?;
+            println!("found = {:?}", result);
+            symbols.insert(name.clone(), result);
         }
         Ok(symbols)
     }
@@ -55,7 +59,11 @@ impl<'a> Scope for Module {
     }
 
     fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
-        self.symbols.get(name).cloned()
+        println!("Module resolve name: {}", name);
+        match self.symbols.get(name) {
+            None => self.enclosing_scope.resolve(name),
+            Some(sym) => Some(sym.clone())
+        }
     }
 
     fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<()> {

@@ -10,7 +10,7 @@ use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::Write;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
     name: String,
     args: Vec<ArgSym>,
@@ -47,7 +47,14 @@ impl Symbol for FunctionSym {
     }
 
     fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
-        unimplemented!()
+        println!("solve type for [{:?}]", self);
+        let sym_expr = self.expr.solve_type(scope)?;
+        Ok(Box::new(FunctionSym{
+            name: self.name.clone(),
+            args: self.args.clone(),
+            expr: self.expr.clone(),
+            ty: sym_expr.get_type(),
+        }))
     }
 }
 
@@ -57,15 +64,16 @@ impl SymbolWriter for FunctionSym {
             Error::new(OguError::CodeGenError)
                 .context(format!("Symbol {:?} has no type", self.get_name()))
         })?);
-        let mut args = String::new();
+        let args = String::new();
         let header = fmt.format_func_header(self.get_name(), args, func_type);
         writeln!(file, "{} {{", header)?;
+        self.expr.write_symbol(fmt, file);
         writeln!(file, "}}")?;
         Ok(())
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct ArgSym {
     name: String,
     ty: Option<Box<dyn Type>>,

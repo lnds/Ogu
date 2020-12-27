@@ -4,6 +4,7 @@ use crate::types::Type;
 pub(crate) enum BasicType {
     Unit,
     Primitive(String),
+    Str,
 }
 
 impl Type for BasicType {
@@ -11,6 +12,7 @@ impl Type for BasicType {
         match self {
             BasicType::Unit => String::from("()"),
             BasicType::Primitive(s) => s.clone(),
+            BasicType::Str => String::from("String"),
         }
     }
 }

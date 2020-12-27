@@ -14,6 +14,9 @@ pub trait Transpiler {
 pub trait Formatter {
     fn format_func_header(&self, name: String, args: String, ty: String) -> String;
     fn format_type(&self, ty: Box<dyn Type>) -> String;
+    fn format_id(&self, id: &str) -> String;
+    fn format_str(&self, s: &str) -> String;
+    fn format_func_call(&self, f: &str, args: &str) -> String;
 }
 
 pub trait SymbolWriter {

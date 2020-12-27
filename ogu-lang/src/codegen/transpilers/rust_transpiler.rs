@@ -97,4 +97,16 @@ impl Formatter for RustFormatter {
     fn format_type(&self, ty: Box<dyn Type>) -> String {
         ty.get_name()
     }
+
+    fn format_id(&self, id: &str) -> String {
+        id.to_string()
+    }
+
+    fn format_str(&self, s: &str) -> String {
+        format!("\"{}\"", s)
+    }
+
+    fn format_func_call(&self, f: &str, args: &str) -> String{
+        format!("{} ({})", f, args)
+    }
 }

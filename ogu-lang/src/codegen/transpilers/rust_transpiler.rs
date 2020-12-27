@@ -109,4 +109,8 @@ impl Formatter for RustFormatter {
     fn format_func_call(&self, f: &str, args: &str) -> String{
         format!("{} ({})", f, args)
     }
+
+    fn format_const_decl_header(&self, name: &str, ty: &str) -> String {
+        format!("const {} : {} = ", name, ty)
+    }
 }

@@ -47,13 +47,19 @@ impl Symbol for FunctionSym {
     }
 
     fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
-        let sym_expr = self.expr.solve_type(scope)?;
-        Ok(Box::new(FunctionSym{
-            name: self.name.clone(),
-            args: self.args.clone(),
-            expr: self.expr.clone(),
-            ty: sym_expr.get_type(),
-        }))
+        match &self.ty {
+            Some(t) => Ok(Box::new(self.clone())),
+            None => {
+                let sym_expr = self.expr.solve_type(scope)?;
+                Ok(Box::new(FunctionSym{
+                    name: self.name.clone(),
+                    args: self.args.clone(),
+                    expr: self.expr.clone(),
+                    ty: sym_expr.get_type(),
+                }))
+            }
+        }
+
     }
 }
 

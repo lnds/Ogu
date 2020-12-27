@@ -1,4 +1,6 @@
 -- test 1
 a = 10
 
-main = a + 1
+a1 = a + 1
+
+main () = (println! "a = {} a1 = {}" a a1)

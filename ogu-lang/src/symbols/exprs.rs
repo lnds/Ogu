@@ -1,6 +1,6 @@
 use crate::codegen::transpilers::{SymbolWriter, Formatter};
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::expression::Expression::{FuncCallExpr, Identifier, StringLiteral, IntegerLiteral};
+use crate::parser::ast::expressions::expression::Expression::{FuncCallExpr, Identifier, StringLiteral, IntegerLiteral, AddExpr};
 use crate::symbols::scopes::Scope;
 use crate::symbols::{raise_symbol_table_error, Symbol};
 use crate::types::basic::BasicType;
@@ -25,6 +25,7 @@ impl ExprSym {
     fn type_of(expr: &ExprSymEnum) -> Option<Box<dyn Type>> {
         match expr {
             ExprSymEnum::Str(_) => Some(Box::new(BasicType::Str)),
+            ExprSymEnum::Int(str) => Some(BasicType::int(str)),
             _ => None,
         }
     }
@@ -37,6 +38,7 @@ enum ExprSymEnum {
     Str(String),
     Int(String),
     FuncCall(Box<ExprSym>, Box<ExprSym>),
+    Add(Box<ExprSym>, Box<ExprSym>),
 }
 
 impl ExprSymEnum {
@@ -47,7 +49,8 @@ impl ExprSymEnum {
             ExprSymEnum::Id(s) => s.clone(),
             ExprSymEnum::Str(s) => s.clone(),
             ExprSymEnum::FuncCall(e, _) => e.get_name(),
-            ExprSymEnum::Int(e) => e.clone()
+            ExprSymEnum::Int(e) => e.clone(),
+            ExprSymEnum::Add(a, b) => format!("{:?}+{:?}", a, b)
         }
     }
 
@@ -59,7 +62,16 @@ impl ExprSymEnum {
                 let f_args = a.expr.format(fmt);
                 writeln!(file, "{}", fmt.format_func_call(&f_call, &f_args))?;
             }
-            _ => {
+            ExprSymEnum::Add(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = l.expr.format(fmt);
+                writeln!(file, "{} + {}", ls, rs)?;
+            }
+            ExprSymEnum::Int(s) => {
+                write!(file, "{}", s)?;
+            }
+            _s => {
+                println!("write_symbol not implemented for {:?}", _s);
                 todo!()
             }
         };
@@ -85,6 +97,7 @@ impl<'a> From<Expression<'a>> for Box<ExprSym> {
             Identifier(id) => ExprSym::new(ExprSymEnum::Id(id.to_string())),
             StringLiteral(s) => ExprSym::new(ExprSymEnum::Str(s.to_string())),
             IntegerLiteral(s) => ExprSym::new(ExprSymEnum::Int(s.to_string())),
+            AddExpr(l, r) => ExprSym::new(ExprSymEnum::Add(l.into(), r.into())),
             _e => {
                 println!("not implemented from for {:?}", _e);
                 todo!()
@@ -115,7 +128,7 @@ impl Symbol for ExprSym {
 
     fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         match &self.ty {
-            Some(ty) => Ok(self.make_copy(ty.clone())),
+            Some(ty) => Ok(Box::new(self.clone())),
             None => match self.find_type(scope) {
                 Some(ty) => Ok(self.make_copy(ty)),
                 None => raise_symbol_table_error(
@@ -128,11 +141,6 @@ impl Symbol for ExprSym {
     }
 }
 
-impl SymbolWriter for ExprSym {
-    fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<(), Error> {
-        self.expr.write_symbol(fmt, file)
-    }
-}
 
 impl ExprSym {
     fn make_copy(&self, ty: Box<dyn Type>) -> Box<dyn Symbol> {
@@ -144,10 +152,30 @@ impl ExprSym {
 
     fn find_type(&self, scope: &dyn Scope) -> Option<Box<dyn Type>> {
         match &self.expr {
-            ExprSymEnum::Id(id) => self.resolve(scope, &id),
+            ExprSymEnum::Void => Some(BasicType::unit()),
+            ExprSymEnum::Id(id) => {
+                self.resolve_type_from_name(scope, &id)
+            }
             ExprSymEnum::FuncCall(e, _) => {
                 e.find_type(scope)
             },
+            ExprSymEnum::Add(l, r) => {
+                let lt = self.resolve_type_from_sym(scope, l);
+                let rt = self.resolve_type_from_sym(scope, r);
+                if lt.is_none() {
+                    None
+                } else if rt.is_none() {
+                    None
+                } else {
+                    let lt = lt.unwrap();
+                    let rt = rt.unwrap();
+                    if lt != rt {
+                        None
+                    } else {
+                        Some(lt)
+                    }
+                }
+            }
             _e => {
                 println!("ExprSym::find_type not implemented for {:?}", _e);
                 todo!()
@@ -155,12 +183,30 @@ impl ExprSym {
         }
     }
 
-    fn resolve(&self, scope: &dyn Scope, name: &str) -> Option<Box<dyn Type>> {
+    fn resolve_type_from_name(&self, scope: &dyn Scope, name: &str) -> Option<Box<dyn Type>> {
         match scope.resolve(name) {
             None => None,
-            Some(sym) => sym.get_type(),
+            Some(sym) => sym.get_type()
         }
     }
 
+    fn resolve_type_from_sym(&self, scope: &dyn Scope, sym: &Box<ExprSym>) -> Option<Box<dyn Type>> {
+        match sym.get_type() {
+            Some(ty) => Some(ty.clone()),
+            None => {
+                let s = scope.resolve(&sym.get_name());
+                match s {
+                    None => None,
+                    Some(s) => s.get_type()
+                }
+            }
+        }
+    }
 
+}
+
+impl SymbolWriter for ExprSym {
+    fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<(), Error> {
+        self.expr.write_symbol(fmt, file)
+    }
 }

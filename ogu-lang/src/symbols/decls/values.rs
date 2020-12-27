@@ -1,10 +1,13 @@
 use crate::symbols::exprs::ExprSym;
 use crate::types::Type;
-use anyhow::Result;
+use anyhow::{Result, Error};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::symbols::Symbol;
-use crate::codegen::transpilers::SymbolWriter;
+use crate::codegen::transpilers::{SymbolWriter, Formatter};
 use crate::symbols::scopes::Scope;
+use std::fs::File;
+use std::io::Write;
+use crate::backend::errors::OguError;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ValueSym {
@@ -36,8 +39,9 @@ impl Symbol for ValueSym {
     }
 
     fn get_symbol_writer(&self) -> Box<dyn SymbolWriter> {
-        unimplemented!()
+        Box::new(self.clone())
     }
+
 
     fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         let sym_expr = self.expr.solve_type(scope)?;
@@ -48,5 +52,19 @@ impl Symbol for ValueSym {
                 ty: sym_expr.get_type()
             }
         ))
+    }
+}
+
+impl SymbolWriter for ValueSym {
+    fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<()> {
+        let func_type = fmt.format_type(self.get_type().ok_or_else(|| {
+            Error::new(OguError::CodeGenError)
+                .context(format!("Symbol {:?} has no type", self.get_name()))
+        })?);
+        let hdr = fmt.format_const_decl_header(&self.get_name(), &func_type);
+        write!(file, "{}", hdr)?;
+        self.expr.write_symbol(fmt, file)?;
+        writeln!(file, ";")?;
+        Ok(())
     }
 }

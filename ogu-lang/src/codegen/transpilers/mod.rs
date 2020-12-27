@@ -17,6 +17,7 @@ pub trait Formatter {
     fn format_id(&self, id: &str) -> String;
     fn format_str(&self, s: &str) -> String;
     fn format_func_call(&self, f: &str, args: &str) -> String;
+    fn format_const_decl_header(&self, name: &str, ty: &str) -> String;
 }
 
 pub trait SymbolWriter {

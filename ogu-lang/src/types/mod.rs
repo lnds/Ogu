@@ -32,3 +32,9 @@ impl Debug for dyn Type {
         Ok(())
     }
 }
+
+impl PartialEq for dyn Type {
+    fn eq(&self, other: &Self) -> bool {
+        self.get_name() == other.get_name()
+    }
+}

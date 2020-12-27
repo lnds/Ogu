@@ -58,7 +58,7 @@ impl RustTranspiler {
             module.scope_name()
         )?;
         for sym in module.get_symbols().iter().map(|s| s.get_symbol_writer()) {
-            sym.write_symbol(&self.formatter, &mut file);
+            sym.write_symbol(&self.formatter, &mut file)?;
         }
         Ok(())
     }
@@ -72,10 +72,10 @@ impl Transpiler for RustTranspiler {
 
     fn dump(&mut self, module: &dyn Scope) -> Result<()> {
         match &self.current_file {
-            None => Err(Error::new(CodeGenError(format!(
+            None => Err(Error::new(CodeGenError).context(format!(
                 "no output file for module: {}",
                 module.scope_name()
-            )))),
+            ))),
             Some(path) => self.dump_code(path, module),
         }
     }
@@ -90,18 +90,12 @@ impl RustFormatter {
 }
 
 impl Formatter for RustFormatter {
-    fn format_func_header(&self, name: String, args: String, ty: Option<String>) -> String {
-        match ty {
-            None => format!("fn {} ({})", name, args),
-            Some(t) => format!("fn {} ({}) -> {}", name, args, t)
-        }
+    fn format_func_header(&self, name: String, args: String, ty: String) -> String {
+        format!("fn {} ({}) -> {}", name, args, ty)
     }
 
-    fn format_type(&self, ty: Option<Box<dyn Type>>) -> Option<String> {
-        match ty {
-            None => None,
-            Some(ty) => todo!()
-        }
+    fn format_type(&self, ty: Box<dyn Type>) -> String {
+        ty.get_name()
     }
 
 }

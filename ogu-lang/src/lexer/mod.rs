@@ -35,7 +35,7 @@ pub(crate) struct Lexer {
 impl<'a> Lexer {
     pub(crate) fn new(path: &'a PathBuf) -> Result<Lexer> {
         if !path.exists() {
-            return Err(Error::new(OguError::NotFound(format!("{:?}", path))));
+            return Err(Error::new(OguError::NotFound).context(format!("{:?}", path)));
         }
         Ok(Lexer {
             source: LexerSource::File(path.clone()),

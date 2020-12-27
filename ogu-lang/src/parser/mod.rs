@@ -164,14 +164,14 @@ pub(crate) fn raise_parser_error<T>(
         "@ EOF".to_string()
     };
     if show_token {
-        Err(Error::new(OguError::ParserError(msg.to_string()))).context(format!(
+        Err(Error::new(OguError::ParserError).context(format!(
             "Error {} {}, token found = {}",
             msg,
             position,
             parser.get_token(pos).unwrap_or(Token::Error)
-        ))
+        )))
     } else {
-        Err(Error::new(OguError::ParserError(msg.to_string())))
-            .context(format!("Error: {} {}", msg, position))
+        Err(Error::new(OguError::ParserError)
+            .context(format!("Error: {} {}", msg, position)))
     }
 }

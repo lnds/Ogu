@@ -48,7 +48,7 @@ impl Debug for dyn Symbol {
 }
 
 pub(crate) fn raise_symbol_table_error<T>(msg: &str, symbol: String, module: String) -> Result<T> {
-    Err(Error::new(OguError::SymbolTableError(msg.to_string()))).context(format!(
+    Err(Error::new(OguError::SymbolTableError)).context(format!(
         "Error: {}. Symbol: {}, Module: {}.",
         msg, symbol, module
     ))

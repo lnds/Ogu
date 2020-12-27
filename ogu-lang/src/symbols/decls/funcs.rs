@@ -3,10 +3,10 @@ use crate::parser::ast::expressions::args::Args;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::symbols::Symbol;
 use crate::types::Type;
-use anyhow::Result;
+use anyhow::{Result, Error};
 use std::fs::File;
 use std::io::Write;
-use std::fmt::Display;
+use crate::backend::errors::OguError;
 
 #[derive(Clone)]
 pub(crate) struct FunctionSym {
@@ -46,7 +46,10 @@ impl Symbol for FunctionSym {
 
 impl SymbolWriter for FunctionSym {
     fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<()> {
-        let func_type = fmt.format_type(self.get_type());
+        let func_type = fmt.format_type(
+            self.get_type().ok_or_else(||
+                Error::new(OguError::CodeGenError).context(
+                    format!("Symbol {:?} has no type", self.get_name())))?);
         let mut args = String::new();
         let header = fmt.format_func_header(self.get_name(), args, func_type);
         writeln!(file, "{} {{", header)?;
@@ -55,10 +58,11 @@ impl SymbolWriter for FunctionSym {
     }
 }
 
+
 #[derive(Clone)]
 pub(crate) struct ArgSym {
     name: String,
-    ty: Option<Box<dyn Type>>
+    ty: Option<Box<dyn Type>>,
 }
 
 

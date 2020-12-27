@@ -12,8 +12,8 @@ pub trait Transpiler {
 }
 
 pub trait Formatter {
-    fn format_func_header(&self, name: String, args: String, ty: Option<String>) -> String;
-    fn format_type(&self, ty: Option<Box<dyn Type>>) -> Option<String>;
+    fn format_func_header(&self, name: String, args: String, ty: String) -> String;
+    fn format_type(&self, ty: Box<dyn Type>) -> String;
 }
 
 pub trait SymbolWriter {

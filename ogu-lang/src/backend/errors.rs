@@ -3,15 +3,15 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum OguError {
     #[error("Can't load Figfont")]
-    FigfontError(String),
+    FigfontError,
     #[error("Source not found")]
-    NotFound(String),
+    NotFound,
     #[error("Parser error")]
-    ParserError(String),
+    ParserError,
     #[error("Symbol table error")]
-    SymbolTableError(String),
+    SymbolTableError,
     #[error("code gen error")]
-    CodeGenError(String),
+    CodeGenError,
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 }

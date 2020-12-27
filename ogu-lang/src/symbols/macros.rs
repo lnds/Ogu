@@ -1,4 +1,5 @@
 use crate::codegen::transpilers::{Formatter, SymbolWriter};
+use crate::symbols::scopes::Scope;
 use crate::symbols::Symbol;
 use crate::types::basic::BasicType;
 use crate::types::Type;
@@ -31,6 +32,10 @@ impl Symbol for MacroSym {
 
     fn get_symbol_writer(&self) -> Box<dyn SymbolWriter> {
         Box::new(self.clone())
+    }
+
+    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
+        unimplemented!()
     }
 }
 

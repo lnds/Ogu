@@ -1,4 +1,5 @@
 pub(crate) mod decls;
+pub(crate) mod exprs;
 pub(crate) mod macros;
 pub(crate) mod module;
 pub mod scopes;
@@ -6,6 +7,7 @@ pub(crate) mod sym_table;
 
 use crate::backend::errors::OguError;
 use crate::codegen::transpilers::SymbolWriter;
+use crate::symbols::scopes::Scope;
 use crate::types::Type;
 use anyhow::{Context, Error, Result};
 use std::fmt::{Debug, Formatter};
@@ -14,6 +16,7 @@ pub trait Symbol: SymbolClone {
     fn get_name(&self) -> String;
     fn get_type(&self) -> Option<Box<dyn Type>>;
     fn get_symbol_writer(&self) -> Box<dyn SymbolWriter>;
+    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>>;
 }
 
 pub trait SymbolClone {

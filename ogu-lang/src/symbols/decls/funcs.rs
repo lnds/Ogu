@@ -1,18 +1,20 @@
+use crate::backend::errors::OguError;
 use crate::codegen::transpilers::{Formatter, SymbolWriter};
 use crate::parser::ast::expressions::args::Args;
 use crate::parser::ast::expressions::expression::Expression;
+use crate::symbols::exprs::ExprSym;
+use crate::symbols::scopes::Scope;
 use crate::symbols::Symbol;
 use crate::types::Type;
-use anyhow::{Result, Error};
+use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::Write;
-use crate::backend::errors::OguError;
 
 #[derive(Clone)]
 pub(crate) struct FunctionSym {
     name: String,
     args: Vec<ArgSym>,
-    //expr: ExprSym,
+    expr: Box<ExprSym>,
     ty: Option<Box<dyn Type>>,
 }
 
@@ -21,6 +23,7 @@ impl FunctionSym {
         Box::new(FunctionSym {
             name: name.to_string(),
             args: args.into(),
+            expr: expr.into(),
             ty: None,
         })
     }
@@ -42,14 +45,18 @@ impl Symbol for FunctionSym {
     fn get_symbol_writer(&self) -> Box<dyn SymbolWriter> {
         Box::new(self.clone())
     }
+
+    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
+        unimplemented!()
+    }
 }
 
 impl SymbolWriter for FunctionSym {
     fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<()> {
-        let func_type = fmt.format_type(
-            self.get_type().ok_or_else(||
-                Error::new(OguError::CodeGenError).context(
-                    format!("Symbol {:?} has no type", self.get_name())))?);
+        let func_type = fmt.format_type(self.get_type().ok_or_else(|| {
+            Error::new(OguError::CodeGenError)
+                .context(format!("Symbol {:?} has no type", self.get_name()))
+        })?);
         let mut args = String::new();
         let header = fmt.format_func_header(self.get_name(), args, func_type);
         writeln!(file, "{} {{", header)?;
@@ -58,13 +65,11 @@ impl SymbolWriter for FunctionSym {
     }
 }
 
-
 #[derive(Clone)]
 pub(crate) struct ArgSym {
     name: String,
     ty: Option<Box<dyn Type>>,
 }
-
 
 impl Symbol for ArgSym {
     fn get_name(&self) -> String {
@@ -76,6 +81,10 @@ impl Symbol for ArgSym {
     }
 
     fn get_symbol_writer(&self) -> Box<dyn SymbolWriter> {
+        unimplemented!()
+    }
+
+    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         unimplemented!()
     }
 }

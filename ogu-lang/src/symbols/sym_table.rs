@@ -4,6 +4,7 @@ use crate::symbols::Symbol;
 use anyhow::Result;
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub(crate) struct SymbolTable {
     name: String,
     enclosing_scope: Option<Box<dyn Scope>>,

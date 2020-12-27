@@ -97,5 +97,4 @@ impl Formatter for RustFormatter {
     fn format_type(&self, ty: Box<dyn Type>) -> String {
         ty.get_name()
     }
-
 }

@@ -13,6 +13,7 @@ use crate::types::basic::BasicType;
 use anyhow::Result;
 use std::path::PathBuf;
 
+#[derive(Clone)]
 pub struct Compiler {
     show_tokens: bool,
     show_ast: bool,
@@ -21,16 +22,16 @@ pub struct Compiler {
 }
 
 impl Compiler {
-    pub fn new(params: &Params) -> Self {
+    pub fn new(params: &Params) -> Box<Self> {
         let mut symbol_table = Box::new(SymbolTable::new("_ogu"));
         symbol_table.define(MacroSym::new("println!", BasicType::Unit));
         symbol_table.define(MacroSym::new("print!", BasicType::Unit));
-        Compiler {
+        Box::new(Compiler {
             show_tokens: params.tokens,
             show_ast: params.print,
             ogu_scope: symbol_table,
             scopes: vec![],
-        }
+        })
     }
 }
 
@@ -86,7 +87,9 @@ impl Compiler {
         if self.show_ast {
             println!("AST = {:#?}", module);
         }
-        Ok(Box::new(Module::new(&module, self)?))
+        let mut module = Box::new(Module::new(&module, Box::new(self.clone()))?);
+        module.set_symbols(module.solve_symbols_types()?);
+        Ok(module)
     }
 
     /// dumps symbols

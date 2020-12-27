@@ -2,7 +2,7 @@ use crate::lexer::token_stream::TokenStream;
 use crate::lexer::tokens::{LineNumber, LineWidth, Token};
 
 use crate::backend::errors::OguError;
-use anyhow::{Context, Error, Result};
+use anyhow::{Error, Result};
 
 pub(crate) mod ast;
 
@@ -171,7 +171,6 @@ pub(crate) fn raise_parser_error<T>(
             parser.get_token(pos).unwrap_or(Token::Error)
         )))
     } else {
-        Err(Error::new(OguError::ParserError)
-            .context(format!("Error: {} {}", msg, position)))
+        Err(Error::new(OguError::ParserError).context(format!("Error: {} {}", msg, position)))
     }
 }

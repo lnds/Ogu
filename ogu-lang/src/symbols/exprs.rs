@@ -145,7 +145,6 @@ impl ExprSym {
         match &self.expr {
             ExprSymEnum::Id(id) => self.resolve(scope, &id),
             ExprSymEnum::FuncCall(e, _) => {
-                println!("me piden encontar el type de una func call");
                 e.find_type(scope)
             },
             _e => {

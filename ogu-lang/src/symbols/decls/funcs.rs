@@ -47,7 +47,6 @@ impl Symbol for FunctionSym {
     }
 
     fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
-        println!("solve type for [{:?}]", self);
         let sym_expr = self.expr.solve_type(scope)?;
         Ok(Box::new(FunctionSym{
             name: self.name.clone(),

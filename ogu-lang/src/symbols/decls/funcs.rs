@@ -16,15 +16,17 @@ pub(crate) struct FunctionSym {
     args: Vec<ArgSym>,
     expr: Box<ExprSym>,
     ty: Option<Box<dyn Type>>,
+    enclosing_scope: Box<dyn Scope>,
 }
 
 impl FunctionSym {
-    pub(crate) fn new(name: &str, args: Args, expr: Expression) -> Box<Self> {
+    pub(crate) fn new(name: &str, args: Args, expr: Expression, enclosing_scope: Box<dyn Scope>) -> Box<Self> {
         Box::new(FunctionSym {
             name: name.to_string(),
             args: args.into(),
             expr: expr.into(),
             ty: None,
+            enclosing_scope
         })
     }
 
@@ -56,6 +58,7 @@ impl Symbol for FunctionSym {
                     args: self.args.clone(),
                     expr: self.expr.clone(),
                     ty: sym_expr.get_type(),
+                    enclosing_scope: self.enclosing_scope.clone()
                 }))
             }
         }

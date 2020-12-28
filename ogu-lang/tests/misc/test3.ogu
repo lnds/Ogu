@@ -1,11 +1,5 @@
 -- test 3
-main  = do
-    2 + 2 |> range |> sum
+max x y = if x > y then x else y
 
-    "a b c d" |> toUpperCase |> split " " |> first
-
-    "foo" |> str "bar" |> str "zoo"
-
-    "foo" |> str "bar" |> str "zoo"
-
-    "foo" |> str "bar"
+main () =
+    println! "{}" $ max 10 20

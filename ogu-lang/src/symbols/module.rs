@@ -5,6 +5,9 @@ use crate::symbols::scopes::Scope;
 use crate::symbols::Symbol;
 use anyhow::Result;
 use std::collections::HashMap;
+use crate::parser::ast::module::decls::Declaration::{Function, Value};
+use crate::symbols::decls::funcs::FunctionSym;
+use crate::symbols::decls::values::ValueSym;
 
 #[derive(Clone)]
 pub struct Module {
@@ -21,15 +24,24 @@ impl Module {
             enclosing_scope: compiler.clone(),
         };
         for decl in module_ast.get_decls().iter() {
-            Module::define_decl(decl, &mut module)?;
+            let sym = Module::define_decl(decl, Box::new(module.clone()))?;
+            module.define(sym);
         }
         Ok(module)
     }
 
-    fn define_decl(decl: &Declaration, module: &mut dyn Scope) -> Result<()> {
-        let sym = decl.clone().into();
-        module.define(sym);
-        Ok(())
+    fn define_decl(decl: &Declaration, scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+        let sym : Box<dyn Symbol> = match decl {
+            Function(name, args, expr) =>
+                FunctionSym::new(name, args.clone().into(), expr.clone().into(), scope),
+            Value(name, expr) =>
+                ValueSym::new(name, expr.clone().into(), scope),
+            _d => {
+                println!("not implemented for {:?}", _d);
+                todo!()
+            }
+        };
+        Ok(sym)
     }
 
     pub(crate) fn solve_symbols_types(&self) -> Result<HashMap<String, Box<dyn Symbol>>> {

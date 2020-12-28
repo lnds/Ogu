@@ -14,16 +14,18 @@ pub(crate) struct ValueSym {
     name: String,
     expr: Box<ExprSym>,
     ty: Option<Box<dyn Type>>,
+    enclosing_scope: Box<dyn Scope>
 }
 
 impl ValueSym {
-    pub(crate) fn new(name: &str, expr: Expression) -> Box<Self> {
+    pub(crate) fn new(name: &str, expr: Expression, enclosing_scope: Box<dyn Scope>) -> Box<Self> {
         let expr: Box<ExprSym> = expr.into();
         let ty: Option<Box<dyn Type>> = expr.get_type();
         Box::new(ValueSym {
             name: name.to_string(),
             expr,
             ty,
+            enclosing_scope
         })
     }
 }
@@ -47,6 +49,7 @@ impl Symbol for ValueSym {
             name: self.name.clone(),
             expr: self.expr.clone(),
             ty: sym_expr.get_type(),
+            enclosing_scope: self.enclosing_scope.clone()
         }))
     }
 }

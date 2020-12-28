@@ -1,7 +1,6 @@
 use crate::codegen::transpilers::{SymbolWriter, Formatter};
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::expression::Expression::{
-    FuncCallExpr, Identifier, StringLiteral, IntegerLiteral, AddExpr, Unit, SubExpr, MulExpr, DivExpr, ModExpr};
+use crate::parser::ast::expressions::expression::Expression::{FuncCallExpr, Identifier, StringLiteral, IntegerLiteral, AddExpr, Unit, SubExpr, MulExpr, DivExpr, ModExpr, LetExpr, PowExpr, FloatLiteral, CondExpr};
 use crate::symbols::scopes::Scope;
 use crate::symbols::{raise_symbol_table_error, Symbol};
 use crate::types::basic::BasicType;
@@ -10,6 +9,7 @@ use anyhow::{Error, Result};
 use std::ops::Deref;
 use std::fs::File;
 use std::io::Write;
+use crate::parser::ast::expressions::equations::Equation;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ExprSym {
@@ -38,12 +38,16 @@ enum ExprSymEnum {
     Id(String),
     Str(String),
     Int(String),
+    Float(String),
     FuncCall(Box<ExprSym>, Vec<ExprSym>),
     Add(Box<ExprSym>, Box<ExprSym>),
     Sub(Box<ExprSym>, Box<ExprSym>),
     Mul(Box<ExprSym>, Box<ExprSym>),
     Div(Box<ExprSym>, Box<ExprSym>),
     Mod(Box<ExprSym>, Box<ExprSym>),
+    Pow(Box<ExprSym>, Box<ExprSym>),
+    Let(Vec<ExprSym>, Box<ExprSym>),
+    Val(String, Box<ExprSym>),
 }
 
 impl ExprSymEnum {
@@ -53,7 +57,6 @@ impl ExprSymEnum {
             ExprSymEnum::FuncCall(e, _) => e.get_name(),
             _ => format!("{:?}", self)
         }
-
     }
 
     fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<()> {
@@ -124,6 +127,17 @@ impl<'a> From<Expression<'a>> for Box<ExprSym> {
 }
 
 
+impl<'a> From<Equation<'a>> for ExprSym {
+    fn from(eq: Equation<'a>) -> Self {
+        match eq {
+            Equation::Value(id, exp) => {
+                ExprSym::new(ExprSymEnum::Val(id.to_string(), exp.into()))
+            }
+            _ => todo!()
+        }
+    }
+}
+
 impl<'a> From<Expression<'a>> for ExprSym {
     fn from(expr: Expression<'a>) -> Self {
         match expr {
@@ -133,11 +147,20 @@ impl<'a> From<Expression<'a>> for ExprSym {
             Identifier(id) => ExprSym::new(ExprSymEnum::Id(id.to_string())),
             StringLiteral(s) => ExprSym::new(ExprSymEnum::Str(s.to_string())),
             IntegerLiteral(s) => ExprSym::new(ExprSymEnum::Int(s.to_string())),
+            FloatLiteral(s) => ExprSym::new(ExprSymEnum::Float(s.to_string())),
             AddExpr(l, r) => ExprSym::new(ExprSymEnum::Add(l.into(), r.into())),
             SubExpr(l, r) => ExprSym::new(ExprSymEnum::Sub(l.into(), r.into())),
             MulExpr(l, r) => ExprSym::new(ExprSymEnum::Mul(l.into(), r.into())),
             DivExpr(l, r) => ExprSym::new(ExprSymEnum::Div(l.into(), r.into())),
             ModExpr(l, r) => ExprSym::new(ExprSymEnum::Mod(l.into(), r.into())),
+            PowExpr(l, r) => ExprSym::new(ExprSymEnum::Pow(l.into(), r.into())),
+            LetExpr(eqv, expr) => {
+                let mut eqs = vec![];
+                for e in eqv.iter() {
+                    eqs.push(e.clone().into());
+                }
+                ExprSym::new(ExprSymEnum::Let(eqs, expr.into()))
+            }
             _e => {
                 println!("not implemented from for {:?}", _e);
                 todo!()

@@ -1,6 +1,6 @@
 use crate::backend::errors::OguError;
 use crate::codegen::transpilers::{Formatter, SymbolWriter};
-use crate::parser::ast::expressions::args::Args;
+use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::symbols::exprs::ExprSym;
 use crate::symbols::scopes::Scope;
@@ -84,6 +84,15 @@ pub(crate) struct ArgSym {
     ty: Option<Box<dyn Type>>,
 }
 
+impl ArgSym {
+    fn new(name: &str, ty: Option<Box<dyn Type>>) -> Self {
+        ArgSym {
+            name: name.to_string(),
+            ty
+        }
+    }
+}
+
 impl Symbol for ArgSym {
     fn get_name(&self) -> String {
         self.name.to_string()
@@ -106,7 +115,22 @@ impl<'a> From<Args<'a>> for Vec<ArgSym> {
     fn from(args: Args<'a>) -> Self {
         match args {
             Args::Void => vec![],
-            Args::Many(_) => todo!(),
+            Args::Many(args) => {
+                let mut result = vec![];
+                for a in args.iter() {
+                    result.push(a.clone().into());
+                }
+                result
+            },
+        }
+    }
+}
+
+impl<'a> From<Arg<'a>> for ArgSym {
+    fn from(arg: Arg<'a>) -> Self {
+        match arg {
+            Arg::Simple(id) => ArgSym::new(id, None),
+            _ => todo!()
         }
     }
 }

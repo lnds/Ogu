@@ -13,6 +13,7 @@ pub trait Transpiler {
 
 pub trait Formatter {
     fn format_func_header(&self, name: String, args: String, ty: String) -> String;
+    fn format_func_arg(&self, name: String, ty: Box<dyn Type>) -> String;
     fn format_type(&self, ty: Box<dyn Type>) -> String;
     fn format_id(&self, id: &str) -> String;
     fn format_str(&self, s: &str) -> String;
@@ -20,6 +21,11 @@ pub trait Formatter {
     fn format_func_call(&self, f: &str, args: &str) -> String;
     fn format_const_decl_header(&self, name: &str, ty: &str) -> String;
     fn format_if_expr(&self, cond: &str, then_part: &str, else_part: &str) -> String;
+    fn format_bin_op(&self, op: &str, l: &str, r: &str) -> String;
+    fn format_ge(&self, l: &str, r: &str) -> String;
+    fn format_gt(&self, l: &str, r: &str) -> String;
+    fn format_le(&self, l: &str, r: &str) -> String;
+    fn format_lt(&self, l: &str, r: &str) -> String;
 }
 
 pub trait SymbolWriter {

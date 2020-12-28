@@ -54,7 +54,7 @@ impl Scope for FunctionSym {
         }
     }
 
-    fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<(), Error> {
+    fn gen_code(&self, _generator: &mut Box<dyn CodeGenerator>) -> Result<(), Error> {
         unimplemented!()
     }
 
@@ -80,7 +80,7 @@ impl Symbol for FunctionSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
             None => {
@@ -103,7 +103,14 @@ impl SymbolWriter for FunctionSym {
             Error::new(OguError::CodeGenError)
                 .context(format!("Symbol {:?} has no type", self.get_name()))
         })?);
-        let args = String::new();
+        let mut args = vec![];
+        for a in self.args.iter() {
+            args.push(fmt.format_func_arg(a.get_name(), a.get_type().ok_or_else(||{
+                Error::new(OguError::CodeGenError)
+                    .context(format!("Argument {:?} has no type", a.get_name()))
+            })?));
+        }
+        let args = args.join(", ");
         let header = fmt.format_func_header(self.get_name(), args, func_type);
         writeln!(file, "{} {{", header)?;
         self.expr.write_symbol(fmt, file)?;

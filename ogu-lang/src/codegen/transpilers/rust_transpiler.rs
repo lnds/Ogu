@@ -95,6 +95,10 @@ impl Formatter for RustFormatter {
         format!("fn {} ({}) -> {}", name, args, ty)
     }
 
+    fn format_func_arg(&self, name: String, ty: Box<dyn Type>) -> String {
+        format!("{} : {}", name, self.format_type(ty))
+    }
+
     fn format_type(&self, ty: Box<dyn Type>) -> String {
         ty.get_name()
     }
@@ -120,6 +124,26 @@ impl Formatter for RustFormatter {
     }
 
     fn format_if_expr(&self, cond: &str, then_part: &str, else_part: &str) -> String {
-        format!("if {} \n{{\t{}\n}} else {{\t{}}}", cond, then_part, else_part)
+        format!("if {} {{ {} }} else {{ {} }}", cond, then_part, else_part)
+    }
+
+    fn format_bin_op(&self, op: &str, l: &str, r: &str) -> String {
+        format!("{} {} {}", l, op, r)
+    }
+
+    fn format_ge(&self, l: &str, r: &str) -> String {
+        self.format_bin_op(">=", l, r)
+    }
+
+    fn format_gt(&self, l: &str, r: &str) -> String {
+        self.format_bin_op(">", l, r)
+    }
+
+    fn format_le(&self, l: &str, r: &str) -> String {
+        self.format_bin_op("<=", l, r)
+    }
+
+    fn format_lt(&self, l: &str, r: &str) -> String {
+        self.format_bin_op("<", l, r)
     }
 }

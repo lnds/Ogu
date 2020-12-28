@@ -128,6 +128,35 @@ impl ExprSymEnum {
             ExprSymEnum::Id(id) => fmt.format_id(id),
             ExprSymEnum::Str(s) => fmt.format_str(s),
             ExprSymEnum::Int(s) => fmt.format_int(s),
+            ExprSymEnum::Gt(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_gt(&ls, &rs)
+            }
+            ExprSymEnum::Ge(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_ge(&ls, &rs)
+            }
+            ExprSymEnum::Lt(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_lt(&ls, &rs)
+            }
+            ExprSymEnum::Le(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_le(&ls, &rs)
+            }
+            ExprSymEnum::FuncCall(f, args) => {
+                let fs = f.expr.format(fmt);
+                let mut f_args = vec![];
+                for a in args.iter() {
+                    f_args.push(a.expr.format(fmt));
+                }
+                let f_args = f_args.join(",");
+                fmt.format_func_call(&fs, &f_args)
+            }
             _e => {
                 println!("format not implemented for {:?}", _e);
                 todo!()

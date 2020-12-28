@@ -2,4 +2,4 @@
 max x y = if x > y then x else y
 
 main () =
-    println! "{}" $ max 10 20
+    println! "{}" max $ 10 20

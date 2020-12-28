@@ -118,4 +118,8 @@ impl Formatter for RustFormatter {
     fn format_const_decl_header(&self, name: &str, ty: &str) -> String {
         format!("const {} : {} = ", name, ty)
     }
+
+    fn format_if_expr(&self, cond: &str, then_part: &str, else_part: &str) -> String {
+        format!("if {} \n{{\t{}\n}} else {{\t{}}}", cond, then_part, else_part)
+    }
 }

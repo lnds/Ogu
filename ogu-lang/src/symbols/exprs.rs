@@ -81,6 +81,12 @@ impl ExprSymEnum {
                 let f_args = f_args.join(",");
                 writeln!(file, "{}", fmt.format_func_call(&f_call, &f_args))?;
             }
+            ExprSymEnum::If(c, t, e) => {
+                let c = c.expr.format(fmt);
+                let t = t.expr.format(fmt);
+                let e = e.expr.format(fmt);
+                writeln!(file, "{}", fmt.format_if_expr(&c, &t, &e))?;
+            }
             ExprSymEnum::Add(l, r) => {
                 let ls = l.expr.format(fmt);
                 let rs = r.expr.format(fmt);
@@ -242,6 +248,15 @@ impl ExprSym {
                     None
                 } else {
                     Some(lt)
+                }
+            }
+            ExprSymEnum::If(_, t, e) => {
+                let tt = self.resolve_type_from_sym(scope, t)?;
+                let et = self.resolve_type_from_sym(scope, e)?;
+                if tt != et {
+                    None
+                } else {
+                    Some(tt)
                 }
             }
             _e => {

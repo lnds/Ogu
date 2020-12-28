@@ -9,6 +9,8 @@ use crate::types::Type;
 use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::Write;
+use crate::codegen::CodeGenerator;
+use crate::types::generic::GenericType;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -35,6 +37,36 @@ impl FunctionSym {
     }
 }
 
+impl Scope for FunctionSym {
+    fn scope_name(&self) -> &str {
+        &self.name
+    }
+
+    fn define(&mut self, _sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>> {
+        unimplemented!()
+    }
+
+    fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
+        let sym = self.args.iter().find(|a| a.get_name() == name).cloned();
+        match sym {
+            None => self.enclosing_scope.resolve(name),
+            Some(sym) => Some(Box::new(sym.clone()))
+        }
+    }
+
+    fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
+        let mut result : Vec<Box<dyn Symbol>> = vec![];
+        for a in self.args.iter() {
+            result.push(Box::new(a.clone()));
+        }
+        result
+    }
+}
+
 impl Symbol for FunctionSym {
     fn get_name(&self) -> String {
         self.name.to_string()
@@ -52,7 +84,7 @@ impl Symbol for FunctionSym {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
             None => {
-                let sym_expr = self.expr.solve_type(scope)?;
+                let sym_expr = self.expr.solve_type(self)?;
                 Ok(Box::new(FunctionSym {
                     name: self.name.clone(),
                     args: self.args.clone(),
@@ -131,7 +163,7 @@ impl<'a> From<Args<'a>> for Vec<ArgSym> {
 impl<'a> From<Arg<'a>> for ArgSym {
     fn from(arg: Arg<'a>) -> Self {
         match arg {
-            Arg::Simple(id) => ArgSym::new(id, None),
+            Arg::Simple(id) => ArgSym::new(id, Some(GenericType::new("T"))),
             _ => todo!(),
         }
     }

@@ -1,3 +1,5 @@
 -- test 2
 
-main = 2 * 3
+six = 2 * 3
+
+main () = println! "{}" six

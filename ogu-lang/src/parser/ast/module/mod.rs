@@ -1,17 +1,19 @@
-pub mod body;
-pub mod exposing;
-pub mod externs;
-pub mod imports;
+pub(crate) mod body;
+pub(crate) mod exposing;
+pub(crate) mod externs;
+pub(crate) mod imports;
+pub(crate) mod decls;
 
 use crate::lexer::tokens::Lexeme;
 use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use std::path::PathBuf;
 
-use crate::parser::ast::module::body::{BodyAst, Declaration};
+use crate::parser::ast::module::body::BodyAst;
 use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::externs::Extern;
 use crate::parser::ast::module::imports::Import;
 use anyhow::Result;
+use crate::parser::ast::module::decls::Declaration;
 
 #[derive(Debug, Clone)]
 pub enum ModuleName<'a> {

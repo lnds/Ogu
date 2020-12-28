@@ -1,10 +1,10 @@
 use crate::codegen::CodeGenerator;
-use crate::parser::ast::module::body::Declaration;
 use crate::parser::ast::module::ModuleAst;
 use crate::symbols::scopes::Scope;
 use crate::symbols::Symbol;
 use anyhow::Result;
 use std::collections::HashMap;
+use crate::parser::ast::module::decls::Declaration;
 
 #[derive(Clone)]
 pub struct Module {

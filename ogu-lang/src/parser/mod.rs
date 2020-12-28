@@ -145,13 +145,6 @@ pub(crate) fn consume_qualified_type_id<'a>(
     Ok((t_id, names, pos))
 }
 
-pub(crate) fn consume_id<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(&'a str, usize)> {
-    match parser.get_token(pos) {
-        Some(Lexeme::Id(id)) => Ok((id, pos + 1)),
-        _ => raise_parser_error("Expecting identifier", parser, pos, true),
-    }
-}
-
 pub(crate) fn raise_parser_error<T>(
     msg: &str,
     parser: &Parser,

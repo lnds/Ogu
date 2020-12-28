@@ -1,10 +1,11 @@
 use crate::lexer::tokens::Lexeme;
-use crate::parser::ast::module::body::{BodyAst, Declaration};
 use crate::parser::{consume_string, consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
+use crate::parser::ast::module::body::BodyAst;
+use crate::parser::ast::module::decls::DeclVec;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Extern<'a>(&'a str, Vec<Declaration<'a>>);
+pub(crate) struct Extern<'a>(&'a str, DeclVec<'a>);
 
 impl<'a> Extern<'a> {
     pub(crate) fn parse(parser: &'a Parser, pos: usize) -> Result<(Option<Self>, usize)> {

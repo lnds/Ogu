@@ -10,7 +10,8 @@ use crate::parser::{
     consume_opt_symbol, consume_symbol, consume_type_id, parse_opt_dedent, parse_opt_indent,
     raise_parser_error, Parser,
 };
-use anyhow::Result;
+use anyhow::{Result, Error};
+use crate::backend::errors::OguError;
 
 #[macro_export]
 macro_rules! parse_left_assoc {
@@ -143,7 +144,6 @@ pub(crate) enum Expression<'a> {
         Option<Box<Expression<'a>>>,
     ),
     LetExpr(Vec<Equation<'a>>, Box<Expression<'a>>),
-    CondExpr(Vec<(Option<Expression<'a>>, Expression<'a>)>),
     CaseExpr(
         Box<Expression<'a>>,
         Vec<(Option<Expression<'a>>, Expression<'a>)>,
@@ -246,7 +246,7 @@ impl<'a> Expression<'a> {
             }
         }
         let pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
-        Ok((Expression::CondExpr(conds), pos))
+        Ok((Expression::if_from(&conds)?, pos))
     }
 
     fn parse_opt_otherwise(
@@ -1102,6 +1102,31 @@ impl<'a> Expression<'a> {
             } else {
                 Ok((Expression::ResumeExpr(Some(Box::new(new_ctx)), None), pos))
             }
+        }
+    }
+}
+
+impl<'a> Expression<'a> {
+    pub(crate) fn if_from(pairs: &[(Option<Expression<'a>>, Expression<'a>)]) -> Result<Expression<'a>> {
+        if pairs.is_empty() {
+            return Err(Error::new(OguError::ParserError).context("empty conditional"));
+        }
+        if pairs.len() == 1 {
+            let (cond, expr) = &pairs[0];
+            match cond {
+                None => Ok(Expression::IfExpr(Box::new(Expression::Identifier("True")), Box::new(expr.clone()), Box::new(Expression::Unit))),
+                Some(c) =>
+                    Ok(Expression::IfExpr(Box::new(c.clone()), Box::new(expr.clone()), Box::new(Expression::Unit))),
+            }
+        } else { // len > 1
+            let (cond, expr) = &pairs[0];
+            let rest = &pairs[1..];
+            match cond {
+                None =>  Err(Error::new(OguError::ParserError).context("invalid otherwise before other conditions")),
+                Some(c) =>
+                    Ok(Expression::IfExpr(Box::new(c.clone()), Box::new(expr.clone()), Box::new(Expression::if_from(rest)?))),
+            }
+
         }
     }
 }

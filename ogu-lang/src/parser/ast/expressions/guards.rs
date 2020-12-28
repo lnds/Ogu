@@ -15,7 +15,7 @@ pub(crate) struct Guard<'a>(
 pub(crate) type GuardVec<'a> = Vec<Guard<'a>>;
 
 impl<'a> Guard<'a> {
-    pub fn guards_to_cond(guards: &[Guard<'a>]) -> Expression<'a> {
+    pub fn guards_to_cond(guards: &[Guard<'a>]) -> Result<Expression<'a>> {
         let mut pairs: Vec<(Option<Expression<'a>>, Expression<'a>)> = vec![];
         for guard in guards.iter() {
             pairs.push((
@@ -23,7 +23,8 @@ impl<'a> Guard<'a> {
                 guard.1.deref().clone(),
             ));
         }
-        Expression::CondExpr(pairs)
+        Expression::if_from(&pairs)
+        //Expression::CondExpr(pairs)
     }
 }
 

@@ -43,14 +43,14 @@ impl<'a> Declaration<'a> {
             }
             Equation::FunctionWithGuards(name, args, guards) => {
                 if let Some(where_decl) = opt_where {
-                    let expr = Expression::LetExpr(where_decl, Box::new(Guard::guards_to_cond(&guards)));
+                    let expr = Expression::LetExpr(where_decl, Box::new(Guard::guards_to_cond(&guards)?));
                     Ok(Some((
                         Declaration::Function(name, args, expr),
                         pos,
                     )))
                 } else {
                     Ok(Some((
-                        Declaration::Function(name, args,  Guard::guards_to_cond(&guards)),
+                        Declaration::Function(name, args,  Guard::guards_to_cond(&guards)?),
                         pos,
                     )))
                 }

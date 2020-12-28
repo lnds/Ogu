@@ -1,6 +1,6 @@
 use crate::codegen::transpilers::{SymbolWriter, Formatter};
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::expression::Expression::{FuncCallExpr, Identifier, StringLiteral, IntegerLiteral, AddExpr, Unit, SubExpr, MulExpr, DivExpr, ModExpr, LetExpr, PowExpr, FloatLiteral, CondExpr};
+use crate::parser::ast::expressions::expression::Expression::{FuncCallExpr, Identifier, StringLiteral, IntegerLiteral, AddExpr, Unit, SubExpr, MulExpr, DivExpr, ModExpr, LetExpr, PowExpr, FloatLiteral};
 use crate::symbols::scopes::Scope;
 use crate::symbols::{raise_symbol_table_error, Symbol};
 use crate::types::basic::BasicType;

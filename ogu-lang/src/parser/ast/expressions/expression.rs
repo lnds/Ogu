@@ -201,11 +201,7 @@ impl<'a> Expression<'a> {
         Expression::parse_control_expr
     );
 
-    parse_right_assoc!(
-        parse_dollar_func_call_expr,
-        Lexeme::Dollar,
-        Expression::parse_pipe_func_call_expr
-    );
+
 
     pub(crate) fn parse_control_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
@@ -782,6 +778,22 @@ impl<'a> Expression<'a> {
         }
     }
 
+    fn parse_dollar_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
+        let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+        if !parser.peek(pos, Lexeme::Dollar) {
+            Ok((expr, pos))
+        } else {
+            let mut pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
+            let mut args = vec![];
+            while !is_func_call_end_symbol(parser.get_token(pos)) {
+                let (arg, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                args.push(arg);
+                pos = new_pos;
+            }
+            Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
+        }
+    }
+
     fn parse_prim_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             Some(Lexeme::LeftParen) => Expression::parse_paren_expr(parser, pos),
@@ -801,9 +813,14 @@ impl<'a> Expression<'a> {
                     (Expression::QualifiedIdentifier(id, fields), pos)
                 };
                 if parser.peek(pos, Lexeme::Dollar) {
-                    let pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
-                    let (arg, pos) = Expression::parse(parser, pos)?;
-                    Ok((Expression::FuncCallExpr(Box::new(expr), vec![arg]), pos))
+                    let mut pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
+                    let mut args = vec![];
+                    while !is_func_call_end_symbol(parser.get_token(pos)) {
+                        let (arg, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                        args.push(arg);
+                        pos = new_pos;
+                    }
+                    Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
                 } else {
                     Ok((expr, pos))
                 }

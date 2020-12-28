@@ -42,7 +42,7 @@ impl BasicType {
             BasicType::primitive("u128")
         } else if s.ends_with("usize") {
             BasicType::primitive("usize")
-        } else if s.ends_with("N") {
+        } else if s.ends_with('N') {
             println!("Big integer not implemented");
             todo!()
         } else {

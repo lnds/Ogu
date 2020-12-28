@@ -56,7 +56,7 @@ impl Symbol for ValueSym {
 }
 
 impl SymbolWriter for ValueSym {
-    fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<()> {
+    fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<()> {
         let func_type = fmt.format_type(self.get_type().ok_or_else(|| {
             Error::new(OguError::CodeGenError)
                 .context(format!("Symbol {:?} has no type", self.get_name()))

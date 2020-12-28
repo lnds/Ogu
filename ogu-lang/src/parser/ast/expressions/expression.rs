@@ -90,7 +90,7 @@ pub(crate) enum Expression<'a> {
     SetExpr(Vec<Expression<'a>>),
     RecordExpr(Vec<(&'a str, Expression<'a>)>),
     TypedFuncCall(String, Vec<Expression<'a>>, Vec<Expression<'a>>),
-    FuncCallExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>),
     LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>),
     MatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     NoMatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
@@ -532,7 +532,7 @@ impl<'a> Expression<'a> {
                 } else {
                     let (arg, pos) = Expression::parse_prim_expr(parser, pos)?;
                     let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
-                    Ok((Expression::FuncCallExpr(Box::new(expr), Box::new(arg)), pos))
+                    Ok((Expression::FuncCallExpr(Box::new(expr), vec![arg]), pos))
                 }
             }
             None => raise_parser_error("unexpected EOF", parser, pos, false),
@@ -762,20 +762,14 @@ impl<'a> Expression<'a> {
 
     fn parse_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
-        if is_func_call_end_symbol(parser.get_token(pos)) {
-            Ok((expr, pos))
-        } else {
-            Expression::parse_func_call_arg(parser, pos, expr)
+        let mut args = vec![];
+        let mut pos = pos;
+        while !is_func_call_end_symbol(parser.get_token(pos)) {
+            let (arg, new_pos) = Expression::parse_prim_expr(parser, pos)?;
+            args.push(arg);
+            pos = new_pos;
         }
-    }
-
-    fn parse_func_call_arg(parser: &'a Parser<'a>, pos: usize, expr: Expression<'a>) -> ParseResult<'a> {
-        if is_func_call_end_symbol(parser.get_token(pos)) {
-            Ok((expr, pos))
-        } else {
-            let (arg, pos) = Expression::parse_prim_expr(parser, pos)?;
-            Expression::parse_func_call_arg(parser, pos, Expression::FuncCallExpr(Box::new(expr), Box::new(arg)))
-        }
+        Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
     }
 
     fn parse_prim_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
@@ -799,7 +793,7 @@ impl<'a> Expression<'a> {
                 if parser.peek(pos, Lexeme::Dollar) {
                     let pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
                     let (arg, pos) = Expression::parse(parser, pos)?;
-                    Ok((Expression::FuncCallExpr(Box::new(expr), Box::new(arg)), pos))
+                    Ok((Expression::FuncCallExpr(Box::new(expr), vec![arg]), pos))
                 } else {
                     Ok((expr, pos))
                 }

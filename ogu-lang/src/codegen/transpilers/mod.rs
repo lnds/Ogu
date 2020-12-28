@@ -21,5 +21,5 @@ pub trait Formatter {
 }
 
 pub trait SymbolWriter {
-    fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<()>;
+    fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<()>;
 }

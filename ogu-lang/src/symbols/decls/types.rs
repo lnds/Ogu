@@ -34,7 +34,7 @@ impl Symbol for TypeAliasSym {
         unimplemented!()
     }
 
-    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         unimplemented!()
     }
 }

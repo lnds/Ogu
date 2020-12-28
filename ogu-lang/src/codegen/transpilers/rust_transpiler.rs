@@ -8,6 +8,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use std::{env, fs};
+use std::ops::Deref;
 
 pub struct RustTranspiler {
     outputdir: PathBuf,
@@ -58,7 +59,7 @@ impl RustTranspiler {
             module.scope_name()
         )?;
         for sym in module.get_symbols().iter().map(|s| s.get_symbol_writer()) {
-            sym.write_symbol(&self.formatter, &mut file)?;
+            sym.write_symbol(self.formatter.deref(), &mut file)?;
         }
         Ok(())
     }

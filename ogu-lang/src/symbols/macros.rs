@@ -40,7 +40,7 @@ impl Symbol for MacroSym {
 }
 
 impl SymbolWriter for MacroSym {
-    fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<()> {
+    fn write_symbol(&self, _fmt: &dyn Formatter, _file: &mut File) -> Result<()> {
         unimplemented!()
     }
 }

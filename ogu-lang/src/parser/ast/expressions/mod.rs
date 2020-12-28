@@ -8,6 +8,7 @@ use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::expression::{Expression, ParseResult};
 use crate::parser::{raise_parser_error, Parser};
 use anyhow::Result;
+use std::ops::Deref;
 
 pub struct LeftAssocExpr<'a>(Lexeme<'a>, Box<Expression<'a>>, Box<Expression<'a>>);
 
@@ -249,7 +250,7 @@ pub(crate) fn is_func_call_end_symbol(symbol: Option<Lexeme>) -> bool {
 pub(crate) fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
     let LeftAssocExpr(sym, left, right) = la_expr;
     match sym {
-        Lexeme::PipeRight => Expression::FuncCallExpr(right, left),
+        Lexeme::PipeRight => Expression::FuncCallExpr(right, vec![left.deref().clone()]),
         Lexeme::Or => Expression::OrExpr(left, right),
         Lexeme::And => Expression::AndExpr(left, right),
         Lexeme::LessThan => Expression::LtExpr(left, right),
@@ -282,9 +283,9 @@ pub(crate) fn right_assoc_expr_to_expr(ra_expr: RightAssocExpr) -> Result<Expres
     match sym {
         Lexeme::Cons => Ok(Expression::ConsExpr(left, right)),
         Lexeme::Pow => Ok(Expression::PowExpr(left, right)),
-        Lexeme::Dollar => Ok(Expression::FuncCallExpr(left, right)),
+        Lexeme::Dollar => Ok(Expression::FuncCallExpr(left, vec![right.deref().clone()])),
         Lexeme::ComposeForward => Ok(Expression::ComposeFwdExpr(left, right)),
-        Lexeme::PipeLeft => Ok(Expression::FuncCallExpr(left, right)),
+        Lexeme::PipeLeft => Ok(Expression::FuncCallExpr(left, vec![right.deref().clone()])),
         _ => todo!(),
     }
 }

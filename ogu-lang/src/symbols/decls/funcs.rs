@@ -48,7 +48,7 @@ impl Symbol for FunctionSym {
 
     fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         match &self.ty {
-            Some(t) => Ok(Box::new(self.clone())),
+            Some(_) => Ok(Box::new(self.clone())),
             None => {
                 let sym_expr = self.expr.solve_type(scope)?;
                 Ok(Box::new(FunctionSym{
@@ -64,7 +64,7 @@ impl Symbol for FunctionSym {
 }
 
 impl SymbolWriter for FunctionSym {
-    fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<()> {
+    fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<()> {
         let func_type = fmt.format_type(self.get_type().ok_or_else(|| {
             Error::new(OguError::CodeGenError)
                 .context(format!("Symbol {:?} has no type", self.get_name()))
@@ -106,7 +106,7 @@ impl<'a> From<Args<'a>> for Vec<ArgSym> {
     fn from(args: Args<'a>) -> Self {
         match args {
             Args::Void => vec![],
-            Args::Many(a) => todo!(),
+            Args::Many(_) => todo!(),
         }
     }
 }

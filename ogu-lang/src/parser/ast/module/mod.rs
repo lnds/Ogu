@@ -53,7 +53,7 @@ impl<'a> ModuleAst<'a> {
     }
 
     pub(crate) fn get_decls(&self) -> Vec<Declaration> {
-        self.body.declarations.to_vec()
+        self.body.clone().get_decls().to_vec()
     }
 }
 

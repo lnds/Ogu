@@ -1,6 +1,6 @@
 use crate::codegen::transpilers::{SymbolWriter, Formatter};
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::expression::Expression::{FuncCallExpr, Identifier, StringLiteral, IntegerLiteral, AddExpr};
+use crate::parser::ast::expressions::expression::Expression::{FuncCallExpr, Identifier, StringLiteral, IntegerLiteral, AddExpr, Unit};
 use crate::symbols::scopes::Scope;
 use crate::symbols::{raise_symbol_table_error, Symbol};
 use crate::types::basic::BasicType;
@@ -17,9 +17,9 @@ pub(crate) struct ExprSym {
 }
 
 impl ExprSym {
-    fn new(expr: ExprSymEnum) -> Box<Self> {
+    fn new(expr: ExprSymEnum) -> Self {
         let ty = ExprSym::type_of(&expr);
-        Box::new(ExprSym { expr, ty })
+        ExprSym { expr, ty }
     }
 
     fn type_of(expr: &ExprSymEnum) -> Option<Box<dyn Type>> {
@@ -37,7 +37,7 @@ enum ExprSymEnum {
     Id(String),
     Str(String),
     Int(String),
-    FuncCall(Box<ExprSym>, Box<ExprSym>),
+    FuncCall(Box<ExprSym>, Vec<ExprSym>),
     Add(Box<ExprSym>, Box<ExprSym>),
 }
 
@@ -54,12 +54,16 @@ impl ExprSymEnum {
         }
     }
 
-    fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<()> {
+    fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<()> {
         match self {
             ExprSymEnum::Id(id) => write!(file, "{}", id)?,
-            ExprSymEnum::FuncCall(e, a) => {
+            ExprSymEnum::FuncCall(e, args) => {
                 let f_call = e.expr.format(fmt);
-                let f_args = a.expr.format(fmt);
+                let mut f_args = vec![];
+                for a in args.iter() {
+                    f_args.push(a.expr.format(fmt));
+                }
+                let f_args = f_args.join(",");
                 writeln!(file, "{}", fmt.format_func_call(&f_call, &f_args))?;
             }
             ExprSymEnum::Add(l, r) => {
@@ -79,7 +83,7 @@ impl ExprSymEnum {
         Ok(())
     }
 
-    fn format(&self, fmt: &Box<dyn Formatter>) -> String {
+    fn format(&self, fmt: &dyn Formatter) -> String {
      match self {
          ExprSymEnum::Id(id) => fmt.format_id(id),
          ExprSymEnum::Str(s) => fmt.format_str(s),
@@ -93,8 +97,18 @@ impl ExprSymEnum {
 
 impl<'a> From<Expression<'a>> for Box<ExprSym> {
     fn from(expr: Expression<'a>) -> Self {
+       Box::new(expr.into())
+    }
+}
+
+
+
+impl<'a> From<Expression<'a>> for ExprSym {
+    fn from(expr: Expression<'a>) -> Self {
         match expr {
-            FuncCallExpr(id, expr) => ExprSym::new(ExprSymEnum::FuncCall(id.into(), expr.into())),
+            Unit => ExprSym::new(ExprSymEnum::Void),
+            FuncCallExpr(id, args) =>
+                ExprSym::new(ExprSymEnum::FuncCall(id.into(), args.iter().map(|a| a.clone().into()).collect())),
             Identifier(id) => ExprSym::new(ExprSymEnum::Id(id.to_string())),
             StringLiteral(s) => ExprSym::new(ExprSymEnum::Str(s.to_string())),
             IntegerLiteral(s) => ExprSym::new(ExprSymEnum::Int(s.to_string())),
@@ -107,12 +121,14 @@ impl<'a> From<Expression<'a>> for Box<ExprSym> {
     }
 }
 
+
 impl<'a> From<Box<Expression<'a>>> for Box<ExprSym> {
     fn from(expr: Box<Expression<'a>>) -> Self {
         let ex = expr.deref().clone();
         ex.into()
     }
 }
+
 
 impl Symbol for ExprSym {
     fn get_name(&self) -> String {
@@ -129,7 +145,7 @@ impl Symbol for ExprSym {
 
     fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         match &self.ty {
-            Some(ty) => Ok(Box::new(self.clone())),
+            Some(_) => Ok(Box::new(self.clone())),
             None => match self.find_type(scope) {
                 Some(ty) => Ok(self.make_copy(ty)),
                 None => raise_symbol_table_error(
@@ -163,9 +179,7 @@ impl ExprSym {
             ExprSymEnum::Add(l, r) => {
                 let lt = self.resolve_type_from_sym(scope, l);
                 let rt = self.resolve_type_from_sym(scope, r);
-                if lt.is_none() {
-                    None
-                } else if rt.is_none() {
+                if lt.is_none() || rt.is_none() {
                     None
                 } else {
                     let lt = lt.unwrap();
@@ -191,7 +205,7 @@ impl ExprSym {
         }
     }
 
-    fn resolve_type_from_sym(&self, scope: &dyn Scope, sym: &Box<ExprSym>) -> Option<Box<dyn Type>> {
+    fn resolve_type_from_sym(&self, scope: &dyn Scope, sym: &ExprSym) -> Option<Box<dyn Type>> {
         match sym.get_type() {
             Some(ty) => Some(ty.clone()),
             None => {
@@ -207,7 +221,7 @@ impl ExprSym {
 }
 
 impl SymbolWriter for ExprSym {
-    fn write_symbol(&self, fmt: &Box<dyn Formatter>, file: &mut File) -> Result<(), Error> {
+    fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<(), Error> {
         self.expr.write_symbol(fmt, file)
     }
 }

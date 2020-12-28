@@ -51,7 +51,7 @@ impl Symbol for FunctionSym {
             Some(_) => Ok(Box::new(self.clone())),
             None => {
                 let sym_expr = self.expr.solve_type(scope)?;
-                Ok(Box::new(FunctionSym{
+                Ok(Box::new(FunctionSym {
                     name: self.name.clone(),
                     args: self.args.clone(),
                     expr: self.expr.clone(),
@@ -59,7 +59,6 @@ impl Symbol for FunctionSym {
                 }))
             }
         }
-
     }
 }
 
@@ -88,7 +87,7 @@ impl ArgSym {
     fn new(name: &str, ty: Option<Box<dyn Type>>) -> Self {
         ArgSym {
             name: name.to_string(),
-            ty
+            ty,
         }
     }
 }
@@ -121,7 +120,7 @@ impl<'a> From<Args<'a>> for Vec<ArgSym> {
                     result.push(a.clone().into());
                 }
                 result
-            },
+            }
         }
     }
 }
@@ -130,7 +129,7 @@ impl<'a> From<Arg<'a>> for ArgSym {
     fn from(arg: Arg<'a>) -> Self {
         match arg {
             Arg::Simple(id) => ArgSym::new(id, None),
-            _ => todo!()
+            _ => todo!(),
         }
     }
 }

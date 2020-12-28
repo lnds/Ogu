@@ -1,8 +1,8 @@
 use crate::lexer::tokens::Lexeme;
-use crate::parser::{consume_string, consume_symbol, raise_parser_error, Parser};
-use anyhow::Result;
 use crate::parser::ast::module::body::BodyAst;
 use crate::parser::ast::module::decls::DeclVec;
+use crate::parser::{consume_string, consume_symbol, raise_parser_error, Parser};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Extern<'a>(&'a str, DeclVec<'a>);

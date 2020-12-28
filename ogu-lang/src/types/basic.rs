@@ -8,7 +8,6 @@ pub(crate) enum BasicType {
 }
 
 impl BasicType {
-
     pub fn unit() -> Box<BasicType> {
         Box::new(BasicType::Unit)
     }
@@ -50,6 +49,18 @@ impl BasicType {
         }
     }
 
+    pub fn float(s: &str) -> Box<BasicType> {
+        if s.ends_with("f32") {
+            BasicType::primitive("f32")
+        } else if s.ends_with("f64") {
+            BasicType::primitive("f64")
+        } else if s.ends_with('M') {
+            println!("Big integer not implemented");
+            todo!()
+        } else {
+            BasicType::primitive("f64")
+        }
+    }
 }
 
 impl Type for BasicType {

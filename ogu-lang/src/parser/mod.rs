@@ -1,5 +1,5 @@
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::{LineNumber, LineWidth, Lexeme};
+use crate::lexer::tokens::{Lexeme, LineNumber, LineWidth};
 
 use crate::backend::errors::OguError;
 use anyhow::{Error, Result};

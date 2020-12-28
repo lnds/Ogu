@@ -1,11 +1,17 @@
-use crate::parser::ast::module::decls::{Declaration, Derivation, BaseType, RecordElement, AlgebraicType, AlgebraicElement, FuncType, FuncPrototype, DeclParseResult};
-use crate::parser::{consume_symbol, Parser, consume_type_id, parse_opt_indent, parse_opt_dedent, consume_string, raise_parser_error};
-use crate::parser::ast::expressions::args::Arg;
 use crate::lexer::tokens::Lexeme;
-use anyhow::Result;
-use crate::parser::ast::expressions::equations::Equation;
+use crate::parser::ast::expressions::args::Arg;
 use crate::parser::ast::expressions::consume_id;
+use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
+use crate::parser::ast::module::decls::{
+    AlgebraicElement, AlgebraicType, BaseType, DeclParseResult, Declaration, Derivation,
+    FuncPrototype, FuncType, RecordElement,
+};
+use crate::parser::{
+    consume_string, consume_symbol, consume_type_id, parse_opt_dedent, parse_opt_indent,
+    raise_parser_error, Parser,
+};
+use anyhow::Result;
 
 impl<'a> Declaration<'a> {
     pub(crate) fn parse_type_decl(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
@@ -285,8 +291,6 @@ impl<'a> Declaration<'a> {
         )))
     }
 
-
-
     pub(crate) fn parse_effect_func_prototype(
         parser: &'a Parser<'a>,
         pos: usize,
@@ -385,8 +389,6 @@ impl<'a> Declaration<'a> {
         Ok(Some((Declaration::Handler(id, args, guards), pos)))
     }
 }
-
-
 
 fn consume_alg_type_param<'a>(
     parser: &'a Parser,

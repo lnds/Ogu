@@ -1,13 +1,13 @@
-use crate::symbols::exprs::ExprSym;
-use crate::types::Type;
-use anyhow::{Result, Error};
+use crate::backend::errors::OguError;
+use crate::codegen::transpilers::{Formatter, SymbolWriter};
 use crate::parser::ast::expressions::expression::Expression;
-use crate::symbols::Symbol;
-use crate::codegen::transpilers::{SymbolWriter, Formatter};
+use crate::symbols::exprs::ExprSym;
 use crate::symbols::scopes::Scope;
+use crate::symbols::Symbol;
+use crate::types::Type;
+use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::Write;
-use crate::backend::errors::OguError;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ValueSym {
@@ -18,15 +18,14 @@ pub(crate) struct ValueSym {
 
 impl ValueSym {
     pub(crate) fn new(name: &str, expr: Expression) -> Box<Self> {
-        let expr : Box<ExprSym> = expr.into();
-        let ty : Option<Box<dyn Type>> = expr.get_type();
+        let expr: Box<ExprSym> = expr.into();
+        let ty: Option<Box<dyn Type>> = expr.get_type();
         Box::new(ValueSym {
             name: name.to_string(),
             expr,
             ty,
         })
     }
-
 }
 
 impl Symbol for ValueSym {
@@ -42,16 +41,13 @@ impl Symbol for ValueSym {
         Box::new(self.clone())
     }
 
-
     fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         let sym_expr = self.expr.solve_type(scope)?;
-        Ok(Box::new(
-            ValueSym {
-                name: self.name.clone(),
-                expr: self.expr.clone(),
-                ty: sym_expr.get_type()
-            }
-        ))
+        Ok(Box::new(ValueSym {
+            name: self.name.clone(),
+            expr: self.expr.clone(),
+            ty: sym_expr.get_type(),
+        }))
     }
 }
 
@@ -68,4 +64,3 @@ impl SymbolWriter for ValueSym {
         Ok(())
     }
 }
-

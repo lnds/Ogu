@@ -1,22 +1,20 @@
-use crate::types::Type;
-use crate::symbols::Symbol;
 use crate::codegen::transpilers::SymbolWriter;
 use crate::symbols::scopes::Scope;
+use crate::symbols::Symbol;
+use crate::types::Type;
 use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct TypeAliasSym {
     name: String,
-    ty : Box<dyn Type>
+    ty: Box<dyn Type>,
 }
 
-
 impl TypeAliasSym {
-
     pub fn new(name: &str, ty: Box<dyn Type>) -> Box<Self> {
-        Box::new(TypeAliasSym{
+        Box::new(TypeAliasSym {
             name: name.to_string(),
-            ty: ty.clone()
+            ty: ty.clone(),
         })
     }
 }

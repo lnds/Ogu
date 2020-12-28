@@ -56,5 +56,3 @@ pub(crate) fn raise_symbol_table_error<T>(msg: &str, symbol: String, module: Str
         msg, symbol, module
     ))
 }
-
-

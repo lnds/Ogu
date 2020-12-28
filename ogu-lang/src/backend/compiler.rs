@@ -4,6 +4,7 @@ use crate::lexer::tokens::Lexeme;
 use crate::lexer::Lexer;
 use crate::parser::ast::module::ModuleAst;
 use crate::parser::Parser;
+use crate::symbols::decls::types::TypeAliasSym;
 use crate::symbols::macros::MacroSym;
 use crate::symbols::module::Module;
 use crate::symbols::scopes::Scope;
@@ -12,7 +13,6 @@ use crate::symbols::Symbol;
 use crate::types::basic::BasicType;
 use anyhow::Result;
 use std::path::PathBuf;
-use crate::symbols::decls::types::TypeAliasSym;
 
 #[derive(Clone)]
 pub struct Compiler {

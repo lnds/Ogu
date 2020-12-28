@@ -1,9 +1,9 @@
 pub(crate) mod funcs;
 pub(crate) mod types;
 
-use crate::parser::ast::expressions::expression::{Expression, HandleGuard};
 use crate::parser::ast::expressions::args::Args;
 use crate::parser::ast::expressions::equations::Equation;
+use crate::parser::ast::expressions::expression::{Expression, HandleGuard};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
@@ -83,11 +83,9 @@ pub(crate) enum BaseType<'a> {
     ExternType(&'a str),
 }
 
-
 pub(crate) type DeclVec<'a> = Vec<Declaration<'a>>;
 
 pub(crate) type DeclParseResult<'a> = Result<Option<(Declaration<'a>, usize)>>;
-
 
 impl<'a> Declaration<'a> {
     pub fn get_name(&self) -> &'a str {
@@ -107,5 +105,3 @@ impl<'a> Declaration<'a> {
         }
     }
 }
-
-

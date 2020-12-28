@@ -1,3 +1,4 @@
+use crate::backend::errors::OguError;
 use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression::TryHandleExpr;
@@ -10,8 +11,7 @@ use crate::parser::{
     consume_opt_symbol, consume_symbol, consume_type_id, parse_opt_dedent, parse_opt_indent,
     raise_parser_error, Parser,
 };
-use anyhow::{Result, Error};
-use crate::backend::errors::OguError;
+use anyhow::{Error, Result};
 
 #[macro_export]
 macro_rules! parse_left_assoc {
@@ -384,7 +384,11 @@ impl<'a> Expression<'a> {
 
     parse_left_assoc!(parse_eq_expr, Lexeme::Equal, Expression::parse_ne_expr);
 
-    parse_left_assoc!(parse_ne_expr, Lexeme::NotEqual, Expression::parse_regex_expr);
+    parse_left_assoc!(
+        parse_ne_expr,
+        Lexeme::NotEqual,
+        Expression::parse_regex_expr
+    );
 
     fn parse_regex_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         Expression::parse_matches_expr(parser, pos)
@@ -706,7 +710,9 @@ impl<'a> Expression<'a> {
                         pos = consume_symbol(parser, pos, Lexeme::Dot)?;
                         match parser.get_token(pos) {
                             Some(Lexeme::Id(id)) => q_ids.push(Expression::Identifier(id)),
-                            Some(Lexeme::TypeId(tid)) => q_ids.push(Expression::TypeIdentifier(tid)),
+                            Some(Lexeme::TypeId(tid)) => {
+                                q_ids.push(Expression::TypeIdentifier(tid))
+                            }
                             _ => break,
                         }
                         pos += 1;
@@ -896,7 +902,10 @@ impl<'a> Expression<'a> {
             pos = parser.skip_nl(pos + 1);
             if matches!(
                 parser.get_token(pos),
-                Some(Lexeme::Loop) | Some(Lexeme::While) | Some(Lexeme::Until) | Some(Lexeme::Dedent)
+                Some(Lexeme::Loop)
+                    | Some(Lexeme::While)
+                    | Some(Lexeme::Until)
+                    | Some(Lexeme::Dedent)
             ) {
                 break;
             }
@@ -1107,26 +1116,39 @@ impl<'a> Expression<'a> {
 }
 
 impl<'a> Expression<'a> {
-    pub(crate) fn if_from(pairs: &[(Option<Expression<'a>>, Expression<'a>)]) -> Result<Expression<'a>> {
+    pub(crate) fn if_from(
+        pairs: &[(Option<Expression<'a>>, Expression<'a>)],
+    ) -> Result<Expression<'a>> {
         if pairs.is_empty() {
             return Err(Error::new(OguError::ParserError).context("empty conditional"));
         }
         if pairs.len() == 1 {
             let (cond, expr) = &pairs[0];
             match cond {
-                None => Ok(Expression::IfExpr(Box::new(Expression::Identifier("True")), Box::new(expr.clone()), Box::new(Expression::Unit))),
-                Some(c) =>
-                    Ok(Expression::IfExpr(Box::new(c.clone()), Box::new(expr.clone()), Box::new(Expression::Unit))),
+                None => Ok(Expression::IfExpr(
+                    Box::new(Expression::Identifier("True")),
+                    Box::new(expr.clone()),
+                    Box::new(Expression::Unit),
+                )),
+                Some(c) => Ok(Expression::IfExpr(
+                    Box::new(c.clone()),
+                    Box::new(expr.clone()),
+                    Box::new(Expression::Unit),
+                )),
             }
-        } else { // len > 1
+        } else {
+            // len > 1
             let (cond, expr) = &pairs[0];
             let rest = &pairs[1..];
             match cond {
-                None =>  Err(Error::new(OguError::ParserError).context("invalid otherwise before other conditions")),
-                Some(c) =>
-                    Ok(Expression::IfExpr(Box::new(c.clone()), Box::new(expr.clone()), Box::new(Expression::if_from(rest)?))),
+                None => Err(Error::new(OguError::ParserError)
+                    .context("invalid otherwise before other conditions")),
+                Some(c) => Ok(Expression::IfExpr(
+                    Box::new(c.clone()),
+                    Box::new(expr.clone()),
+                    Box::new(Expression::if_from(rest)?),
+                )),
             }
-
         }
     }
 }

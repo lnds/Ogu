@@ -8,7 +8,6 @@ pub(crate) type LineNumber = usize;
 
 pub(crate) type IndentStack = Vec<LineCount>;
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Token<'a> {
     pub(crate) lexeme: Lexeme<'a>,
@@ -18,11 +17,7 @@ pub(crate) struct Token<'a> {
 
 impl<'a> Token<'a> {
     pub(crate) fn new(lexeme: Lexeme<'a>, line: LineCount, col: LineWidth) -> Self {
-        Token {
-            lexeme,
-            line,
-            col,
-        }
+        Token { lexeme, line, col }
     }
 }
 
@@ -273,7 +268,10 @@ impl<'a> Lexeme<'a> {
     pub(crate) fn is_close_paren(&self) -> bool {
         matches!(
             *self,
-            Lexeme::RightParen | Lexeme::RightBracket | Lexeme::RightCurly | Lexeme::RightCurlyCurly
+            Lexeme::RightParen
+                | Lexeme::RightBracket
+                | Lexeme::RightCurly
+                | Lexeme::RightCurlyCurly
         )
     }
 }
@@ -405,7 +403,8 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::Else));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Lexeme::lexer("exposing extends extern for from if handle handler in is lazy");
+        let mut lex =
+            Lexeme::lexer("exposing extends extern for from if handle handler in is lazy");
         assert_eq!(lex.next(), Some(Lexeme::Exposing));
         assert_eq!(lex.next(), Some(Lexeme::Extends));
         assert_eq!(lex.next(), Some(Lexeme::Extern));
@@ -614,7 +613,10 @@ mod test_tokens {
         let mut lex = Lexeme::lexer("#2017-02-26T23:50:30");
         assert_eq!(lex.next(), Some(Lexeme::IsoDate("#2017-02-26T23:50:30")));
         let mut lex = Lexeme::lexer("#2017-02-26T23:50:30.120");
-        assert_eq!(lex.next(), Some(Lexeme::IsoDate("#2017-02-26T23:50:30.120")));
+        assert_eq!(
+            lex.next(),
+            Some(Lexeme::IsoDate("#2017-02-26T23:50:30.120"))
+        );
         let mut lex = Lexeme::lexer("#2017-02-26T23:50:30.120Z");
         assert_eq!(
             lex.next(),
@@ -671,5 +673,4 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::Char("\\u3829")));
         assert_eq!(lex.next(), None);
     }
-
 }

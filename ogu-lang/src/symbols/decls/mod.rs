@@ -1,12 +1,12 @@
 pub(crate) mod funcs;
-pub(crate) mod values;
 pub(crate) mod types;
+pub(crate) mod values;
 
-use crate::symbols::decls::funcs::FunctionSym;
-use crate::symbols::Symbol;
-use crate::symbols::decls::values::ValueSym;
-use crate::parser::ast::module::decls::Declaration::{Function, Value};
 use crate::parser::ast::module::decls::Declaration;
+use crate::parser::ast::module::decls::Declaration::{Function, Value};
+use crate::symbols::decls::funcs::FunctionSym;
+use crate::symbols::decls::values::ValueSym;
+use crate::symbols::Symbol;
 
 impl<'a> From<Declaration<'a>> for Box<dyn Symbol> {
     fn from(decl: Declaration<'a>) -> Self {

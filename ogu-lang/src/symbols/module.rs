@@ -1,10 +1,10 @@
 use crate::codegen::CodeGenerator;
+use crate::parser::ast::module::decls::Declaration;
 use crate::parser::ast::module::ModuleAst;
 use crate::symbols::scopes::Scope;
 use crate::symbols::Symbol;
 use anyhow::Result;
 use std::collections::HashMap;
-use crate::parser::ast::module::decls::Declaration;
 
 #[derive(Clone)]
 pub struct Module {
@@ -58,7 +58,7 @@ impl<'a> Scope for Module {
     fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
         match self.symbols.get(name) {
             None => self.enclosing_scope.resolve(name),
-            Some(sym) => Some(sym.clone())
+            Some(sym) => Some(sym.clone()),
         }
     }
 

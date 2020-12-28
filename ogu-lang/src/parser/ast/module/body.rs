@@ -1,16 +1,12 @@
 use crate::lexer::tokens::Lexeme;
-use crate::parser::{
-     consume_symbol,
-    raise_parser_error, Parser,
-};
+use crate::parser::ast::module::decls::{DeclParseResult, DeclVec, Declaration};
+use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
-use crate::parser::ast::module::decls::{Declaration, DeclVec, DeclParseResult};
 
 #[derive(Debug, Clone)]
 pub(crate) struct BodyAst<'a> {
     pub(crate) declarations: Vec<Declaration<'a>>,
 }
-
 
 impl<'a> BodyAst<'a> {
     pub(crate) fn get_decls(self) -> Vec<Declaration<'a>> {
@@ -66,7 +62,3 @@ impl<'a> BodyAst<'a> {
         }
     }
 }
-
-
-
-

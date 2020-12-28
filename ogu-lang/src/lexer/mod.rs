@@ -12,7 +12,7 @@ use crate::backend::errors::OguError;
 use crate::lexer::token_stream::TokenStream;
 use crate::lexer::tokens::Lexeme::NewLine;
 use crate::lexer::tokens::{
-    IndentStack, LineCount, LineNumber, LineWidth, Lexeme, Token, TokenList,
+    IndentStack, Lexeme, LineCount, LineNumber, LineWidth, Token, TokenList,
 };
 
 type Line = (LineCount, String);

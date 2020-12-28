@@ -6,9 +6,9 @@ use crate::types::Type;
 use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::Write;
+use std::ops::Deref;
 use std::path::PathBuf;
 use std::{env, fs};
-use std::ops::Deref;
 
 pub struct RustTranspiler {
     outputdir: PathBuf,
@@ -111,7 +111,7 @@ impl Formatter for RustFormatter {
         s.to_string()
     }
 
-    fn format_func_call(&self, f: &str, args: &str) -> String{
+    fn format_func_call(&self, f: &str, args: &str) -> String {
         format!("{} ({})", f, args)
     }
 

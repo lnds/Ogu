@@ -2,6 +2,7 @@ use anyhow::Result;
 use std::fmt::{Debug, Formatter};
 
 pub(crate) mod basic;
+pub(crate) mod generic;
 
 pub trait Type: TypeClone {
     fn get_name(&self) -> String;

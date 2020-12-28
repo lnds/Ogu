@@ -1,6 +1,7 @@
 use crate::codegen::transpilers::{SymbolWriter, Formatter};
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::expression::Expression::{FuncCallExpr, Identifier, StringLiteral, IntegerLiteral, AddExpr, Unit};
+use crate::parser::ast::expressions::expression::Expression::{
+    FuncCallExpr, Identifier, StringLiteral, IntegerLiteral, AddExpr, Unit, SubExpr, MulExpr, DivExpr, ModExpr};
 use crate::symbols::scopes::Scope;
 use crate::symbols::{raise_symbol_table_error, Symbol};
 use crate::types::basic::BasicType;
@@ -39,19 +40,20 @@ enum ExprSymEnum {
     Int(String),
     FuncCall(Box<ExprSym>, Vec<ExprSym>),
     Add(Box<ExprSym>, Box<ExprSym>),
+    Sub(Box<ExprSym>, Box<ExprSym>),
+    Mul(Box<ExprSym>, Box<ExprSym>),
+    Div(Box<ExprSym>, Box<ExprSym>),
+    Mod(Box<ExprSym>, Box<ExprSym>),
 }
 
 impl ExprSymEnum {
-
     fn get_name(&self) -> String {
         match self {
-            ExprSymEnum::Void => String::new(),
-            ExprSymEnum::Id(s) => s.clone(),
-            ExprSymEnum::Str(s) => s.clone(),
+            ExprSymEnum::Id(s) => s.to_string(),
             ExprSymEnum::FuncCall(e, _) => e.get_name(),
-            ExprSymEnum::Int(e) => e.clone(),
-            ExprSymEnum::Add(a, b) => format!("{:?}+{:?}", a, b)
+            _ => format!("{:?}", self)
         }
+
     }
 
     fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<()> {
@@ -67,10 +69,29 @@ impl ExprSymEnum {
                 writeln!(file, "{}", fmt.format_func_call(&f_call, &f_args))?;
             }
             ExprSymEnum::Add(l, r) => {
-                println!("ADD l={:?}, r = {:?}", l, r);
                 let ls = l.expr.format(fmt);
-                let rs = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
                 writeln!(file, "{} + {}", ls, rs)?;
+            }
+            ExprSymEnum::Sub(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                writeln!(file, "{} - {}", ls, rs)?;
+            }
+            ExprSymEnum::Mul(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                writeln!(file, "{} * {}", ls, rs)?;
+            }
+            ExprSymEnum::Div(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                writeln!(file, "{} / {}", ls, rs)?;
+            }
+            ExprSymEnum::Mod(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                writeln!(file, "{} % {}", ls, rs)?;
             }
             ExprSymEnum::Int(s) => {
                 write!(file, "{}", s)?;
@@ -84,23 +105,23 @@ impl ExprSymEnum {
     }
 
     fn format(&self, fmt: &dyn Formatter) -> String {
-     match self {
-         ExprSymEnum::Id(id) => fmt.format_id(id),
-         ExprSymEnum::Str(s) => fmt.format_str(s),
-         _e => {
-             println!("format not implemented for {:?}", _e);
-             todo!()
-         }
-     }
+        match self {
+            ExprSymEnum::Id(id) => fmt.format_id(id),
+            ExprSymEnum::Str(s) => fmt.format_str(s),
+            ExprSymEnum::Int(s) => fmt.format_int(s),
+            _e => {
+                println!("format not implemented for {:?}", _e);
+                todo!()
+            }
+        }
     }
 }
 
 impl<'a> From<Expression<'a>> for Box<ExprSym> {
     fn from(expr: Expression<'a>) -> Self {
-       Box::new(expr.into())
+        Box::new(expr.into())
     }
 }
-
 
 
 impl<'a> From<Expression<'a>> for ExprSym {
@@ -113,6 +134,10 @@ impl<'a> From<Expression<'a>> for ExprSym {
             StringLiteral(s) => ExprSym::new(ExprSymEnum::Str(s.to_string())),
             IntegerLiteral(s) => ExprSym::new(ExprSymEnum::Int(s.to_string())),
             AddExpr(l, r) => ExprSym::new(ExprSymEnum::Add(l.into(), r.into())),
+            SubExpr(l, r) => ExprSym::new(ExprSymEnum::Sub(l.into(), r.into())),
+            MulExpr(l, r) => ExprSym::new(ExprSymEnum::Mul(l.into(), r.into())),
+            DivExpr(l, r) => ExprSym::new(ExprSymEnum::Div(l.into(), r.into())),
+            ModExpr(l, r) => ExprSym::new(ExprSymEnum::Mod(l.into(), r.into())),
             _e => {
                 println!("not implemented from for {:?}", _e);
                 todo!()
@@ -175,20 +200,15 @@ impl ExprSym {
             }
             ExprSymEnum::FuncCall(e, _) => {
                 e.find_type(scope)
-            },
-            ExprSymEnum::Add(l, r) => {
-                let lt = self.resolve_type_from_sym(scope, l);
-                let rt = self.resolve_type_from_sym(scope, r);
-                if lt.is_none() || rt.is_none() {
+            }
+            ExprSymEnum::Add(l, r)
+            | ExprSymEnum::Mul(l, r) => {
+                let lt = self.resolve_type_from_sym(scope, l)?;
+                let rt = self.resolve_type_from_sym(scope, r)?;
+                if lt != rt {
                     None
                 } else {
-                    let lt = lt.unwrap();
-                    let rt = rt.unwrap();
-                    if lt != rt {
-                        None
-                    } else {
-                        Some(lt)
-                    }
+                    Some(lt)
                 }
             }
             _e => {
@@ -217,7 +237,6 @@ impl ExprSym {
             }
         }
     }
-
 }
 
 impl SymbolWriter for ExprSym {

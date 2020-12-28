@@ -71,9 +71,6 @@ pub(crate) enum Declaration<'a> {
     Value(&'a str, Expression<'a>),
     ValueWithWhere(&'a str, Expression<'a>, Vec<Equation<'a>>),
     Function(&'a str, Args<'a>, Expression<'a>),
-    FunctionWithWhere(&'a str, Args<'a>, Expression<'a>, Vec<Equation<'a>>),
-    FunctionWithGuards(&'a str, Args<'a>, Vec<Guard<'a>>),
-    FunctionWithGuardsAndWhere(&'a str, Args<'a>, Vec<Guard<'a>>, Vec<Equation<'a>>),
     TypeDecl(
         &'a str,
         Option<Vec<&'a str>>,
@@ -96,9 +93,6 @@ impl<'a> Declaration<'a> {
             Declaration::Value(val, _) => val,
             Declaration::ValueWithWhere(val, _, _) => val,
             Declaration::Function(f, _, _) => f,
-            Declaration::FunctionWithWhere(f, _, _, _) => f,
-            Declaration::FunctionWithGuards(f, _, _) => f,
-            Declaration::FunctionWithGuardsAndWhere(f, _, _, _) => f,
             Declaration::TypeDecl(ty, _, _, _) => ty,
             Declaration::TypeAlias(ty, _, _) => ty,
             Declaration::TraitDecl(tr, _, _) => tr,
@@ -202,8 +196,9 @@ impl<'a> Declaration<'a> {
             }
             Equation::Function(name, args, expr) => {
                 if let Some(where_decl) = opt_where {
+                    let expr = Expression::LetExpr(where_decl, Box::new(expr));
                     Ok(Some((
-                        Declaration::FunctionWithWhere(name, args, expr, where_decl),
+                        Declaration::Function(name, args, expr),
                         pos,
                     )))
                 } else {
@@ -212,13 +207,14 @@ impl<'a> Declaration<'a> {
             }
             Equation::FunctionWithGuards(name, args, guards) => {
                 if let Some(where_decl) = opt_where {
+                    let expr = Expression::LetExpr(where_decl, Box::new(Guard::guards_to_cond(&guards)));
                     Ok(Some((
-                        Declaration::FunctionWithGuardsAndWhere(name, args, guards, where_decl),
+                        Declaration::Function(name, args, expr),
                         pos,
                     )))
                 } else {
                     Ok(Some((
-                        Declaration::FunctionWithGuards(name, args, guards),
+                        Declaration::Function(name, args,  Guard::guards_to_cond(&guards)),
                         pos,
                     )))
                 }

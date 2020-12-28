@@ -107,6 +107,10 @@ impl Formatter for RustFormatter {
         format!("\"{}\"", s)
     }
 
+    fn format_int(&self, s: &str) -> String {
+        s.to_string()
+    }
+
     fn format_func_call(&self, f: &str, args: &str) -> String{
         format!("{} ({})", f, args)
     }

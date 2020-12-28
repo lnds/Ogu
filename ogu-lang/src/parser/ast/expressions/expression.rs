@@ -762,14 +762,18 @@ impl<'a> Expression<'a> {
 
     fn parse_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
-        let mut args = vec![];
-        let mut pos = pos;
-        while !is_func_call_end_symbol(parser.get_token(pos)) {
-            let (arg, new_pos) = Expression::parse_prim_expr(parser, pos)?;
-            args.push(arg);
-            pos = new_pos;
+        if is_func_call_end_symbol(parser.get_token(pos)) {
+            Ok((expr, pos))
+        } else {
+            let mut args = vec![];
+            let mut pos = pos;
+            while !is_func_call_end_symbol(parser.get_token(pos)) {
+                let (arg, new_pos) = Expression::parse_prim_expr(parser, pos)?;
+                args.push(arg);
+                pos = new_pos;
+            }
+            Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
         }
-        Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
     }
 
     fn parse_prim_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {

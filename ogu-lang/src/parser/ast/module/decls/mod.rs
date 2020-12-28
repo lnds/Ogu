@@ -9,7 +9,6 @@ use anyhow::Result;
 #[derive(Debug, Clone)]
 pub(crate) enum Declaration<'a> {
     Value(&'a str, Expression<'a>),
-    ValueWithWhere(&'a str, Expression<'a>, Vec<Equation<'a>>),
     Function(&'a str, Args<'a>, Expression<'a>),
     TypeDecl(
         &'a str,
@@ -94,7 +93,6 @@ impl<'a> Declaration<'a> {
     pub fn get_name(&self) -> &'a str {
         match self {
             Declaration::Value(val, _) => val,
-            Declaration::ValueWithWhere(val, _, _) => val,
             Declaration::Function(f, _, _) => f,
             Declaration::TypeDecl(ty, _, _, _) => ty,
             Declaration::TypeAlias(ty, _, _) => ty,
@@ -111,6 +109,3 @@ impl<'a> Declaration<'a> {
 }
 
 
-impl<'a> Declaration<'a> {
-
-}

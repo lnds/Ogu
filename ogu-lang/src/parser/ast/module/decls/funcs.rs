@@ -21,8 +21,9 @@ impl<'a> Declaration<'a> {
         match eq {
             Equation::Value(name, expr) => {
                 if let Some(where_decl) = opt_where {
+                    let expr = Expression::LetExpr(where_decl, Box::new(expr));
                     Ok(Some((
-                        Declaration::ValueWithWhere(name, expr, where_decl),
+                        Declaration::Value(name, expr),
                         pos,
                     )))
                 } else {

@@ -18,6 +18,14 @@ impl Type for GenericType {
     fn get_full_name(&self) -> String {
         format!("{} : {}", self.base, self.traits.join(" + "))
     }
+
+    fn signature(&self) -> String {
+        "generic".to_string()
+    }
+
+    fn is_equivalent(&self, other: &dyn Type) -> bool {
+        other.is_generic() && self.get_full_name() == other.get_full_name()
+    }
 }
 
 impl GenericType {

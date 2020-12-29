@@ -34,6 +34,7 @@ impl ExprSym {
             ExprSymEnum::Str(_) => Some(Box::new(BasicType::Str)),
             ExprSymEnum::Int(str) => Some(BasicType::int(str)),
             ExprSymEnum::Float(str) => Some(BasicType::float(str)),
+            ExprSymEnum::Val(_, e) => ExprSym::type_of(&e.expr),
             _ => None,
         }
     }
@@ -58,6 +59,18 @@ impl ExprSym {
                 if l.contains_id(name) || r.contains_id(name) {
                     result.insert("PartialEq".to_string());
                 }
+            }
+            ExprSymEnum::Mul(l, r) => {
+                if l.contains_id(name) || r.contains_id(name) {
+                            result.insert(format!("std::ops::Mul<Output={}>", "X"));
+
+                }
+            }
+            ExprSymEnum::Let(eqs, expr) => {
+                for eq in eqs {
+                    result.extend(eq.find_traits(name).iter().cloned());
+                }
+                result.extend(expr.find_traits(name).iter().cloned());
             }
             _e => {
                 //println!("!!! e = {:?}", _e)
@@ -128,6 +141,16 @@ impl ExprSymEnum {
                 let t = t.expr.format(fmt);
                 let e = e.expr.format(fmt);
                 writeln!(file, "{}", fmt.format_if_expr(&c, &t, &e))?;
+            }
+            ExprSymEnum::Let(eqs, e) => {
+                writeln!(file, "{{")?;
+                for eq in eqs.iter() {
+                    let s = eq.expr.format(fmt);
+                    writeln!(file, "{}", s)?;
+                }
+                writeln!(file, "{}", e.expr.format(fmt))?;
+                writeln!(file, "}}")?;
+
             }
             ExprSymEnum::Add(l, r) => {
                 let ls = l.expr.format(fmt);
@@ -200,6 +223,31 @@ impl ExprSymEnum {
                 let rs = r.expr.format(fmt);
                 fmt.format_le(&ls, &rs)
             }
+            ExprSymEnum::Add(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_add(&ls, &rs)
+            }
+            ExprSymEnum::Sub(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_sub(&ls, &rs)
+            }
+            ExprSymEnum::Mul(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_mul(&ls, &rs)
+            }
+            ExprSymEnum::Div(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_div(&ls, &rs)
+            }
+            ExprSymEnum::Mod(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_mod(&ls, &rs)
+            }
             ExprSymEnum::FuncCall(f, args) => {
                 let fs = f.expr.format(fmt);
                 let mut f_args = vec![];
@@ -208,6 +256,10 @@ impl ExprSymEnum {
                 }
                 let f_args = f_args.join(",");
                 fmt.format_func_call(&fs, &f_args)
+            }
+            ExprSymEnum::Val(n, v) => {
+                let vs = v.expr.format(fmt);
+                fmt.format_val_decl(&n, &vs)
             }
             _e => {
                 println!("format not implemented for {:?}", _e);
@@ -332,13 +384,15 @@ impl ExprSym {
             | ExprSymEnum::Sub(l, r)
             | ExprSymEnum::Mul(l, r)
             | ExprSymEnum::Div(l, r)
-            | ExprSymEnum::Mod(l, r) => promote_type(
-                self.resolve_type_from_sym(scope, l)?,
-                self.resolve_type_from_sym(scope, r)?,
-            ),
+            | ExprSymEnum::Mod(l, r) => {
+                let lt = self.resolve_type_from_sym(scope, l)?;
+                let rt = self.resolve_type_from_sym(scope, r)?;
+                let ty = promote_type(&*lt, &*rt)?;
+                Some(ty)
+            }
             ExprSymEnum::If(_, t, e) => promote_type(
-                self.resolve_type_from_sym(scope, t)?,
-                self.resolve_type_from_sym(scope, e)?,
+                &*self.resolve_type_from_sym(scope, t)?,
+                &*self.resolve_type_from_sym(scope, e)?,
             ),
             ExprSymEnum::Let(eqs, expr) => {
                 let mut sym_table: Box<dyn Scope> = SymbolTable::new("let", Some(scope.clone_box()));

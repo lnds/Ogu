@@ -168,4 +168,28 @@ impl Formatter for RustFormatter {
     fn format_lt(&self, l: &str, r: &str) -> String {
         self.format_bin_op("<", l, r)
     }
+
+    fn format_add(&self, l: &str, r: &str) -> String {
+        self.format_bin_op("+", l, r)
+    }
+
+    fn format_sub(&self, l: &str, r: &str) -> String {
+        self.format_bin_op("-", l, r)
+    }
+
+    fn format_mul(&self, l: &str, r: &str) -> String {
+        self.format_bin_op("*", l, r)
+    }
+
+    fn format_div(&self, l: &str, r: &str) -> String {
+        self.format_bin_op("/", l, r)
+    }
+
+    fn format_mod(&self, l: &str, r: &str) -> String {
+        self.format_bin_op("%", l, r)
+    }
+
+    fn format_val_decl(&self, v: &str, expr: &str) -> String {
+        format!("let {} = {};", v, expr)
+    }
 }

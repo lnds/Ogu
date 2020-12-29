@@ -10,9 +10,9 @@ use crate::codegen::transpilers::SymbolWriter;
 use crate::symbols::scopes::Scope;
 use crate::types::Type;
 use anyhow::{Context, Error, Result};
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug};
 
-pub trait Symbol: SymbolClone {
+pub trait Symbol: SymbolClone + Debug {
     fn get_name(&self) -> String;
     fn get_type(&self) -> Option<Box<dyn Type>>;
     fn get_symbol_writer(&self) -> Box<dyn SymbolWriter>;
@@ -35,18 +35,6 @@ where
 impl Clone for Box<dyn Symbol> {
     fn clone(&self) -> Box<dyn Symbol> {
         self.clone_box()
-    }
-}
-
-impl Debug for dyn Symbol {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(
-            f,
-            "Symbol {{ name: {}, type: {:?} }}",
-            self.get_name(),
-            self.get_type()
-        )?;
-        Ok(())
     }
 }
 

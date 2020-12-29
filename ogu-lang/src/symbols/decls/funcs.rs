@@ -87,8 +87,16 @@ impl Scope for FunctionSym {
         result
     }
 
-    fn set_symbols(&mut self, _syms: HashMap<String, Box<dyn Symbol>>) {
-        unimplemented!()
+    fn set_symbols(&mut self, symbols: HashMap<String, Box<dyn Symbol>>) {
+        let mut new_args = vec![];
+        for a in self.args.iter() {
+            if let Some(sym) = symbols.get(&a.name) {
+                new_args.push(ArgSym::new(&a.name, sym.get_type()))
+            } else {
+                new_args.push(a.clone());
+            }
+        }
+        self.args = new_args;
     }
 }
 

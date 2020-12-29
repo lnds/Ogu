@@ -4,10 +4,12 @@ use std::fmt::{Debug, Formatter};
 pub(crate) mod basic;
 pub(crate) mod generic;
 
-pub trait Type: TypeClone {
+pub trait Type: TypeClone  {
     fn get_name(&self) -> String;
     fn is_generic(&self) -> bool;
     fn get_full_name(&self) -> String;
+    fn signature(&self) -> String;
+    fn is_equivalent(&self, other: &dyn Type) -> bool;
 }
 
 pub trait TypeClone {
@@ -36,21 +38,17 @@ impl Debug for dyn Type {
     }
 }
 
-impl PartialEq for dyn Type {
-    fn eq(&self, other: &Self) -> bool {
-        self.get_name() == other.get_name()
-    }
-}
 
-pub(crate) fn promote_type(lt: Box<dyn Type>, rt: Box<dyn Type>) -> Option<Box<dyn Type>> {
-    if lt.clone() == rt.clone() {
-        return Some(rt.clone());
-    }
+
+pub(crate) fn promote_type(lt: &dyn Type, rt: &dyn Type) -> Option<Box<dyn Type>> {
     if lt.is_generic() {
-        return Some(rt.clone());
+        return Some(rt.clone_box());
     }
     if rt.is_generic() {
-        return Some(lt.clone());
+        return Some(lt.clone_box());
+    }
+    if lt.is_equivalent(rt) {
+        return Some(rt.clone_box());
     }
     None
 }

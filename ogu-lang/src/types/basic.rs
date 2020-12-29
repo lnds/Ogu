@@ -79,4 +79,13 @@ impl Type for BasicType {
     fn get_full_name(&self) -> String {
         self.get_name()
     }
+
+    fn signature(&self) -> String {
+        "basic".to_string()
+    }
+
+    fn is_equivalent(&self, other: &dyn Type) -> bool {
+        self.signature() == other.signature()
+        && self.get_name() == other.get_name()
+    }
 }

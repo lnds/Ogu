@@ -45,7 +45,7 @@ impl Module {
     }
 }
 
-impl<'a> Scope for Module {
+impl Scope for Module {
     fn scope_name(&self) -> &str {
         &self.name
     }

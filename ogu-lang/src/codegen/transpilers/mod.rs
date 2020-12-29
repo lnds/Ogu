@@ -36,6 +36,13 @@ pub trait Formatter {
     fn format_gt(&self, l: &str, r: &str) -> String;
     fn format_le(&self, l: &str, r: &str) -> String;
     fn format_lt(&self, l: &str, r: &str) -> String;
+    fn format_add(&self, l: &str, r: &str) -> String;
+    fn format_sub(&self, l: &str, r: &str) -> String;
+    fn format_mul(&self, l: &str, r: &str) -> String;
+    fn format_div(&self, l: &str, r: &str) -> String;
+    fn format_mod(&self, l: &str, r: &str) -> String;
+    fn format_val_decl(&self, v: &str, expr: &str) -> String;
+
 }
 
 pub trait SymbolWriter {

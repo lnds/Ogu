@@ -6,7 +6,7 @@ use crate::types::Type;
 use anyhow::Result;
 use std::fs::File;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct MacroSym {
     name: String,
     ty: Option<Box<dyn Type>>,

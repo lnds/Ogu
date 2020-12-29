@@ -10,7 +10,7 @@ pub trait Scope: ScopeClone {
     fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>>;
     fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<()>;
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>>;
-    fn set_symbols(&mut self, syms: HashMap<String, Box<dyn Symbol>>);
+    fn set_symbols(&mut self, symbols: HashMap<String, Box<dyn Symbol>>);
 }
 
 pub(crate) fn solve_symbols_types(

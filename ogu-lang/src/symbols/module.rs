@@ -44,10 +44,10 @@ impl Module {
         Ok(sym)
     }
 
-    pub(crate) fn solve_symbols_types(&self) -> Result<HashMap<String, Box<dyn Symbol>>> {
+    pub(crate) fn solve_symbols_types(self) -> Result<HashMap<String, Box<dyn Symbol>>> {
         let mut symbols = HashMap::new();
         for (name, sym) in self.symbols.iter() {
-            let result = sym.solve_type(self)?;
+            let result = sym.solve_type(Box::new(self.clone()))?;
             symbols.insert(name.clone(), result);
         }
         Ok(symbols)

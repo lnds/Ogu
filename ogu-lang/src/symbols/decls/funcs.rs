@@ -104,7 +104,7 @@ impl Symbol for FunctionSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, _scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
             None => {
@@ -115,7 +115,7 @@ impl Symbol for FunctionSym {
                     ty: self.get_type(),
                     enclosing_scope: self.enclosing_scope.clone(),
                 };
-                let sym_expr = self.expr.solve_type(&sym)?;
+                let sym_expr = self.expr.solve_type(Box::new(sym.clone()))?;
                 sym.ty = sym_expr.get_type();
                 Ok(Box::new(sym))
             }
@@ -193,7 +193,7 @@ impl Symbol for ArgSym {
         unimplemented!()
     }
 
-    fn solve_type(&self, _scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         unimplemented!()
     }
 }

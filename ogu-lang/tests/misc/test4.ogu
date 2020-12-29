@@ -1,5 +1,7 @@
 -- test 4
 min x y = if x < y then x else y
 
+min2 x y = if x <= y then x else y
+
 main () =
-    println! "{}" min $ 10 20
+    println! "{} {}" (min  10 20) (min2 10 20)

@@ -1,5 +1,7 @@
 -- test 5
 eq a b = if a == b then "equal" else "different"
 
+ne a b = if a /= b then "different" else "equal"
+
 main () =
-    println! "{}" eq $ 10 20
+    println! "{} {}" (eq  10 20) (ne  10 10)

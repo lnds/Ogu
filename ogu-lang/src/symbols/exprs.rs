@@ -15,6 +15,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 use std::ops::Deref;
+use crate::symbols::sym_table::SymbolTable;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ExprSym {
@@ -173,6 +174,11 @@ impl ExprSymEnum {
                 let rs = r.expr.format(fmt);
                 fmt.format_eq(&ls, &rs)
             }
+            ExprSymEnum::Ne(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_ne(&ls, &rs)
+            }
             ExprSymEnum::Gt(l, r) => {
                 let ls = l.expr.format(fmt);
                 let rs = r.expr.format(fmt);
@@ -285,10 +291,10 @@ impl Symbol for ExprSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
-            None => match self.find_type(scope) {
+            None => match self.find_type(scope.clone()) {
                 Some(ty) => Ok(self.make_copy(ty)),
                 None => raise_symbol_table_error(
                     "type not found",
@@ -308,7 +314,7 @@ impl ExprSym {
         })
     }
 
-    fn find_type(&self, scope: &dyn Scope) -> Option<Box<dyn Type>> {
+    fn find_type(&self, scope: Box<dyn Scope>) -> Option<Box<dyn Type>> {
         match &self.expr {
             ExprSymEnum::Void => Some(BasicType::unit()),
             ExprSymEnum::Id(id) => self.resolve_type_from_name(scope, &id),
@@ -318,8 +324,8 @@ impl ExprSym {
             | ExprSymEnum::Mul(l, r)
             | ExprSymEnum::Div(l, r)
             | ExprSymEnum::Mod(l, r) => {
-                let lt = self.resolve_type_from_sym(scope, l)?;
-                let rt = self.resolve_type_from_sym(scope, r)?;
+                let lt = self.resolve_type_from_sym(scope.clone(), l)?;
+                let rt = self.resolve_type_from_sym(scope.clone(), r)?;
                 if lt != rt {
                     None
                 } else {
@@ -327,14 +333,19 @@ impl ExprSym {
                 }
             }
             ExprSymEnum::If(_, t, e) => {
-                let tt = self.resolve_type_from_sym(scope, t)?;
-                let et = self.resolve_type_from_sym(scope, e)?;
+                let tt = self.resolve_type_from_sym(scope.clone(), t)?;
+                let et = self.resolve_type_from_sym(scope.clone(), e)?;
                 if tt != et {
                     None
                 } else {
                     Some(tt)
                 }
             }
+            ExprSymEnum::Let(eqs, expr) => {
+                let sym_table = SymbolTable::new("let", Some(scope.clone()));
+                todo!()
+            }
+
             _e => {
                 println!("ExprSym::find_type not implemented for {:?}", _e);
                 todo!()
@@ -342,14 +353,14 @@ impl ExprSym {
         }
     }
 
-    fn resolve_type_from_name(&self, scope: &dyn Scope, name: &str) -> Option<Box<dyn Type>> {
+    fn resolve_type_from_name(&self, scope: Box<dyn Scope>, name: &str) -> Option<Box<dyn Type>> {
         match scope.resolve(name) {
             None => None,
             Some(sym) => sym.get_type(),
         }
     }
 
-    fn resolve_type_from_sym(&self, scope: &dyn Scope, sym: &ExprSym) -> Option<Box<dyn Type>> {
+    fn resolve_type_from_sym(&self, scope: Box<dyn Scope>, sym: &ExprSym) -> Option<Box<dyn Type>> {
         match sym.get_type() {
             Some(ty) => Some(ty.clone()),
             None => {

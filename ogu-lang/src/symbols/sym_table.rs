@@ -12,10 +12,10 @@ pub(crate) struct SymbolTable {
 }
 
 impl SymbolTable {
-    pub(crate) fn new(name: &str) -> Self {
+    pub(crate) fn new(name: &str, enclosing_scope: Option<Box<dyn Scope>>) -> Self {
         SymbolTable {
             name: name.to_string(),
-            enclosing_scope: None,
+            enclosing_scope,
             symbols: HashMap::new(),
         }
     }

@@ -1,10 +1,6 @@
 -- test 6
 
--- seudo currying
+test a = let b = 10 in a * b
 
-multiplicar x y = x * y
 
-doblar = curry multiplicar 2
-
-test = doblar 4
-
+main () = println! "{}" test $ 10

@@ -1,5 +1,7 @@
 -- test 3
 max x y = if x > y then x else y
 
+max2 x y = if x >= y then x else y
+
 main () =
-    println! "{}" max $ 10 20
+    println! "{} {}" (max $ 10 20) (max2 10 20)

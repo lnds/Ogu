@@ -31,7 +31,7 @@ impl FunctionSym {
     ) -> Box<Self> {
         Box::new(FunctionSym {
             name: name.to_string(),
-            args: args.clone().into(),
+            args: args.into(),
             expr: expr.clone().into(),
             ty: None,
             enclosing_scope,
@@ -222,6 +222,13 @@ impl<'a> From<Args<'a>> for Vec<ArgSym> {
         }
     }
 }
+
+impl<'a> From<&Args<'a>> for Vec<ArgSym> {
+    fn from(args: &Args<'a>) -> Self {
+        args.clone().into()
+    }
+}
+
 
 impl<'a> From<Arg<'a>> for ArgSym {
     fn from(arg: Arg<'a>) -> Self {

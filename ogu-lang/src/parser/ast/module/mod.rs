@@ -40,20 +40,6 @@ impl<'a> ModuleAst<'a> {
         }
     }
 
-    pub(crate) fn get_exposed_names(&mut self) -> Vec<&str> {
-        match &self.exposing {
-            None => vec![],
-            Some(Exposing::All) => {
-                let mut result = vec![];
-                for decl in self.get_decls().iter() {
-                    result.push(decl.get_name())
-                }
-                result
-            }
-            Some(Exposing::List(v)) => v.clone(),
-        }
-    }
-
     pub(crate) fn get_decls(&self) -> Vec<Declaration> {
         self.body.clone().get_decls().to_vec()
     }

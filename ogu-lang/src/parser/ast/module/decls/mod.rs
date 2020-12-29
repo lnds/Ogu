@@ -42,14 +42,6 @@ pub(crate) enum FuncPrototype<'a> {
     Effect(&'a str, FuncType<'a>),
 }
 
-impl<'a> FuncPrototype<'a> {
-    fn get_name(&self) -> &'a str {
-        match self {
-            FuncPrototype::Normal(s, _) => s,
-            FuncPrototype::Effect(s, _) => s,
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub(crate) enum AlgebraicElement<'a> {
@@ -86,22 +78,3 @@ pub(crate) enum BaseType<'a> {
 pub(crate) type DeclVec<'a> = Vec<Declaration<'a>>;
 
 pub(crate) type DeclParseResult<'a> = Result<Option<(Declaration<'a>, usize)>>;
-
-impl<'a> Declaration<'a> {
-    pub fn get_name(&self) -> &'a str {
-        match self {
-            Declaration::Value(val, _) => val,
-            Declaration::Function(f, _, _) => f,
-            Declaration::TypeDecl(ty, _, _, _) => ty,
-            Declaration::TypeAlias(ty, _, _) => ty,
-            Declaration::TraitDecl(tr, _, _) => tr,
-            Declaration::ExtensionDecl(e, _, _) => e,
-            Declaration::FunctionPrototype(ft) => ft.get_name(),
-            Declaration::MacroDecl(d) => d.get_name(),
-            Declaration::Effect(fp) => fp.get_name(),
-            Declaration::Handler(h, _, _) => h,
-            Declaration::DocString(Some(_)) => "",
-            Declaration::DocString(None) => "",
-        }
-    }
-}

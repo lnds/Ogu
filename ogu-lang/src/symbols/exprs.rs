@@ -223,6 +223,19 @@ impl<'a> From<Expression<'a>> for Box<ExprSym> {
     }
 }
 
+impl<'a> From<&Expression<'a>> for Box<ExprSym> {
+    fn from(expr: &Expression<'a>) -> Self {
+        expr.clone().into()
+    }
+}
+
+impl<'a> From<Box<Expression<'a>>> for Box<ExprSym> {
+    fn from(expr: Box<Expression<'a>>) -> Self {
+        let ex = expr.deref().clone();
+        ex.into()
+    }
+}
+
 impl<'a> From<Equation<'a>> for ExprSym {
     fn from(eq: Equation<'a>) -> Self {
         match eq {
@@ -272,12 +285,6 @@ impl<'a> From<Expression<'a>> for ExprSym {
     }
 }
 
-impl<'a> From<Box<Expression<'a>>> for Box<ExprSym> {
-    fn from(expr: Box<Expression<'a>>) -> Self {
-        let ex = expr.deref().clone();
-        ex.into()
-    }
-}
 
 impl Symbol for ExprSym {
     fn get_name(&self) -> String {

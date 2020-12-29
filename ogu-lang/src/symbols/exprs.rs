@@ -11,6 +11,7 @@ use crate::symbols::{raise_symbol_table_error, Symbol};
 use crate::types::basic::BasicType;
 use crate::types::Type;
 use anyhow::{Error, Result};
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 use std::ops::Deref;
@@ -33,6 +34,34 @@ impl ExprSym {
             ExprSymEnum::Int(str) => Some(BasicType::int(str)),
             ExprSymEnum::Float(str) => Some(BasicType::float(str)),
             _ => None,
+        }
+    }
+
+    pub(crate) fn find_traits(&self, name: &str) -> Vec<String> {
+        let mut result: HashSet<String> = HashSet::new();
+        match &self.expr {
+            ExprSymEnum::If(c, t, e) => result.extend(c.find_traits(name).iter().cloned()),
+            ExprSymEnum::Gt(l, r)
+            | ExprSymEnum::Ge(l, r)
+            | ExprSymEnum::Lt(l, r)
+            | ExprSymEnum::Le(l, r) => {
+                if l.contains_id(name) || r.contains_id(name) {
+                    result.insert("PartialOrd".to_string());
+                }
+            }
+            e => {
+                println!("!!! e = {:?}", e)
+            }
+        }
+        result.iter().cloned().collect()
+    }
+
+    fn contains_id(&self, name: &str) -> bool {
+        println!("contains {:?} in {:?}", name, self);
+        match &self.expr {
+            ExprSymEnum::Id(id) => id == name,
+            ExprSymEnum::Gt(l, r) => l.contains_id(name) || r.contains_id(name),
+            _ => false,
         }
     }
 }

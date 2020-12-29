@@ -1,13 +1,13 @@
 use crate::codegen::CodeGenerator;
 use crate::parser::ast::module::decls::Declaration;
+use crate::parser::ast::module::decls::Declaration::{Function, Value};
 use crate::parser::ast::module::ModuleAst;
+use crate::symbols::decls::funcs::FunctionSym;
+use crate::symbols::decls::values::ValueSym;
 use crate::symbols::scopes::Scope;
 use crate::symbols::Symbol;
 use anyhow::Result;
 use std::collections::HashMap;
-use crate::parser::ast::module::decls::Declaration::{Function, Value};
-use crate::symbols::decls::funcs::FunctionSym;
-use crate::symbols::decls::values::ValueSym;
 
 #[derive(Clone)]
 pub struct Module {
@@ -31,11 +31,11 @@ impl Module {
     }
 
     fn define_decl(decl: &Declaration, scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
-        let sym : Box<dyn Symbol> = match decl {
-            Function(name, args, expr) =>
-                FunctionSym::new(name, args.clone().into(), expr.clone().into(), scope),
-            Value(name, expr) =>
-                ValueSym::new(name, expr.clone().into(), scope),
+        let sym: Box<dyn Symbol> = match decl {
+            Function(name, args, expr) => {
+                FunctionSym::new(name, args.clone().into(), expr.clone().into(), scope)
+            }
+            Value(name, expr) => ValueSym::new(name, expr.clone().into(), scope),
             _d => {
                 println!("not implemented for {:?}", _d);
                 todo!()

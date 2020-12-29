@@ -14,7 +14,7 @@ pub(crate) struct ValueSym {
     name: String,
     expr: Box<ExprSym>,
     ty: Option<Box<dyn Type>>,
-    enclosing_scope: Box<dyn Scope>
+    enclosing_scope: Box<dyn Scope>,
 }
 
 impl ValueSym {
@@ -25,7 +25,7 @@ impl ValueSym {
             name: name.to_string(),
             expr,
             ty,
-            enclosing_scope
+            enclosing_scope,
         })
     }
 }
@@ -49,14 +49,14 @@ impl Symbol for ValueSym {
             name: self.name.clone(),
             expr: self.expr.clone(),
             ty: sym_expr.get_type(),
-            enclosing_scope: self.enclosing_scope.clone()
+            enclosing_scope: self.enclosing_scope.clone(),
         }))
     }
 }
 
 impl SymbolWriter for ValueSym {
     fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<()> {
-        let func_type = fmt.format_type(self.get_type().ok_or_else(|| {
+        let func_type = fmt.format_type(&self.get_type().ok_or_else(|| {
             Error::new(OguError::CodeGenError)
                 .context(format!("Symbol {:?} has no type", self.get_name()))
         })?);

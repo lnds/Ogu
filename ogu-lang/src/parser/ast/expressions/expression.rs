@@ -201,8 +201,6 @@ impl<'a> Expression<'a> {
         Expression::parse_control_expr
     );
 
-
-
     pub(crate) fn parse_control_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             None => raise_parser_error("Expecting an expression but found EOF", parser, pos, false),

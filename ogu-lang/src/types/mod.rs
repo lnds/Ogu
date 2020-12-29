@@ -6,6 +6,8 @@ pub(crate) mod generic;
 
 pub trait Type: TypeClone {
     fn get_name(&self) -> String;
+    fn is_generic(&self) -> bool;
+    fn get_full_name(&self) -> String;
 }
 
 pub trait TypeClone {

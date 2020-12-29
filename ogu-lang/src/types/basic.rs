@@ -71,4 +71,12 @@ impl Type for BasicType {
             BasicType::Str => String::from("String"),
         }
     }
+
+    fn is_generic(&self) -> bool {
+        false
+    }
+
+    fn get_full_name(&self) -> String {
+        self.get_name()
+    }
 }

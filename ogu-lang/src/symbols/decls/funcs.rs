@@ -1,16 +1,16 @@
 use crate::backend::errors::OguError;
 use crate::codegen::transpilers::{Formatter, SymbolWriter};
+use crate::codegen::CodeGenerator;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::symbols::exprs::ExprSym;
 use crate::symbols::scopes::Scope;
 use crate::symbols::Symbol;
+use crate::types::generic::GenericType;
 use crate::types::Type;
 use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::Write;
-use crate::codegen::CodeGenerator;
-use crate::types::generic::GenericType;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -22,18 +22,41 @@ pub(crate) struct FunctionSym {
 }
 
 impl FunctionSym {
-    pub(crate) fn new(name: &str, args: Args, expr: Expression, enclosing_scope: Box<dyn Scope>) -> Box<Self> {
+    pub(crate) fn new(
+        name: &str,
+        args: Args,
+        expr: Expression,
+        enclosing_scope: Box<dyn Scope>,
+    ) -> Box<Self> {
         Box::new(FunctionSym {
             name: name.to_string(),
             args: args.into(),
             expr: expr.into(),
             ty: None,
-            enclosing_scope
+            enclosing_scope,
         })
     }
 
     pub(crate) fn get_args(&self) -> Vec<ArgSym> {
         self.args.to_vec()
+    }
+
+    fn solve_args_types(&self, args: &[ArgSym]) -> Vec<ArgSym> {
+        let mut result = vec![];
+        for a in args.iter() {
+            match a.get_type() {
+                None => result.push(ArgSym::new(
+                    &a.get_name(),
+                    Some(GenericType::new("T", self.find_traits(&a.get_name()))),
+                )),
+                Some(_) => result.push(a.clone()),
+            }
+        }
+        result.to_vec()
+    }
+
+    fn find_traits(&self, name: &str) -> Vec<String> {
+        self.expr.find_traits(name)
     }
 }
 
@@ -50,7 +73,7 @@ impl Scope for FunctionSym {
         let sym = self.args.iter().find(|a| a.get_name() == name).cloned();
         match sym {
             None => self.enclosing_scope.resolve(name),
-            Some(sym) => Some(Box::new(sym.clone()))
+            Some(sym) => Some(Box::new(sym)),
         }
     }
 
@@ -59,7 +82,7 @@ impl Scope for FunctionSym {
     }
 
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
-        let mut result : Vec<Box<dyn Symbol>> = vec![];
+        let mut result: Vec<Box<dyn Symbol>> = vec![];
         for a in self.args.iter() {
             result.push(Box::new(a.clone()));
         }
@@ -84,14 +107,16 @@ impl Symbol for FunctionSym {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
             None => {
-                let sym_expr = self.expr.solve_type(self)?;
-                Ok(Box::new(FunctionSym {
+                let mut sym = FunctionSym {
                     name: self.name.clone(),
-                    args: self.args.clone(),
+                    args: self.solve_args_types(&self.args),
                     expr: self.expr.clone(),
-                    ty: sym_expr.get_type(),
-                    enclosing_scope: self.enclosing_scope.clone()
-                }))
+                    ty: self.get_type(),
+                    enclosing_scope: self.enclosing_scope.clone(),
+                };
+                let sym_expr = self.expr.solve_type(&sym)?;
+                sym.ty = sym_expr.get_type();
+                Ok(Box::new(sym))
             }
         }
     }
@@ -99,23 +124,38 @@ impl Symbol for FunctionSym {
 
 impl SymbolWriter for FunctionSym {
     fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<()> {
-        let func_type = fmt.format_type(self.get_type().ok_or_else(|| {
-            Error::new(OguError::CodeGenError)
-                .context(format!("Symbol {:?} has no type", self.get_name()))
-        })?);
-        let mut args = vec![];
-        for a in self.args.iter() {
-            args.push(fmt.format_func_arg(a.get_name(), a.get_type().ok_or_else(||{
-                Error::new(OguError::CodeGenError)
-                    .context(format!("Argument {:?} has no type", a.get_name()))
-            })?));
+        match self.get_type() {
+            None => Err(Error::new(OguError::CodeGenError)
+                .context(format!("Symbol {:?} has no type", self.get_name()))),
+            Some(func_type) => {
+                let mut args = vec![];
+                for a in self.args.iter() {
+                    args.push(fmt.format_func_arg(
+                        a.get_name(),
+                        a.get_type().ok_or_else(|| {
+                            Error::new(OguError::CodeGenError)
+                                .context(format!("Argument {:?} has no type", a.get_name()))
+                        })?,
+                    ));
+                }
+                let args = args.join(", ");
+                let header =
+                    if func_type.is_generic() {
+                        let s_params = fmt.format_type_with_traits(&func_type);
+                        let s_func_type = fmt.format_type(&func_type);
+                        fmt.format_generic_func_header(self.get_name(), s_params, args, s_func_type)
+
+                    } else {
+                        let s_func_type = fmt.format_type(&func_type);
+                        fmt.format_func_header(self.get_name(), args, s_func_type)
+
+                    };
+                writeln!(file, "{} {{", header)?;
+                self.expr.write_symbol(fmt, file)?;
+                writeln!(file, "}}")?;
+                Ok(())
+            }
         }
-        let args = args.join(", ");
-        let header = fmt.format_func_header(self.get_name(), args, func_type);
-        writeln!(file, "{} {{", header)?;
-        self.expr.write_symbol(fmt, file)?;
-        writeln!(file, "}}")?;
-        Ok(())
     }
 }
 
@@ -170,7 +210,7 @@ impl<'a> From<Args<'a>> for Vec<ArgSym> {
 impl<'a> From<Arg<'a>> for ArgSym {
     fn from(arg: Arg<'a>) -> Self {
         match arg {
-            Arg::Simple(id) => ArgSym::new(id, Some(GenericType::new("T"))),
+            Arg::Simple(id) => ArgSym::new(id, None),
             _ => todo!(),
         }
     }

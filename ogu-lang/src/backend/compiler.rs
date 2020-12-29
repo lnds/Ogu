@@ -26,7 +26,7 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn new(params: &Params) -> Box<Self> {
-        let mut symbol_table = Box::new(SymbolTable::new("_ogu", None));
+        let mut symbol_table = SymbolTable::new("_ogu", None);
         symbol_table.define(MacroSym::new("println!", BasicType::Unit));
         symbol_table.define(MacroSym::new("print!", BasicType::Unit));
         symbol_table.define(TypeAliasSym::new("Int", BasicType::primitive("i64")));
@@ -95,7 +95,7 @@ impl Compiler {
         if self.show_ast {
             println!("AST = {:#?}", module);
         }
-        let mut module : Box<dyn Scope> = Box::new(Module::new(&module, Box::new(self.clone()))?);
+        let mut module : Box<dyn Scope> = Module::new(&module, Box::new(self.clone()))?;
         module.set_symbols(solve_symbols_types(&module)?);
         Ok(module)
     }

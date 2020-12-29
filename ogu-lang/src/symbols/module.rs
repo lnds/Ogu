@@ -17,7 +17,7 @@ pub struct Module {
 }
 
 impl Module {
-    pub(crate) fn new(module_ast: &ModuleAst, compiler: Box<dyn Scope>) -> Result<Self> {
+    pub(crate) fn new(module_ast: &ModuleAst, compiler: Box<dyn Scope>) -> Result<Box<Self>> {
         let mut module = Module {
             name: module_ast.get_module_name(),
             symbols: HashMap::new(),
@@ -27,7 +27,7 @@ impl Module {
             let sym = Module::define_decl(decl, Box::new(module.clone()))?;
             module.define(sym);
         }
-        Ok(module)
+        Ok(Box::new(module))
     }
 
     fn define_decl(decl: &Declaration, scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {

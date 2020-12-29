@@ -6,7 +6,7 @@ use crate::parser::ast::expressions::expression::Expression::{
     IntegerLiteral, LeExpr, LetExpr, LtExpr, ModExpr, MulExpr, NeExpr, PowExpr, StringLiteral,
     SubExpr, Unit,
 };
-use crate::symbols::scopes::Scope;
+use crate::symbols::scopes::{Scope, solve_symbols_types};
 use crate::symbols::{raise_symbol_table_error, Symbol};
 use crate::types::basic::BasicType;
 use crate::types::Type;
@@ -106,6 +106,7 @@ impl ExprSymEnum {
         match self {
             ExprSymEnum::Id(s) => s.to_string(),
             ExprSymEnum::FuncCall(e, _) => e.get_name(),
+            ExprSymEnum::Val(s, _) => s.to_string(),
             _ => format!("{:?}", self),
         }
     }
@@ -294,7 +295,7 @@ impl Symbol for ExprSym {
     fn solve_type(&self, scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
-            None => match self.find_type(scope.clone()) {
+            None => match self.find_type(scope) {
                 Some(ty) => Ok(self.make_copy(ty)),
                 None => raise_symbol_table_error(
                     "type not found",
@@ -314,18 +315,26 @@ impl ExprSym {
         })
     }
 
-    fn find_type(&self, scope: Box<dyn Scope>) -> Option<Box<dyn Type>> {
+    fn find_type(&self, scope: &Box<dyn Scope>) -> Option<Box<dyn Type>> {
         match &self.expr {
             ExprSymEnum::Void => Some(BasicType::unit()),
             ExprSymEnum::Id(id) => self.resolve_type_from_name(scope, &id),
             ExprSymEnum::FuncCall(e, _) => e.find_type(scope),
+            ExprSymEnum::Val(n, expr) =>
+                {
+                    println!("resolve type for {}, expr = {:?}, scope = {:?}", n, expr, scope);
+                    let ty = expr.find_type(scope);
+                    println!("found = {:?}", ty);
+                    ty
+
+                }
             ExprSymEnum::Add(l, r)
             | ExprSymEnum::Sub(l, r)
             | ExprSymEnum::Mul(l, r)
             | ExprSymEnum::Div(l, r)
             | ExprSymEnum::Mod(l, r) => {
-                let lt = self.resolve_type_from_sym(scope.clone(), l)?;
-                let rt = self.resolve_type_from_sym(scope.clone(), r)?;
+                let lt = self.resolve_type_from_sym(scope, l)?;
+                let rt = self.resolve_type_from_sym(scope, r)?;
                 if lt != rt {
                     None
                 } else {
@@ -333,8 +342,8 @@ impl ExprSym {
                 }
             }
             ExprSymEnum::If(_, t, e) => {
-                let tt = self.resolve_type_from_sym(scope.clone(), t)?;
-                let et = self.resolve_type_from_sym(scope.clone(), e)?;
+                let tt = self.resolve_type_from_sym(scope, t)?;
+                let et = self.resolve_type_from_sym(scope, e)?;
                 if tt != et {
                     None
                 } else {
@@ -342,15 +351,17 @@ impl ExprSym {
                 }
             }
             ExprSymEnum::Let(eqs, expr) => {
-                let mut sym_table = SymbolTable::new("let", Some(scope.clone()));
+                let mut sym_table : Box<dyn Scope> = SymbolTable::new("let", Some(scope.clone()));
                 for eq in eqs.iter() {
-                    println!("adding symbol eq = {:#?}", eq);
                     sym_table.define(Box::new(eq.clone()));
                 }
+                sym_table.set_symbols(solve_symbols_types(&sym_table).ok()?);
                 println!("sym table for let = {:#?}", sym_table);
-                todo!()
+                let ty = expr.find_type(&sym_table);
+                println!("found ty = {:?}", ty);
+                ty
             }
-
+            ExprSymEnum::Int(_) => self.get_type(),
             _e => {
                 println!("ExprSym::find_type not implemented for {:?}", _e);
                 todo!()
@@ -358,14 +369,14 @@ impl ExprSym {
         }
     }
 
-    fn resolve_type_from_name(&self, scope: Box<dyn Scope>, name: &str) -> Option<Box<dyn Type>> {
+    fn resolve_type_from_name(&self, scope: &Box<dyn Scope>, name: &str) -> Option<Box<dyn Type>> {
         match scope.resolve(name) {
             None => None,
             Some(sym) => sym.get_type(),
         }
     }
 
-    fn resolve_type_from_sym(&self, scope: Box<dyn Scope>, sym: &ExprSym) -> Option<Box<dyn Type>> {
+    fn resolve_type_from_sym(&self, scope: &Box<dyn Scope>, sym: &ExprSym) -> Option<Box<dyn Type>> {
         match sym.get_type() {
             Some(ty) => Some(ty.clone()),
             None => {

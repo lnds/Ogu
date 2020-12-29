@@ -95,7 +95,13 @@ impl Formatter for RustFormatter {
         format!("fn {} ({}) -> {}", name, args, ty)
     }
 
-    fn format_generic_func_header(&self, name: String, params: String, args: String, ty: String) -> String {
+    fn format_generic_func_header(
+        &self,
+        name: String,
+        params: String,
+        args: String,
+        ty: String,
+    ) -> String {
         format!("fn {} <{}> ({}) -> {}", name, params, args, ty)
     }
 
@@ -137,6 +143,14 @@ impl Formatter for RustFormatter {
 
     fn format_bin_op(&self, op: &str, l: &str, r: &str) -> String {
         format!("{} {} {}", l, op, r)
+    }
+
+    fn format_eq(&self, l: &str, r: &str) -> String {
+        self.format_bin_op("==", l, r)
+    }
+
+    fn format_ne(&self, l: &str, r: &str) -> String {
+        self.format_bin_op("!=", l, r)
     }
 
     fn format_ge(&self, l: &str, r: &str) -> String {

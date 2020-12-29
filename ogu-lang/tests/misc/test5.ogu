@@ -1,4 +1,5 @@
 -- test 5
+eq a b = if a == b then "equal" else "different"
 
 main () =
-    [0 ...] |> take-while \x -> x < 4000000 |> filter even? |> reduce (+)
+    println! "{}" eq $ 10 20

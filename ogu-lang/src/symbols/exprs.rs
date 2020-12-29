@@ -2,9 +2,9 @@ use crate::codegen::transpilers::{Formatter, SymbolWriter};
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::expression::Expression::{
-    AddExpr, DivExpr, FloatLiteral, FuncCallExpr, GeExpr, GtExpr, Identifier, IfExpr,
-    IntegerLiteral, LeExpr, LetExpr, LtExpr, ModExpr, MulExpr, PowExpr, StringLiteral, SubExpr,
-    Unit,
+    AddExpr, DivExpr, EqExpr, FloatLiteral, FuncCallExpr, GeExpr, GtExpr, Identifier, IfExpr,
+    IntegerLiteral, LeExpr, LetExpr, LtExpr, ModExpr, MulExpr, NeExpr, PowExpr, StringLiteral,
+    SubExpr, Unit,
 };
 use crate::symbols::scopes::Scope;
 use crate::symbols::{raise_symbol_table_error, Symbol};
@@ -40,13 +40,22 @@ impl ExprSym {
     pub(crate) fn find_traits(&self, name: &str) -> Vec<String> {
         let mut result: HashSet<String> = HashSet::new();
         match &self.expr {
-            ExprSymEnum::If(c, t, e) => result.extend(c.find_traits(name).iter().cloned()),
+            ExprSymEnum::If(c, t, e) => {
+                result.extend(c.find_traits(name).iter().cloned());
+                result.extend(t.find_traits(name).iter().cloned());
+                result.extend(e.find_traits(name).iter().cloned());
+            }
             ExprSymEnum::Gt(l, r)
             | ExprSymEnum::Ge(l, r)
             | ExprSymEnum::Lt(l, r)
             | ExprSymEnum::Le(l, r) => {
                 if l.contains_id(name) || r.contains_id(name) {
                     result.insert("PartialOrd".to_string());
+                }
+            }
+            ExprSymEnum::Eq(l, r) | ExprSymEnum::Ne(l, r) => {
+                if l.contains_id(name) || r.contains_id(name) {
+                    result.insert("PartialEq".to_string());
                 }
             }
             e => {
@@ -84,6 +93,8 @@ enum ExprSymEnum {
     Lt(Box<ExprSym>, Box<ExprSym>),
     Ge(Box<ExprSym>, Box<ExprSym>),
     Gt(Box<ExprSym>, Box<ExprSym>),
+    Eq(Box<ExprSym>, Box<ExprSym>),
+    Ne(Box<ExprSym>, Box<ExprSym>),
     Let(Vec<ExprSym>, Box<ExprSym>),
     If(Box<ExprSym>, Box<ExprSym>, Box<ExprSym>),
     Val(String, Box<ExprSym>),
@@ -157,6 +168,11 @@ impl ExprSymEnum {
             ExprSymEnum::Id(id) => fmt.format_id(id),
             ExprSymEnum::Str(s) => fmt.format_str(s),
             ExprSymEnum::Int(s) => fmt.format_int(s),
+            ExprSymEnum::Eq(l, r) => {
+                let ls = l.expr.format(fmt);
+                let rs = r.expr.format(fmt);
+                fmt.format_eq(&ls, &rs)
+            }
             ExprSymEnum::Gt(l, r) => {
                 let ls = l.expr.format(fmt);
                 let rs = r.expr.format(fmt);
@@ -231,6 +247,8 @@ impl<'a> From<Expression<'a>> for ExprSym {
             GtExpr(l, r) => ExprSym::new(ExprSymEnum::Gt(l.into(), r.into())),
             LeExpr(l, r) => ExprSym::new(ExprSymEnum::Le(l.into(), r.into())),
             LtExpr(l, r) => ExprSym::new(ExprSymEnum::Lt(l.into(), r.into())),
+            EqExpr(l, r) => ExprSym::new(ExprSymEnum::Eq(l.into(), r.into())),
+            NeExpr(l, r) => ExprSym::new(ExprSymEnum::Ne(l.into(), r.into())),
             LetExpr(eqv, expr) => {
                 let mut eqs = vec![];
                 for e in eqv.iter() {

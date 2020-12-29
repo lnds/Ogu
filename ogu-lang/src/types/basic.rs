@@ -68,7 +68,7 @@ impl Type for BasicType {
         match self {
             BasicType::Unit => String::from("()"),
             BasicType::Primitive(s) => s.clone(),
-            BasicType::Str => String::from("String"),
+            BasicType::Str => String::from("&'static str"),
         }
     }
 

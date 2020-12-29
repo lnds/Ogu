@@ -13,7 +13,13 @@ pub trait Transpiler {
 
 pub trait Formatter {
     fn format_func_header(&self, name: String, args: String, ty: String) -> String;
-    fn format_generic_func_header(&self, name: String, params: String, args: String, ty: String) -> String;
+    fn format_generic_func_header(
+        &self,
+        name: String,
+        params: String,
+        args: String,
+        ty: String,
+    ) -> String;
     fn format_func_arg(&self, name: String, ty: Box<dyn Type>) -> String;
     fn format_type(&self, ty: &Box<dyn Type>) -> String;
     fn format_type_with_traits(&self, ty: &Box<dyn Type>) -> String;
@@ -24,6 +30,8 @@ pub trait Formatter {
     fn format_const_decl_header(&self, name: &str, ty: &str) -> String;
     fn format_if_expr(&self, cond: &str, then_part: &str, else_part: &str) -> String;
     fn format_bin_op(&self, op: &str, l: &str, r: &str) -> String;
+    fn format_eq(&self, l: &str, r: &str) -> String;
+    fn format_ne(&self, l: &str, r: &str) -> String;
     fn format_ge(&self, l: &str, r: &str) -> String;
     fn format_gt(&self, l: &str, r: &str) -> String;
     fn format_le(&self, l: &str, r: &str) -> String;

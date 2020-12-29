@@ -11,6 +11,7 @@ use crate::types::Type;
 use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::Write;
+use std::collections::HashSet;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -139,17 +140,22 @@ impl SymbolWriter for FunctionSym {
                     ));
                 }
                 let args = args.join(", ");
-                let header =
-                    if func_type.is_generic() {
-                        let s_params = fmt.format_type_with_traits(&func_type);
-                        let s_func_type = fmt.format_type(&func_type);
-                        fmt.format_generic_func_header(self.get_name(), s_params, args, s_func_type)
+                let mut s_params = HashSet::new();
+                for a in self.args.iter() {
+                    match a.get_type() {
+                        None => return Err(Error::new(OguError::CodeGenError)
+                            .context(format!("Arg {:?} has no type", a.get_name()))),
+                        Some(ty) =>
+                            if ty.is_generic() {
+                                s_params.insert(fmt.format_type_with_traits(&ty));
+                            }
+                    }
+                }
+                let s_params = s_params.iter().cloned().collect::<Vec<String>>();
+                let s_params = if s_params.is_empty() { String::new() } else { s_params.join(", ") };
+                let s_func_type = fmt.format_type(&func_type);
+                let header = fmt.format_generic_func_header(self.get_name(), s_params, args, s_func_type);
 
-                    } else {
-                        let s_func_type = fmt.format_type(&func_type);
-                        fmt.format_func_header(self.get_name(), args, s_func_type)
-
-                    };
                 writeln!(file, "{} {{", header)?;
                 self.expr.write_symbol(fmt, file)?;
                 writeln!(file, "}}")?;

@@ -43,7 +43,6 @@ impl Module {
         };
         Ok(sym)
     }
-
 }
 
 impl<'a> Scope for Module {

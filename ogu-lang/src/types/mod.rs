@@ -41,3 +41,15 @@ impl PartialEq for dyn Type {
         self.get_name() == other.get_name()
     }
 }
+
+pub(crate) fn promote_type(lt: Box<dyn Type>, rt: Box<dyn Type>) -> Option<Box<dyn Type>> {
+    if lt.is_generic() {
+        Some(rt.clone())
+    } else if rt.is_generic() {
+        Some(lt.clone())
+    } else if &lt != &rt {
+        None
+    } else {
+        Some(rt.clone())
+    }
+}

@@ -1,8 +1,8 @@
 use crate::codegen::CodeGenerator;
 use crate::symbols::Symbol;
 use anyhow::Result;
-use std::fmt::{Debug, Formatter};
 use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 
 pub trait Scope: ScopeClone {
     fn scope_name(&self) -> &str;
@@ -13,7 +13,9 @@ pub trait Scope: ScopeClone {
     fn set_symbols(&mut self, syms: HashMap<String, Box<dyn Symbol>>);
 }
 
-pub(crate) fn solve_symbols_types(scope: &Box<dyn Scope>) -> Result<HashMap<String, Box<dyn Symbol>>> {
+pub(crate) fn solve_symbols_types(
+    scope: &Box<dyn Scope>,
+) -> Result<HashMap<String, Box<dyn Symbol>>> {
     let mut symbols = HashMap::new();
     let scope_symbols = scope.get_symbols();
     for sym in scope_symbols.iter() {
@@ -22,7 +24,6 @@ pub(crate) fn solve_symbols_types(scope: &Box<dyn Scope>) -> Result<HashMap<Stri
     }
     Ok(symbols)
 }
-
 
 pub trait ScopeClone {
     fn clone_box(&self) -> Box<dyn Scope>;

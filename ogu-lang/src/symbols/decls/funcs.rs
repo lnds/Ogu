@@ -9,10 +9,10 @@ use crate::symbols::Symbol;
 use crate::types::generic::GenericType;
 use crate::types::Type;
 use anyhow::{Error, Result};
+use std::collections::hash_map::RandomState;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::Write;
-use std::collections::{HashSet, HashMap};
-use std::collections::hash_map::RandomState;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -120,7 +120,7 @@ impl Symbol for FunctionSym {
                     ty: self.get_type(),
                     enclosing_scope: self.enclosing_scope.clone(),
                 };
-                let sym_scope : Box<dyn Scope> = Box::new(sym.clone());
+                let sym_scope: Box<dyn Scope> = Box::new(sym.clone());
                 let sym_expr = self.expr.solve_type(&sym_scope)?;
                 sym.ty = sym_expr.get_type();
                 Ok(Box::new(sym))
@@ -149,18 +149,26 @@ impl SymbolWriter for FunctionSym {
                 let mut s_params = HashSet::new();
                 for a in self.args.iter() {
                     match a.get_type() {
-                        None => return Err(Error::new(OguError::CodeGenError)
-                            .context(format!("Arg {:?} has no type", a.get_name()))),
-                        Some(ty) =>
+                        None => {
+                            return Err(Error::new(OguError::CodeGenError)
+                                .context(format!("Arg {:?} has no type", a.get_name())))
+                        }
+                        Some(ty) => {
                             if ty.is_generic() {
                                 s_params.insert(fmt.format_type_with_traits(&ty));
                             }
+                        }
                     }
                 }
                 let s_params = s_params.iter().cloned().collect::<Vec<String>>();
-                let s_params = if s_params.is_empty() { String::new() } else { s_params.join(", ") };
+                let s_params = if s_params.is_empty() {
+                    String::new()
+                } else {
+                    s_params.join(", ")
+                };
                 let s_func_type = fmt.format_type(&func_type);
-                let header = fmt.format_generic_func_header(self.get_name(), s_params, args, s_func_type);
+                let header =
+                    fmt.format_generic_func_header(self.get_name(), s_params, args, s_func_type);
 
                 writeln!(file, "{} {{", header)?;
                 self.expr.write_symbol(fmt, file)?;

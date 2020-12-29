@@ -7,14 +7,14 @@ use crate::parser::Parser;
 use crate::symbols::decls::types::TypeAliasSym;
 use crate::symbols::macros::MacroSym;
 use crate::symbols::module::Module;
-use crate::symbols::scopes::{Scope, solve_symbols_types};
+use crate::symbols::scopes::{solve_symbols_types, Scope};
 use crate::symbols::sym_table::SymbolTable;
 use crate::symbols::Symbol;
 use crate::types::basic::BasicType;
 use anyhow::Result;
-use std::path::PathBuf;
 use std::collections::hash_map::RandomState;
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[derive(Clone)]
 pub struct Compiler {
@@ -95,7 +95,7 @@ impl Compiler {
         if self.show_ast {
             println!("AST = {:#?}", module);
         }
-        let mut module : Box<dyn Scope> = Module::new(&module, Box::new(self.clone()))?;
+        let mut module: Box<dyn Scope> = Module::new(&module, Box::new(self.clone()))?;
         module.set_symbols(solve_symbols_types(&module)?);
         Ok(module)
     }

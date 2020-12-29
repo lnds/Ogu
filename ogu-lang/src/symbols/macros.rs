@@ -34,7 +34,7 @@ impl Symbol for MacroSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, _scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         unimplemented!()
     }
 }

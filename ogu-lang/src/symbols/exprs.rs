@@ -291,7 +291,7 @@ impl Symbol for ExprSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
             None => match self.find_type(scope.clone()) {
@@ -342,7 +342,12 @@ impl ExprSym {
                 }
             }
             ExprSymEnum::Let(eqs, expr) => {
-                let sym_table = SymbolTable::new("let", Some(scope.clone()));
+                let mut sym_table = SymbolTable::new("let", Some(scope.clone()));
+                for eq in eqs.iter() {
+                    println!("adding symbol eq = {:#?}", eq);
+                    sym_table.define(Box::new(eq.clone()));
+                }
+                println!("sym table for let = {:#?}", sym_table);
                 todo!()
             }
 

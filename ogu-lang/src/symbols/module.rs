@@ -44,18 +44,6 @@ impl Module {
         Ok(sym)
     }
 
-    pub(crate) fn solve_symbols_types(self) -> Result<HashMap<String, Box<dyn Symbol>>> {
-        let mut symbols = HashMap::new();
-        for (name, sym) in self.symbols.iter() {
-            let result = sym.solve_type(Box::new(self.clone()))?;
-            symbols.insert(name.clone(), result);
-        }
-        Ok(symbols)
-    }
-
-    pub(crate) fn set_symbols(&mut self, symbols: HashMap<String, Box<dyn Symbol>>) {
-        self.symbols = symbols
-    }
 }
 
 impl<'a> Scope for Module {
@@ -80,5 +68,9 @@ impl<'a> Scope for Module {
 
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
         self.symbols.values().cloned().collect()
+    }
+
+    fn set_symbols(&mut self, syms: HashMap<String, Box<dyn Symbol>>) {
+        self.symbols = syms
     }
 }

@@ -7,12 +7,14 @@ use crate::parser::Parser;
 use crate::symbols::decls::types::TypeAliasSym;
 use crate::symbols::macros::MacroSym;
 use crate::symbols::module::Module;
-use crate::symbols::scopes::Scope;
+use crate::symbols::scopes::{Scope, solve_symbols_types};
 use crate::symbols::sym_table::SymbolTable;
 use crate::symbols::Symbol;
 use crate::types::basic::BasicType;
 use anyhow::Result;
 use std::path::PathBuf;
+use std::collections::hash_map::RandomState;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct Compiler {
@@ -65,6 +67,10 @@ impl Scope for Compiler {
         }
         result
     }
+
+    fn set_symbols(&mut self, _syms: HashMap<String, Box<dyn Symbol>>) {
+        unimplemented!()
+    }
 }
 
 impl Compiler {
@@ -89,8 +95,8 @@ impl Compiler {
         if self.show_ast {
             println!("AST = {:#?}", module);
         }
-        let mut module = Box::new(Module::new(&module, Box::new(self.clone()))?);
-        module.set_symbols(module.clone().solve_symbols_types()?);
+        let mut module : Box<dyn Scope> = Box::new(Module::new(&module, Box::new(self.clone()))?);
+        module.set_symbols(solve_symbols_types(&module)?);
         Ok(module)
     }
 

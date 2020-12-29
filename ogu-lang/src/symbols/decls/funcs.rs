@@ -11,7 +11,8 @@ use crate::types::Type;
 use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::Write;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
+use std::collections::hash_map::RandomState;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -89,6 +90,10 @@ impl Scope for FunctionSym {
         }
         result
     }
+
+    fn set_symbols(&mut self, _syms: HashMap<String, Box<dyn Symbol>>) {
+        unimplemented!()
+    }
 }
 
 impl Symbol for FunctionSym {
@@ -104,7 +109,7 @@ impl Symbol for FunctionSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, _scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
             None => {
@@ -115,7 +120,8 @@ impl Symbol for FunctionSym {
                     ty: self.get_type(),
                     enclosing_scope: self.enclosing_scope.clone(),
                 };
-                let sym_expr = self.expr.solve_type(Box::new(sym.clone()))?;
+                let sym_scope : Box<dyn Scope> = Box::new(sym.clone());
+                let sym_expr = self.expr.solve_type(&sym_scope)?;
                 sym.ty = sym_expr.get_type();
                 Ok(Box::new(sym))
             }
@@ -193,7 +199,7 @@ impl Symbol for ArgSym {
         unimplemented!()
     }
 
-    fn solve_type(&self, _scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         unimplemented!()
     }
 }

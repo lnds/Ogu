@@ -43,7 +43,7 @@ impl Symbol for ValueSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         let sym_expr = self.expr.solve_type(scope)?;
         Ok(Box::new(ValueSym {
             name: self.name.clone(),

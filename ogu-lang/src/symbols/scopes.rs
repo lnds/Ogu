@@ -2,6 +2,7 @@ use crate::codegen::CodeGenerator;
 use crate::symbols::Symbol;
 use anyhow::Result;
 use std::fmt::{Debug, Formatter};
+use std::collections::HashMap;
 
 pub trait Scope: ScopeClone {
     fn scope_name(&self) -> &str;
@@ -9,7 +10,19 @@ pub trait Scope: ScopeClone {
     fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>>;
     fn gen_code(&self, generator: &mut Box<dyn CodeGenerator>) -> Result<()>;
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>>;
+    fn set_symbols(&mut self, syms: HashMap<String, Box<dyn Symbol>>);
 }
+
+pub(crate) fn solve_symbols_types(scope: &Box<dyn Scope>) -> Result<HashMap<String, Box<dyn Symbol>>> {
+    let mut symbols = HashMap::new();
+    let scope_symbols = scope.get_symbols();
+    for sym in scope_symbols.iter() {
+        let result = sym.solve_type(scope)?;
+        symbols.insert(sym.get_name(), result);
+    }
+    Ok(symbols)
+}
+
 
 pub trait ScopeClone {
     fn clone_box(&self) -> Box<dyn Scope>;

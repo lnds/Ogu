@@ -4,7 +4,7 @@ use crate::symbols::Symbol;
 use anyhow::Result;
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct SymbolTable {
     name: String,
     enclosing_scope: Option<Box<dyn Scope>>,
@@ -19,7 +19,11 @@ impl SymbolTable {
             symbols: HashMap::new(),
         }
     }
+
+
 }
+
+
 
 impl Scope for SymbolTable {
     fn scope_name(&self) -> &str {
@@ -47,5 +51,9 @@ impl Scope for SymbolTable {
 
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
         self.symbols.values().cloned().collect()
+    }
+
+    fn set_symbols(&mut self, syms: HashMap<String, Box<dyn Symbol>>) {
+        self.symbols = syms;
     }
 }

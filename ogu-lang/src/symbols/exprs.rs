@@ -59,8 +59,8 @@ impl ExprSym {
                     result.insert("PartialEq".to_string());
                 }
             }
-            e => {
-                //println!("!!! e = {:?}", e)
+            _e => {
+                //println!("!!! e = {:?}", _e)
             }
         }
         result.iter().cloned().collect()
@@ -292,7 +292,7 @@ impl Symbol for ExprSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
             None => match self.find_type(scope) {
@@ -315,12 +315,12 @@ impl ExprSym {
         })
     }
 
-    fn find_type(&self, scope: &Box<dyn Scope>) -> Option<Box<dyn Type>> {
+    fn find_type(&self, scope: &dyn Scope) -> Option<Box<dyn Type>> {
         match &self.expr {
             ExprSymEnum::Void => Some(BasicType::unit()),
             ExprSymEnum::Id(id) => self.resolve_type_from_name(scope, &id),
             ExprSymEnum::FuncCall(e, _) => e.find_type(scope),
-            ExprSymEnum::Val(n, expr) => expr.find_type(scope),
+            ExprSymEnum::Val(_, expr) => expr.find_type(scope),
             ExprSymEnum::Add(l, r)
             | ExprSymEnum::Sub(l, r)
             | ExprSymEnum::Mul(l, r)
@@ -334,12 +334,12 @@ impl ExprSym {
                 self.resolve_type_from_sym(scope, e)?,
             ),
             ExprSymEnum::Let(eqs, expr) => {
-                let mut sym_table: Box<dyn Scope> = SymbolTable::new("let", Some(scope.clone()));
+                let mut sym_table: Box<dyn Scope> = SymbolTable::new("let", Some(scope.clone_box()));
                 for eq in eqs.iter() {
                     sym_table.define(Box::new(eq.clone()));
                 }
-                sym_table.set_symbols(solve_symbols_types(&sym_table).ok()?);
-                expr.find_type(&sym_table)
+                sym_table.set_symbols(solve_symbols_types(&*sym_table).ok()?);
+                expr.find_type(&*sym_table)
             }
             ExprSymEnum::Int(_) => self.get_type(),
             _e => {
@@ -349,7 +349,7 @@ impl ExprSym {
         }
     }
 
-    fn resolve_type_from_name(&self, scope: &Box<dyn Scope>, name: &str) -> Option<Box<dyn Type>> {
+    fn resolve_type_from_name(&self, scope: &dyn Scope, name: &str) -> Option<Box<dyn Type>> {
         match scope.resolve(name) {
             None => None,
             Some(sym) => sym.get_type(),
@@ -358,7 +358,7 @@ impl ExprSym {
 
     fn resolve_type_from_sym(
         &self,
-        scope: &Box<dyn Scope>,
+        scope: &dyn Scope,
         sym: &ExprSym,
     ) -> Option<Box<dyn Type>> {
         match sym.get_type() {

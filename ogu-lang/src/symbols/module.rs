@@ -33,9 +33,9 @@ impl Module {
     fn define_decl(decl: &Declaration, scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         let sym: Box<dyn Symbol> = match decl {
             Function(name, args, expr) => {
-                FunctionSym::new(name, args.clone().into(), expr.clone().into(), scope)
+                FunctionSym::new(name, args, expr, scope)
             }
-            Value(name, expr) => ValueSym::new(name, expr.clone().into(), scope),
+            Value(name, expr) => ValueSym::new(name, expr, scope),
             _d => {
                 println!("not implemented for {:?}", _d);
                 todo!()

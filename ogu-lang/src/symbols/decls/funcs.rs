@@ -9,7 +9,6 @@ use crate::symbols::Symbol;
 use crate::types::generic::GenericType;
 use crate::types::Type;
 use anyhow::{Error, Result};
-use std::collections::hash_map::RandomState;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::Write;
@@ -26,22 +25,19 @@ pub(crate) struct FunctionSym {
 impl FunctionSym {
     pub(crate) fn new(
         name: &str,
-        args: Args,
-        expr: Expression,
+        args: &Args,
+        expr: &Expression,
         enclosing_scope: Box<dyn Scope>,
     ) -> Box<Self> {
         Box::new(FunctionSym {
             name: name.to_string(),
-            args: args.into(),
-            expr: expr.into(),
+            args: args.clone().into(),
+            expr: expr.clone().into(),
             ty: None,
             enclosing_scope,
         })
     }
 
-    pub(crate) fn get_args(&self) -> Vec<ArgSym> {
-        self.args.to_vec()
-    }
 
     fn solve_args_types(&self, args: &[ArgSym]) -> Vec<ArgSym> {
         let mut result = vec![];
@@ -109,7 +105,7 @@ impl Symbol for FunctionSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, _scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         match &self.ty {
             Some(_) => Ok(Box::new(self.clone())),
             None => {
@@ -121,7 +117,7 @@ impl Symbol for FunctionSym {
                     enclosing_scope: self.enclosing_scope.clone(),
                 };
                 let sym_scope: Box<dyn Scope> = Box::new(sym.clone());
-                let sym_expr = self.expr.solve_type(&sym_scope)?;
+                let sym_expr = self.expr.solve_type(&*sym_scope)?;
                 sym.ty = sym_expr.get_type();
                 Ok(Box::new(sym))
             }
@@ -139,7 +135,7 @@ impl SymbolWriter for FunctionSym {
                 for a in self.args.iter() {
                     args.push(fmt.format_func_arg(
                         a.get_name(),
-                        a.get_type().ok_or_else(|| {
+                        &*a.get_type().ok_or_else(|| {
                             Error::new(OguError::CodeGenError)
                                 .context(format!("Argument {:?} has no type", a.get_name()))
                         })?,
@@ -155,7 +151,7 @@ impl SymbolWriter for FunctionSym {
                         }
                         Some(ty) => {
                             if ty.is_generic() {
-                                s_params.insert(fmt.format_type_with_traits(&ty));
+                                s_params.insert(fmt.format_type_with_traits(&*ty));
                             }
                         }
                     }
@@ -166,7 +162,7 @@ impl SymbolWriter for FunctionSym {
                 } else {
                     s_params.join(", ")
                 };
-                let s_func_type = fmt.format_type(&func_type);
+                let s_func_type = fmt.format_type(&*func_type);
                 let header =
                     fmt.format_generic_func_header(self.get_name(), s_params, args, s_func_type);
 
@@ -207,7 +203,7 @@ impl Symbol for ArgSym {
         unimplemented!()
     }
 
-    fn solve_type(&self, _scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, _scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         unimplemented!()
     }
 }

@@ -14,7 +14,7 @@ pub trait Scope: ScopeClone {
 }
 
 pub(crate) fn solve_symbols_types(
-    scope: &Box<dyn Scope>,
+    scope: &dyn Scope,
 ) -> Result<HashMap<String, Box<dyn Symbol>>> {
     let mut symbols = HashMap::new();
     let scope_symbols = scope.get_symbols();

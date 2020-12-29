@@ -16,7 +16,7 @@ pub trait Symbol: SymbolClone {
     fn get_name(&self) -> String;
     fn get_type(&self) -> Option<Box<dyn Type>>;
     fn get_symbol_writer(&self) -> Box<dyn SymbolWriter>;
-    fn solve_type(&self, scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>>;
+    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>>;
 }
 
 pub trait SymbolClone {

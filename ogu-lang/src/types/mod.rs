@@ -15,8 +15,8 @@ pub trait TypeClone {
 }
 
 impl<T> TypeClone for T
-where
-    T: 'static + Type + Clone,
+    where
+        T: 'static + Type + Clone,
 {
     fn clone_box(&self) -> Box<dyn Type> {
         Box::new(self.clone())
@@ -43,13 +43,14 @@ impl PartialEq for dyn Type {
 }
 
 pub(crate) fn promote_type(lt: Box<dyn Type>, rt: Box<dyn Type>) -> Option<Box<dyn Type>> {
-    if lt.is_generic() {
-        Some(rt.clone())
-    } else if rt.is_generic() {
-        Some(lt.clone())
-    } else if &lt != &rt {
-        None
-    } else {
-        Some(rt.clone())
+    if lt.clone() == rt.clone() {
+        return Some(rt.clone());
     }
+    if lt.is_generic() {
+        return Some(rt.clone());
+    }
+    if rt.is_generic() {
+        return Some(lt.clone());
+    }
+    None
 }

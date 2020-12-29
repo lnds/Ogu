@@ -20,9 +20,9 @@ pub trait Formatter {
         args: String,
         ty: String,
     ) -> String;
-    fn format_func_arg(&self, name: String, ty: Box<dyn Type>) -> String;
-    fn format_type(&self, ty: &Box<dyn Type>) -> String;
-    fn format_type_with_traits(&self, ty: &Box<dyn Type>) -> String;
+    fn format_func_arg(&self, name: String, ty: &dyn Type) -> String;
+    fn format_type(&self, ty: &dyn Type) -> String;
+    fn format_type_with_traits(&self, ty: &dyn Type) -> String;
     fn format_id(&self, id: &str) -> String;
     fn format_str(&self, s: &str) -> String;
     fn format_int(&self, s: &str) -> String;

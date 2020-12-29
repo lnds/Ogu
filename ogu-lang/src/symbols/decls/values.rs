@@ -18,8 +18,8 @@ pub(crate) struct ValueSym {
 }
 
 impl ValueSym {
-    pub(crate) fn new(name: &str, expr: Expression, enclosing_scope: Box<dyn Scope>) -> Box<Self> {
-        let expr: Box<ExprSym> = expr.into();
+    pub(crate) fn new(name: &str, expr: &Expression, enclosing_scope: Box<dyn Scope>) -> Box<Self> {
+        let expr: Box<ExprSym> = expr.clone().into();
         let ty: Option<Box<dyn Type>> = expr.get_type();
         Box::new(ValueSym {
             name: name.to_string(),
@@ -43,7 +43,7 @@ impl Symbol for ValueSym {
         Box::new(self.clone())
     }
 
-    fn solve_type(&self, scope: &Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn solve_type(&self, scope: &dyn Scope) -> Result<Box<dyn Symbol>> {
         let sym_expr = self.expr.solve_type(scope)?;
         Ok(Box::new(ValueSym {
             name: self.name.clone(),
@@ -56,7 +56,7 @@ impl Symbol for ValueSym {
 
 impl SymbolWriter for ValueSym {
     fn write_symbol(&self, fmt: &dyn Formatter, file: &mut File) -> Result<()> {
-        let func_type = fmt.format_type(&self.get_type().ok_or_else(|| {
+        let func_type = fmt.format_type(&*self.get_type().ok_or_else(|| {
             Error::new(OguError::CodeGenError)
                 .context(format!("Symbol {:?} has no type", self.get_name()))
         })?);

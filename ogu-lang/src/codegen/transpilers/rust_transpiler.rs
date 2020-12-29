@@ -105,15 +105,15 @@ impl Formatter for RustFormatter {
         format!("fn {} <{}> ({}) -> {}", name, params, args, ty)
     }
 
-    fn format_func_arg(&self, name: String, ty: Box<dyn Type>) -> String {
-        format!("{} : {}", name, self.format_type(&ty))
+    fn format_func_arg(&self, name: String, ty: &dyn Type) -> String {
+        format!("{} : {}", name, self.format_type(ty))
     }
 
-    fn format_type(&self, ty: &Box<dyn Type>) -> String {
+    fn format_type(&self, ty: &dyn Type) -> String {
         ty.get_name()
     }
 
-    fn format_type_with_traits(&self, ty: &Box<dyn Type>) -> String {
+    fn format_type_with_traits(&self, ty: &dyn Type) -> String {
         ty.get_full_name()
     }
 

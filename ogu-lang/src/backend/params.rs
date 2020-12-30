@@ -31,10 +31,10 @@ pub struct Params {
 
     #[structopt(
         parse(from_os_str),
-        help = "ogu modules...",
+        help = "ogu module...",
         required_if("clean", "false")
     )]
-    pub files: Vec<PathBuf>,
+    pub file: PathBuf,
 
     #[structopt(
         name = "ARGS",

@@ -21,13 +21,6 @@ pub fn run(params: Params) -> Result<()> {
         clean_ogu_dir()?;
     }
     let mut compiler = Compiler::new(&params);
-    compiler.run(params.files.to_vec())?;
-    if params.dump_symbols {
-        compiler.dump();
-    }
-    if params.rust {
-        let mut rust_transpiler: Box<dyn CodeGenerator> = Box::new(RustTranspiler::new()?);
-        compiler.gen_code(&mut rust_transpiler)?
-    }
+    compiler.run(params.file, params.tokens, params.print,params.dump_symbols)?;
     Ok(())
 }

@@ -1,27 +1,33 @@
 use crate::backend::scopes::scopes::Scope;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
+use crate::backend::modules::types::func_type::FuncType;
+use crate::parser::ast::expressions::args::Args;
 use crate::parser::ast::expressions::expression::Expression;
 
 #[derive(Clone, Debug)]
-pub(crate) struct ValueSym {
+pub(crate) struct FunctionSym {
     name: String,
+    args: Vec<Box<dyn Symbol>>,
     expr: Box<dyn Symbol>,
     ty: Option<Box<dyn Type>>,
 }
 
-impl ValueSym {
-    pub(crate) fn new(name: &str, expr: &Expression) -> Box<Self> {
+impl FunctionSym {
+    pub(crate) fn new(name: &str, args: &Args, expr: &Expression) -> Box<Self> {
+        let ty: Option<Box<dyn Type>> = FuncType::new(args, expr);
         let expr: Box<dyn Symbol> = expr.into();
-        Box::new(ValueSym {
+        let args: Vec<Box<dyn Symbol>> = args.clone().into();
+        Box::new(FunctionSym {
             name: name.to_string(),
+            args: args.to_vec(),
             expr: expr.clone(),
-            ty: expr.get_type(),
+            ty: ty.clone(),
         })
     }
 }
 
-impl Symbol for ValueSym {
+impl Symbol for FunctionSym {
     fn get_name(&self) -> &str {
         &self.name
     }
@@ -39,9 +45,15 @@ impl Symbol for ValueSym {
             Some(ty) => Some(ty.clone()),
             None => {
                 self.expr.resolve_type(scope)?;
-                self.set_type(self.expr.get_type());
+                self.ty = self.expr.get_type();
                 self.get_type()
             }
         }
+    }
+}
+
+impl<'a> From<Args<'a>> for Vec<Box<dyn Symbol>> {
+    fn from(_: Args<'a>) -> Self {
+        unimplemented!()
     }
 }

@@ -42,7 +42,6 @@ pub(crate) enum FuncPrototype<'a> {
     Effect(&'a str, FuncType<'a>),
 }
 
-
 #[derive(Debug, Clone)]
 pub(crate) enum AlgebraicElement<'a> {
     Type(&'a str),

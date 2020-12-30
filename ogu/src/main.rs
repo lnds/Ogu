@@ -17,6 +17,11 @@ pub fn run(params: Params) -> Result<()> {
     if params.clean {
         clean_ogu_dir()?;
     }
-    compile(params.file, params.tokens, params.print,params.dump_symbols)?;
+    compile(
+        params.file,
+        params.tokens,
+        params.print,
+        params.dump_symbols,
+    )?;
     Ok(())
 }

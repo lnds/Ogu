@@ -1,6 +1,6 @@
+use crate::backend::scopes::scopes::Scope;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
-use crate::backend::scopes::scopes::Scope;
 
 #[derive(Clone, Debug)]
 pub(crate) struct IdSym {
@@ -9,11 +9,10 @@ pub(crate) struct IdSym {
 }
 
 impl IdSym {
-
     pub(crate) fn new(id: &str) -> Box<Self> {
         Box::new(IdSym {
             name: id.to_string(),
-            ty: None
+            ty: None,
         })
     }
 }
@@ -40,6 +39,5 @@ impl Symbol for IdSym {
                 sym.get_type().clone()
             }
         }
-
     }
 }

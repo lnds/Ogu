@@ -1,7 +1,7 @@
-use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::scopes::scopes::Scope;
+use crate::backend::scopes::symbol::Symbol;
+use crate::backend::scopes::types::Type;
 
 #[derive(Clone, Debug)]
 pub(crate) enum ArithmeticSym {
@@ -12,7 +12,6 @@ pub(crate) enum ArithmeticSym {
     Mod(Box<dyn Symbol>, Box<dyn Symbol>),
     Pow(Box<dyn Symbol>, Box<dyn Symbol>),
 }
-
 
 impl ArithmeticSym {
     pub(crate) fn new_add(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
@@ -28,7 +27,6 @@ impl ArithmeticSym {
 
     pub(crate) fn new_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
         Box::new(ArithmeticSym::Div(l, r))
-
     }
 
     pub(crate) fn new_mod(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
@@ -47,19 +45,20 @@ impl Symbol for ArithmeticSym {
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
-            ArithmeticSym::Add(l,r )
-            |ArithmeticSym::Sub(l,r )
-            |ArithmeticSym::Mul(l,r )
-            |ArithmeticSym::Div(l,r )
-            |ArithmeticSym::Mod(l,r )
-            |ArithmeticSym::Pow(l,r ) => {
+            ArithmeticSym::Add(l, r)
+            | ArithmeticSym::Sub(l, r)
+            | ArithmeticSym::Mul(l, r)
+            | ArithmeticSym::Div(l, r)
+            | ArithmeticSym::Mod(l, r)
+            | ArithmeticSym::Pow(l, r) => {
                 let tl = l.get_type()?;
                 let tr = r.get_type()?;
                 if &tl == &tr {
                     Some(tr.clone())
                 } else {
                     if (tl == BasicType::float() && tr == BasicType::int())
-                        ||(tl == BasicType::int() && tr == BasicType::float()) {
+                        || (tl == BasicType::int() && tr == BasicType::float())
+                    {
                         Some(BasicType::float())
                     } else {
                         None
@@ -77,18 +76,17 @@ impl Symbol for ArithmeticSym {
         match self.get_type() {
             Some(ty) => Some(ty.clone()),
             None => match self {
-                ArithmeticSym::Add(l,r )
-                |ArithmeticSym::Sub(l,r )
-                |ArithmeticSym::Mul(l,r )
-                |ArithmeticSym::Div(l,r )
-                |ArithmeticSym::Mod(l,r )
-                |ArithmeticSym::Pow(l,r ) => {
+                ArithmeticSym::Add(l, r)
+                | ArithmeticSym::Sub(l, r)
+                | ArithmeticSym::Mul(l, r)
+                | ArithmeticSym::Div(l, r)
+                | ArithmeticSym::Mod(l, r)
+                | ArithmeticSym::Pow(l, r) => {
                     l.resolve_type(scope)?;
                     r.resolve_type(scope);
                     self.get_type()
                 }
-            }
+            },
         }
-
     }
 }

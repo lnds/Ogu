@@ -1,20 +1,16 @@
-use crate::backend::scopes::types::Type;
-use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::scopes::Scope;
+use crate::backend::scopes::symbol::Symbol;
+use crate::backend::scopes::types::Type;
 
 #[derive(Clone, Debug)]
 pub(crate) struct MacroSym {
     name: &'static str,
-    ty : Option<Box<dyn Type>>,
+    ty: Option<Box<dyn Type>>,
 }
 
 impl MacroSym {
-
     pub(crate) fn new(name: &'static str, ty: Option<Box<dyn Type>>) -> Box<Self> {
-        Box::new(MacroSym {
-            name,
-            ty
-        })
+        Box::new(MacroSym { name, ty })
     }
 }
 
@@ -28,7 +24,7 @@ impl Symbol for MacroSym {
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-       self.ty = ty.clone()
+        self.ty = ty.clone()
     }
 
     fn resolve_type(&mut self, scope: &dyn Scope) -> Option<Box<dyn Type>> {

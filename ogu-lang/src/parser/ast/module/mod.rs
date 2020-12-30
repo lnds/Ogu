@@ -46,7 +46,11 @@ impl<'a> ModuleAst<'a> {
 }
 
 impl<'a> ModuleAst<'a> {
-    pub fn parse(parser: &'a Parser<'a>, filename: Option<PathBuf>, pos: usize) -> Result<ModuleAst<'a>> {
+    pub fn parse(
+        parser: &'a Parser<'a>,
+        filename: Option<PathBuf>,
+        pos: usize,
+    ) -> Result<ModuleAst<'a>> {
         let (name, pos) = if parser.peek(pos, Lexeme::Module) {
             name_from_parser(parser, pos)?
         } else {
@@ -73,11 +77,10 @@ impl<'a> ModuleAst<'a> {
 fn name_from_filename<'a>(filename: Option<PathBuf>) -> ModuleName<'a> {
     match filename {
         None => ModuleName::Anonymous,
-        Some(filename) =>
-            match filename.as_path().file_stem() {
-                None => ModuleName::Anonymous,
-                Some(s) => ModuleName::Simple(capitalize(&s.to_str().unwrap())),
-            }
+        Some(filename) => match filename.as_path().file_stem() {
+            None => ModuleName::Anonymous,
+            Some(s) => ModuleName::Simple(capitalize(&s.to_str().unwrap())),
+        },
     }
 }
 

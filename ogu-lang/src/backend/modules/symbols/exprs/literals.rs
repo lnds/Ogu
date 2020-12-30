@@ -1,7 +1,7 @@
-use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::scopes::scopes::Scope;
+use crate::backend::scopes::symbol::Symbol;
+use crate::backend::scopes::types::Type;
 
 #[derive(Clone, Debug)]
 pub(crate) enum LiteralSym {
@@ -11,7 +11,6 @@ pub(crate) enum LiteralSym {
 }
 
 impl LiteralSym {
-
     pub(crate) fn new_int(v: &str) -> Box<LiteralSym> {
         Box::new(LiteralSym::Int(v.to_string()))
     }

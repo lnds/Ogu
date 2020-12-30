@@ -7,7 +7,7 @@ pub(crate) struct SymbolTable {
     name: String,
     enclosing_scope: Option<Box<dyn Scope>>,
     symbol_table: HashMap<String, usize>,
-    symbols: Vec<Box<dyn Symbol>>
+    symbols: Vec<Box<dyn Symbol>>,
 }
 
 impl SymbolTable {
@@ -16,7 +16,7 @@ impl SymbolTable {
             name: name.to_string(),
             enclosing_scope,
             symbol_table: HashMap::new(),
-            symbols: vec![]
+            symbols: vec![],
         })
     }
 }
@@ -26,7 +26,7 @@ impl Scope for SymbolTable {
         &self.name
     }
 
-    fn get_enclosing_scope(&self) ->  Option<Box<dyn Scope>> {
+    fn get_enclosing_scope(&self) -> Option<Box<dyn Scope>> {
         self.enclosing_scope.clone()
     }
 
@@ -36,26 +36,21 @@ impl Scope for SymbolTable {
         let r = self.symbol_table.insert(sym.get_name().to_string(), pos);
         match r {
             None => None,
-            Some(p) => {
-                self.symbols.get(p).cloned()
-            }
+            Some(p) => self.symbols.get(p).cloned(),
         }
     }
 
     fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
         match self.symbol_table.get(name) {
             Some(p) => self.symbols.get(*p).cloned(),
-            None => {
-                match &self.enclosing_scope {
-                    None => None,
-                    Some(scope) => scope.resolve(name)
-                }
-            }
+            None => match &self.enclosing_scope {
+                None => None,
+                Some(scope) => scope.resolve(name),
+            },
         }
     }
 
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
         self.symbols.to_vec()
     }
-
 }

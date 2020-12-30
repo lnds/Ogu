@@ -9,29 +9,31 @@ pub(crate) enum BasicType {
 }
 
 impl BasicType {
-
     pub(crate) fn unit() -> Box<dyn Type> {
         Box::new(BasicType::Unit)
     }
 
-    pub(crate) fn int() -> Box<dyn Type> { Box::new(BasicType::Int) }
+    pub(crate) fn int() -> Box<dyn Type> {
+        Box::new(BasicType::Int)
+    }
 
-    pub(crate) fn float() -> Box<dyn Type> { Box::new(BasicType::Float) }
+    pub(crate) fn float() -> Box<dyn Type> {
+        Box::new(BasicType::Float)
+    }
 
-    pub(crate) fn static_str() -> Box<dyn Type> { Box::new(BasicType::StaticStr) }
-
+    pub(crate) fn static_str() -> Box<dyn Type> {
+        Box::new(BasicType::StaticStr)
+    }
 }
 
-
 impl Type for BasicType {
-    fn get_name(&self) -> &str {
+    fn get_name(&self) -> String {
         match self {
-            BasicType::Unit => "()",
-            BasicType::Int => "int",
-            BasicType::Float => "int",
-            BasicType::StaticStr => "&str",
+            BasicType::Unit => "()".to_string(),
+            BasicType::Int => "int".to_string(),
+            BasicType::Float => "int".to_string(),
+            BasicType::StaticStr => "&str".to_string(),
         }
-
     }
 
     fn get_signature(&self) -> String {

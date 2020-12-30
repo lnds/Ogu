@@ -1,17 +1,15 @@
-use crate::parser::ast::expressions::expression::Expression;
+use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticSym;
+use crate::backend::modules::symbols::exprs::idents::IdSym;
 use crate::backend::modules::symbols::exprs::literals::LiteralSym;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticSym;
+use crate::parser::ast::expressions::expression::Expression;
 use std::ops::Deref;
-use crate::backend::modules::symbols::exprs::idents::IdSym;
 
-mod literals;
 mod arithmetics;
 mod idents;
-
+mod literals;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
-
     fn from(expr: &Expression<'a>) -> Self {
         match expr {
             Expression::IntegerLiteral(l) => LiteralSym::new_int(l),

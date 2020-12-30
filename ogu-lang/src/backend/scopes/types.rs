@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-pub(crate) trait Type: TypeClone + Debug  {
-    fn get_name(&self) -> &str;
+pub(crate) trait Type: TypeClone + Debug {
+    fn get_name(&self) -> String;
     fn get_signature(&self) -> String;
 }
 
@@ -10,8 +10,8 @@ pub(crate) trait TypeClone {
 }
 
 impl<T> TypeClone for T
-    where
-        T: 'static + Type + Clone,
+where
+    T: 'static + Type + Clone,
 {
     fn clone_box(&self) -> Box<dyn Type> {
         Box::new(self.clone())

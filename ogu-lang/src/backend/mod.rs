@@ -4,9 +4,9 @@ use std::{env, fs};
 pub mod banner;
 pub mod compiler;
 pub mod errors;
+pub(crate) mod modules;
 pub mod params;
 pub(crate) mod scopes;
-pub(crate) mod modules;
 
 pub fn clean_ogu_dir() -> Result<()> {
     println!("cleaning ogu generated files...");

@@ -8,14 +8,13 @@ pub(crate) trait Scope: ScopeClone {
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>>;
 }
 
-
 pub(crate) trait ScopeClone {
     fn clone_box(&self) -> Box<dyn Scope>;
 }
 
 impl<T> ScopeClone for T
-    where
-        T: 'static + Scope + Clone,
+where
+    T: 'static + Scope + Clone,
 {
     fn clone_box(&self) -> Box<dyn Scope> {
         Box::new(self.clone())

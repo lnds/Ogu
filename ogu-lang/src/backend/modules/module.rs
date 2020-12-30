@@ -1,15 +1,16 @@
-use crate::parser::ast::module::ModuleAst;
+use crate::backend::modules::symbols::funcs::FunctionSym;
+use crate::backend::modules::symbols::values::ValueSym;
+use crate::backend::scopes::scopes::Scope;
+use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::module::decls::DeclarationAst;
-use crate::parser::ast::module::decls::DeclarationAst::Value;
-use crate::backend::scopes::scopes::Scope;
-use crate::backend::modules::symbols::values::ValueSym;
+use crate::parser::ast::module::decls::DeclarationAst::{Function, Value};
+use crate::parser::ast::module::ModuleAst;
 use anyhow::Result;
-use crate::backend::scopes::sym_table::SymbolTable;
 
 #[derive(Debug)]
 pub struct Module {
-    decls: Vec<Box<dyn Symbol>>
+    decls: Vec<Box<dyn Symbol>>,
 }
 
 impl Module {
@@ -20,29 +21,21 @@ impl Module {
             sym_table.define(sym);
         }
         let mut decls = sym_table.get_symbols();
-        println!("decls are: {:#?}", decls);
         for d in decls.iter_mut() {
             d.resolve_type(&*sym_table);
         }
-        println!("decls after: {:#?}", decls);
-        Ok(Module {
-            decls
-        })
+        Ok(Module { decls })
     }
 
     fn define_decl(decl: &DeclarationAst) -> Result<Box<dyn Symbol>> {
-        let sym: Box<dyn Symbol> =
-            match decl {
-                /*Function(name, args, expr) => {
-                   //FunctionSym::new(name, args, expr, scope)
-                   todo!()
-                }*/
-                Value(name, expr) => ValueSym::new(name, expr),
-                _d => {
-                    println!("not implemented for {:?}", _d);
-                    todo!()
-                }
-            };
+        let sym: Box<dyn Symbol> = match decl {
+            Function(name, args, expr) => FunctionSym::new(name, args, expr),
+            Value(name, expr) => ValueSym::new(name, expr),
+            _d => {
+                println!("not implemented for {:?}", _d);
+                todo!()
+            }
+        };
         Ok(sym)
     }
 

@@ -19,9 +19,12 @@ impl Module {
             let sym = Module::define_decl(decl)?;
             sym_table.define(sym);
         }
-        let decls = sym_table.get_symbols();
+        let mut decls = sym_table.get_symbols();
         println!("decls are: {:#?}", decls);
-
+        for d in decls.iter_mut() {
+            d.resolve_type(&*sym_table);
+        }
+        println!("decls after: {:#?}", decls);
         Ok(Module {
             decls
         })

@@ -1,6 +1,7 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::scopes::scopes::Scope;
 
 #[derive(Clone, Debug)]
 pub(crate) enum ArithmeticSym {
@@ -70,5 +71,24 @@ impl Symbol for ArithmeticSym {
 
     fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
         unimplemented!()
+    }
+
+    fn resolve_type(&mut self, scope: &dyn Scope) -> Option<Box<dyn Type>> {
+        match self.get_type() {
+            Some(ty) => Some(ty.clone()),
+            None => match self {
+                ArithmeticSym::Add(l,r )
+                |ArithmeticSym::Sub(l,r )
+                |ArithmeticSym::Mul(l,r )
+                |ArithmeticSym::Div(l,r )
+                |ArithmeticSym::Mod(l,r )
+                |ArithmeticSym::Pow(l,r ) => {
+                    l.resolve_type(scope)?;
+                    r.resolve_type(scope);
+                    self.get_type()
+                }
+            }
+        }
+
     }
 }

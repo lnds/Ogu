@@ -40,7 +40,6 @@ mod tests {
         for decl in decls.iter() {
             assert!(decl.get_type().unwrap() ==  BasicType::int());
         }
-        println!("{:#?}", module);
     }
 
     #[test]
@@ -54,6 +53,19 @@ mod tests {
             let t = decl.get_type();
             assert!(t.is_some());
             assert!(t.unwrap() ==  BasicType::int());
+        }
+    }
+
+    #[test]
+    fn test_hello() {
+        let module = test_module("main () = println! \"hello world\"", default_sym_table());
+        assert!(module.is_some());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        for decl in decls.iter() {
+            let t = decl.get_type();
+            assert!(t.is_some());
+            assert!(t.unwrap() ==  BasicType::unit());
         }
         println!("{:#?}", module);
     }

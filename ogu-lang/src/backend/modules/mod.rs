@@ -1,6 +1,3 @@
-use crate::lexer::tokens::Lexeme::Module;
-use crate::parser::ast::module::ModuleAst;
-
 pub(crate) mod symbols;
 pub(crate) mod types;
 pub(crate) mod module;
@@ -13,7 +10,6 @@ mod tests {
     use crate::backend::modules::module::Module;
     use crate::backend::scopes::scopes::Scope;
     use crate::backend::compiler::default_sym_table;
-    use crate::backend::modules::symbols::values::ValueSym;
     use crate::backend::modules::types::basic_type::BasicType;
 
     fn test_module(source: &str, sym_table: Box<dyn Scope>) -> Option<Module> {
@@ -55,7 +51,9 @@ mod tests {
         let module = module.unwrap();
         let decls = module.get_decls();
         for decl in decls.iter() {
-            assert!(decl.get_type().unwrap() ==  BasicType::int());
+            let t = decl.get_type();
+            assert!(t.is_some());
+            assert!(t.unwrap() ==  BasicType::int());
         }
         println!("{:#?}", module);
     }

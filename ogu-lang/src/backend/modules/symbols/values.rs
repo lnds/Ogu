@@ -31,6 +31,6 @@ impl Symbol for ValueSym {
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        unimplemented!()
+        self.ty = ty.clone()
     }
 }

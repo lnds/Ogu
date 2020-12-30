@@ -10,7 +10,7 @@ use crate::backend::modules::module::Module;
 use crate::backend::modules::symbols::macro_sym::MacroSym;
 use crate::backend::modules::types::basic_type::BasicType;
 
-pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> Result<()> {
+pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> Result<Module> {
     let mut lexer = Lexer::new(&path)?;
     println!("parsing {:?}", &path);
     let (tokens, strs) = lexer.scan()?;
@@ -24,13 +24,16 @@ pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> 
         println!("AST = {:#?}", module_ast);
     }
     let scope = Module::new(module_ast, default_sym_table())?;
-    if dump {}
-    Ok(())
+    if dump {
+        println!("Symbols:");
+        println!("{:#?}", scope.get_decls());
+    }
+    Ok(scope)
 }
 
 pub(crate) fn default_sym_table() -> Box<dyn Scope> {
     let mut symbol_table: Box<dyn Scope> = SymbolTable::new("_ogu", None);
-    symbol_table.define(&MacroSym::new("println!", Some(BasicType::unit())));
-    symbol_table.define(&MacroSym::new("print!", Some(BasicType::unit())));
+    symbol_table.define(MacroSym::new("println!", Some(BasicType::unit())));
+    symbol_table.define(MacroSym::new("print!", Some(BasicType::unit())));
     symbol_table
 }

@@ -2,9 +2,10 @@ use crate::backend::scopes::symbol::Symbol;
 
 pub(crate) trait Scope: ScopeClone {
     fn scope_name(&self) -> &str;
-    fn get_enclosing_scope(&self) -> Option<&dyn Scope>;
-    fn define(&mut self, sym: &dyn Symbol) -> Option<Box<Symbol>>;
+    fn get_enclosing_scope(&self) -> Option<Box<dyn Scope>>;
+    fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>>;
     fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>>;
+    fn get_symbols(&self) -> Vec<Box<dyn Symbol>>;
 }
 
 

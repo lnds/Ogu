@@ -9,11 +9,11 @@ pub(crate) struct MacroSym {
 
 impl MacroSym {
 
-    pub(crate) fn new(name: &'static str, ty: Option<Box<dyn Type>>) -> Self {
-        MacroSym {
+    pub(crate) fn new(name: &'static str, ty: Option<Box<dyn Type>>) -> Box<Self> {
+        Box::new(MacroSym {
             name,
             ty
-        }
+        })
     }
 }
 

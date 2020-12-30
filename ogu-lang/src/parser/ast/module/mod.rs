@@ -9,7 +9,7 @@ use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use std::path::PathBuf;
 
 use crate::parser::ast::module::body::BodyAst;
-use crate::parser::ast::module::decls::Declaration;
+use crate::parser::ast::module::decls::DeclarationAst;
 use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::externs::Extern;
 use crate::parser::ast::module::imports::Import;
@@ -40,7 +40,7 @@ impl<'a> ModuleAst<'a> {
         }
     }
 
-    pub(crate) fn get_decls(&self) -> Vec<Declaration> {
+    pub(crate) fn get_decls(&self) -> Vec<DeclarationAst> {
         self.body.clone().get_decls().to_vec()
     }
 }

@@ -2,8 +2,8 @@ use crate::backend::scopes::types::Type;
 
 pub(crate) trait Symbol: SymbolClone {
     fn get_name(&self) -> &str;
-    fn get_type(&self) -> Option<&dyn Type>;
-    fn set_type(&self, ty: &dyn Type);
+    fn get_type(&self) -> Option<Box<dyn Type>>;
+    fn set_type(&mut self, ty: Option<Box<dyn Type>>);
 }
 
 

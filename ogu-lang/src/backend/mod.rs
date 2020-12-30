@@ -6,6 +6,7 @@ pub mod compiler;
 pub mod errors;
 pub mod params;
 pub(crate) mod scopes;
+pub(crate) mod modules;
 
 pub fn clean_ogu_dir() -> Result<()> {
     println!("cleaning ogu generated files...");

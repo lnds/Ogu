@@ -1,6 +1,6 @@
 use crate::codegen::CodeGenerator;
-use crate::parser::ast::module::decls::Declaration;
-use crate::parser::ast::module::decls::Declaration::{Function, Value};
+use crate::parser::ast::module::decls::DeclarationAst;
+use crate::parser::ast::module::decls::DeclarationAst::{Function, Value};
 use crate::parser::ast::module::ModuleAst;
 use crate::symbols::decls::funcs::FunctionSym;
 use crate::symbols::decls::values::ValueSym;
@@ -30,7 +30,7 @@ impl Module {
         Ok(Box::new(module))
     }
 
-    fn define_decl(decl: &Declaration, scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
+    fn define_decl(decl: &DeclarationAst, scope: Box<dyn Scope>) -> Result<Box<dyn Symbol>> {
         let sym: Box<dyn Symbol> = match decl {
             Function(name, args, expr) => {
                 FunctionSym::new(name, args, expr, scope)

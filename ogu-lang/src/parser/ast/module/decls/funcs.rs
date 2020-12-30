@@ -2,18 +2,18 @@ use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::Guard;
-use crate::parser::ast::module::decls::{DeclParseResult, Declaration};
+use crate::parser::ast::module::decls::{DeclParseResult, DeclarationAst};
 use crate::parser::{
     consume_symbol, look_ahead_where, parse_opt_dedent, parse_opt_indent, raise_parser_error,
     Parser,
 };
 use anyhow::Result;
 
-impl<'a> Declaration<'a> {
+impl<'a> DeclarationAst<'a> {
     pub fn parse_func_or_val(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
         let (eq, pos) = Equation::parse(parser, pos, true)?;
         let (opt_where, pos) = if let Some(where_pos) = look_ahead_where(parser, pos) {
-            let (where_decl, mut pos) = Declaration::parse_where(parser, where_pos)?;
+            let (where_decl, mut pos) = DeclarationAst::parse_where(parser, where_pos)?;
             if parser.peek(pos, Lexeme::Dedent) {
                 pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
             }
@@ -25,27 +25,27 @@ impl<'a> Declaration<'a> {
             Equation::Value(name, expr) => {
                 if let Some(where_decl) = opt_where {
                     let expr = Expression::LetExpr(where_decl, Box::new(expr));
-                    Ok(Some((Declaration::Value(name, expr), pos)))
+                    Ok(Some((DeclarationAst::Value(name, expr), pos)))
                 } else {
-                    Ok(Some((Declaration::Value(name, expr), pos)))
+                    Ok(Some((DeclarationAst::Value(name, expr), pos)))
                 }
             }
             Equation::Function(name, args, expr) => {
                 if let Some(where_decl) = opt_where {
                     let expr = Expression::LetExpr(where_decl, Box::new(expr));
-                    Ok(Some((Declaration::Function(name, args, expr), pos)))
+                    Ok(Some((DeclarationAst::Function(name, args, expr), pos)))
                 } else {
-                    Ok(Some((Declaration::Function(name, args, expr), pos)))
+                    Ok(Some((DeclarationAst::Function(name, args, expr), pos)))
                 }
             }
             Equation::FunctionWithGuards(name, args, guards) => {
                 if let Some(where_decl) = opt_where {
                     let expr =
                         Expression::LetExpr(where_decl, Box::new(Guard::guards_to_cond(&guards)?));
-                    Ok(Some((Declaration::Function(name, args, expr), pos)))
+                    Ok(Some((DeclarationAst::Function(name, args, expr), pos)))
                 } else {
                     Ok(Some((
-                        Declaration::Function(name, args, Guard::guards_to_cond(&guards)?),
+                        DeclarationAst::Function(name, args, Guard::guards_to_cond(&guards)?),
                         pos,
                     )))
                 }

@@ -7,7 +7,7 @@ use crate::parser::ast::expressions::expression::{Expression, HandleGuard};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub(crate) enum Declaration<'a> {
+pub(crate) enum DeclarationAst<'a> {
     Value(&'a str, Expression<'a>),
     Function(&'a str, Args<'a>, Expression<'a>),
     TypeDecl(
@@ -18,9 +18,9 @@ pub(crate) enum Declaration<'a> {
     ),
     TypeAlias(&'a str, Option<Vec<&'a str>>, BaseType<'a>),
     TraitDecl(&'a str, Option<Vec<&'a str>>, Vec<FuncPrototype<'a>>),
-    ExtensionDecl(&'a str, &'a str, Vec<Declaration<'a>>),
+    ExtensionDecl(&'a str, &'a str, Vec<DeclarationAst<'a>>),
     FunctionPrototype(FuncPrototype<'a>),
-    MacroDecl(Box<Declaration<'a>>),
+    MacroDecl(Box<DeclarationAst<'a>>),
     Effect(FuncPrototype<'a>),
     Handler(&'a str, Args<'a>, Vec<HandleGuard<'a>>),
     DocString(Option<String>),
@@ -75,6 +75,6 @@ pub(crate) enum BaseType<'a> {
     ExternType(&'a str),
 }
 
-pub(crate) type DeclVec<'a> = Vec<Declaration<'a>>;
+pub(crate) type DeclVec<'a> = Vec<DeclarationAst<'a>>;
 
-pub(crate) type DeclParseResult<'a> = Result<Option<(Declaration<'a>, usize)>>;
+pub(crate) type DeclParseResult<'a> = Result<Option<(DeclarationAst<'a>, usize)>>;

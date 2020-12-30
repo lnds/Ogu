@@ -1,15 +1,15 @@
 use crate::lexer::tokens::Lexeme;
-use crate::parser::ast::module::decls::{DeclParseResult, DeclVec, Declaration};
+use crate::parser::ast::module::decls::{DeclParseResult, DeclVec, DeclarationAst};
 use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub(crate) struct BodyAst<'a> {
-    pub(crate) declarations: Vec<Declaration<'a>>,
+    pub(crate) declarations: Vec<DeclarationAst<'a>>,
 }
 
 impl<'a> BodyAst<'a> {
-    pub(crate) fn get_decls(self) -> Vec<Declaration<'a>> {
+    pub(crate) fn get_decls(self) -> Vec<DeclarationAst<'a>> {
         self.declarations.to_vec()
     }
 
@@ -35,27 +35,27 @@ impl<'a> BodyAst<'a> {
             Some(Lexeme::Macro) => {
                 let pos = consume_symbol(parser, pos, Lexeme::Macro)?;
                 if let Some((decl, pos)) = BodyAst::parse_decl(parser, pos)? {
-                    Ok(Some((Declaration::MacroDecl(Box::new(decl)), pos)))
+                    Ok(Some((DeclarationAst::MacroDecl(Box::new(decl)), pos)))
                 } else {
                     raise_parser_error("expecting macro declaration", parser, pos, false)
                 }
             }
             Some(Lexeme::Id(_)) if parser.peek(pos + 1, Lexeme::Colon) => {
-                let (proto, pos) = Declaration::parse_func_prototype(parser, pos)?;
-                Ok(Some((Declaration::FunctionPrototype(proto), pos)))
+                let (proto, pos) = DeclarationAst::parse_func_prototype(parser, pos)?;
+                Ok(Some((DeclarationAst::FunctionPrototype(proto), pos)))
             }
-            Some(Lexeme::Id(_)) => Declaration::parse_func_or_val(parser, pos),
-            Some(Lexeme::Type) => Declaration::parse_type_decl(parser, pos),
-            Some(Lexeme::Alias) => Declaration::parse_type_alias_decl(parser, pos),
-            Some(Lexeme::Trait) => Declaration::parse_trait_decl(parser, pos),
-            Some(Lexeme::Handler) => Declaration::parse_handler_decl(parser, pos),
+            Some(Lexeme::Id(_)) => DeclarationAst::parse_func_or_val(parser, pos),
+            Some(Lexeme::Type) => DeclarationAst::parse_type_decl(parser, pos),
+            Some(Lexeme::Alias) => DeclarationAst::parse_type_alias_decl(parser, pos),
+            Some(Lexeme::Trait) => DeclarationAst::parse_trait_decl(parser, pos),
+            Some(Lexeme::Handler) => DeclarationAst::parse_handler_decl(parser, pos),
             Some(Lexeme::Effect) => {
-                let (prot, pos) = Declaration::parse_effect_func_prototype(parser, pos)?;
-                Ok(Some((Declaration::Effect(prot), pos)))
+                let (prot, pos) = DeclarationAst::parse_effect_func_prototype(parser, pos)?;
+                Ok(Some((DeclarationAst::Effect(prot), pos)))
             }
-            Some(Lexeme::Extends) => Declaration::parse_extends(parser, pos),
+            Some(Lexeme::Extends) => DeclarationAst::parse_extends(parser, pos),
             Some(Lexeme::LargeString(i)) => Ok(Some((
-                Declaration::DocString(parser.get_large_string(i)),
+                DeclarationAst::DocString(parser.get_large_string(i)),
                 pos + 1,
             ))),
             _ => raise_parser_error("expecting a declaration", parser, pos, true),

@@ -3,8 +3,8 @@ use crate::backend::scopes::symbol::Symbol;
 pub(crate) trait Scope: ScopeClone {
     fn scope_name(&self) -> &str;
     fn get_enclosing_scope(&self) -> Option<&dyn Scope>;
-    fn define(&mut self, sym: &dyn Symbol) -> Option<&dyn Symbol>;
-    fn resolve(&self, name: &str) -> Option<&dyn Symbol>;
+    fn define(&mut self, sym: &dyn Symbol) -> Option<Box<Symbol>>;
+    fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>>;
 }
 
 

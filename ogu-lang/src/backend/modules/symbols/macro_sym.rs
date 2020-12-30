@@ -1,15 +1,15 @@
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::symbol::Symbol;
 
-#[derive(Clone)]
-pub(crate) struct MacroSym<'a> {
-    name: &'a str,
+#[derive(Clone, Debug)]
+pub(crate) struct MacroSym {
+    name: &'static str,
     ty : Option<Box<dyn Type>>,
 }
 
-impl<'a> MacroSym<'a> {
+impl MacroSym {
 
-    pub(crate) fn new(name: &'a str, ty: Option<Box<dyn Type>>) -> Self {
+    pub(crate) fn new(name: &'static str, ty: Option<Box<dyn Type>>) -> Self {
         MacroSym {
             name,
             ty
@@ -17,8 +17,8 @@ impl<'a> MacroSym<'a> {
     }
 }
 
-impl<'a> Symbol for MacroSym<'static> {
-    fn get_name(&self) -> &str {
+impl Symbol for MacroSym {
+    fn get_name(&self) -> &'static str {
         self.name
     }
 

@@ -1,7 +1,7 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
-use crate::backend::scopes::scopes::Scope;
 use crate::backend::modules::types::trait_type::TraitType;
+use crate::backend::scopes::Scope;
 
 #[derive(Clone, Debug)]
 pub(crate) enum PartialOrdSym {
@@ -69,7 +69,7 @@ impl Symbol for PartialOrdSym {
         unimplemented!()
     }
 
-    fn resolve_type(&mut self, scope: &dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
         match self {
             PartialOrdSym::Gt(l, r)
             |  PartialOrdSym::Ge(l, r)
@@ -77,14 +77,21 @@ impl Symbol for PartialOrdSym {
             |  PartialOrdSym::Le(l, r) => {
                 match l.resolve_type(scope) {
                     None => match r.resolve_type(scope) {
-                        None => r.set_type(Some(TraitType::new("PartialOrd"))),
-                        Some(rt) =>
-                            l.set_type(Some(rt.clone()))
+                        None => {
+                            r.set_type(Some(TraitType::new("PartialOrd")));
+                            l.set_type(Some(TraitType::new("PartialOrd")));
+                            scope.define(l.clone());
+                            scope.define(r.clone());
+                        },
+                        Some(rt) => {
+                            l.set_type(Some(rt.clone()));
+                            scope.define(l.clone());
+                        }
                     }
                     Some(lt) =>
-                        match r.resolve_type(scope) {
-                            None => r.set_type(Some(lt.clone())),
-                            _ => {}
+                        if r.resolve_type(scope).is_none() {
+                            r.set_type(Some(lt.clone()));
+                            scope.define(r.clone());
                         }
                 };
                 self.get_type()

@@ -1,7 +1,7 @@
-use crate::backend::scopes::scopes::Scope;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::parser::ast::expressions::expression::Expression;
+use crate::backend::scopes::Scope;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ValueSym {
@@ -34,7 +34,7 @@ impl Symbol for ValueSym {
         self.ty = ty.clone()
     }
 
-    fn resolve_type(&mut self, scope: &dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
         match &self.ty {
             Some(ty) => Some(ty.clone()),
             None => {

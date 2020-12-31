@@ -1,32 +1,34 @@
-use crate::backend::scopes::scopes::Scope;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::modules::types::func_type::FuncType;
-use crate::parser::ast::expressions::args::Args;
+use crate::parser::ast::expressions::args::{Args, Arg};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::scopes::sym_table::SymbolTable;
+use crate::backend::scopes::Scope;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
     name: String,
-    args: Box<dyn Symbol>,
+    args: Box<ArgsSym>,
     expr: Box<dyn Symbol>,
     ty: Option<Box<dyn Type>>,
 }
 
 impl FunctionSym {
     pub(crate) fn new(name: &str, args: &Args, expr: &Expression) -> Box<Self> {
-        let ty: Option<Box<dyn Type>> = FuncType::new(args, expr);
+        let ty: Option<Box<dyn Type>> = FuncType::new_opt(args, expr);
         let expr: Box<dyn Symbol> = expr.into();
-        let args: Box<dyn Symbol> = args.clone().into();
+        let args: Box<ArgsSym> = args.clone().into();
         Box::new(FunctionSym {
             name: name.to_string(),
             args,
             expr,
-            ty
+            ty,
         })
     }
 }
+
 
 impl Symbol for FunctionSym {
     fn get_name(&self) -> &str {
@@ -34,18 +36,27 @@ impl Symbol for FunctionSym {
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
-        self.expr.get_type()
+        self.ty.clone()
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
         self.ty = ty.clone()
     }
 
-    fn resolve_type(&mut self, scope: &dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
         match &self.ty {
             Some(ty) => Some(ty.clone()),
             None => {
-                self.expr.resolve_type(scope)?;
+                let mut sym_table = SymbolTable::new(&self.name, Some(scope.clone_box()));
+                if let ArgsSym::Many(args) = &*self.args {
+                    for a in args.iter() {
+                        sym_table.define(a.clone());
+                    }
+                }
+                self.expr.resolve_type(&mut *sym_table)?;
+                for s in sym_table.get_symbols() {
+                    self.args.define(s.clone_box());
+                }
                 self.ty = self.expr.get_type();
                 self.get_type()
             }
@@ -54,26 +65,30 @@ impl Symbol for FunctionSym {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) enum ArgSym {
+pub(crate) enum ArgsSym {
     Unit,
     Many(Vec<Box<dyn Symbol>>),
 }
 
-impl ArgSym {
+impl ArgsSym {
 
-    fn new_unit() -> Box<ArgSym> {
-        Box::new(ArgSym::Unit)
+    fn new_unit() -> Box<Self> {
+        Box::new(ArgsSym::Unit)
+    }
+
+    fn new_many(args: Vec<Box<dyn Symbol>>) -> Box<Self> {
+        Box::new(ArgsSym::Many(args))
     }
 }
 
-impl Symbol for ArgSym {
+impl Symbol for ArgsSym {
     fn get_name(&self) -> &str {
         "arg"
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
-            ArgSym::Unit => Some(BasicType::unit()),
+            ArgsSym::Unit => Some(BasicType::unit()),
             _ => todo!()
         }
     }
@@ -82,17 +97,111 @@ impl Symbol for ArgSym {
         unimplemented!()
     }
 
-    fn resolve_type(&mut self, _scope: &dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, _scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
         todo!()
     }
 }
 
+impl Scope for ArgsSym {
+    fn scope_name(&self) -> &str {
+        unimplemented!()
+    }
 
-impl<'a> From<Args<'a>> for Box<dyn Symbol> {
-    fn from(args: Args<'a>) -> Self {
-        match args {
-            Args::Void => ArgSym::new_unit(),
-            _=> todo!()
+
+    fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>> {
+        match self {
+            ArgsSym::Unit => None,
+            ArgsSym::Many(args) => {
+                for a in args.iter_mut() {
+                    if a.get_name() == sym.get_name() {
+                        *a = sym.clone_box();
+                        return Some(a.clone_box())
+                    }
+                }
+                None
+            }
         }
     }
+
+    fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
+        match self {
+            ArgsSym::Unit => None,
+            ArgsSym::Many(args) => {
+                args.iter().find(|s| s.get_name() == name).cloned()
+            }
+        }
+    }
+
+    fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
+        unimplemented!()
+    }
+
+    fn set_symbols(&mut self, _symbols: Vec<Box<dyn Symbol>>) {
+        unimplemented!()
+    }
+}
+
+#[derive(Clone, Debug)]
+struct IdArgSym {
+    name: String,
+    ty : Option<Box<dyn Type>>,
+}
+
+
+impl IdArgSym {
+
+    fn new(name: &str) -> Box<Self> {
+        Box::new(IdArgSym {
+            name: name.to_string(),
+            ty: None,
+        })
+    }
+}
+
+impl Symbol for IdArgSym {
+    fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    fn get_type(&self) -> Option<Box<dyn Type>> {
+        self.ty.clone()
+    }
+
+    fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
+        self.ty = ty.clone()
+    }
+
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
+        match &self.ty {
+            Some(ty) => Some(ty.clone()),
+            None => {
+                let sym = scope.resolve(&self.name)?;
+                self.ty = sym.get_type();
+                self.get_type()
+            }
+        }
+    }
+}
+
+impl<'a> From<Args<'a>> for Box<ArgsSym> {
+    fn from(args: Args<'a>) -> Self {
+        match args {
+            Args::Void => ArgsSym::new_unit(),
+            Args::Many(arg_vec) => ArgsSym::new_many(vec_args_into(&arg_vec)),
+
+        }
+    }
+}
+
+impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
+    fn from(arg: Arg<'a>) -> Self {
+        match arg {
+            Arg::Simple(s) => IdArgSym::new(s),
+            _ => todo!()
+        }
+    }
+}
+
+fn vec_args_into<'a>(args: &[Arg<'a>]) -> Vec<Box<dyn Symbol>> {
+    args.iter().map(|a| a.clone().into()).collect()
 }

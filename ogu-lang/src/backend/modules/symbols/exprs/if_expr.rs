@@ -1,6 +1,6 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
-use crate::backend::scopes::scopes::Scope;
+use crate::backend::scopes::Scope;
 
 #[derive(Clone, Debug)]
 pub(crate) struct IfExprSym {
@@ -40,7 +40,7 @@ impl Symbol for IfExprSym{
         unimplemented!()
     }
 
-    fn resolve_type(&mut self, scope: &dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
         self.cond.resolve_type(scope)?;
         self.then_expr.resolve_type(scope);
         self.else_expr.resolve_type(scope);

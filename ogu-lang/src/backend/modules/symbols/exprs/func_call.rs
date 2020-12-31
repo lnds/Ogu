@@ -1,6 +1,6 @@
-use crate::backend::scopes::scopes::Scope;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
+use crate::backend::scopes::Scope;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallSym {
@@ -33,8 +33,11 @@ impl Symbol for FuncCallSym {
 
     }
 
-    fn resolve_type(&mut self, scope: &dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
         self.func.resolve_type(scope);
+        for a in self.args.iter_mut() {
+            a.resolve_type(scope);
+        }
         self.ty = self.func.get_type();
         self.get_type()
     }

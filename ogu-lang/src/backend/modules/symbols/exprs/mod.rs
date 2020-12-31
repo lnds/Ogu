@@ -7,6 +7,7 @@ use std::ops::Deref;
 use crate::backend::modules::symbols::exprs::func_call::FuncCallSym;
 use crate::backend::modules::symbols::exprs::if_expr::IfExprSym;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
+use crate::backend::modules::symbols::exprs::do_expr::DoExprSym;
 
 mod arithmetics;
 mod idents;
@@ -14,6 +15,7 @@ mod literals;
 mod func_call;
 mod if_expr;
 mod partial_ord;
+mod do_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -39,9 +41,11 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::IfExpr(c, t, e) =>
                 IfExprSym::new(c.into(), t.into(), e.into()),
 
+            Expression::DoExpr(exprs) =>
+                DoExprSym::new(vec_exprs_into(exprs)),
 
             Expression::FuncCallExpr(f, args) =>
-                FuncCallSym::new(f.into(), vec_args_into(args)),
+                FuncCallSym::new(f.into(), vec_exprs_into(args)),
             _e => {
                 println!("not implemented for: {:?}", _e);
                 todo!()
@@ -56,6 +60,6 @@ impl<'a> From<&Box<Expression<'a>>> for Box<dyn Symbol> {
     }
 }
 
-fn vec_args_into<'a>(args: &Vec<Expression<'a>>) -> Vec<Box<dyn Symbol>> {
+fn vec_exprs_into<'a>(args: &[Expression<'a>]) -> Vec<Box<dyn Symbol>> {
     args.iter().map(|a| a.into()).collect()
 }

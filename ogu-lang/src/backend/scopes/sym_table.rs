@@ -1,6 +1,6 @@
-use crate::backend::scopes::scopes::Scope;
 use crate::backend::scopes::symbol::Symbol;
 use std::collections::HashMap;
+use crate::backend::scopes::Scope;
 
 #[derive(Clone, Debug)]
 pub(crate) struct SymbolTable {
@@ -24,10 +24,6 @@ impl SymbolTable {
 impl Scope for SymbolTable {
     fn scope_name(&self) -> &str {
         &self.name
-    }
-
-    fn get_enclosing_scope(&self) -> Option<Box<dyn Scope>> {
-        self.enclosing_scope.clone()
     }
 
     fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>> {

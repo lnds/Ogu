@@ -19,7 +19,7 @@ pub(crate) enum FuncType {
 }
 
 impl FuncType {
-    pub(crate) fn new(args: &Args, expr: &Expression) -> Option<Box<dyn Type>> {
+    pub(crate) fn new_opt(args: &Args, expr: &Expression) -> Option<Box<dyn Type>> {
         let sym: Box<dyn Symbol> = expr.into();
         let expr_type = sym.get_type()?;
         match args {

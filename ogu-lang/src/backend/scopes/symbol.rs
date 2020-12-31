@@ -1,12 +1,12 @@
-use crate::backend::scopes::scopes::Scope;
 use crate::backend::scopes::types::Type;
 use std::fmt::Debug;
+use crate::backend::scopes::Scope;
 
 pub(crate) trait Symbol: SymbolClone + Debug {
     fn get_name(&self) -> &str;
     fn get_type(&self) -> Option<Box<dyn Type>>;
     fn set_type(&mut self, ty: Option<Box<dyn Type>>);
-    fn resolve_type(&mut self, scope: &dyn Scope) -> Option<Box<dyn Type>>;
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>>;
 }
 
 pub(crate) trait SymbolClone {

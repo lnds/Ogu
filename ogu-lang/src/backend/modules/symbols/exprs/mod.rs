@@ -5,11 +5,15 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::expression::Expression;
 use std::ops::Deref;
 use crate::backend::modules::symbols::exprs::func_call::FuncCallSym;
+use crate::backend::modules::symbols::exprs::if_expr::IfExprSym;
+use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
 
 mod arithmetics;
 mod idents;
 mod literals;
 mod func_call;
+mod if_expr;
+mod partial_ord;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -26,6 +30,15 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::DivExpr(l, r) => ArithmeticSym::new_div(l.into(), r.into()),
             Expression::ModExpr(l, r) => ArithmeticSym::new_mod(l.into(), r.into()),
             Expression::PowExpr(l, r) => ArithmeticSym::new_pow(l.into(), r.into()),
+
+            Expression::GtExpr(l, r) => PartialOrdSym::new_gt(l.into(), r.into()),
+            Expression::GeExpr(l, r) => PartialOrdSym::new_ge(l.into(), r.into()),
+            Expression::LtExpr(l, r) => PartialOrdSym::new_lt(l.into(), r.into()),
+            Expression::LeExpr(l, r) => PartialOrdSym::new_le(l.into(), r.into()),
+
+            Expression::IfExpr(c, t, e) =>
+                IfExprSym::new(c.into(), t.into(), e.into()),
+
 
             Expression::FuncCallExpr(f, args) =>
                 FuncCallSym::new(f.into(), vec_args_into(args)),

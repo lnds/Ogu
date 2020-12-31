@@ -53,20 +53,20 @@ impl Symbol for ArithmeticSym {
             | ArithmeticSym::Pow(l, r) => {
                 let tl = l.get_type()?;
                 let tr = r.get_type()?;
-                if &tl == &tr {
+                if tl == tr.clone() {
                     Some(tr.clone())
+                }
+                else if (tl == BasicType::float() && tr == BasicType::int())
+                    || (tl == BasicType::int() && tr == BasicType::float())
+                {
+                    Some(BasicType::float())
                 } else {
-                    if (tl == BasicType::float() && tr == BasicType::int())
-                        || (tl == BasicType::int() && tr == BasicType::float())
-                    {
-                        Some(BasicType::float())
-                    } else {
-                        None
-                    }
+                    None
                 }
             }
         }
     }
+
 
     fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
         unimplemented!()
@@ -83,7 +83,7 @@ impl Symbol for ArithmeticSym {
                 | ArithmeticSym::Mod(l, r)
                 | ArithmeticSym::Pow(l, r) => {
                     l.resolve_type(scope)?;
-                    r.resolve_type(scope);
+                    r.resolve_type(scope)?;
                     self.get_type()
                 }
             },

@@ -37,7 +37,7 @@ impl Type for BasicType {
     }
 
     fn get_signature(&self) -> String {
-        self.get_name().to_string()
+        format!("BasicType {}", self.get_name())
     }
 }
 

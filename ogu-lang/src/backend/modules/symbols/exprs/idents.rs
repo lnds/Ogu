@@ -36,7 +36,7 @@ impl Symbol for IdSym {
             None => {
                 let sym = scope.resolve(&self.name)?;
                 self.ty = sym.get_type();
-                sym.get_type().clone()
+                sym.get_type()
             }
         }
     }

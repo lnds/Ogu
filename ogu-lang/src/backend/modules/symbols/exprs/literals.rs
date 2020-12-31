@@ -42,6 +42,6 @@ impl Symbol for LiteralSym {
     }
 
     fn resolve_type(&mut self, _scope: &dyn Scope) -> Option<Box<dyn Type>> {
-        self.get_type().clone()
+        self.get_type()
     }
 }

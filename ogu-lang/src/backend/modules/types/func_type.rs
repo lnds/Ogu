@@ -42,6 +42,6 @@ impl Type for FuncType {
     }
 
     fn get_signature(&self) -> String {
-        format!("FuncType<{}>", self.get_name().to_string())
+        format!("FuncType<{}>", self.get_name())
     }
 }

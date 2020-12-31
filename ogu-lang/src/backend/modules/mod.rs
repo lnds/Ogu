@@ -11,6 +11,7 @@ mod tests {
     use crate::lexer::Lexer;
     use crate::parser::ast::module::ModuleAst;
     use crate::parser::Parser;
+    use indoc::indoc;
 
     fn test_module(source: &str, sym_table: Box<dyn Scope>) -> Option<Module> {
         let mut lexer = Lexer::from(source);
@@ -30,32 +31,22 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_0() {
-        let module = test_module("a = 1", default_sym_table());
-        assert!(module.is_some());
-        let module = module.unwrap();
-        let decls = module.get_decls();
-        for decl in decls.iter() {
-            assert!(decl.get_type().unwrap() == BasicType::int());
-        }
-    }
 
     #[test]
-    fn test_1() {
+    fn test_values() {
         let module = test_module(
-            "a = 1\
-        b = a + 1",
+            indoc! {"
+                a = 1
+                b = a * 1
+                c = a * b"},
             default_sym_table(),
         );
         assert!(module.is_some());
         let module = module.unwrap();
         let decls = module.get_decls();
-        for decl in decls.iter() {
-            let t = decl.get_type();
-            assert!(t.is_some());
-            assert!(t.unwrap() == BasicType::int());
-        }
+        assert_eq!(decls[0].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[1].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[2].get_type(), Some(BasicType::int()));
     }
 
     #[test]
@@ -64,11 +55,36 @@ mod tests {
         assert!(module.is_some());
         let module = module.unwrap();
         let decls = module.get_decls();
-        for decl in decls.iter() {
-            let t = decl.get_type();
-            assert!(t.is_some());
-            assert!(t.unwrap() == BasicType::unit());
-        }
-        println!("{:#?}", module);
+        assert_eq!(decls[0].get_type(), Some(BasicType::unit()));
+    }
+
+
+    #[test]
+    fn test_arithmetic() {
+        let module = test_module(indoc!{r#"
+            a = 10
+            a1 = a + 1
+            a2 = a * a1
+            a3 = a1 - a2
+            a4 = a3 / a2
+            a5 = a4 % 10
+            a6 = a5 ^ a
+            a7 = (a1 + a2) * (a3 - a4) / (a5 % a6) ^ a
+            main () = println! "a7 = {}" a7
+            "#},
+            default_sym_table());
+        assert!(module.is_some());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        assert_eq!(decls[0].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[1].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[2].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[3].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[4].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[5].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[6].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[7].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[8].get_type(), Some(BasicType::unit()));
+
     }
 }

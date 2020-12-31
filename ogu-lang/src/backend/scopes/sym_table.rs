@@ -2,7 +2,7 @@ use crate::backend::scopes::scopes::Scope;
 use crate::backend::scopes::symbol::Symbol;
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct SymbolTable {
     name: String,
     enclosing_scope: Option<Box<dyn Scope>>,
@@ -52,5 +52,13 @@ impl Scope for SymbolTable {
 
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
         self.symbols.to_vec()
+    }
+
+    fn set_symbols(&mut self, symbols: Vec<Box<dyn Symbol>>) {
+        self.symbols = symbols.to_vec();
+        self.symbol_table.clear();
+        for (i, sym) in self.symbols.iter().enumerate() {
+            self.symbol_table.insert(sym.get_name().to_string(), i);
+        }
     }
 }

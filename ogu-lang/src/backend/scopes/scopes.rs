@@ -1,11 +1,13 @@
 use crate::backend::scopes::symbol::Symbol;
+use std::fmt::Debug;
 
-pub(crate) trait Scope: ScopeClone {
+pub(crate) trait Scope: ScopeClone + Debug {
     fn scope_name(&self) -> &str;
     fn get_enclosing_scope(&self) -> Option<Box<dyn Scope>>;
     fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>>;
     fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>>;
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>>;
+    fn set_symbols(&mut self, symbols: Vec<Box<dyn Symbol>>);
 }
 
 pub(crate) trait ScopeClone {

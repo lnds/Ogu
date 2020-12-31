@@ -57,7 +57,8 @@ impl Symbol for FunctionSym {
                 for s in sym_table.get_symbols() {
                     self.args.define(s.clone_box());
                 }
-                self.ty = self.expr.get_type();
+                let ty: Option<Box<dyn Type>> = FuncType::make(&*self.args, &*self.expr);
+                self.ty = ty;
                 self.get_type()
             }
         }
@@ -71,7 +72,6 @@ pub(crate) enum ArgsSym {
 }
 
 impl ArgsSym {
-
     fn new_unit() -> Box<Self> {
         Box::new(ArgsSym::Unit)
     }
@@ -115,7 +115,7 @@ impl Scope for ArgsSym {
                 for a in args.iter_mut() {
                     if a.get_name() == sym.get_name() {
                         *a = sym.clone_box();
-                        return Some(a.clone_box())
+                        return Some(a.clone_box());
                     }
                 }
                 None
@@ -144,12 +144,11 @@ impl Scope for ArgsSym {
 #[derive(Clone, Debug)]
 struct IdArgSym {
     name: String,
-    ty : Option<Box<dyn Type>>,
+    ty: Option<Box<dyn Type>>,
 }
 
 
 impl IdArgSym {
-
     fn new(name: &str) -> Box<Self> {
         Box::new(IdArgSym {
             name: name.to_string(),
@@ -188,7 +187,6 @@ impl<'a> From<Args<'a>> for Box<ArgsSym> {
         match args {
             Args::Void => ArgsSym::new_unit(),
             Args::Many(arg_vec) => ArgsSym::new_many(vec_args_into(&arg_vec)),
-
         }
     }
 }

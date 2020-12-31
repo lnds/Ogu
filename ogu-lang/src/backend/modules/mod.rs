@@ -13,6 +13,7 @@ mod tests {
     use indoc::indoc;
     use crate::backend::modules::types::trait_type::TraitType;
     use crate::backend::scopes::Scope;
+    use crate::backend::modules::types::func_type::FuncType;
 
     fn test_module(source: &str, sym_table: Box<dyn Scope>) -> Option<Module> {
         let mut lexer = Lexer::from(source);
@@ -56,7 +57,8 @@ mod tests {
         assert!(module.is_some());
         let module = module.unwrap();
         let decls = module.get_decls();
-        assert_eq!(decls[0].get_type(), Some(BasicType::unit()));
+        assert_eq!(decls[0].get_type(), FuncType::make_pair( FuncType::make_box_type(BasicType::unit()), FuncType::make_box_type(BasicType::unit())));
+
     }
 
 
@@ -85,7 +87,7 @@ mod tests {
         assert_eq!(decls[5].get_type(), Some(BasicType::int()));
         assert_eq!(decls[6].get_type(), Some(BasicType::int()));
         assert_eq!(decls[7].get_type(), Some(BasicType::int()));
-        assert_eq!(decls[8].get_type(), Some(BasicType::unit()));
+        assert_eq!(decls[8].get_type(), FuncType::make_pair( FuncType::make_box_type(BasicType::unit()), FuncType::make_box_type(BasicType::unit())));
 
     }
 
@@ -94,22 +96,22 @@ mod tests {
         let module = test_module(indoc!{r#"
         max x y = if x > y then x else y
 
-        max2 x y = if x >= y then x else y
+        --max2 x y = if x >= y then x else y
 
         -- min x y = if x < y then x else y
 
         -- min2 x y = if x <= y then x else y
 
-        -- main () =
-        --    println! "{} {}" (max $ 10 20)  -- (max2 10 20)
+        main () =
+           println! "{} {}" (max $ 10 20)  (max2 10 20)
         -- println! "{} {}" (min $ 10 20) (min2 10 20)"#},
             default_sym_table());
         assert!(module.is_some());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("DECLS: {:#?}", decls);
-        assert_eq!(decls[0].get_type(), Some(TraitType::new("PartialOrd")));
-        assert_eq!(decls[1].get_type(), Some(TraitType::new("PartialOrd")));
+        assert_eq!(decls[0].get_type(), FuncType::make_pair( FuncType::make_pair_box(FuncType::make_box_type(TraitType::new("PartialOrd")), FuncType::make_box_type(TraitType::new("PartialOrd"))), FuncType::make_box_type(TraitType::new("PartialOrd"))));
+        //assert_eq!(decls[1].get_type(), Some(TraitType::new("PartialOrd")));
         //assert_eq!(decls[2].get_type(), Some(TraitType::new("PartialOrd")));
         //assert_eq!(decls[3].get_type(), Some(TraitType::new("PartialOrd")));
         //assert_eq!(decls[5].get_type(), Some(BasicType::unit()));

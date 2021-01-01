@@ -72,6 +72,7 @@ pub(crate) enum Expression<'a> {
     FormatString(&'a str),
     Unit,
     EmptyList,
+    ParenExpr(Box<Expression<'a>>),
     NotExpr(Box<Expression<'a>>),
     LazyExpr(Box<Expression<'a>>),
     YieldExpr(Box<Expression<'a>>),
@@ -514,7 +515,16 @@ impl<'a> Expression<'a> {
             Some(_) => {
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
                 if parser.peek(pos, Lexeme::RightParen) {
-                    Ok((expr, pos + 1))
+                    match expr {
+                        Expression::Identifier(_) |
+                        Expression::FuncCallExpr(_, _) |
+                        Expression::RecurExpr(_) |
+                        Expression::LambdaExpr(_, _) |
+                        Expression::QualifiedIdentifier(_, _) =>
+                            Ok((Expression::ParenExpr(Box::new(expr)), pos + 1)), //
+                        _ => Ok((expr, pos+1))
+                    }
+
                 } else if parser.peek(pos, Lexeme::Comma) {
                     let mut exprs = vec![expr];
                     let mut pos = pos;
@@ -530,7 +540,8 @@ impl<'a> Expression<'a> {
                 } else {
                     let (arg, pos) = Expression::parse_prim_expr(parser, pos)?;
                     let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
-                    Ok((Expression::FuncCallExpr(Box::new(expr), vec![arg]), pos))
+                    let f_call = Expression::FuncCallExpr(Box::new(expr), vec![arg]);
+                    Ok((Expression::ParenExpr(Box::new(f_call)), pos))
                 }
             }
             None => raise_parser_error("unexpected EOF", parser, pos, false),

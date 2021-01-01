@@ -58,7 +58,7 @@ mod tests {
         let decls = module.get_decls();
         assert_eq!(
             decls[0].get_type(),
-            FuncType::new_opt(vec![],BasicType::unit())
+            FuncType::new_opt(None,BasicType::unit())
         );
     }
 
@@ -92,7 +92,7 @@ mod tests {
         assert_eq!(decls[7].get_type(), Some(BasicType::int()));
         assert_eq!(
             decls[8].get_type(),
-            FuncType::new_opt(vec![], BasicType::unit())
+            FuncType::new_opt(None, BasicType::unit())
         );
     }
 
@@ -122,7 +122,7 @@ mod tests {
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(
-                vec![TraitType::new_trait("PartialOrd"), TraitType::new_trait("PartialOrd")],
+                Some(vec![TraitType::new_trait("PartialOrd"), TraitType::new_trait("PartialOrd")]),
                 TraitType::new_trait("PartialOrd")));
     }
 }

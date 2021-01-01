@@ -6,7 +6,7 @@ use crate::parser::ast::expressions::expression::Expression;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncType {
-    args: Vec<Box<dyn Type>>,
+    args: Option<Vec<Box<dyn Type>>>,
     result: Box<dyn Type>,
 }
 
@@ -31,11 +31,11 @@ impl Type for FuncType {
 
 impl FuncType {
 
-    pub(crate) fn new(args: Vec<Box<dyn Type>>, result: Box<dyn Type>) -> Box<Self> {
+    pub(crate) fn new(args: Option<Vec<Box<dyn Type>>>, result: Box<dyn Type>) -> Box<Self> {
         Box::new(FuncType { args, result })
     }
 
-    pub(crate) fn new_opt(args: Vec<Box<dyn Type>>, result: Box<dyn Type>) -> Option<Box<dyn Type>> {
+    pub(crate) fn new_opt(args: Option<Vec<Box<dyn Type>>>, result: Box<dyn Type>) -> Option<Box<dyn Type>> {
         Some(Self::new(args, result))
     }
 
@@ -44,8 +44,8 @@ impl FuncType {
         let sym: Box<dyn Symbol> = expr.into();
         let result = sym.get_type()?;
         let args = match args {
-            Args::Void => vec![],
-            Args::Many(a) => vec_args_into(a).iter().flat_map(|sym| sym.get_type()).collect()
+            Args::Void => None,
+            Args::Many(a) => Some(vec_args_into(a).iter().flat_map(|sym| sym.get_type()).collect())
         };
         Self::new_opt(args, result)
     }
@@ -54,8 +54,9 @@ impl FuncType {
     pub(crate) fn make(args: &ArgsSym, expr: &dyn Symbol) -> Option<Box<dyn Type>> {
         let result = expr.get_type()?;
         let args = match args {
-            ArgsSym::Unit => vec![],
-            ArgsSym::Many(a) => a.iter().flat_map(|sym| sym.get_type()).collect()
+            ArgsSym::Unit => None,
+            ArgsSym::Many(a) =>
+                Some(a.iter().flat_map(|sym| sym.get_type()).collect())
         };
         Self::new_opt(args, result)
     }

@@ -20,7 +20,7 @@ impl Type for FuncType {
     }
 
     fn is_trait(&self) -> bool {
-        false
+        self.result.is_trait()
     }
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
@@ -52,11 +52,14 @@ impl FuncType {
 
 
     pub(crate) fn make(args: &ArgsSym, expr: &dyn Symbol) -> Option<Box<dyn Type>> {
+        println!("make func type args = {:?} expr = {:?}", args, expr);
         let result = expr.get_type()?;
         let args = match args {
             ArgsSym::Unit => None,
-            ArgsSym::Many(a) =>
+            ArgsSym::Many(a) => {
+                println!("make from many a = {:#?}", a);
                 Some(a.iter().flat_map(|sym| sym.get_type()).collect())
+            }
         };
         Self::new_opt(args, result)
     }

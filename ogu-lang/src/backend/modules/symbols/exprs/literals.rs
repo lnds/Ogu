@@ -2,6 +2,7 @@ use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
+use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) enum LiteralSym {
@@ -41,7 +42,7 @@ impl Symbol for LiteralSym {
         unimplemented!()
     }
 
-    fn resolve_type(&mut self, _scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
-        self.get_type()
+    fn resolve_type(&mut self, _scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
+        Ok(self.get_type())
     }
 }

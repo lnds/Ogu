@@ -2,6 +2,8 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::backend::scopes::Scope;
+use anyhow::{Result, Error};
+use crate::backend::errors::OguError;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ValueSym {
@@ -34,13 +36,16 @@ impl Symbol for ValueSym {
         self.ty = ty.clone()
     }
 
-    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match &self.ty {
-            Some(ty) => Some(ty.clone()),
+            Some(ty) => Ok(Some(ty.clone())),
             None => {
                 self.expr.resolve_type(scope)?;
                 self.set_type(self.expr.get_type());
-                self.get_type()
+                match self.get_type() {
+                    None => Err(Error::new(OguError::SymbolTableError).context(format!("Id not found: {:?}", self.name))),
+                    Some(t) => Ok(Some(t))
+                }
             }
         }
     }

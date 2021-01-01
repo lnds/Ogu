@@ -10,7 +10,7 @@ use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
 use crate::backend::modules::symbols::exprs::do_expr::DoExprSym;
 
 mod arithmetics;
-mod idents;
+pub(crate) mod idents;
 mod literals;
 mod func_call;
 mod if_expr;

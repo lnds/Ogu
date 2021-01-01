@@ -2,6 +2,8 @@ use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
+use anyhow::{Result, Error};
+use crate::backend::errors::OguError;
 
 #[derive(Clone, Debug)]
 pub(crate) enum ArithmeticSym {
@@ -72,9 +74,9 @@ impl Symbol for ArithmeticSym {
         unimplemented!()
     }
 
-    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match self.get_type() {
-            Some(ty) => Some(ty.clone()),
+            Some(ty) => Ok(Some(ty.clone())),
             None => match self {
                 ArithmeticSym::Add(l, r)
                 | ArithmeticSym::Sub(l, r)
@@ -84,7 +86,10 @@ impl Symbol for ArithmeticSym {
                 | ArithmeticSym::Pow(l, r) => {
                     l.resolve_type(scope)?;
                     r.resolve_type(scope)?;
-                    self.get_type()
+                    match self.get_type() {
+                        None => Err(Error::new(OguError::SymbolTableError).context(format!("could not resolve {:?}", self))),
+                        Some(t) => Ok(Some(t))
+                    }
                 }
             },
         }

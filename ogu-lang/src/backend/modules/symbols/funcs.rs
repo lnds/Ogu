@@ -6,6 +6,9 @@ use crate::parser::ast::expressions::expression::Expression;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::Scope;
+use crate::backend::modules::symbols::exprs::idents::IdSym;
+use anyhow::{Result,Error};
+use crate::backend::errors::OguError;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -43,9 +46,9 @@ impl Symbol for FunctionSym {
         self.ty = ty.clone()
     }
 
-    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match &self.ty {
-            Some(ty) => Some(ty.clone()),
+            Some(ty) => Ok(Some(ty.clone())),
             None => {
                 let mut sym_table = SymbolTable::new(&self.name, Some(scope.clone_box()));
                 if let ArgsSym::Many(args) = &*self.args {
@@ -59,7 +62,10 @@ impl Symbol for FunctionSym {
                 }
                 let ty: Option<Box<dyn Type>> = FuncType::make(&*self.args, &*self.expr);
                 self.ty = ty;
-                self.get_type()
+                match self.get_type() {
+                    None => Err(Error::new(OguError::SymbolTableError).context(format!("func not found {}", self.name))),
+                    Some(t) => Ok(Some(t))
+                }
             }
         }
     }
@@ -97,7 +103,7 @@ impl Symbol for ArgsSym {
         unimplemented!()
     }
 
-    fn resolve_type(&mut self, _scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, _scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         todo!()
     }
 }
@@ -141,46 +147,6 @@ impl Scope for ArgsSym {
     }
 }
 
-#[derive(Clone, Debug)]
-struct IdArgSym {
-    name: String,
-    ty: Option<Box<dyn Type>>,
-}
-
-
-impl IdArgSym {
-    fn new(name: &str) -> Box<Self> {
-        Box::new(IdArgSym {
-            name: name.to_string(),
-            ty: None,
-        })
-    }
-}
-
-impl Symbol for IdArgSym {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-
-    fn get_type(&self) -> Option<Box<dyn Type>> {
-        self.ty.clone()
-    }
-
-    fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        self.ty = ty.clone()
-    }
-
-    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
-        match &self.ty {
-            Some(ty) => Some(ty.clone()),
-            None => {
-                let sym = scope.resolve(&self.name)?;
-                self.ty = sym.get_type();
-                self.get_type()
-            }
-        }
-    }
-}
 
 impl<'a> From<Args<'a>> for Box<ArgsSym> {
     fn from(args: Args<'a>) -> Self {
@@ -194,7 +160,7 @@ impl<'a> From<Args<'a>> for Box<ArgsSym> {
 impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
     fn from(arg: Arg<'a>) -> Self {
         match arg {
-            Arg::Simple(s) => IdArgSym::new(s),
+            Arg::Simple(s) => IdSym::new(s),
             _ => todo!()
         }
     }

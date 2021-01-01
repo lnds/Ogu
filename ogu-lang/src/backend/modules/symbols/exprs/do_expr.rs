@@ -1,6 +1,8 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
+use anyhow::{Result, Error};
+use crate::backend::errors::OguError;
 
 #[derive(Debug, Clone)]
 pub(crate) struct DoExprSym {
@@ -31,10 +33,13 @@ impl Symbol for DoExprSym {
         unimplemented!()
     }
 
-    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         for e in self.exprs.iter_mut() {
-            e.resolve_type(scope);
+            e.resolve_type(scope)?;
         }
-        self.get_type()
+        match self.get_type() {
+            None => Err(Error::new(OguError::SymbolTableError).context(format!("cound not resolve {:?}", self))),
+            Some(t) => Ok(Some(t))
+        }
     }
 }

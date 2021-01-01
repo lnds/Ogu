@@ -1,6 +1,8 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
+use anyhow::{Result, Error};
+use crate::backend::errors::OguError;
 
 #[derive(Clone, Debug)]
 pub(crate) struct IfExprSym {
@@ -40,10 +42,13 @@ impl Symbol for IfExprSym{
         unimplemented!()
     }
 
-    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         self.cond.resolve_type(scope)?;
-        self.then_expr.resolve_type(scope);
-        self.else_expr.resolve_type(scope);
-        self.get_type()
+        self.then_expr.resolve_type(scope)?;
+        self.else_expr.resolve_type(scope)?;
+        match self.get_type() {
+            None => Err(Error::new(OguError::SymbolTableError).context(format!("could not resolve {:?}", self))),
+            Some(t) => Ok(Some(t))
+        }
     }
 }

@@ -1,6 +1,8 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
+use anyhow::{Result, Error};
+use crate::backend::errors::OguError;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallSym {
@@ -33,12 +35,16 @@ impl Symbol for FuncCallSym {
 
     }
 
-    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Option<Box<dyn Type>> {
-        self.func.resolve_type(scope);
+    fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
+        self.func.resolve_type(scope)?;
         for a in self.args.iter_mut() {
-            a.resolve_type(scope);
+            a.resolve_type(scope)?;
         }
         self.ty = self.func.get_type();
-        self.get_type()
+        /// TODO: simplify type from func_type
+        match self.get_type() {
+            None => Err(Error::new(OguError::SymbolTableError).context(format!("could note resolve {:?}", self))),
+            Some(t) => Ok(Some(t))
+        }
     }
 }

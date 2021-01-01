@@ -19,7 +19,7 @@ pub(crate) struct FunctionSym {
 
 impl FunctionSym {
     pub(crate) fn new(name: &str, args: &Args, expr: &Expression) -> Box<Self> {
-        let ty: Option<Box<dyn Type>> = FuncType::new_opt(args, expr);
+        let ty: Option<Box<dyn Type>> = FuncType::from_ast_opt(args, expr);
         let expr: Box<dyn Symbol> = expr.into();
         let args: Box<ArgsSym> = args.clone().into();
         Box::new(FunctionSym {
@@ -157,6 +157,6 @@ impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
     }
 }
 
-fn vec_args_into<'a>(args: &[Arg<'a>]) -> Vec<Box<dyn Symbol>> {
+pub(crate) fn vec_args_into<'a>(args: &[Arg<'a>]) -> Vec<Box<dyn Symbol>> {
     args.iter().map(|a| a.clone().into()).collect()
 }

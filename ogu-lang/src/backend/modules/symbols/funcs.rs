@@ -1,14 +1,13 @@
+use crate::backend::modules::symbols::exprs::idents::IdSym;
+use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::func_type::FuncType;
+use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
-use crate::backend::modules::types::func_type::FuncType;
-use crate::parser::ast::expressions::args::{Args, Arg};
-use crate::parser::ast::expressions::expression::Expression;
-use crate::backend::modules::types::basic_type::BasicType;
-use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::Scope;
-use crate::backend::modules::symbols::exprs::idents::IdSym;
-use anyhow::{Result,Error};
-use crate::backend::errors::OguError;
+use crate::parser::ast::expressions::args::{Arg, Args};
+use crate::parser::ast::expressions::expression::Expression;
+use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -31,7 +30,6 @@ impl FunctionSym {
         })
     }
 }
-
 
 impl Symbol for FunctionSym {
     fn get_name(&self) -> &str {
@@ -92,7 +90,7 @@ impl Symbol for ArgsSym {
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
             ArgsSym::Unit => Some(BasicType::unit()),
-            _ => todo!()
+            _ => todo!(),
         }
     }
 
@@ -109,7 +107,6 @@ impl Scope for ArgsSym {
     fn scope_name(&self) -> &str {
         unimplemented!()
     }
-
 
     fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>> {
         match self {
@@ -129,9 +126,7 @@ impl Scope for ArgsSym {
     fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
         match self {
             ArgsSym::Unit => None,
-            ArgsSym::Many(args) => {
-                args.iter().find(|s| s.get_name() == name).cloned()
-            }
+            ArgsSym::Many(args) => args.iter().find(|s| s.get_name() == name).cloned(),
         }
     }
 
@@ -143,7 +138,6 @@ impl Scope for ArgsSym {
         unimplemented!()
     }
 }
-
 
 impl<'a> From<Args<'a>> for Box<ArgsSym> {
     fn from(args: Args<'a>) -> Self {
@@ -158,7 +152,7 @@ impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
     fn from(arg: Arg<'a>) -> Self {
         match arg {
             Arg::Simple(s) => IdSym::new(s),
-            _ => todo!()
+            _ => todo!(),
         }
     }
 }

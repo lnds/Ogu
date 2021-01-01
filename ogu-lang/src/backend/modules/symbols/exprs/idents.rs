@@ -1,8 +1,8 @@
+use crate::backend::errors::OguError;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Result, Error};
-use crate::backend::errors::OguError;
+use anyhow::{Error, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct IdSym {
@@ -35,15 +35,14 @@ impl Symbol for IdSym {
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match &self.ty {
             Some(ty) => Ok(Some(ty.clone())),
-            None => {
-                match scope.resolve(&self.name) {
-                    None => Err(Error::new(OguError::SymbolTableError).context(format!("Symbol not found : {}", self.name))),
-                    Some(sym) => {
-                        self.ty = sym.get_type();
-                        Ok(self.get_type())
-                    }
+            None => match scope.resolve(&self.name) {
+                None => Err(Error::new(OguError::SymbolTableError)
+                    .context(format!("Symbol not found : {}", self.name))),
+                Some(sym) => {
+                    self.ty = sym.get_type();
+                    Ok(self.get_type())
                 }
-            }
+            },
         }
     }
 }

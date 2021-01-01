@@ -1,21 +1,16 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Result, Error};
-use crate::backend::errors::OguError;
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub(crate) struct DoExprSym {
     exprs: Vec<Box<dyn Symbol>>,
 }
 
-
 impl DoExprSym {
-
     pub(crate) fn new(exprs: Vec<Box<dyn Symbol>>) -> Box<Self> {
-        Box::new(DoExprSym {
-            exprs
-        })
+        Box::new(DoExprSym { exprs })
     }
 }
 

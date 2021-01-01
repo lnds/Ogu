@@ -2,18 +2,20 @@ use crate::backend::scopes::types::Type;
 
 #[derive(Clone, Debug)]
 pub(crate) struct TraitType {
-    name: String
+    name: String,
 }
 
 impl TraitType {
-    pub(crate) fn new(name: &str) -> Box<dyn Type> {
-        Box::new(TraitType { name: name.to_string() })
+    pub(crate) fn new_trait(name: &str) -> Box<dyn Type> {
+        Box::new(TraitType {
+            name: name.to_string(),
+        })
     }
 }
 
 impl Type for TraitType {
     fn get_name(&self) -> String {
-       self.name.to_string()
+        self.name.to_string()
     }
 
     fn get_signature(&self) -> String {

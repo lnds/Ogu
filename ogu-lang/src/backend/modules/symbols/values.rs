@@ -1,9 +1,8 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
-use crate::parser::ast::expressions::expression::Expression;
 use crate::backend::scopes::Scope;
-use anyhow::{Result, Error};
-use crate::backend::errors::OguError;
+use crate::parser::ast::expressions::expression::Expression;
+use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ValueSym {

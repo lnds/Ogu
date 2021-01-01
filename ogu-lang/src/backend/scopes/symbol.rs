@@ -1,7 +1,7 @@
 use crate::backend::scopes::types::Type;
-use std::fmt::Debug;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
+use std::fmt::Debug;
 
 pub(crate) trait Symbol: SymbolClone + Debug {
     fn get_name(&self) -> &str;

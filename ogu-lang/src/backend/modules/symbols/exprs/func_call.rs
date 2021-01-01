@@ -1,22 +1,21 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Result, Error};
-use crate::backend::errors::OguError;
+use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallSym {
     func: Box<dyn Symbol>,
     args: Vec<Box<dyn Symbol>>,
-    ty: Option<Box<dyn Type>>
+    ty: Option<Box<dyn Type>>,
 }
 
 impl FuncCallSym {
-    pub(crate) fn new(func: Box<dyn Symbol>, args: Vec<Box<dyn Symbol>>) -> Box<Self>{
+    pub(crate) fn new(func: Box<dyn Symbol>, args: Vec<Box<dyn Symbol>>) -> Box<Self> {
         Box::new(FuncCallSym {
             func,
             args,
-            ty: None
+            ty: None,
         })
     }
 }
@@ -32,7 +31,6 @@ impl Symbol for FuncCallSym {
 
     fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
         unimplemented!()
-
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {

@@ -2,8 +2,7 @@ use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Result, Error};
-use crate::backend::errors::OguError;
+use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) enum ArithmeticSym {
@@ -57,8 +56,7 @@ impl Symbol for ArithmeticSym {
                 let tr = r.get_type()?;
                 if tl == tr.clone() {
                     Some(tr.clone())
-                }
-                else if (tl == BasicType::float() && tr == BasicType::int())
+                } else if (tl == BasicType::float() && tr == BasicType::int())
                     || (tl == BasicType::int() && tr == BasicType::float())
                 {
                     Some(BasicType::float())
@@ -68,7 +66,6 @@ impl Symbol for ArithmeticSym {
             }
         }
     }
-
 
     fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
         unimplemented!()

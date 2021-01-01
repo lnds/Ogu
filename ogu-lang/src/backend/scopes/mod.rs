@@ -18,8 +18,8 @@ pub(crate) trait ScopeClone {
 }
 
 impl<T> ScopeClone for T
-    where
-        T: 'static + Scope + Clone,
+where
+    T: 'static + Scope + Clone,
 {
     fn clone_box(&self) -> Box<dyn Scope> {
         Box::new(self.clone())

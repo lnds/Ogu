@@ -1,29 +1,30 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Result, Error};
-use crate::backend::errors::OguError;
+use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct IfExprSym {
     cond: Box<dyn Symbol>,
     then_expr: Box<dyn Symbol>,
     else_expr: Box<dyn Symbol>,
-
 }
 
 impl IfExprSym {
-
-    pub(crate) fn new(cond: Box<dyn Symbol>, then_expr: Box<dyn Symbol>, else_expr: Box<dyn Symbol>) -> Box<Self> {
+    pub(crate) fn new(
+        cond: Box<dyn Symbol>,
+        then_expr: Box<dyn Symbol>,
+        else_expr: Box<dyn Symbol>,
+    ) -> Box<Self> {
         Box::new(IfExprSym {
             cond,
             then_expr,
-            else_expr
+            else_expr,
         })
     }
 }
 
-impl Symbol for IfExprSym{
+impl Symbol for IfExprSym {
     fn get_name(&self) -> &str {
         "if_expr"
     }

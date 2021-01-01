@@ -1,9 +1,9 @@
+use crate::backend::modules::symbols::funcs::ArgsSym;
+use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
-use crate::backend::modules::types::basic_type::BasicType;
 use crate::parser::ast::expressions::args::Args;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::backend::modules::symbols::funcs::ArgsSym;
 
 /*
    FT ::= ()
@@ -34,15 +34,19 @@ impl FuncType {
 
     pub(crate) fn make(args: &ArgsSym, expr: &dyn Symbol) -> Option<Box<dyn Type>> {
         match args {
-            ArgsSym::Unit => Self::make_pair(Self::make_box_type(BasicType::unit()), Self::get_type(expr)?),
-            ArgsSym::Many(args) if args.len() == 1 =>
-                Self::make_pair(Self::get_type(&*args[0])?, FuncType::get_type(expr)?),
-            ArgsSym::Many(args) if args.len() == 2 =>
-                Self::make_pair(
-                    Self::make_pair(Self::get_type(&*args[0])?, Self::get_type(&*args[1])?)?,
-                     FuncType::get_type(expr)?),
+            ArgsSym::Unit => Self::make_pair(
+                Self::make_box_type(BasicType::unit()),
+                Self::get_type(expr)?,
+            ),
+            ArgsSym::Many(args) if args.len() == 1 => {
+                Self::make_pair(Self::get_type(&*args[0])?, FuncType::get_type(expr)?)
+            }
+            ArgsSym::Many(args) if args.len() == 2 => Self::make_pair(
+                Self::make_pair(Self::get_type(&*args[0])?, Self::get_type(&*args[1])?)?,
+                FuncType::get_type(expr)?,
+            ),
 
-            _ => todo!()
+            _ => todo!(),
         }
     }
 
@@ -59,18 +63,14 @@ impl FuncType {
         Some(Self::make_box_type(ty))
     }
 
-    pub(crate) fn make_pair_box(t1: Box<dyn Type>, t2: Box::<dyn Type>) -> Box<dyn Type> {
+    pub(crate) fn make_pair_box(t1: Box<dyn Type>, t2: Box<dyn Type>) -> Box<dyn Type> {
         Box::new(FuncType::Pair(t1, t2))
     }
 
-    pub(crate) fn make_pair(t1: Box<dyn Type>, t2: Box::<dyn Type>) -> Option<Box<dyn Type>> {
+    pub(crate) fn make_pair(t1: Box<dyn Type>, t2: Box<dyn Type>) -> Option<Box<dyn Type>> {
         Some(Self::make_pair_box(t1, t2))
     }
-
-
 }
-
-
 
 impl Type for FuncType {
     fn get_name(&self) -> String {

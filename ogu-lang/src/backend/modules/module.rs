@@ -2,11 +2,11 @@ use crate::backend::modules::symbols::funcs::FunctionSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
+use crate::backend::scopes::Scope;
 use crate::parser::ast::module::decls::DeclarationAst;
 use crate::parser::ast::module::decls::DeclarationAst::{Function, Value};
 use crate::parser::ast::module::ModuleAst;
 use anyhow::Result;
-use crate::backend::scopes::Scope;
 
 #[derive(Debug)]
 pub struct Module {

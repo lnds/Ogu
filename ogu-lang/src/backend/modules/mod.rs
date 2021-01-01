@@ -107,7 +107,7 @@ mod tests {
 
         min2 x y = if x <= y then x else y
 
-        sum_m x y = (min x y) + (max x y)
+        p20 = max 10 20
 
         main () =
            println! "{} {}" (max $ 10 20)  (max2 10 20);

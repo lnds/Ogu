@@ -34,12 +34,15 @@ impl Symbol for FuncCallSym {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        self.func.resolve_type(scope)?;
+        let ft = self.func.resolve_type(scope)?;
+        println!("FUNC TYPE FOR FUNC CAL = {:?}", ft);
         for a in self.args.iter_mut() {
             a.resolve_type(scope)?;
         }
-        self.ty = self.func.get_type();
-        /// TODO: simplify type from func_type
+        self.ty = match self.func.get_type() {
+            None => None,
+            Some(t) =>  t.resolve_expr_type()
+        };
         Ok(self.get_type())
     }
 }

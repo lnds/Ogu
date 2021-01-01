@@ -39,6 +39,14 @@ impl Type for BasicType {
     fn get_signature(&self) -> String {
         format!("BasicType {}", self.get_name())
     }
+
+    fn is_trait(&self) -> bool {
+        true
+    }
+
+    fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
+        None
+    }
 }
 
 impl PartialEq for BasicType {

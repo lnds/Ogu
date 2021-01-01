@@ -1,5 +1,4 @@
 use crate::backend::modules::symbols::funcs::{ArgsSym, vec_args_into};
-use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::parser::ast::expressions::args::Args;
@@ -18,6 +17,14 @@ impl Type for FuncType {
 
     fn get_signature(&self) -> String {
         format!("FuncType<{}>", self.get_name())
+    }
+
+    fn is_trait(&self) -> bool {
+        false
+    }
+
+    fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
+        Some(self.result.clone())
     }
 }
 

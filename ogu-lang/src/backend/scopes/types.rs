@@ -3,6 +3,8 @@ use std::fmt::Debug;
 pub(crate) trait Type: TypeClone + Debug {
     fn get_name(&self) -> String;
     fn get_signature(&self) -> String;
+    fn is_trait(&self) -> bool;
+    fn resolve_expr_type(&self) -> Option<Box<dyn Type>>;
 }
 
 pub(crate) trait TypeClone {

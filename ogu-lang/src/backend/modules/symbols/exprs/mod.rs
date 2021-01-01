@@ -16,6 +16,7 @@ pub(crate) mod idents;
 mod if_expr;
 mod literals;
 mod partial_ord;
+mod paren_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {

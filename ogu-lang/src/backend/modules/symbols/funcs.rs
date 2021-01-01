@@ -46,8 +46,8 @@ impl Symbol for FunctionSym {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match &self.ty {
-            Some(ty) => Ok(Some(ty.clone())),
-            None => {
+            Some(ty) if !ty.is_trait() => Ok(Some(ty.clone())),
+            _ => {
                 let mut sym_table = SymbolTable::new(&self.name, Some(scope.clone_box()));
                 if let ArgsSym::Many(args) = &*self.args {
                     for a in args.iter() {

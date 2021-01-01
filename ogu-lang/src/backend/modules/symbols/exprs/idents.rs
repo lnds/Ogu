@@ -29,7 +29,12 @@ impl Symbol for IdSym {
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        self.ty = ty.clone()
+        match &self.ty {
+            None => self.ty = ty.clone(),
+            Some(t) if t.is_trait() => self.ty = ty.clone(),
+            _ => {}
+        }
+
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {

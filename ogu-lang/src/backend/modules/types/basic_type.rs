@@ -31,7 +31,7 @@ impl Type for BasicType {
         match self {
             BasicType::Unit => "()".to_string(),
             BasicType::Int => "int".to_string(),
-            BasicType::Float => "int".to_string(),
+            BasicType::Float => "float".to_string(),
             BasicType::StaticStr => "&str".to_string(),
         }
     }
@@ -41,7 +41,7 @@ impl Type for BasicType {
     }
 
     fn is_trait(&self) -> bool {
-        true
+        false
     }
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {

@@ -40,11 +40,12 @@ impl Symbol for PartialOrdSym {
             PartialOrdSym::Gt(l, r)
             | PartialOrdSym::Ge(l, r)
             | PartialOrdSym::Lt(l, r)
-            | PartialOrdSym::Le(l, r) => match l.get_type() {
+            | PartialOrdSym::Le(l, r)
+            => match l.get_type() {
                 None => match r.get_type() {
                     None => Some(TraitType::new_trait("PartialOrd")),
                     Some(rt) => Some(rt.clone()),
-                },
+                }
                 Some(lt) => match r.get_type() {
                     None => Some(lt.clone()),
                     Some(rt) => {
@@ -81,12 +82,10 @@ impl Symbol for PartialOrdSym {
                             l.set_type(Some(rt.clone()));
                             scope.define(l.clone());
                         }
-                    },
+                    }
                     Some(lt) => {
-                        if r.resolve_type(scope)?.is_none() {
-                            r.set_type(Some(lt.clone()));
-                            scope.define(r.clone());
-                        }
+                        r.set_type(Some(lt.clone()));
+                        scope.define(r.clone());
                     }
                 };
                 Ok(self.get_type())

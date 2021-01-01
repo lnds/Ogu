@@ -71,7 +71,7 @@ mod tests {
             a2 = a * a1
             a3 = a1 - a2
             a4 = a3 / a2
-            a5 = a4 % 10
+            a5 = a4 % 10.0
             a6 = a5 ^ a
             a7 = (a1 + a2) * (a3 - a4) / (a5 % a6) ^ a
             main () = println! "a7 = {}" a7
@@ -81,19 +81,44 @@ mod tests {
         assert!(module.is_some());
         let module = module.unwrap();
         let decls = module.get_decls();
-        println!("DECLS = {:#?}", decls);
+        println!("TEST DECLS = {:#?}", decls);
         assert_eq!(decls[0].get_type(), Some(BasicType::int()));
         assert_eq!(decls[1].get_type(), Some(BasicType::int()));
         assert_eq!(decls[2].get_type(), Some(BasicType::int()));
         assert_eq!(decls[3].get_type(), Some(BasicType::int()));
         assert_eq!(decls[4].get_type(), Some(BasicType::int()));
-        assert_eq!(decls[5].get_type(), Some(BasicType::int()));
-        assert_eq!(decls[6].get_type(), Some(BasicType::int()));
-        assert_eq!(decls[7].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[5].get_type(), Some(BasicType::float()));
+        assert_eq!(decls[6].get_type(), Some(BasicType::float()));
+        assert_eq!(decls[7].get_type(), Some(BasicType::float()));
         assert_eq!(
             decls[8].get_type(),
             FuncType::new_opt(None, BasicType::unit())
         );
+    }
+
+    #[test]
+    fn test_funcs_1() {
+        let module = test_module(
+            indoc! {r#"
+        mul x y = x * y
+
+        m = mul"#},
+            default_sym_table(),
+        );
+        assert!(module.is_some());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(
+                Some(vec![TraitType::new_trait("Num"), TraitType::new_trait("Num")]),
+                TraitType::new_trait("Num")));
+        assert_eq!(
+            decls[1].get_type(),
+            FuncType::new_opt(
+                Some(vec![TraitType::new_trait("Num"), TraitType::new_trait("Num")]),
+                TraitType::new_trait("Num")));
     }
 
     #[test]

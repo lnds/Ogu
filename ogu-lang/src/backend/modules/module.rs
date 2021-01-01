@@ -22,7 +22,7 @@ impl Module {
         }
         let mut decls = sym_table.get_symbols();
         for d in decls.iter_mut() {
-            let r = d.resolve_type(&mut *sym_table);
+            d.resolve_type(&mut *sym_table)?;
             sym_table.define(d.clone_box()); // redefine symbol
         }
         Ok(Module { decls })

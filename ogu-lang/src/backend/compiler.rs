@@ -9,6 +9,7 @@ use crate::parser::ast::module::ModuleAst;
 use crate::parser::Parser;
 use anyhow::Result;
 use std::path::PathBuf;
+use crate::backend::modules::types::variadic_type::VariadicType;
 
 pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> Result<Module> {
     let mut lexer = Lexer::new(&path)?;
@@ -33,7 +34,7 @@ pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> 
 
 pub(crate) fn default_sym_table() -> Box<dyn Scope> {
     let mut symbol_table: Box<dyn Scope> = SymbolTable::new("_ogu", None);
-    symbol_table.define(MacroSym::new("println!", Some(BasicType::unit())));
-    symbol_table.define(MacroSym::new("print!", Some(BasicType::unit())));
+    symbol_table.define(MacroSym::new("println!", VariadicType::new_opt(BasicType::unit())));
+    symbol_table.define(MacroSym::new("print!", VariadicType::new_opt(BasicType::unit())));
     symbol_table
 }

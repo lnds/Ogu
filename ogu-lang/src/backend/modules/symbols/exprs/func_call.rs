@@ -42,9 +42,6 @@ impl Symbol for FuncCallSym {
         }
         self.ty = self.func.get_type();
         /// TODO: simplify type from func_type
-        match self.get_type() {
-            None => Err(Error::new(OguError::SymbolTableError).context(format!("could note resolve {:?}", self))),
-            Some(t) => Ok(Some(t))
-        }
+        Ok(self.get_type())
     }
 }

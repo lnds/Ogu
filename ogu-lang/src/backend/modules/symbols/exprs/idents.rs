@@ -40,11 +40,7 @@ impl Symbol for IdSym {
                     None => Err(Error::new(OguError::SymbolTableError).context(format!("Symbol not found : {}", self.name))),
                     Some(sym) => {
                         self.ty = sym.get_type();
-                        match self.get_type() {
-                            None => Err(Error::new(OguError::SymbolTableError).context(format!("Symbol not found : {}", self.name))),
-                            Some(t) => Ok(Some(t))
-                        }
-
+                        Ok(self.get_type())
                     }
                 }
             }

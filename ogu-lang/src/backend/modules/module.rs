@@ -21,11 +21,13 @@ impl Module {
             sym_table.define(sym);
         }
         let mut decls = sym_table.get_symbols();
+        println!("ANTES DECLS: {:#?}", decls);
         for d in decls.iter_mut() {
-            d.resolve_type(&mut *sym_table)?;
+            let r = d.resolve_type(&mut *sym_table);
+            println!("d = {:#?} r = {:?}", d, r);
             sym_table.define(d.clone_box()); // redefine symbol
         }
-
+        println!("DESPUES DECLS: {:#?}", decls);
         // TODO CHECK UNDEFINED symbols
         Ok(Module { decls })
     }

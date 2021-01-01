@@ -96,12 +96,7 @@ impl Symbol for PartialOrdSym {
                             scope.define(r.clone());
                         }
                 };
-                match self.get_type() {
-                    None =>
-                        Err(Error::new(OguError::SymbolTableError).context(format!("could not solve type for {:?}", self))),
-                    Some(t) =>
-                        Ok(Some(t))
-                }
+                Ok(self.get_type())
             }
         }
     }

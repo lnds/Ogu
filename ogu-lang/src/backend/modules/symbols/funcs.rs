@@ -62,10 +62,7 @@ impl Symbol for FunctionSym {
                 }
                 let ty: Option<Box<dyn Type>> = FuncType::make(&*self.args, &*self.expr);
                 self.ty = ty;
-                match self.get_type() {
-                    None => Err(Error::new(OguError::SymbolTableError).context(format!("func not found {}", self.name))),
-                    Some(t) => Ok(Some(t))
-                }
+                Ok(self.get_type())
             }
         }
     }

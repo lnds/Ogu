@@ -37,9 +37,6 @@ impl Symbol for DoExprSym {
         for e in self.exprs.iter_mut() {
             e.resolve_type(scope)?;
         }
-        match self.get_type() {
-            None => Err(Error::new(OguError::SymbolTableError).context(format!("cound not resolve {:?}", self))),
-            Some(t) => Ok(Some(t))
-        }
+        Ok(self.get_type())
     }
 }

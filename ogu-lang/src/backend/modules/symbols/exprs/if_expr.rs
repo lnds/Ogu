@@ -46,9 +46,6 @@ impl Symbol for IfExprSym{
         self.cond.resolve_type(scope)?;
         self.then_expr.resolve_type(scope)?;
         self.else_expr.resolve_type(scope)?;
-        match self.get_type() {
-            None => Err(Error::new(OguError::SymbolTableError).context(format!("could not resolve {:?}", self))),
-            Some(t) => Ok(Some(t))
-        }
+        Ok(self.get_type())
     }
 }

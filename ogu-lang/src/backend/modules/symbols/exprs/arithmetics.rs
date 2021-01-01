@@ -86,10 +86,7 @@ impl Symbol for ArithmeticSym {
                 | ArithmeticSym::Pow(l, r) => {
                     l.resolve_type(scope)?;
                     r.resolve_type(scope)?;
-                    match self.get_type() {
-                        None => Err(Error::new(OguError::SymbolTableError).context(format!("could not resolve {:?}", self))),
-                        Some(t) => Ok(Some(t))
-                    }
+                    Ok(self.get_type())
                 }
             },
         }

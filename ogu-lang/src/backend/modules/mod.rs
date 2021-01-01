@@ -102,8 +102,8 @@ mod tests {
 
         -- min2 x y = if x <= y then x else y
 
-        main () =
-           println! "{} {}" (max $ 10 20)  (max2 10 20)
+        --main () =
+        --   println! "{} {}" (max $ 10 20)  (max2 10 20)
         -- println! "{} {}" (min $ 10 20) (min2 10 20)"#},
             default_sym_table());
         assert!(module.is_some());

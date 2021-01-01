@@ -37,10 +37,7 @@ impl Symbol for MacroSym {
                     None => Err(Error::new(OguError::SymbolTableError).context(format!("{} not found", self.name))),
                     Some(sym) => {
                         self.ty = sym.get_type();
-                        match self.get_type() {
-                            None => Err(Error::new(OguError::SymbolTableError).context(format!("cound not resolve {:?}", self))),
-                            Some(t) => Ok(Some(t))
-                        }
+                        Ok(self.get_type())
                     }
                 }
             }

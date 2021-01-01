@@ -42,10 +42,7 @@ impl Symbol for ValueSym {
             None => {
                 self.expr.resolve_type(scope)?;
                 self.set_type(self.expr.get_type());
-                match self.get_type() {
-                    None => Err(Error::new(OguError::SymbolTableError).context(format!("Id not found: {:?}", self.name))),
-                    Some(t) => Ok(Some(t))
-                }
+                Ok(self.get_type())
             }
         }
     }

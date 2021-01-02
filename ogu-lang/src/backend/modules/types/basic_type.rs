@@ -45,7 +45,7 @@ impl Type for BasicType {
     }
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
-        None
+        Some(Box::new(self.clone()))
     }
 }
 

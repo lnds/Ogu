@@ -122,6 +122,42 @@ mod tests {
     }
 
     #[test]
+    fn test_funcs_2() {
+        let module = test_module(
+            indoc! {r#"
+        mul x y = x * y
+
+        fmul x y = (mul x y) / 1.0
+        "#},
+            default_sym_table(),
+        );
+        assert!(module.is_some());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(
+                Some(vec![
+                    TraitType::new_trait("Num"),
+                    TraitType::new_trait("Num")
+                ]),
+                TraitType::new_trait("Num")
+            )
+        );
+        assert_eq!(
+            decls[1].get_type(),
+            FuncType::new_opt(
+                Some(vec![
+                    TraitType::new_trait("Num"),
+                    TraitType::new_trait("Num")
+                ]),
+                BasicType::float()
+            )
+        );
+    }
+
+    #[test]
     fn test_vals_1() {
         let module = test_module(
             indoc! {r#"

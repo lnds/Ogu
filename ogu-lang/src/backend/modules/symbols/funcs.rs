@@ -30,16 +30,24 @@ impl FunctionSym {
         })
     }
 
-    pub(crate) fn replace_args(&mut self, args: Vec<Box<dyn Symbol>>, scope: &mut dyn Scope) {
+    pub(crate) fn replace_args(
+        &mut self,
+        args: Vec<Box<dyn Symbol>>,
+        scope: &mut dyn Scope,
+    ) -> Result<()> {
         if let ArgsSym::Many(own_args) = &*self.args {
             let mut new_args: Vec<Box<dyn Symbol>> = vec![];
             println!("replacing...");
             for (p, a) in own_args.iter().enumerate() {
-                new_args.push(IdSym::new_with_type(a.get_name(), args[p].get_type().clone()))
+                new_args.push(IdSym::new_with_type(
+                    a.get_name(),
+                    args[p].get_type().clone(),
+                ))
             }
             self.args = ArgsSym::new_many(new_args);
-            self.resolve_type(scope);
+            self.resolve_type(scope)?;
         }
+        Ok(())
     }
 }
 
@@ -66,8 +74,19 @@ impl Symbol for FunctionSym {
                         sym_table.define(a.clone());
                     }
                 }
+
                 self.expr.resolve_type(&mut *sym_table)?;
+                if self.name == "fmul" {
+                    println!("EXPR  resolved = {:#?}", self.expr);
+                    println!(
+                        "EXPR IN SYMBOL TABLE = {:#?}",
+                        sym_table.resolve(self.expr.get_name())
+                    );
+                }
                 for s in sym_table.get_symbols() {
+                    if self.name == "fmul" {
+                        println!("s = {:?}", s);
+                    }
                     self.args.define(s.clone_box());
                 }
                 let ty: Option<Box<dyn Type>> = FuncType::make(&*self.args, &*self.expr);

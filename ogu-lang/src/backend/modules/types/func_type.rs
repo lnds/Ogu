@@ -1,4 +1,5 @@
 use crate::backend::modules::symbols::funcs::{vec_args_into, ArgsSym};
+use crate::backend::modules::types::trait_type::TraitType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::parser::ast::expressions::args::Args;
@@ -20,7 +21,17 @@ impl Type for FuncType {
     }
 
     fn is_trait(&self) -> bool {
-        self.result.is_trait()
+        match &self.args {
+            None => self.result.is_trait(),
+            Some(args) => {
+                for a in args.iter() {
+                    if a.is_trait() {
+                        return true;
+                    }
+                }
+                self.result.is_trait()
+            }
+        }
     }
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
@@ -52,7 +63,10 @@ impl FuncType {
             Args::Many(a) => Some(
                 vec_args_into(a)
                     .iter()
-                    .flat_map(|sym| sym.get_type())
+                    .map(|sym| {
+                        sym.get_type()
+                            .unwrap_or_else(|| TraitType::new_trait("Unknown"))
+                    })
                     .collect(),
             ),
         };
@@ -63,7 +77,14 @@ impl FuncType {
         let result = expr.get_type()?;
         let args = match args {
             ArgsSym::Unit => None,
-            ArgsSym::Many(a) => Some(a.iter().flat_map(|sym| sym.get_type()).collect()),
+            ArgsSym::Many(a) => Some(
+                a.iter()
+                    .map(|sym| {
+                        sym.get_type()
+                            .unwrap_or_else(|| TraitType::new_trait("Unknown"))
+                    })
+                    .collect(),
+            ),
         };
         Self::new_opt(args, result)
     }

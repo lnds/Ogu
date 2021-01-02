@@ -1,3 +1,4 @@
+#![allow(clippy::transmute_ptr_to_ref)]
 use std::fmt::Debug;
 
 pub(crate) trait Type: TypeClone + Debug + mopa::Any {

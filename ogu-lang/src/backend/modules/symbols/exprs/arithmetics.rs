@@ -80,47 +80,44 @@ impl Symbol for ArithmeticSym {
     fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {}
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        match self.get_type() {
-            Some(ty) if !ty.is_trait() => Ok(Some(ty.clone())),
-            _ => match self {
-                ArithmeticSym::Add(l, r)
-                | ArithmeticSym::Sub(l, r)
-                | ArithmeticSym::Mul(l, r)
-                | ArithmeticSym::Div(l, r)
-                | ArithmeticSym::Mod(l, r)
-                | ArithmeticSym::Pow(l, r) => {
-                    match l.resolve_type(scope)? {
-                        None => match r.resolve_type(scope)? {
-                            None => {
-                                r.set_type(Some(TraitType::new_trait("Num")));
-                                l.set_type(Some(TraitType::new_trait("Num")));
-                                scope.define(l.clone());
-                                scope.define(r.clone());
-                            }
-                            Some(rt) => {
-                                l.set_type(Some(rt.clone()));
-                                scope.define(l.clone());
-                            }
-                        },
-                        Some(lt) => match r.resolve_type(scope)? {
-                            None => {
-                                r.set_type(Some(lt.clone()));
-                                scope.define(r.clone());
-                            }
-                            Some(rt) if lt.is_trait() && !rt.is_trait() => {
-                                l.set_type(Some(rt.clone()));
-                                scope.define(l.clone());
-                            }
-                            Some(rt) if rt.is_trait() && !lt.is_trait() => {
-                                r.set_type(Some(lt.clone()));
-                                scope.define(r.clone());
-                            }
-                            _ => {}
-                        },
-                    }
-                    Ok(self.get_type())
+        match self {
+            ArithmeticSym::Add(l, r)
+            | ArithmeticSym::Sub(l, r)
+            | ArithmeticSym::Mul(l, r)
+            | ArithmeticSym::Div(l, r)
+            | ArithmeticSym::Mod(l, r)
+            | ArithmeticSym::Pow(l, r) => {
+                match l.resolve_type(scope)? {
+                    None => match r.resolve_type(scope)? {
+                        None => {
+                            r.set_type(Some(TraitType::new_trait("Num")));
+                            l.set_type(Some(TraitType::new_trait("Num")));
+                            scope.define(l.clone());
+                            scope.define(r.clone());
+                        }
+                        Some(rt) => {
+                            l.set_type(Some(rt.clone()));
+                            scope.define(l.clone());
+                        }
+                    },
+                    Some(lt) => match r.resolve_type(scope)? {
+                        None => {
+                            r.set_type(Some(lt.clone()));
+                            scope.define(r.clone());
+                        }
+                        Some(rt) if lt.is_trait() && !rt.is_trait() => {
+                            l.set_type(Some(rt.clone()));
+                            scope.define(l.clone());
+                        }
+                        Some(rt) if rt.is_trait() && !lt.is_trait() => {
+                            r.set_type(Some(lt.clone()));
+                            scope.define(r.clone());
+                        }
+                        _ => {}
+                    },
                 }
-            },
+                Ok(self.get_type())
+            }
         }
     }
 }

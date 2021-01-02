@@ -1,3 +1,4 @@
+#![allow(clippy::transmute_ptr_to_ref)]
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::Result;

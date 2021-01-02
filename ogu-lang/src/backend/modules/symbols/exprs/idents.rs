@@ -17,6 +17,13 @@ impl IdSym {
             ty: None,
         })
     }
+
+    pub(crate) fn new_with_type(id: &str, ty: Option<Box<dyn Type>>) -> Box<Self> {
+        Box::new(IdSym {
+            name: id.to_string(),
+            ty
+        })
+    }
 }
 
 impl Symbol for IdSym {
@@ -38,8 +45,8 @@ impl Symbol for IdSym {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match &self.ty {
-            Some(ty) => Ok(Some(ty.clone())),
-            None => match scope.resolve(&self.name) {
+            Some(ty) if !ty.is_trait() => Ok(Some(ty.clone())),
+            _ => match scope.resolve(&self.name) {
                 None => Err(Error::new(OguError::SymbolTableError)
                     .context(format!("Symbol not found : {}", self.name))),
                 Some(sym) => {

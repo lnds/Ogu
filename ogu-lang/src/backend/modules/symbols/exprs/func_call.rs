@@ -1,8 +1,10 @@
+use crate::backend::errors::OguError;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::Result;
+use anyhow::{Error, Result};
+use crate::backend::modules::symbols::funcs::FunctionSym;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallSym {
@@ -37,25 +39,50 @@ impl Symbol for FuncCallSym {
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
         if let Some(ft) = ft {
-            match ft.downcast_ref::<FuncType>() {
-                None => {
-                    self.ty = match self.func.get_type() {
-                        None => None,
-                        Some(t) => t.resolve_expr_type(),
-                    };
-                }
-                Some(ft) => {
-                    println!("ft is = {:?}", ft);
-
-                    for a in self.args.iter_mut() {
-                        a.resolve_type(scope)?;
+            if let Some(ft) = ft.downcast_ref::<FuncType>() {
+                println!("ft is = {:?}", ft);
+                match ft.get_args() {
+                    None => {
+                        if !self.args.is_empty() {
+                            return Err(Error::new(OguError::SemanticError).context(format!(
+                                "function {} need no args",
+                                self.func.get_name()
+                            )));
+                        }
                     }
-                    self.ty = match self.func.get_type() {
-                        None => None,
-                        Some(t) => t.resolve_expr_type(),
-                    };
+                    Some(ft_args) if ft_args.len() > self.args.len() => {
+                        return Err(Error::new(OguError::SemanticError).context(format!(
+                            "function {} receive more args than needed",
+                            self.func.get_name()
+                        )))
+                    }
+                    Some(ft_args) if ft_args.len() < self.args.len() => {
+                        println!("probably curry");
+                        todo!()
+                    }
+                    Some(_) => {
+                        for a in self.args.iter_mut() {
+                            a.resolve_type(scope)?;
+                        }
+                        if let Some(func) = scope.resolve(self.func.get_name()) {
+                            if let Some(func) = func.downcast_ref::<FunctionSym>() {
+                                let mut f = func.clone();
+                                f.replace_args(self.args.to_vec(), scope);
+                                //println!("F = {:?}", f);
+                                println!("func = {:?}\n f = {:?}", self.func.get_type(), f.get_type());
+                                println!("F == func? {}", self.func.get_type() == f.get_type());
+                                if self.func.get_type() != f.get_type() {
+                                    self.func = Box::new(f);
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            self.ty = match self.func.get_type() {
+                None => None,
+                Some(t) => t.resolve_expr_type(),
+            };
         }
         Ok(self.get_type())
     }

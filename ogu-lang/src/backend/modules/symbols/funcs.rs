@@ -29,6 +29,18 @@ impl FunctionSym {
             ty,
         })
     }
+
+    pub(crate) fn replace_args(&mut self, args: Vec<Box<dyn Symbol>>, scope: &mut dyn Scope) {
+        if let ArgsSym::Many(own_args) = &*self.args {
+            let mut new_args: Vec<Box<dyn Symbol>> = vec![];
+            println!("replacing...");
+            for (p, a) in own_args.iter().enumerate() {
+                new_args.push(IdSym::new_with_type(a.get_name(), args[p].get_type().clone()))
+            }
+            self.args = ArgsSym::new_many(new_args);
+            self.resolve_type(scope);
+        }
+    }
 }
 
 impl Symbol for FunctionSym {
@@ -77,7 +89,7 @@ impl ArgsSym {
         Box::new(ArgsSym::Unit)
     }
 
-    fn new_many(args: Vec<Box<dyn Symbol>>) -> Box<Self> {
+    pub(crate) fn new_many(args: Vec<Box<dyn Symbol>>) -> Box<Self> {
         Box::new(ArgsSym::Many(args))
     }
 }

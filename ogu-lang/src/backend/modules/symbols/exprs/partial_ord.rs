@@ -47,11 +47,14 @@ impl Symbol for PartialOrdSym {
                 },
                 Some(lt) => match r.get_type() {
                     None => Some(lt.clone()),
+                    Some(rt) if lt.is_trait() => Some(rt.clone()),
+                    Some(rt) if rt.is_trait() => Some(lt.clone()),
                     Some(rt) => {
-                        if lt != rt.clone() {
-                            None
-                        } else {
+                        if lt == rt.clone() {
                             Some(rt.clone())
+                        } else {
+                            println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
+                            None
                         }
                     }
                 },
@@ -82,9 +85,21 @@ impl Symbol for PartialOrdSym {
                             scope.define(l.clone());
                         }
                     },
-                    Some(lt) => {
-                        r.set_type(Some(lt.clone()));
-                        scope.define(r.clone());
+                    Some(lt) => match r.resolve_type(scope)? {
+                        None => {
+                            r.set_type(Some(lt.clone()));
+                            scope.define(r.clone());
+                        }
+                        Some(rt) if lt.is_trait() && !rt.is_trait() => {
+                            l.set_type(Some(rt.clone()));
+                            scope.define(l.clone());
+                        }
+                        Some(rt) if rt.is_trait() && !lt.is_trait() => {
+                            r.set_type(Some(lt.clone()));
+                            scope.define(r.clone());
+                        }
+                        _ => {
+                        }
                     }
                 };
                 Ok(self.get_type())

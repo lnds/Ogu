@@ -10,6 +10,8 @@ pub enum OguError {
     ParserError,
     #[error("Symbol table error")]
     SymbolTableError,
+    #[error("Semantic error")]
+    SemanticError,
     #[error("code gen error")]
     CodeGenError,
     #[error(transparent)]

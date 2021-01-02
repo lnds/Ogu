@@ -98,9 +98,8 @@ impl Symbol for PartialOrdSym {
                             r.set_type(Some(lt.clone()));
                             scope.define(r.clone());
                         }
-                        _ => {
-                        }
-                    }
+                        _ => {}
+                    },
                 };
                 Ok(self.get_type())
             }

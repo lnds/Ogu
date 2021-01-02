@@ -2,9 +2,8 @@ use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
 use std::fmt::Debug;
-use mopa;
 
-pub(crate) trait Symbol: SymbolClone + Debug +  mopa::Any  {
+pub(crate) trait Symbol: SymbolClone + Debug + mopa::Any {
     fn get_name(&self) -> &str;
     fn get_type(&self) -> Option<Box<dyn Type>>;
     fn set_type(&mut self, ty: Option<Box<dyn Type>>);

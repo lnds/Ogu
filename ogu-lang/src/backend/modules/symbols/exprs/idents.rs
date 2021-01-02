@@ -21,7 +21,7 @@ impl IdSym {
     pub(crate) fn new_with_type(id: &str, ty: Option<Box<dyn Type>>) -> Box<Self> {
         Box::new(IdSym {
             name: id.to_string(),
-            ty
+            ty,
         })
     }
 }

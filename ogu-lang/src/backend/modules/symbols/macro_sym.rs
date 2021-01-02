@@ -31,8 +31,8 @@ impl Symbol for MacroSym {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match &self.ty {
-            Some(ty) => Ok(Some(ty.clone())),
-            None => match scope.resolve(self.name) {
+            Some(ty) if !ty.is_trait() => Ok(Some(ty.clone())),
+            _ => match scope.resolve(self.name) {
                 None => Err(Error::new(OguError::SymbolTableError)
                     .context(format!("{} not found", self.name))),
                 Some(sym) => {

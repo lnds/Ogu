@@ -5,6 +5,8 @@ use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{Error, Result};
 use crate::backend::modules::symbols::funcs::FunctionSym;
+use crate::backend::modules::symbols::macro_sym::MacroSym;
+use crate::backend::modules::types::variadic_type::VariadicType;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallSym {
@@ -68,9 +70,6 @@ impl Symbol for FuncCallSym {
                             if let Some(func) = func.downcast_ref::<FunctionSym>() {
                                 let mut f = func.clone();
                                 f.replace_args(self.args.to_vec(), scope);
-                                //println!("F = {:?}", f);
-                                println!("func = {:?}\n f = {:?}", self.func.get_type(), f.get_type());
-                                println!("F == func? {}", self.func.get_type() == f.get_type());
                                 if self.func.get_type() != f.get_type() {
                                     self.func = Box::new(f);
                                 }
@@ -78,6 +77,10 @@ impl Symbol for FuncCallSym {
                         }
                     }
                 }
+            }
+            else if let Some(ft) = ft.downcast_ref::<VariadicType>() {
+                // TODO
+                println!("!! algo hay que hacer con el variadic (tipico son las macros) {:#?}", ft);
             }
             self.ty = match self.func.get_type() {
                 None => None,

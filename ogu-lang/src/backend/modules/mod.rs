@@ -146,6 +146,32 @@ mod tests {
     }
 
     #[test]
+    fn test_args_1() {
+        let module = test_module(
+            indoc! {r#"
+        min x y = if x < y then x else y
+        b = (min (min 10 20) 20)
+        "#},
+            default_sym_table(),
+        );
+        assert!(module.is_some());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(
+                Some(vec![
+                    TraitType::new_trait("PartialOrd"),
+                    TraitType::new_trait("PartialOrd")
+                ]),
+                TraitType::new_trait("PartialOrd")
+            )
+        );
+        assert_eq!(decls[1].get_type(), Some(BasicType::int()));
+    }
+
+    #[test]
     fn test_if_and_do() {
         let module = test_module(
             indoc! {r#"

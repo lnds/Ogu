@@ -52,12 +52,10 @@ impl FuncType {
 
 
     pub(crate) fn make(args: &ArgsSym, expr: &dyn Symbol) -> Option<Box<dyn Type>> {
-        println!("make func type args = {:?} expr = {:?}", args, expr);
         let result = expr.get_type()?;
         let args = match args {
             ArgsSym::Unit => None,
             ArgsSym::Many(a) => {
-                println!("make from many a = {:#?}", a);
                 Some(a.iter().flat_map(|sym| sym.get_type()).collect())
             }
         };

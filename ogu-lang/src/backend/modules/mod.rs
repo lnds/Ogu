@@ -118,6 +118,28 @@ mod tests {
     }
 
     #[test]
+    fn test_vals_1() {
+        let module = test_module(
+            indoc! {r#"
+        a = 10
+        b = (a)
+        c () = a
+        d = (c)
+        "#},
+            default_sym_table(),
+        );
+        assert!(module.is_some());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(decls[0].get_type(), decls[1].get_type());
+        assert_eq!(decls[0].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[2].get_type(), FuncType::new_opt(None, BasicType::int()));
+        assert_eq!(decls[3].get_type(), Some(BasicType::int()));
+
+    }
+
+    #[test]
     fn test_if_and_do() {
         let module = test_module(
             indoc! {r#"
@@ -131,9 +153,9 @@ mod tests {
 
         p20 = max 10 20
 
-        main () =
-           println! "{} {}" (max $ 10 20)  (max2 10 20);
-           println! "{} {}" (min $ 10 20) (min2 10 20)"#},
+        --main () =
+        --   println! "{} {}" (max $ 10 20)  (max2 10 20);
+        --   println! "{} {}" (min $ 10 20) (min2 10 20)"#},
             default_sym_table(),
         );
         assert!(module.is_some());
@@ -145,5 +167,18 @@ mod tests {
             FuncType::new_opt(
                 Some(vec![TraitType::new_trait("PartialOrd"), TraitType::new_trait("PartialOrd")]),
                 TraitType::new_trait("PartialOrd")));
+        assert_eq!(decls[0].get_type(), decls[1].get_type());
+        assert_eq!(
+            decls[2].get_type(),
+            FuncType::new_opt(
+                Some(vec![TraitType::new_trait("PartialOrd"), TraitType::new_trait("PartialOrd")]),
+                TraitType::new_trait("PartialOrd")));
+        assert_eq!(decls[2].get_type(), decls[3].get_type());
+        assert_eq!(decls[4].get_type(), Some(BasicType::int()));
+        assert_eq!(
+            decls[5].get_type(),
+            FuncType::new_opt(None,BasicType::unit())
+        );
+
     }
 }

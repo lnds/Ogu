@@ -8,6 +8,7 @@ use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::expression::Expression;
 use std::ops::Deref;
+use crate::backend::modules::symbols::exprs::paren_expr::ParenExprSym;
 
 mod arithmetics;
 mod do_expr;
@@ -26,6 +27,8 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::StringLiteral(s) => LiteralSym::new_str(s),
 
             Expression::Identifier(id) => IdSym::new(id),
+
+            Expression::ParenExpr(expr) => ParenExprSym::make(expr),
 
             Expression::AddExpr(l, r) => ArithmeticSym::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticSym::new_sub(l.into(), r.into()),

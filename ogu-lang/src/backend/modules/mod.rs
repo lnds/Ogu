@@ -101,7 +101,6 @@ mod tests {
         let module = test_module(
             indoc! {r#"
         mul x y = x * y
-
         m = mul"#},
             default_sym_table(),
         );
@@ -109,16 +108,13 @@ mod tests {
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("DECLS: {:#?}", decls);
+        assert_eq!(decls[0].get_type(), decls[1].get_type());
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![TraitType::new_trait("Num"), TraitType::new_trait("Num")]),
                 TraitType::new_trait("Num")));
-        assert_eq!(
-            decls[1].get_type(),
-            FuncType::new_opt(
-                Some(vec![TraitType::new_trait("Num"), TraitType::new_trait("Num")]),
-                TraitType::new_trait("Num")));
+
     }
 
     #[test]

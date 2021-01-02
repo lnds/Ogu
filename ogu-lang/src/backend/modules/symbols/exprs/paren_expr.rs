@@ -1,7 +1,7 @@
 use crate::backend::scopes::symbol::Symbol;
-use crate::parser::ast::expressions::expression::Expression;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
+use crate::parser::ast::expressions::expression::Expression;
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
@@ -10,14 +10,10 @@ pub(crate) struct ParenExprSym {
 }
 
 impl ParenExprSym {
-
     pub(crate) fn make(expr: &Expression) -> Box<dyn Symbol> {
         match expr {
-            Expression::Identifier(_) =>
-                Box::new(ParenExprSym {
-                    expr: expr.into()
-                }),
-            _ => expr.into()
+            Expression::Identifier(_) => Box::new(ParenExprSym { expr: expr.into() }),
+            _ => expr.into(),
         }
     }
 }
@@ -30,7 +26,7 @@ impl Symbol for ParenExprSym {
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self.expr.get_type() {
             None => None,
-            Some(t) => t.resolve_expr_type()
+            Some(t) => t.resolve_expr_type(),
         }
     }
 

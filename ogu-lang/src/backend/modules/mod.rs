@@ -58,7 +58,7 @@ mod tests {
         let decls = module.get_decls();
         assert_eq!(
             decls[0].get_type(),
-            FuncType::new_opt(None,BasicType::unit())
+            FuncType::new_opt(None, BasicType::unit())
         );
     }
 
@@ -112,9 +112,13 @@ mod tests {
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(
-                Some(vec![TraitType::new_trait("Num"), TraitType::new_trait("Num")]),
-                TraitType::new_trait("Num")));
-
+                Some(vec![
+                    TraitType::new_trait("Num"),
+                    TraitType::new_trait("Num")
+                ]),
+                TraitType::new_trait("Num")
+            )
+        );
     }
 
     #[test]
@@ -134,9 +138,11 @@ mod tests {
         println!("DECLS: {:#?}", decls);
         assert_eq!(decls[0].get_type(), decls[1].get_type());
         assert_eq!(decls[0].get_type(), Some(BasicType::int()));
-        assert_eq!(decls[2].get_type(), FuncType::new_opt(None, BasicType::int()));
+        assert_eq!(
+            decls[2].get_type(),
+            FuncType::new_opt(None, BasicType::int())
+        );
         assert_eq!(decls[3].get_type(), Some(BasicType::int()));
-
     }
 
     #[test]
@@ -165,20 +171,29 @@ mod tests {
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(
-                Some(vec![TraitType::new_trait("PartialOrd"), TraitType::new_trait("PartialOrd")]),
-                TraitType::new_trait("PartialOrd")));
+                Some(vec![
+                    TraitType::new_trait("PartialOrd"),
+                    TraitType::new_trait("PartialOrd")
+                ]),
+                TraitType::new_trait("PartialOrd")
+            )
+        );
         assert_eq!(decls[0].get_type(), decls[1].get_type());
         assert_eq!(
             decls[2].get_type(),
             FuncType::new_opt(
-                Some(vec![TraitType::new_trait("PartialOrd"), TraitType::new_trait("PartialOrd")]),
-                TraitType::new_trait("PartialOrd")));
+                Some(vec![
+                    TraitType::new_trait("PartialOrd"),
+                    TraitType::new_trait("PartialOrd")
+                ]),
+                TraitType::new_trait("PartialOrd")
+            )
+        );
         assert_eq!(decls[2].get_type(), decls[3].get_type());
         assert_eq!(decls[4].get_type(), Some(BasicType::int()));
         assert_eq!(
             decls[5].get_type(),
-            FuncType::new_opt(None,BasicType::unit())
+            FuncType::new_opt(None, BasicType::unit())
         );
-
     }
 }

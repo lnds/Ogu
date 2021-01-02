@@ -1,6 +1,7 @@
 use crate::backend::modules::module::Module;
 use crate::backend::modules::symbols::macro_sym::MacroSym;
 use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::variadic_type::VariadicType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::Scope;
 use crate::lexer::tokens::Lexeme;
@@ -9,7 +10,6 @@ use crate::parser::ast::module::ModuleAst;
 use crate::parser::Parser;
 use anyhow::Result;
 use std::path::PathBuf;
-use crate::backend::modules::types::variadic_type::VariadicType;
 
 pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> Result<Module> {
     let mut lexer = Lexer::new(&path)?;
@@ -34,7 +34,13 @@ pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> 
 
 pub(crate) fn default_sym_table() -> Box<dyn Scope> {
     let mut symbol_table: Box<dyn Scope> = SymbolTable::new("_ogu", None);
-    symbol_table.define(MacroSym::new("println!", VariadicType::new_opt(BasicType::unit())));
-    symbol_table.define(MacroSym::new("print!", VariadicType::new_opt(BasicType::unit())));
+    symbol_table.define(MacroSym::new(
+        "println!",
+        VariadicType::new_opt(BasicType::unit()),
+    ));
+    symbol_table.define(MacroSym::new(
+        "print!",
+        VariadicType::new_opt(BasicType::unit()),
+    ));
     symbol_table
 }

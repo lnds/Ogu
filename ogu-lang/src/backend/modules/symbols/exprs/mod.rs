@@ -4,11 +4,11 @@ use crate::backend::modules::symbols::exprs::func_call::FuncCallSym;
 use crate::backend::modules::symbols::exprs::idents::IdSym;
 use crate::backend::modules::symbols::exprs::if_expr::IfExprSym;
 use crate::backend::modules::symbols::exprs::literals::LiteralSym;
+use crate::backend::modules::symbols::exprs::paren_expr::ParenExprSym;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::expression::Expression;
 use std::ops::Deref;
-use crate::backend::modules::symbols::exprs::paren_expr::ParenExprSym;
 
 mod arithmetics;
 mod do_expr;
@@ -16,8 +16,8 @@ mod func_call;
 pub(crate) mod idents;
 mod if_expr;
 mod literals;
-mod partial_ord;
 mod paren_expr;
+mod partial_ord;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {

@@ -1,4 +1,4 @@
-use crate::backend::modules::symbols::funcs::{ArgsSym, vec_args_into};
+use crate::backend::modules::symbols::funcs::{vec_args_into, ArgsSym};
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::parser::ast::expressions::args::Args;
@@ -28,36 +28,42 @@ impl Type for FuncType {
     }
 }
 
-
 impl FuncType {
-
     pub(crate) fn new(args: Option<Vec<Box<dyn Type>>>, result: Box<dyn Type>) -> Box<Self> {
         Box::new(FuncType { args, result })
     }
 
-    pub(crate) fn new_opt(args: Option<Vec<Box<dyn Type>>>, result: Box<dyn Type>) -> Option<Box<dyn Type>> {
+    pub(crate) fn new_opt(
+        args: Option<Vec<Box<dyn Type>>>,
+        result: Box<dyn Type>,
+    ) -> Option<Box<dyn Type>> {
         Some(Self::new(args, result))
     }
 
+    pub(crate) fn get_args(&self) -> Option<Vec<Box<dyn Type>>> {
+        self.args.clone()
+    }
 
     pub(crate) fn from_ast_opt(args: &Args, expr: &Expression) -> Option<Box<dyn Type>> {
         let sym: Box<dyn Symbol> = expr.into();
         let result = sym.get_type()?;
         let args = match args {
             Args::Void => None,
-            Args::Many(a) => Some(vec_args_into(a).iter().flat_map(|sym| sym.get_type()).collect())
+            Args::Many(a) => Some(
+                vec_args_into(a)
+                    .iter()
+                    .flat_map(|sym| sym.get_type())
+                    .collect(),
+            ),
         };
         Self::new_opt(args, result)
     }
-
 
     pub(crate) fn make(args: &ArgsSym, expr: &dyn Symbol) -> Option<Box<dyn Type>> {
         let result = expr.get_type()?;
         let args = match args {
             ArgsSym::Unit => None,
-            ArgsSym::Many(a) => {
-                Some(a.iter().flat_map(|sym| sym.get_type()).collect())
-            }
+            ArgsSym::Many(a) => Some(a.iter().flat_map(|sym| sym.get_type()).collect()),
         };
         Self::new_opt(args, result)
     }

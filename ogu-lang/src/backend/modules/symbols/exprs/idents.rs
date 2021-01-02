@@ -34,7 +34,6 @@ impl Symbol for IdSym {
             Some(t) if t.is_trait() => self.ty = ty.clone(),
             _ => {}
         }
-
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {

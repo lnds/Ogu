@@ -516,15 +516,15 @@ impl<'a> Expression<'a> {
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
                 if parser.peek(pos, Lexeme::RightParen) {
                     match expr {
-                        Expression::Identifier(_) |
-                        Expression::FuncCallExpr(_, _) |
-                        Expression::RecurExpr(_) |
-                        Expression::LambdaExpr(_, _) |
-                        Expression::QualifiedIdentifier(_, _) =>
-                            Ok((Expression::ParenExpr(Box::new(expr)), pos + 1)), //
-                        _ => Ok((expr, pos+1))
+                        Expression::Identifier(_)
+                        | Expression::FuncCallExpr(_, _)
+                        | Expression::RecurExpr(_)
+                        | Expression::LambdaExpr(_, _)
+                        | Expression::QualifiedIdentifier(_, _) => {
+                            Ok((Expression::ParenExpr(Box::new(expr)), pos + 1))
+                        } //
+                        _ => Ok((expr, pos + 1)),
                     }
-
                 } else if parser.peek(pos, Lexeme::Comma) {
                     let mut exprs = vec![expr];
                     let mut pos = pos;

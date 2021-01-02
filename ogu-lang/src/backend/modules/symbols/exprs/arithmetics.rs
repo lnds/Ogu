@@ -1,9 +1,9 @@
 use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::trait_type::TraitType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
-use crate::backend::modules::types::trait_type::TraitType;
 
 #[derive(Clone, Debug)]
 pub(crate) enum ArithmeticSym {
@@ -52,31 +52,28 @@ impl Symbol for ArithmeticSym {
             | ArithmeticSym::Mul(l, r)
             | ArithmeticSym::Div(l, r)
             | ArithmeticSym::Mod(l, r)
-            | ArithmeticSym::Pow(l, r)
-            =>
-                match l.get_type() {
-                    None => match r.get_type() {
-                        None => Some(TraitType::new_trait("Num")),
-                        Some(rt) => Some(rt.clone())
+            | ArithmeticSym::Pow(l, r) => match l.get_type() {
+                None => match r.get_type() {
+                    None => Some(TraitType::new_trait("Num")),
+                    Some(rt) => Some(rt.clone()),
+                },
+                Some(lt) => match r.get_type() {
+                    None => Some(lt.clone()),
+                    Some(rt) if lt.is_trait() => Some(rt.clone()),
+                    Some(rt) if rt.is_trait() => Some(lt.clone()),
+                    Some(rt) => {
+                        if lt == rt.clone() {
+                            Some(rt.clone())
+                        } else if (lt == BasicType::float() && rt == BasicType::int())
+                            || (lt == BasicType::int() && rt == BasicType::float())
+                        {
+                            Some(BasicType::float())
+                        } else {
+                            Some(TraitType::new_trait("Num"))
+                        }
                     }
-                    Some(lt) => match r.get_type() {
-                        None => Some(lt.clone()),
-                        Some(rt) if lt.is_trait() =>
-                            Some(rt.clone()),
-                        Some(rt) if rt.is_trait() =>
-                            Some(lt.clone()),
-                        Some(rt) =>
-                            if lt == rt.clone() {
-                                Some(rt.clone())
-                            } else if (lt == BasicType::float() && rt == BasicType::int())
-                                || (lt == BasicType::int() && rt == BasicType::float())
-                            {
-                                Some(BasicType::float())
-                            } else {
-                                Some(TraitType::new_trait("Num"))
-                            }
-                    }
-                }
+                },
+            },
         }
     }
 
@@ -104,7 +101,7 @@ impl Symbol for ArithmeticSym {
                                 l.set_type(Some(rt.clone()));
                                 scope.define(l.clone());
                             }
-                        }
+                        },
                         Some(lt) => match r.resolve_type(scope)? {
                             None => {
                                 r.set_type(Some(lt.clone()));
@@ -119,11 +116,11 @@ impl Symbol for ArithmeticSym {
                                 scope.define(r.clone());
                             }
                             _ => {}
-                        }
+                        },
                     }
                     Ok(self.get_type())
                 }
-            }
+            },
         }
     }
 }

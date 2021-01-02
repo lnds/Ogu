@@ -221,9 +221,14 @@ mod tests {
 
         p20 = max 10 20
 
-        main () =
-           println! "{} {}" (max $ 10 20)  (max2 10 20);
-           println! "{} {}" (min $ 10 20) (min2 10 20)"#},
+        eq x y = if x == y then "equal" else "distinct"
+
+        main () = do
+            if (max $ 10 20) == (max2 10 20) then
+                println! "{} {}" (max $ 10 20)  (max2 10 20)
+            else
+                println!("no")
+            println! "{} {}" (min $ 10 20) (min2 10 20)"#},
             default_sym_table(),
         );
         assert!(module.is_some());
@@ -255,6 +260,16 @@ mod tests {
         assert_eq!(decls[4].get_type(), Some(BasicType::int()));
         assert_eq!(
             decls[5].get_type(),
+            FuncType::new_opt(
+                Some(vec![
+                    TraitType::new_trait("PartialEq"),
+                    TraitType::new_trait("PartialEq")
+                ]),
+                BasicType::static_str()
+            )
+        );
+        assert_eq!(
+            decls[6].get_type(),
             FuncType::new_opt(None, BasicType::unit())
         );
     }

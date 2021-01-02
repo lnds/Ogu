@@ -5,6 +5,7 @@ use crate::backend::modules::symbols::exprs::idents::IdSym;
 use crate::backend::modules::symbols::exprs::if_expr::IfExprSym;
 use crate::backend::modules::symbols::exprs::literals::LiteralSym;
 use crate::backend::modules::symbols::exprs::paren_expr::ParenExprSym;
+use crate::backend::modules::symbols::exprs::partial_eq::PartialEqSym;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::expression::Expression;
@@ -17,6 +18,7 @@ pub(crate) mod idents;
 mod if_expr;
 mod literals;
 mod paren_expr;
+mod partial_eq;
 mod partial_ord;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
@@ -41,6 +43,9 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::GeExpr(l, r) => PartialOrdSym::new_ge(l.into(), r.into()),
             Expression::LtExpr(l, r) => PartialOrdSym::new_lt(l.into(), r.into()),
             Expression::LeExpr(l, r) => PartialOrdSym::new_le(l.into(), r.into()),
+
+            Expression::EqExpr(l, r) => PartialEqSym::new_eq(l.into(), r.into()),
+            Expression::NeExpr(l, r) => PartialEqSym::new_ne(l.into(), r.into()),
 
             Expression::IfExpr(c, t, e) => IfExprSym::new(c.into(), t.into(), e.into()),
 

@@ -28,6 +28,9 @@ mod tests {
             println!("AST = {:#?}", module_ast);
             assert!(module_ast.is_ok());
             let module = Module::new(module_ast.unwrap(), sym_table);
+            if module.is_err() {
+                println!("module error = {:#?}", module);
+            }
             assert!(module.is_ok());
             Some(module.unwrap())
         } else {

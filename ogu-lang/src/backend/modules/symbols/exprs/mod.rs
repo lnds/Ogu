@@ -8,6 +8,7 @@ use crate::backend::modules::symbols::exprs::literals::LiteralSym;
 use crate::backend::modules::symbols::exprs::paren_expr::ParenExprSym;
 use crate::backend::modules::symbols::exprs::partial_eq::PartialEqSym;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
+use crate::backend::modules::symbols::exprs::tuple_expr::TupleExprSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
@@ -24,6 +25,7 @@ mod literals;
 mod paren_expr;
 mod partial_eq;
 mod partial_ord;
+mod tuple_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -35,6 +37,8 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::Identifier(id) => IdSym::new(id),
 
             Expression::ParenExpr(expr) => ParenExprSym::make(expr),
+
+            Expression::TupleExpr(tuple) => TupleExprSym::make(vec_exprs_into(tuple)),
 
             Expression::AddExpr(l, r) => ArithmeticSym::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticSym::new_sub(l.into(), r.into()),

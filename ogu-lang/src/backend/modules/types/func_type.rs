@@ -1,7 +1,7 @@
 use crate::backend::modules::symbols::funcs::{vec_args_into, ArgsSym};
-use crate::backend::modules::types::trait_type::TraitType;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeClone};
 use crate::parser::ast::expressions::args::Args;
 use crate::parser::ast::expressions::expression::Expression;
 
@@ -67,10 +67,7 @@ impl FuncType {
             Args::Many(a) => Some(
                 vec_args_into(a)
                     .iter()
-                    .map(|sym| {
-                        sym.get_type()
-                            .unwrap_or_else(|| TraitType::new_trait("Unknown"))
-                    })
+                    .map(|sym| sym.get_type().unwrap_or_else(|| TRAIT_UNKNOWN.clone_box()))
                     .collect(),
             ),
         };
@@ -83,10 +80,7 @@ impl FuncType {
             ArgsSym::Unit => None,
             ArgsSym::Many(a) => Some(
                 a.iter()
-                    .map(|sym| {
-                        sym.get_type()
-                            .unwrap_or_else(|| TraitType::new_trait("Unknown"))
-                    })
+                    .map(|sym| sym.get_type().unwrap_or_else(|| TRAIT_UNKNOWN.clone_box()))
                     .collect(),
             ),
         };

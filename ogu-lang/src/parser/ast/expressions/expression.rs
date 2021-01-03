@@ -1159,11 +1159,7 @@ impl<'a> Expression<'a> {
         if pairs.len() == 1 {
             let (cond, expr) = &pairs[0];
             match cond {
-                None => Ok(Expression::IfExpr(
-                    Box::new(Expression::Identifier("True")),
-                    Box::new(expr.clone()),
-                    Box::new(Expression::Unit),
-                )),
+                None => Ok(expr.clone()),
                 Some(c) => Ok(Expression::IfExpr(
                     Box::new(c.clone()),
                     Box::new(expr.clone()),

@@ -107,10 +107,13 @@ mod tests {
     fn test_let() {
         let module = test_module(
             indoc! {r#"
+            -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
             str_imc w h =
-                let imc = w / h ^ 2
-                in if imc <= 18.5 then "you are below normal weight"
-                   else "you are obese, be careful!"
+                let bmi = w / h ^ 2
+                in if bmi <= 18.5 then "You're underweight, you emo, you!"
+                   elif bmi <= 25.0 then "You're supposedly normal. Pffft, I bet you're ugly!"
+                   elif bmi <= 30.0 then "You're fat! Lose some weight, fatty!"
+                   else "You're a whale, congratulations!"
             "#},
             default_sym_table(),
         );
@@ -119,10 +122,36 @@ mod tests {
         let decls = module.get_decls();
         println!("TEST DECLS = {:#?}", decls);
         assert_eq!(decls[0].get_type(),
-            FuncType::new_opt(Some(vec![BasicType::float(), BasicType::float()]), BasicType::static_str())
+            FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]), BasicType::static_str())
         );
     }
 
+    #[test]
+    fn test_where() {
+        let module = test_module(
+            indoc! {r#"
+            -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
+            str_imc w h =
+                if bmi <= 18.5 then "You're underweight, you emo, you!"
+                elif bmi <= 25.0 then "You're supposedly normal. Pffft, I bet you're ugly!"
+                elif bmi <= 30.0 then "You're fat! Lose some weight, fatty!"
+                else "You're a whale, congratulations!"
+                where
+                     bmi = w / h ^ 2
+
+            "#},
+            default_sym_table(),
+        );
+        assert!(module.is_some());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("TEST DECLS = {:#?}", decls);
+        assert_eq!(decls[0].get_type(),
+                   FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]), BasicType::static_str())
+        );
+    }
+
+    
     #[test]
     fn test_funcs_1() {
         let module = test_module(

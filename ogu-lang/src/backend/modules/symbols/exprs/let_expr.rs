@@ -43,6 +43,9 @@ impl Symbol for LetExprSym {
                 e.set_type(sym.get_type());
             }
         }
+        for s in sym_table.get_symbols().iter() {
+            scope.define(s.clone());
+        }
         Ok(self.get_type())
     }
 }

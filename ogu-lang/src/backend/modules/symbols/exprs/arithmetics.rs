@@ -79,34 +79,20 @@ impl Symbol for ArithmeticSym {
                     }
                 },
             },
-            ArithmeticSym::IntDiv(l, r) => match l.get_type() {
-                None => match r.get_type() {
-                    None => Some(TRAIT_NUM.clone_box()),
-                    Some(rt) => Some(rt.clone()),
-                },
-                Some(lt) => match r.get_type() {
-                    None => Some(lt.clone()),
-                    Some(rt) if lt.is_trait() => Some(rt.clone()),
-                    Some(rt) if rt.is_trait() => Some(lt.clone()),
-                    Some(_) => {
-                        Some(BasicType::int())
-                    }
+            ArithmeticSym::IntDiv(l, r) =>
+                if l.get_type().is_none() && r.get_type().is_none() {
+                    None
                 }
-            },
-            ArithmeticSym::Div(l, r) => match l.get_type() {
-                None => match r.get_type() {
-                    None => Some(TRAIT_NUM.clone_box()),
-                    Some(rt) => Some(rt.clone()),
-                },
-                Some(lt) => match r.get_type() {
-                    None => Some(lt.clone()),
-                    Some(rt) if lt.is_trait() => Some(rt.clone()),
-                    Some(rt) if rt.is_trait() => Some(lt.clone()),
-                    Some(_) => {
-                        Some(BasicType::float())
-                    }
-                },
-            },
+                else {
+                    Some(BasicType::int())
+                }
+            ArithmeticSym::Div(l, r) =>
+                if l.get_type().is_none() && r.get_type().is_none() {
+                    None
+                }
+                else {
+                    Some(BasicType::float())
+                }
         }
     }
 

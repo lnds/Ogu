@@ -1004,18 +1004,26 @@ impl<'a> Expression<'a> {
         let pos = parser.skip_nl(pos);
         let pos = parse_opt_dedent(parser, pos, indent)?;
         let pos = parser.skip_nl(pos);
+        let (outer_indent, pos) = parse_opt_indent(parser, pos);
         if parser.peek(pos, Lexeme::Else) {
             let pos = consume_symbol(parser, pos, Lexeme::Else)?;
             let pos = parser.skip_nl(pos);
             let (indent, pos) = parse_opt_indent(parser, pos);
             let (else_expr, pos) = Expression::parse(parser, pos)?;
             let pos = parse_opt_dedent(parser, pos, indent)?;
+            let pos = parse_opt_dedent(parser, pos, outer_indent)?;
+
             Ok((
                 Expression::IfExpr(Box::new(cond), Box::new(then_expr), Box::new(else_expr)),
                 pos,
             ))
         } else {
+            println!("NEXT TOKE = {:?}", parser.get_token(pos));
+            let (indent, pos) = parse_opt_indent(parser, pos);
             let (elif_expr, pos) = Expression::parse_inner_if(parser, pos, Lexeme::Elif)?;
+            let pos = parse_opt_dedent(parser, pos, indent)?;
+            let pos = parse_opt_dedent(parser, pos, outer_indent)?;
+
             Ok((
                 Expression::IfExpr(Box::new(cond), Box::new(then_expr), Box::new(elif_expr)),
                 pos,

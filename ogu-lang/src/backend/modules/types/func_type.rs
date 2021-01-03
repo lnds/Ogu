@@ -37,6 +37,10 @@ impl Type for FuncType {
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
         Some(self.result.clone())
     }
+
+    fn promotes(&self, other: &dyn Type) -> bool {
+        unimplemented!()
+    }
 }
 
 impl FuncType {

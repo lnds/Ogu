@@ -1,3 +1,4 @@
+use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::types::Type;
 
 #[derive(Clone, Debug)]
@@ -46,6 +47,36 @@ impl Type for BasicType {
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
         Some(Box::new(self.clone()))
+    }
+
+    fn promotes(&self, other: &dyn Type) -> bool {
+        match self {
+            BasicType::Int => {
+                if other == TRAIT_NUM {
+                    true
+                } else if let Some(ot) = other.downcast_ref::<BasicType>() {
+                    match ot {
+                        BasicType::Int => true,
+                        _ => false,
+                    }
+                } else {
+                    false
+                }
+            }
+            BasicType::Float => {
+                if other == TRAIT_NUM {
+                    true
+                } else if let Some(ot) = other.downcast_ref::<BasicType>() {
+                    match ot {
+                        BasicType::Int | BasicType::Float => true,
+                        _ => false,
+                    }
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
     }
 }
 

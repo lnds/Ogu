@@ -1,7 +1,8 @@
 use crate::backend::modules::types::basic_type::BasicType;
-use crate::backend::modules::types::trait_type::TraitType;
+use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::TypeClone;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
 
@@ -54,7 +55,7 @@ impl Symbol for ArithmeticSym {
             | ArithmeticSym::Mod(l, r)
             | ArithmeticSym::Pow(l, r) => match l.get_type() {
                 None => match r.get_type() {
-                    None => Some(TraitType::new_trait("Num")),
+                    None => Some(TRAIT_NUM.clone_box()),
                     Some(rt) => Some(rt.clone()),
                 },
                 Some(lt) => match r.get_type() {
@@ -69,7 +70,7 @@ impl Symbol for ArithmeticSym {
                         {
                             Some(BasicType::float())
                         } else {
-                            Some(TraitType::new_trait("Num"))
+                            Some(TRAIT_NUM.clone_box())
                         }
                     }
                 },
@@ -90,8 +91,8 @@ impl Symbol for ArithmeticSym {
                 match l.resolve_type(scope)? {
                     None => match r.resolve_type(scope)? {
                         None => {
-                            r.set_type(Some(TraitType::new_trait("Num")));
-                            l.set_type(Some(TraitType::new_trait("Num")));
+                            r.set_type(Some(TRAIT_NUM.clone_box()));
+                            l.set_type(Some(TRAIT_NUM.clone_box()));
                             scope.define(l.clone());
                             scope.define(r.clone());
                         }

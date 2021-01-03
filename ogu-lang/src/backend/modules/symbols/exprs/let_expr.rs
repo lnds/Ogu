@@ -1,9 +1,8 @@
+use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
-use crate::backend::scopes::sym_table::SymbolTable;
-use mopa::Any;
 
 #[derive(Clone, Debug)]
 pub(crate) struct LetExprSym {
@@ -12,13 +11,8 @@ pub(crate) struct LetExprSym {
 }
 
 impl LetExprSym {
-    pub(crate) fn new(
-        eqs: Vec<Box<dyn Symbol>>,
-        expr: Box<dyn Symbol>,
-    ) -> Box<Self> {
-        Box::new(LetExprSym {
-           eqs, expr
-        })
+    pub(crate) fn new(eqs: Vec<Box<dyn Symbol>>, expr: Box<dyn Symbol>) -> Box<Self> {
+        Box::new(LetExprSym { eqs, expr })
     }
 }
 
@@ -41,11 +35,11 @@ impl Symbol for LetExprSym {
             sym_table.define(e.clone());
         }
         for e in self.eqs.iter_mut() {
-            e.resolve_type(&mut *sym_table);
+            e.resolve_type(&mut *sym_table)?;
         }
         self.expr.resolve_type(&mut *sym_table)?;
         for e in self.eqs.iter_mut() {
-            if let Some(sym)  = sym_table.resolve(e.get_name()) {
+            if let Some(sym) = sym_table.resolve(e.get_name()) {
                 e.set_type(sym.get_type());
             }
         }

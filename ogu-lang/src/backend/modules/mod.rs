@@ -24,6 +24,10 @@ mod tests {
         assert!(parser.is_ok());
         if let Ok(parser) = parser {
             let module_ast = ModuleAst::parse(&parser, None, 0);
+            if !module_ast.is_ok() {
+                println!("ERR: {:?}", module_ast);
+            }
+
             assert!(module_ast.is_ok());
             let module = Module::new(module_ast.unwrap(), sym_table);
             assert!(module.is_ok());
@@ -100,8 +104,10 @@ mod tests {
     fn test_let() {
         let module = test_module(
             indoc! {r#"
-            a = 10
-            a1 = let b = a in  b + 1
+            str_imc w h =
+                let imc = w / h ^ 2
+                in if imc <= 18.5 then "you are below normal weight"
+                   else "you are obese, be careful!"
             "#},
             default_sym_table(),
         );

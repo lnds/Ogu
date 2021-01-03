@@ -1,6 +1,7 @@
-use crate::backend::modules::types::trait_type::TraitType;
+use crate::backend::modules::types::trait_type::TRAIT_ORD;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::TypeClone;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
 
@@ -42,7 +43,7 @@ impl Symbol for PartialOrdSym {
             | PartialOrdSym::Lt(l, r)
             | PartialOrdSym::Le(l, r) => match l.get_type() {
                 None => match r.get_type() {
-                    None => Some(TraitType::new_trait("PartialOrd")),
+                    None => Some(TRAIT_ORD.clone_box()),
                     Some(rt) => Some(rt.clone()),
                 },
                 Some(lt) => match r.get_type() {
@@ -53,8 +54,14 @@ impl Symbol for PartialOrdSym {
                         if lt == rt.clone() {
                             Some(rt.clone())
                         } else {
-                            println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
-                            None
+                            if lt.promotes(&*rt) {
+                                Some(lt.clone())
+                            } else if rt.promotes(&*lt) {
+                                Some(lt.clone())
+                            } else {
+                                println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
+                                None
+                            }
                         }
                     }
                 },
@@ -75,8 +82,8 @@ impl Symbol for PartialOrdSym {
                 match l.resolve_type(scope)? {
                     None => match r.resolve_type(scope)? {
                         None => {
-                            r.set_type(Some(TraitType::new_trait("PartialOrd")));
-                            l.set_type(Some(TraitType::new_trait("PartialOrd")));
+                            r.set_type(Some(TRAIT_ORD.clone_box()));
+                            l.set_type(Some(TRAIT_ORD.clone_box()));
                             scope.define(l.clone());
                             scope.define(r.clone());
                         }

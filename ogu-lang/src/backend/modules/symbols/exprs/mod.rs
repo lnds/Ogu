@@ -3,27 +3,27 @@ use crate::backend::modules::symbols::exprs::do_expr::DoExprSym;
 use crate::backend::modules::symbols::exprs::func_call::FuncCallSym;
 use crate::backend::modules::symbols::exprs::idents::IdSym;
 use crate::backend::modules::symbols::exprs::if_expr::IfExprSym;
+use crate::backend::modules::symbols::exprs::let_expr::LetExprSym;
 use crate::backend::modules::symbols::exprs::literals::LiteralSym;
 use crate::backend::modules::symbols::exprs::paren_expr::ParenExprSym;
 use crate::backend::modules::symbols::exprs::partial_eq::PartialEqSym;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
+use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
+use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
 use std::ops::Deref;
-use crate::parser::ast::expressions::equations::Equation;
-use crate::backend::modules::symbols::exprs::let_expr::LetExprSym;
-use crate::backend::modules::symbols::values::ValueSym;
 
 mod arithmetics;
 mod do_expr;
 mod func_call;
 pub(crate) mod idents;
 mod if_expr;
+mod let_expr;
 mod literals;
 mod paren_expr;
 mod partial_eq;
 mod partial_ord;
-mod let_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -53,7 +53,6 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::IfExpr(c, t, e) => IfExprSym::new(c.into(), t.into(), e.into()),
 
-
             Expression::LetExpr(eqs, expr) => LetExprSym::new(vec_eqs_into(eqs), expr.into()),
 
             Expression::DoExpr(exprs) => DoExprSym::new(vec_exprs_into(exprs)),
@@ -75,9 +74,9 @@ impl<'a> From<&Box<Expression<'a>>> for Box<dyn Symbol> {
 
 impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
     fn from(eq: &Equation<'a>) -> Self {
-        match eq{
+        match eq {
             Equation::Value(id, expr) => ValueSym::new(id, expr),
-            _ => todo!()
+            _ => todo!(),
         }
     }
 }

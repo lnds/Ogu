@@ -1,6 +1,7 @@
-use crate::backend::modules::types::trait_type::TraitType;
+use crate::backend::modules::types::trait_type::TRAIT_EQ;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::TypeClone;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
 
@@ -29,7 +30,7 @@ impl Symbol for PartialEqSym {
         match self {
             PartialEqSym::Eq(l, r) | PartialEqSym::Ne(l, r) => match l.get_type() {
                 None => match r.get_type() {
-                    None => Some(TraitType::new_trait("PartialEq")),
+                    None => Some(TRAIT_EQ.clone_box()),
                     Some(rt) => Some(rt.clone()),
                 },
                 Some(lt) => match r.get_type() {
@@ -59,8 +60,8 @@ impl Symbol for PartialEqSym {
                 match l.resolve_type(scope)? {
                     None => match r.resolve_type(scope)? {
                         None => {
-                            r.set_type(Some(TraitType::new_trait("PartialEq")));
-                            l.set_type(Some(TraitType::new_trait("PartialEq")));
+                            r.set_type(Some(TRAIT_EQ.clone_box()));
+                            l.set_type(Some(TRAIT_EQ.clone_box()));
                             scope.define(l.clone());
                             scope.define(r.clone());
                         }

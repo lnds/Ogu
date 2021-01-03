@@ -6,16 +6,16 @@ use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ValueSym {
-    name: String,
+    name: Box<dyn Symbol>,
     expr: Box<dyn Symbol>,
     ty: Option<Box<dyn Type>>,
 }
 
 impl ValueSym {
-    pub(crate) fn new(name: &str, expr: &Expression) -> Box<Self> {
+    pub(crate) fn new(name: &Expression, expr: &Expression) -> Box<Self> {
         let expr: Box<dyn Symbol> = expr.into();
         Box::new(ValueSym {
-            name: name.to_string(),
+            name: name.into(),
             expr: expr.clone(),
             ty: expr.get_type(),
         })
@@ -24,7 +24,7 @@ impl ValueSym {
 
 impl Symbol for ValueSym {
     fn get_name(&self) -> &str {
-        &self.name
+        &self.name.get_name()
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {

@@ -8,7 +8,7 @@ use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub(crate) enum DeclarationAst<'a> {
-    Value(&'a str, Expression<'a>),
+    Value(Expression<'a>, Expression<'a>),
     Function(&'a str, Args<'a>, Expression<'a>),
     TypeDecl(
         &'a str,

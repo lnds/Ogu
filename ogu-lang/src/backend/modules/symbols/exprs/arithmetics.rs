@@ -79,20 +79,20 @@ impl Symbol for ArithmeticSym {
                     }
                 },
             },
-            ArithmeticSym::IntDiv(l, r) =>
+            ArithmeticSym::IntDiv(l, r) => {
                 if l.get_type().is_none() && r.get_type().is_none() {
                     None
-                }
-                else {
+                } else {
                     Some(BasicType::int())
                 }
-            ArithmeticSym::Div(l, r) =>
+            }
+            ArithmeticSym::Div(l, r) => {
                 if l.get_type().is_none() && r.get_type().is_none() {
                     None
-                }
-                else {
+                } else {
                     Some(BasicType::float())
                 }
+            }
         }
     }
 

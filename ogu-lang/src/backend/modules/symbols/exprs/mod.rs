@@ -77,7 +77,10 @@ impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
     fn from(eq: &Equation<'a>) -> Self {
         match eq {
             Equation::Value(id, expr) => ValueSym::new(id, expr),
-            _ => todo!(),
+            _e => {
+                println!("not implemented for {:?}", _e);
+                todo!()
+            }
         }
     }
 }

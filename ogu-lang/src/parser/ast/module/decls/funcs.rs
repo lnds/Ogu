@@ -2,10 +2,7 @@ use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::module::decls::{DeclParseResult, DeclarationAst};
-use crate::parser::{
-    consume_symbol, look_ahead_where, parse_opt_dedent, parse_opt_indent, raise_parser_error,
-    Parser,
-};
+use crate::parser::{consume_symbol, look_ahead_where, parse_opt_dedent, parse_opt_indent, Parser};
 use anyhow::Result;
 
 impl<'a> DeclarationAst<'a> {
@@ -37,7 +34,6 @@ impl<'a> DeclarationAst<'a> {
                     Ok(Some((DeclarationAst::Function(name, args, expr), pos)))
                 }
             }
-            _ => raise_parser_error("invalid declaration", parser, pos, true),
         }
     }
 

@@ -11,10 +11,7 @@ use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub(crate) enum Equation<'a> {
-    Value(&'a str, Expression<'a>),
-    TupleValue(Vec<&'a str>, Expression<'a>),
-    LValue(Expression<'a>, Expression<'a>),
-    LValueWithGuards(Expression<'a>, Vec<Guard<'a>>),
+    Value(Expression<'a>, Expression<'a>),
     Function(&'a str, Args<'a>, Expression<'a>),
 }
 
@@ -68,7 +65,7 @@ impl<'a> Equation<'a> {
             let (l_expr, pos) = Expression::parse_primary_expr(parser, pos)?;
             let pos = consume_symbol(parser, pos, symbol)?;
             let (expr, pos) = Expression::parse(parser, pos)?;
-            Ok((Equation::LValue(l_expr, expr), pos))
+            Ok((Equation::Value(l_expr, expr), pos))
         }
     }
 
@@ -96,7 +93,15 @@ impl<'a> Equation<'a> {
                 consume_symbol(parser, pos, symbol2)?
             };
             let (expr, pos) = Expression::parse(parser, pos)?;
-            Ok((Equation::TupleValue(ids, expr), pos))
+            Ok((
+                Equation::Value(
+                    Expression::TupleExpr(
+                        ids.iter().map(|id| Expression::Identifier(id)).collect(),
+                    ),
+                    expr,
+                ),
+                pos,
+            ))
         } else {
             raise_parser_error("Expecting identifier", parser, pos, true)
         }
@@ -122,7 +127,7 @@ impl<'a> Equation<'a> {
         // we already parsed a =
         let pos = parser.skip_nl(pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
-        Ok((Equation::Value(name, expr), pos))
+        Ok((Equation::Value(Expression::Identifier(name), expr), pos))
     }
 
     fn parse_func(
@@ -146,7 +151,7 @@ impl<'a> Equation<'a> {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr_val, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
-        let eq = Equation::LValue(expr_left, expr_val);
+        let eq = Equation::Value(expr_left, expr_val);
         Ok((eq, pos))
     }
 
@@ -181,7 +186,8 @@ impl<'a> Equation<'a> {
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
         let (guards, pos) = parse_guards(parser, pos)?;
-        let eq = Equation::LValueWithGuards(left_expr, guards);
+        let expr = Guard::guards_to_cond(&guards)?;
+        let eq = Equation::Value(left_expr, expr);
         Ok((eq, pos))
     }
 }

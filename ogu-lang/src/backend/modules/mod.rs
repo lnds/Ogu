@@ -149,6 +149,33 @@ mod tests {
     }
 
     #[test]
+    fn test_guards() {
+        let module = test_module(
+            indoc! {r#"
+            -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
+            str_imc w h 
+                | bmi <= skinny = "You're underweight, you emo, you!"
+                | bmi <= normal = "You're supposedly normal. Pffft, I bet you're ugly!"
+                | bmi <= fat = "You're fat! Lose some weight, fatty!"
+                | otherwise =  "You're a whale, congratulations!"
+                where
+                     bmi = w / h ^ 2
+                     skinny = 18.5
+                     normal = 25.0
+                     fat = 30.0
+            "#},
+            default_sym_table(),
+        );
+        assert!(module.is_some());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("TEST DECLS = {:#?}", decls);
+        assert_eq!(decls[0].get_type(),
+                   FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]), BasicType::static_str())
+        );
+    }
+
+    #[test]
     fn test_cond() {
         let module = test_module(
             indoc! {r#"

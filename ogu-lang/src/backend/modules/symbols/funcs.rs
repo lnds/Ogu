@@ -76,17 +76,8 @@ impl Symbol for FunctionSym {
                 }
 
                 self.expr.resolve_type(&mut *sym_table)?;
-                if self.name == "fmul" {
-                    println!("EXPR  resolved = {:#?}", self.expr);
-                    println!(
-                        "EXPR IN SYMBOL TABLE = {:#?}",
-                        sym_table.resolve(self.expr.get_name())
-                    );
-                }
+
                 for s in sym_table.get_symbols() {
-                    if self.name == "fmul" {
-                        println!("s = {:?}", s);
-                    }
                     self.args.define(s.clone_box());
                 }
                 let ty: Option<Box<dyn Type>> = FuncType::make(&*self.args, &*self.expr);

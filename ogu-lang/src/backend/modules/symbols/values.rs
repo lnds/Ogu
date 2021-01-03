@@ -36,13 +36,8 @@ impl Symbol for ValueSym {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        match &self.ty {
-            Some(ty) if !ty.is_trait() => Ok(Some(ty.clone())),
-            _ => {
-                self.expr.resolve_type(scope)?;
-                self.set_type(self.expr.get_type());
-                Ok(self.get_type())
-            }
-        }
+        self.expr.resolve_type(scope)?;
+        self.set_type(self.expr.get_type());
+        Ok(self.get_type())
     }
 }

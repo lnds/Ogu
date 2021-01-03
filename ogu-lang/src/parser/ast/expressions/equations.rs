@@ -16,7 +16,6 @@ pub(crate) enum Equation<'a> {
     LValue(Expression<'a>, Expression<'a>),
     LValueWithGuards(Expression<'a>, Vec<Guard<'a>>),
     Function(&'a str, Args<'a>, Expression<'a>),
-    FunctionWithGuards(&'a str, Args<'a>, Vec<Guard<'a>>),
 }
 
 impl<'a> Equation<'a> {
@@ -171,7 +170,8 @@ impl<'a> Equation<'a> {
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
         let (guards, pos) = parse_guards(parser, pos)?;
-        let eq = Equation::FunctionWithGuards(name, args, guards);
+        let cond = Guard::guards_to_cond(&guards)?;
+        let eq = Equation::Function(name, args, cond);
         Ok((eq, pos))
     }
 

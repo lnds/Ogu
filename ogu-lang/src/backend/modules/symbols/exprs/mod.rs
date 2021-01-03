@@ -10,6 +10,9 @@ use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::expression::Expression;
 use std::ops::Deref;
+use crate::parser::ast::expressions::equations::Equation;
+use crate::backend::modules::symbols::exprs::let_expr::LetExprSym;
+use crate::backend::modules::symbols::values::ValueSym;
 
 mod arithmetics;
 mod do_expr;
@@ -20,6 +23,7 @@ mod literals;
 mod paren_expr;
 mod partial_eq;
 mod partial_ord;
+mod let_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -49,6 +53,9 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::IfExpr(c, t, e) => IfExprSym::new(c.into(), t.into(), e.into()),
 
+
+            Expression::LetExpr(eqs, expr) => LetExprSym::new(vec_eqs_into(eqs), expr.into()),
+
             Expression::DoExpr(exprs) => DoExprSym::new(vec_exprs_into(exprs)),
 
             Expression::FuncCallExpr(f, args) => FuncCallSym::new(f.into(), vec_exprs_into(args)),
@@ -66,6 +73,19 @@ impl<'a> From<&Box<Expression<'a>>> for Box<dyn Symbol> {
     }
 }
 
+impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
+    fn from(eq: &Equation<'a>) -> Self {
+        match eq{
+            Equation::Value(id, expr) => ValueSym::new(id, expr),
+            _ => todo!()
+        }
+    }
+}
+
 fn vec_exprs_into<'a>(args: &[Expression<'a>]) -> Vec<Box<dyn Symbol>> {
     args.iter().map(|a| a.into()).collect()
+}
+
+fn vec_eqs_into<'a>(eqs: &[Equation<'a>]) -> Vec<Box<dyn Symbol>> {
+    eqs.iter().map(|eq| eq.into()).collect()
 }

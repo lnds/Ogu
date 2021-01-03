@@ -1,7 +1,6 @@
 use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::guards::Guard;
 use crate::parser::ast::module::decls::{DeclParseResult, DeclarationAst};
 use crate::parser::{
     consume_symbol, look_ahead_where, parse_opt_dedent, parse_opt_indent, raise_parser_error,
@@ -36,18 +35,6 @@ impl<'a> DeclarationAst<'a> {
                     Ok(Some((DeclarationAst::Function(name, args, expr), pos)))
                 } else {
                     Ok(Some((DeclarationAst::Function(name, args, expr), pos)))
-                }
-            }
-            Equation::FunctionWithGuards(name, args, guards) => {
-                if let Some(where_decl) = opt_where {
-                    let expr =
-                        Expression::LetExpr(where_decl, Box::new(Guard::guards_to_cond(&guards)?));
-                    Ok(Some((DeclarationAst::Function(name, args, expr), pos)))
-                } else {
-                    Ok(Some((
-                        DeclarationAst::Function(name, args, Guard::guards_to_cond(&guards)?),
-                        pos,
-                    )))
                 }
             }
             _ => raise_parser_error("invalid declaration", parser, pos, true),

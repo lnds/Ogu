@@ -97,6 +97,23 @@ mod tests {
     }
 
     #[test]
+    fn test_let() {
+        let module = test_module(
+            indoc! {r#"
+            a = 10
+            a1 = let b = a in  b + 1
+            "#},
+            default_sym_table(),
+        );
+        assert!(module.is_some());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("TEST DECLS = {:#?}", decls);
+        assert_eq!(decls[0].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[1].get_type(), Some(BasicType::int()));
+    }
+
+    #[test]
     fn test_funcs_1() {
         let module = test_module(
             indoc! {r#"

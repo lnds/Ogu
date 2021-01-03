@@ -8,16 +8,13 @@ use anyhow::Result;
 pub(crate) struct ValueSym {
     name: Box<dyn Symbol>,
     expr: Box<dyn Symbol>,
-    ty: Option<Box<dyn Type>>,
 }
 
 impl ValueSym {
     pub(crate) fn new(name: &Expression, expr: &Expression) -> Box<Self> {
-        let expr: Box<dyn Symbol> = expr.into();
         Box::new(ValueSym {
             name: name.into(),
-            expr: expr.clone(),
-            ty: expr.get_type(),
+            expr: expr.into(),
         })
     }
 }
@@ -32,7 +29,7 @@ impl Symbol for ValueSym {
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        self.ty = ty.clone()
+        self.name.set_type(ty)
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {

@@ -53,15 +53,13 @@ impl Symbol for PartialOrdSym {
                     Some(rt) => {
                         if lt == rt.clone() {
                             Some(rt.clone())
+                        } else if lt.promotes(&*rt) {
+                            Some(lt.clone())
+                        } else if rt.promotes(&*lt) {
+                            Some(rt.clone())
                         } else {
-                            if lt.promotes(&*rt) {
-                                Some(lt.clone())
-                            } else if rt.promotes(&*lt) {
-                                Some(lt.clone())
-                            } else {
-                                println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
-                                None
-                            }
+                            println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
+                            None
                         }
                     }
                 },

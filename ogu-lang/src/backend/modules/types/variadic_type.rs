@@ -22,8 +22,8 @@ impl Type for VariadicType {
         Some(self.result.clone())
     }
 
-    fn promotes(&self, other: &dyn Type) -> bool {
-        unimplemented!()
+    fn promotes(&self, _other: &dyn Type) -> bool {
+        false
     }
 }
 

@@ -12,6 +12,7 @@ pub(crate) enum ArithmeticSym {
     Sub(Box<dyn Symbol>, Box<dyn Symbol>),
     Mul(Box<dyn Symbol>, Box<dyn Symbol>),
     Div(Box<dyn Symbol>, Box<dyn Symbol>),
+    IntDiv(Box<dyn Symbol>, Box<dyn Symbol>),
     Mod(Box<dyn Symbol>, Box<dyn Symbol>),
     Pow(Box<dyn Symbol>, Box<dyn Symbol>),
 }
@@ -30,6 +31,10 @@ impl ArithmeticSym {
 
     pub(crate) fn new_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
         Box::new(ArithmeticSym::Div(l, r))
+    }
+
+    pub(crate) fn new_int_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
+        Box::new(ArithmeticSym::IntDiv(l, r))
     }
 
     pub(crate) fn new_mod(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
@@ -51,7 +56,6 @@ impl Symbol for ArithmeticSym {
             ArithmeticSym::Add(l, r)
             | ArithmeticSym::Sub(l, r)
             | ArithmeticSym::Mul(l, r)
-            | ArithmeticSym::Div(l, r)
             | ArithmeticSym::Mod(l, r)
             | ArithmeticSym::Pow(l, r) => match l.get_type() {
                 None => match r.get_type() {
@@ -75,6 +79,34 @@ impl Symbol for ArithmeticSym {
                     }
                 },
             },
+            ArithmeticSym::IntDiv(l, r) => match l.get_type() {
+                None => match r.get_type() {
+                    None => Some(TRAIT_NUM.clone_box()),
+                    Some(rt) => Some(rt.clone()),
+                },
+                Some(lt) => match r.get_type() {
+                    None => Some(lt.clone()),
+                    Some(rt) if lt.is_trait() => Some(rt.clone()),
+                    Some(rt) if rt.is_trait() => Some(lt.clone()),
+                    Some(_) => {
+                        Some(BasicType::int())
+                    }
+                }
+            },
+            ArithmeticSym::Div(l, r) => match l.get_type() {
+                None => match r.get_type() {
+                    None => Some(TRAIT_NUM.clone_box()),
+                    Some(rt) => Some(rt.clone()),
+                },
+                Some(lt) => match r.get_type() {
+                    None => Some(lt.clone()),
+                    Some(rt) if lt.is_trait() => Some(rt.clone()),
+                    Some(rt) if rt.is_trait() => Some(lt.clone()),
+                    Some(_) => {
+                        Some(BasicType::float())
+                    }
+                },
+            },
         }
     }
 
@@ -85,6 +117,7 @@ impl Symbol for ArithmeticSym {
             ArithmeticSym::Add(l, r)
             | ArithmeticSym::Sub(l, r)
             | ArithmeticSym::Mul(l, r)
+            | ArithmeticSym::IntDiv(l, r)
             | ArithmeticSym::Div(l, r)
             | ArithmeticSym::Mod(l, r)
             | ArithmeticSym::Pow(l, r) => {

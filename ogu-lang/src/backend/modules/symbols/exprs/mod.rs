@@ -39,6 +39,7 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::AddExpr(l, r) => ArithmeticSym::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticSym::new_sub(l.into(), r.into()),
             Expression::MulExpr(l, r) => ArithmeticSym::new_mul(l.into(), r.into()),
+            Expression::IntDivExpr(l, r) => ArithmeticSym::new_int_div(l.into(), r.into()),
             Expression::DivExpr(l, r) => ArithmeticSym::new_div(l.into(), r.into()),
             Expression::ModExpr(l, r) => ArithmeticSym::new_mod(l.into(), r.into()),
             Expression::PowExpr(l, r) => ArithmeticSym::new_pow(l.into(), r.into()),

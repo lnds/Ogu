@@ -8,7 +8,8 @@ mod tests {
     use crate::backend::modules::module::Module;
     use crate::backend::modules::types::basic_type::BasicType;
     use crate::backend::modules::types::func_type::FuncType;
-    use crate::backend::modules::types::trait_type::TraitType;
+    use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
+    use crate::backend::scopes::types::TypeClone;
     use crate::backend::scopes::Scope;
     use crate::lexer::Lexer;
     use crate::parser::ast::module::ModuleAst;
@@ -74,10 +75,11 @@ mod tests {
             a1 = a + 1
             a2 = a * a1
             a3 = a1 - a2
-            a4 = a3 / a2
-            a5 = a4 % 10.0
-            a6 = a5 ^ a
-            a7 = (a1 + a2) * (a3 - a4) / (a5 % a6) ^ a
+            a4 = a3 // a2
+            a5 = a3 / a2
+            a6 = a4 % 10.0
+            a7 = a5 ^ a
+            a8 = (a1 + a2) * (a3 - a4) / (a5 % a6) ^ a
             main () = println! "a7 = {}" a7
             "#},
             default_sym_table(),
@@ -94,8 +96,9 @@ mod tests {
         assert_eq!(decls[5].get_type(), Some(BasicType::float()));
         assert_eq!(decls[6].get_type(), Some(BasicType::float()));
         assert_eq!(decls[7].get_type(), Some(BasicType::float()));
+        assert_eq!(decls[8].get_type(), Some(BasicType::float()));
         assert_eq!(
-            decls[8].get_type(),
+            decls[9].get_type(),
             FuncType::new_opt(None, BasicType::unit())
         );
     }
@@ -115,8 +118,9 @@ mod tests {
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("TEST DECLS = {:#?}", decls);
-        assert_eq!(decls[0].get_type(), Some(BasicType::int()));
-        assert_eq!(decls[1].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[0].get_type(),
+            FuncType::new_opt(Some(vec![BasicType::float(), BasicType::float()]), BasicType::static_str())
+        );
     }
 
     #[test]
@@ -135,11 +139,8 @@ mod tests {
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(
-                Some(vec![
-                    TraitType::new_trait("Num"),
-                    TraitType::new_trait("Num")
-                ]),
-                TraitType::new_trait("Num")
+                Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+                TRAIT_NUM.clone_box()
             )
         );
     }
@@ -161,20 +162,14 @@ mod tests {
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(
-                Some(vec![
-                    TraitType::new_trait("Num"),
-                    TraitType::new_trait("Num")
-                ]),
-                TraitType::new_trait("Num")
+                Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+                TRAIT_NUM.clone_box()
             )
         );
         assert_eq!(
             decls[1].get_type(),
             FuncType::new_opt(
-                Some(vec![
-                    TraitType::new_trait("Num"),
-                    TraitType::new_trait("Num")
-                ]),
+                Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
                 BasicType::float()
             )
         );
@@ -220,11 +215,8 @@ mod tests {
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(
-                Some(vec![
-                    TraitType::new_trait("PartialOrd"),
-                    TraitType::new_trait("PartialOrd")
-                ]),
-                TraitType::new_trait("PartialOrd")
+                Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
+                TRAIT_ORD.clone_box()
             )
         );
         assert_eq!(decls[1].get_type(), Some(BasicType::int()));
@@ -261,22 +253,16 @@ mod tests {
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(
-                Some(vec![
-                    TraitType::new_trait("PartialOrd"),
-                    TraitType::new_trait("PartialOrd")
-                ]),
-                TraitType::new_trait("PartialOrd")
+                Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
+                TRAIT_ORD.clone_box()
             )
         );
         assert_eq!(decls[0].get_type(), decls[1].get_type());
         assert_eq!(
             decls[2].get_type(),
             FuncType::new_opt(
-                Some(vec![
-                    TraitType::new_trait("PartialOrd"),
-                    TraitType::new_trait("PartialOrd")
-                ]),
-                TraitType::new_trait("PartialOrd")
+                Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
+                TRAIT_ORD.clone_box()
             )
         );
         assert_eq!(decls[2].get_type(), decls[3].get_type());
@@ -284,10 +270,7 @@ mod tests {
         assert_eq!(
             decls[5].get_type(),
             FuncType::new_opt(
-                Some(vec![
-                    TraitType::new_trait("PartialEq"),
-                    TraitType::new_trait("PartialEq")
-                ]),
+                Some(vec![TRAIT_EQ.clone_box(), TRAIT_EQ.clone_box()]),
                 BasicType::static_str()
             )
         );

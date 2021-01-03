@@ -38,7 +38,7 @@ impl Type for FuncType {
         Some(self.result.clone())
     }
 
-    fn promotes(&self, other: &dyn Type) -> bool {
+    fn promotes(&self, _other: &dyn Type) -> bool {
         unimplemented!()
     }
 }

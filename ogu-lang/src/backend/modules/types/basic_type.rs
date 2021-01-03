@@ -55,10 +55,7 @@ impl Type for BasicType {
                 if other == TRAIT_NUM {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
-                    match ot {
-                        BasicType::Int => true,
-                        _ => false,
-                    }
+                    matches!(ot, BasicType::Int )
                 } else {
                     false
                 }
@@ -67,10 +64,7 @@ impl Type for BasicType {
                 if other == TRAIT_NUM {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
-                    match ot {
-                        BasicType::Int | BasicType::Float => true,
-                        _ => false,
-                    }
+                    matches!(ot, BasicType::Int | BasicType::Float)
                 } else {
                     false
                 }

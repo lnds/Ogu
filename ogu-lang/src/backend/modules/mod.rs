@@ -449,6 +449,7 @@ mod tests {
         assert_eq!(decls[4].get_type(), Some(BasicType::bool()));
         assert_eq!(decls[5].get_type(), Some(BasicType::bool()));
         assert_eq!(decls[6].get_type(), Some(BasicType::bool()));
+        assert_eq!(decls[7].get_type(), Some(BasicType::bool()));
     }
     #[test]
     fn test_if_and_do() {

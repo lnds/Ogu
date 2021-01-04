@@ -4,6 +4,8 @@ use crate::backend::scopes::types::Type;
 use crate::backend::scopes::types::TypeClone;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
+use crate::backend::modules::types::basic_type::BasicType;
+use crate::lexer::tokens::Lexeme::BackArrow;
 
 #[derive(Clone, Debug)]
 pub(crate) enum PartialEqSym {
@@ -29,18 +31,13 @@ impl Symbol for PartialEqSym {
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
             PartialEqSym::Eq(l, r) | PartialEqSym::Ne(l, r) => match l.get_type() {
-                None => match r.get_type() {
-                    None => Some(TRAIT_EQ.clone_box()),
-                    Some(rt) => Some(rt.clone()),
-                },
+                None => None,
                 Some(lt) => match r.get_type() {
-                    None => Some(lt.clone()),
-                    Some(rt) if lt.is_trait() => Some(rt.clone()),
-                    Some(rt) if rt.is_trait() => Some(lt.clone()),
+                    None => None,
                     Some(rt) => {
-                        if lt == rt.clone() {
-                            Some(rt.clone())
-                        } else {
+                        if &*lt == &*rt || lt.promotes(&*rt) || rt.promotes(&*lt){
+                            Some(BasicType::bool())
+                        } else  {
                             println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
                             None
                         }

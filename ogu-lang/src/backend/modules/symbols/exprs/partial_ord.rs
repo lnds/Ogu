@@ -4,6 +4,7 @@ use crate::backend::scopes::types::Type;
 use crate::backend::scopes::types::TypeClone;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
+use crate::backend::modules::types::basic_type::BasicType;
 
 #[derive(Clone, Debug)]
 pub(crate) enum PartialOrdSym {
@@ -42,21 +43,12 @@ impl Symbol for PartialOrdSym {
             | PartialOrdSym::Ge(l, r)
             | PartialOrdSym::Lt(l, r)
             | PartialOrdSym::Le(l, r) => match l.get_type() {
-                None => match r.get_type() {
-                    None => Some(TRAIT_ORD.clone_box()),
-                    Some(rt) => Some(rt.clone()),
-                },
+                None => None,
                 Some(lt) => match r.get_type() {
-                    None => Some(lt.clone()),
-                    Some(rt) if lt.is_trait() => Some(rt.clone()),
-                    Some(rt) if rt.is_trait() => Some(lt.clone()),
+                    None => None,
                     Some(rt) => {
-                        if lt == rt.clone() {
-                            Some(rt.clone())
-                        } else if lt.promotes(&*rt) {
-                            Some(lt.clone())
-                        } else if rt.promotes(&*lt) {
-                            Some(rt.clone())
+                        if &*lt == &*rt.clone() || lt.promotes(&*rt) || rt.promotes(&*lt) {
+                            Some(BasicType::bool())
                         } else {
                             println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
                             None

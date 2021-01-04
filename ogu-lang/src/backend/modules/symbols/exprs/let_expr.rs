@@ -52,11 +52,4 @@ impl Symbol for LetExprSym {
         Ok(self.get_type())
     }
 
-    fn storable(&self) -> bool {
-        false
-    }
-
-    fn set_storable(&mut self, _s: bool) {
-
-    }
 }

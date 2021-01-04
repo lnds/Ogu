@@ -45,6 +45,4 @@ impl Symbol for ValueSym {
         true
     }
 
-    fn set_storable(&mut self, _s: bool) {
-    }
 }

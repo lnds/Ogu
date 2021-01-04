@@ -61,7 +61,4 @@ impl Symbol for IdSym {
         true
     }
 
-    fn set_storable(&mut self, _s: bool) {
-
-    }
 }

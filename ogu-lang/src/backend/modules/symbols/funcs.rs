@@ -90,9 +90,6 @@ impl Symbol for FunctionSym {
         true
     }
 
-    fn set_storable(&mut self, _s: bool) {
-
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -131,13 +128,6 @@ impl Symbol for ArgsSym {
         todo!()
     }
 
-    fn storable(&self) -> bool {
-        false
-    }
-
-    fn set_storable(&mut self, _s: bool) {
-
-    }
 }
 
 impl Scope for ArgsSym {

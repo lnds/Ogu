@@ -47,7 +47,4 @@ impl Symbol for MacroSym {
         true
     }
 
-    fn set_storable(&mut self, _s: bool) {
-
-    }
 }

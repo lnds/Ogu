@@ -10,6 +10,7 @@ pub(crate) enum BasicType {
     Char,
     Date,
     Regexp,
+    Bool,
 }
 
 impl BasicType {
@@ -33,6 +34,10 @@ impl BasicType {
         Box::new(BasicType::Char)
     }
 
+    pub(crate) fn bool() -> Box<dyn Type> {
+        Box::new(BasicType::Bool)
+    }
+
     pub(crate) fn date() -> Box<dyn Type> {
         Box::new(BasicType::Date)
     }
@@ -51,6 +56,7 @@ impl Type for BasicType {
             BasicType::Float => "float".to_string(),
             BasicType::StaticStr => "&str".to_string(),
             BasicType::Char => "char".to_string(),
+            BasicType::Bool => "bool".to_string(),
             BasicType::Date => "date".to_string(),
             BasicType::Regexp => "regexp".to_string(),
         }

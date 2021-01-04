@@ -382,6 +382,8 @@ mod tests {
         c = 10.0
         d = "str"
         e = ()
+        f = #2020-01-03
+        g = #/(a|b)*/#
         "#},
             default_sym_table(),
         );
@@ -394,6 +396,8 @@ mod tests {
         assert_eq!(decls[2].get_type(), Some(BasicType::float()));
         assert_eq!(decls[3].get_type(), Some(BasicType::static_str()));
         assert_eq!(decls[4].get_type(), Some(BasicType::unit()));
+        assert_eq!(decls[5].get_type(), Some(BasicType::date()));
+        assert_eq!(decls[6].get_type(), Some(BasicType::regexp()));
     }
 
     #[test]

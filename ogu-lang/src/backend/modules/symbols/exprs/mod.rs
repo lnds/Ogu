@@ -34,6 +34,8 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::FloatLiteral(f) => LiteralSym::new_float(f),
             Expression::StringLiteral(s) => LiteralSym::new_str(s),
             Expression::CharLiteral(s) => LiteralSym::new_char(s),
+            Expression::DateLiteral(s) => LiteralSym::new_date(s),
+            Expression::RegexpLiteral(s) => LiteralSym::new_regexp(s),
             Expression::Unit => LiteralSym::new_unit(),
 
             Expression::Identifier(id) => IdSym::new(id),

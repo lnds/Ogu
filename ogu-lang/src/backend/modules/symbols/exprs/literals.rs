@@ -10,6 +10,8 @@ pub(crate) enum LiteralSym {
     Float(String),
     Str(String),
     Char(String),
+    Date(String),
+    Regexp(String),
     Unit,
 }
 
@@ -24,6 +26,14 @@ impl LiteralSym {
 
     pub(crate) fn new_char(v: &str) -> Box<LiteralSym> {
         Box::new(LiteralSym::Char(v.to_string()))
+    }
+
+    pub(crate) fn new_date(d: &str) -> Box<LiteralSym> {
+        Box::new(LiteralSym::Date(d.to_string()))
+    }
+
+    pub(crate) fn new_regexp(r: &str) -> Box<LiteralSym> {
+        Box::new(LiteralSym::Regexp(r.to_string()))
     }
 
     pub(crate) fn new_float(v: &str) -> Box<LiteralSym> {
@@ -46,6 +56,8 @@ impl Symbol for LiteralSym {
             LiteralSym::Float(_) => Some(BasicType::float()),
             LiteralSym::Str(_) => Some(BasicType::static_str()),
             LiteralSym::Char(_) => Some(BasicType::char()),
+            LiteralSym::Date(_) => Some(BasicType::date()),
+            LiteralSym::Regexp(_) => Some(BasicType::regexp()),
             LiteralSym::Unit => Some(BasicType::unit()),
         }
     }

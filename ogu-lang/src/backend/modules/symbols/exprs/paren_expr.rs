@@ -12,7 +12,7 @@ pub(crate) struct ParenExpr {
 impl ParenExpr {
     pub(crate) fn make(expr: &Expression) -> Box<dyn Symbol> {
         match expr {
-            Expression::Identifier(_) => Box::new(ParenExpr { expr: expr.into() }),
+            Expression::Name(_) => Box::new(ParenExpr { expr: expr.into() }),
             _ => expr.into(),
         }
     }

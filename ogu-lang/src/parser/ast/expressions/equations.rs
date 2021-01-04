@@ -96,7 +96,7 @@ impl<'a> Equation<'a> {
             Ok((
                 Equation::Value(
                     Expression::TupleExpr(
-                        ids.iter().map(|id| Expression::Identifier(id)).collect(),
+                        ids.iter().map(|id| Expression::Name(id)).collect(),
                     ),
                     expr,
                 ),
@@ -127,7 +127,7 @@ impl<'a> Equation<'a> {
         // we already parsed a =
         let pos = parser.skip_nl(pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
-        Ok((Equation::Value(Expression::Identifier(name), expr), pos))
+        Ok((Equation::Value(Expression::Name(name), expr), pos))
     }
 
     fn parse_func(

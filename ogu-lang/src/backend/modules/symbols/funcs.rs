@@ -1,5 +1,4 @@
 use crate::backend::modules::symbols::idents::IdSym;
-use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
@@ -106,28 +105,6 @@ impl ArgsSym {
     pub(crate) fn new_many(args: Vec<Box<dyn Symbol>>) -> Box<Self> {
         Box::new(ArgsSym::Many(args))
     }
-}
-
-impl Symbol for ArgsSym {
-    fn get_name(&self) -> &str {
-        "arg"
-    }
-
-    fn get_type(&self) -> Option<Box<dyn Type>> {
-        match self {
-            ArgsSym::Unit => Some(BasicType::unit()),
-            _ => todo!(),
-        }
-    }
-
-    fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
-        unimplemented!()
-    }
-
-    fn resolve_type(&mut self, _scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        todo!()
-    }
-
 }
 
 impl Scope for ArgsSym {

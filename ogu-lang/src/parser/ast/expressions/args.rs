@@ -48,7 +48,7 @@ impl<'a> Arg<'a> {
             Some(Lexeme::Id(id)) => Ok(Some((Arg::Simple(id), pos + 1))),
             _ => {
                 let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
-                if let Expression::Identifier(id) = expr {
+                if let Expression::Name(id) = expr {
                     Ok(Some((Arg::Simple(id), pos)))
                 } else {
                     Ok(Some((Arg::Expr(Box::new(expr)), pos)))

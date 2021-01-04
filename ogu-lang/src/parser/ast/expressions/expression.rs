@@ -58,10 +58,16 @@ pub(crate) struct HandleGuard<'a>(
 );
 
 #[derive(Debug, Clone)]
+pub(crate) enum Identifier<'a> {
+    Id(&'a str),
+    TypeId(&'a str),
+
+}
+
+#[derive(Debug, Clone)]
 pub(crate) enum Expression<'a> {
-    Identifier(&'a str),
+    Name(&'a str),
     QualifiedIdentifier(&'a str, Vec<&'a str>),
-    TypeIdentifier(&'a str),
     StringLiteral(&'a str),
     LargeStringLiteral(Option<String>),
     RegexpLiteral(&'a str),
@@ -91,7 +97,7 @@ pub(crate) enum Expression<'a> {
     DictExpr(Vec<(Expression<'a>, Expression<'a>)>),
     SetExpr(Vec<Expression<'a>>),
     RecordExpr(Vec<(&'a str, Expression<'a>)>),
-    TypedFuncCall(String, Vec<Expression<'a>>, Vec<Expression<'a>>),
+    TypedFuncCall(String, Vec<Identifier<'a>>, Vec<Expression<'a>>),
     FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>),
     LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>),
     MatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
@@ -483,7 +489,7 @@ impl<'a> Expression<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
         match parser.get_token(pos) {
             Some(Lexeme::RightParen) => Ok((Expression::Unit, pos + 1)),
-            Some(Lexeme::Not) if parser.peek(pos+1, Lexeme::RightParen) => Ok((Expression::UnaryNot, pos+2)),
+            Some(Lexeme::Not) if parser.peek(pos + 1, Lexeme::RightParen) => Ok((Expression::UnaryNot, pos + 2)),
             Some(op) if is_basic_op(op) => {
                 let (opt_expr, pos) = if parser.peek(pos + 1, Lexeme::RightParen) {
                     (None, pos + 1)
@@ -516,7 +522,7 @@ impl<'a> Expression<'a> {
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
                 if parser.peek(pos, Lexeme::RightParen) {
                     match expr {
-                        Expression::Identifier(_)
+                        Expression::Name(_)
                         | Expression::FuncCallExpr(_, _)
                         | Expression::RecurExpr(_)
                         | Expression::LambdaExpr(_, _)
@@ -714,9 +720,9 @@ impl<'a> Expression<'a> {
                     while parser.peek(pos, Lexeme::Dot) {
                         pos = consume_symbol(parser, pos, Lexeme::Dot)?;
                         match parser.get_token(pos) {
-                            Some(Lexeme::Id(id)) => q_ids.push(Expression::Identifier(id)),
+                            Some(Lexeme::Id(id)) => q_ids.push(Identifier::Id(id)),
                             Some(Lexeme::TypeId(tid)) => {
-                                q_ids.push(Expression::TypeIdentifier(tid))
+                                q_ids.push(Identifier::TypeId(tid))
                             }
                             _ => break,
                         }
@@ -817,7 +823,7 @@ impl<'a> Expression<'a> {
                     pos = new_pos;
                 }
                 let (expr, pos) = if fields.is_empty() {
-                    (Expression::Identifier(id), pos)
+                    (Expression::Name(id), pos)
                 } else {
                     (Expression::QualifiedIdentifier(id, fields), pos)
                 };

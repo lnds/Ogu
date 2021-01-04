@@ -41,7 +41,7 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::RegexpLiteral(s) => Literal::new_regexp(s),
             Expression::Unit => Literal::new_unit(),
 
-            Expression::Identifier(id) => IdSym::new(id),
+            Expression::Name(id) => IdSym::new(id),
 
             Expression::ParenExpr(expr) => ParenExpr::make(expr),
 

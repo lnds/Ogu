@@ -28,6 +28,7 @@ mod partial_eq;
 mod partial_ord;
 mod tuple_expr;
 mod logical_expr;
+mod comparable_trait;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {

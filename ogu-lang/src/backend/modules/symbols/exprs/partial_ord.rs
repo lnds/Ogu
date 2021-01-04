@@ -5,6 +5,7 @@ use crate::backend::scopes::types::TypeClone;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
 use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
 
 #[derive(Clone, Debug)]
 pub(crate) enum PartialOrdSym {
@@ -65,38 +66,11 @@ impl Symbol for PartialOrdSym {
             | PartialOrdSym::Ge(l, r)
             | PartialOrdSym::Lt(l, r)
             | PartialOrdSym::Le(l, r) => {
-                match l.resolve_type(scope)? {
-                    None => match r.resolve_type(scope)? {
-                        None => {
-                            r.set_type(Some(TRAIT_ORD.clone_box()));
-                            l.set_type(Some(TRAIT_ORD.clone_box()));
-                            scope.define(l.clone());
-                            scope.define(r.clone());
-                        }
-                        Some(rt) => {
-                            l.set_type(Some(rt.clone()));
-                            scope.define(l.clone());
-                        }
-                    },
-                    Some(lt) => match r.resolve_type(scope)? {
-                        None => {
-                            r.set_type(Some(lt.clone()));
-                            scope.define(r.clone());
-                        }
-                        Some(rt) if lt.is_trait() && !rt.is_trait() => {
-                            l.set_type(Some(rt.clone()));
-                            scope.define(l.clone());
-                        }
-                        Some(rt) if rt.is_trait() && !lt.is_trait() => {
-                            r.set_type(Some(lt.clone()));
-                            scope.define(r.clone());
-                        }
-                        _ => {}
-                    },
-                };
+                resolve_comparable(l, r, scope, TRAIT_ORD)?;
+                Ok(self.get_type())
             }
         }
-        Ok(self.get_type())
     }
 
 }
+

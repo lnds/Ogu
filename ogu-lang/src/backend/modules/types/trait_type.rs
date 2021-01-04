@@ -25,16 +25,16 @@ impl Type for TraitType {
         format!("Trait {}", self.get_name())
     }
 
-    fn is_trait(&self) -> bool {
-        true
-    }
-
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
         None
     }
 
     fn promotes(&self, other: &dyn Type) -> bool {
         other == TRAIT_UNKNOWN
+    }
+
+    fn is_trait(&self) -> bool {
+        true
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::backend::modules::types::trait_type::TRAIT_NUM;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeClone};
 
 #[derive(Clone, Debug)]
 pub(crate) enum BasicType {
@@ -13,37 +13,49 @@ pub(crate) enum BasicType {
     Bool,
 }
 
+
+pub(crate) const UNIT_TYPE: &BasicType = &BasicType::Unit;
+pub(crate) const INT_TYPE: &BasicType = &BasicType::Int;
+pub(crate) const FLOAT_TYPE: &BasicType = &BasicType::Float;
+pub(crate) const STATIC_STR_TYPE: &BasicType = &BasicType::StaticStr;
+pub(crate) const CHAR_TYPE: &BasicType = &BasicType::Char;
+pub(crate) const DATE_TYPE: &BasicType = &BasicType::Date;
+pub(crate) const REGEXP_TYPE: &BasicType = &BasicType::Regexp;
+pub(crate) const BOOL_TYPE: &BasicType = &BasicType::Bool;
+
+
+
 impl BasicType {
     pub(crate) fn unit() -> Box<dyn Type> {
-        Box::new(BasicType::Unit)
+        UNIT_TYPE.clone_box()
     }
 
     pub(crate) fn int() -> Box<dyn Type> {
-        Box::new(BasicType::Int)
+        INT_TYPE.clone_box()
     }
 
     pub(crate) fn float() -> Box<dyn Type> {
-        Box::new(BasicType::Float)
+        FLOAT_TYPE.clone_box()
     }
 
     pub(crate) fn static_str() -> Box<dyn Type> {
-        Box::new(BasicType::StaticStr)
+        STATIC_STR_TYPE.clone_box()
     }
 
     pub(crate) fn char() -> Box<dyn Type> {
-        Box::new(BasicType::Char)
+        CHAR_TYPE.clone_box()
     }
 
     pub(crate) fn bool() -> Box<dyn Type> {
-        Box::new(BasicType::Bool)
+        BOOL_TYPE.clone_box()
     }
 
     pub(crate) fn date() -> Box<dyn Type> {
-        Box::new(BasicType::Date)
+        DATE_TYPE.clone_box()
     }
 
     pub(crate) fn regexp() -> Box<dyn Type> {
-        Box::new(BasicType::Regexp)
+        REGEXP_TYPE.clone_box()
     }
 
 }
@@ -64,10 +76,6 @@ impl Type for BasicType {
 
     fn get_signature(&self) -> String {
         format!("BasicType {}", self.get_name())
-    }
-
-    fn is_trait(&self) -> bool {
-        false
     }
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
@@ -97,6 +105,9 @@ impl Type for BasicType {
             _ => false,
         }
     }
+
+    fn is_basic_type(&self) -> bool { true }
+
 }
 
 impl PartialEq for BasicType {

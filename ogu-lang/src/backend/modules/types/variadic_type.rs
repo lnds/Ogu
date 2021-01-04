@@ -14,10 +14,6 @@ impl Type for VariadicType {
         format!("VariadicType <{}>", self.get_name())
     }
 
-    fn is_trait(&self) -> bool {
-        false
-    }
-
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
         Some(self.result.clone())
     }

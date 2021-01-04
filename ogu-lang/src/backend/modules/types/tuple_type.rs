@@ -24,10 +24,6 @@ impl Type for TupleType {
         unimplemented!()
     }
 
-    fn is_trait(&self) -> bool {
-        unimplemented!()
-    }
-
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
         unimplemented!()
     }

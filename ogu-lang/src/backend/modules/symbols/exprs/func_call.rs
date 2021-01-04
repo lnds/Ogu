@@ -8,16 +8,16 @@ use crate::backend::scopes::Scope;
 use anyhow::{Error, Result};
 
 #[derive(Clone, Debug)]
-pub(crate) struct FuncCallSym {
+pub(crate) struct FuncCallExpr {
     func: Box<dyn Symbol>,
     args: Vec<Box<dyn Symbol>>,
     ty: Option<Box<dyn Type>>,
 }
 
-impl FuncCallSym {
+impl FuncCallExpr {
     pub(crate) fn new(func: Box<dyn Symbol>, args: Vec<Box<dyn Symbol>>) -> Box<Self> {
         println!("new func call {:?} {:?}", func, args);
-        Box::new(FuncCallSym {
+        Box::new(FuncCallExpr {
             func,
             args,
             ty: None,
@@ -25,7 +25,7 @@ impl FuncCallSym {
     }
 }
 
-impl Symbol for FuncCallSym {
+impl Symbol for FuncCallExpr {
     fn get_name(&self) -> &str {
         "func_call"
     }

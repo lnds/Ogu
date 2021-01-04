@@ -5,7 +5,7 @@ use crate::backend::scopes::Scope;
 use anyhow::Result;
 
 #[derive(Clone, Debug)]
-pub(crate) enum LiteralSym {
+pub(crate) enum Literal {
     Int(String),
     Float(String),
     Str(String),
@@ -15,50 +15,50 @@ pub(crate) enum LiteralSym {
     Unit,
 }
 
-impl LiteralSym {
-    pub(crate) fn new_int(v: &str) -> Box<LiteralSym> {
-        Box::new(LiteralSym::Int(v.to_string()))
+impl Literal {
+    pub(crate) fn new_int(v: &str) -> Box<Literal> {
+        Box::new(Literal::Int(v.to_string()))
     }
 
-    pub(crate) fn new_str(v: &str) -> Box<LiteralSym> {
-        Box::new(LiteralSym::Str(v.to_string()))
+    pub(crate) fn new_str(v: &str) -> Box<Literal> {
+        Box::new(Literal::Str(v.to_string()))
     }
 
-    pub(crate) fn new_char(v: &str) -> Box<LiteralSym> {
-        Box::new(LiteralSym::Char(v.to_string()))
+    pub(crate) fn new_char(v: &str) -> Box<Literal> {
+        Box::new(Literal::Char(v.to_string()))
     }
 
-    pub(crate) fn new_date(d: &str) -> Box<LiteralSym> {
-        Box::new(LiteralSym::Date(d.to_string()))
+    pub(crate) fn new_date(d: &str) -> Box<Literal> {
+        Box::new(Literal::Date(d.to_string()))
     }
 
-    pub(crate) fn new_regexp(r: &str) -> Box<LiteralSym> {
-        Box::new(LiteralSym::Regexp(r.to_string()))
+    pub(crate) fn new_regexp(r: &str) -> Box<Literal> {
+        Box::new(Literal::Regexp(r.to_string()))
     }
 
-    pub(crate) fn new_float(v: &str) -> Box<LiteralSym> {
-        Box::new(LiteralSym::Float(v.to_string()))
+    pub(crate) fn new_float(v: &str) -> Box<Literal> {
+        Box::new(Literal::Float(v.to_string()))
     }
 
-    pub(crate) fn new_unit() -> Box<LiteralSym> {
-        Box::new(LiteralSym::Unit)
+    pub(crate) fn new_unit() -> Box<Literal> {
+        Box::new(Literal::Unit)
     }
 }
 
-impl Symbol for LiteralSym {
+impl Symbol for Literal {
     fn get_name(&self) -> &str {
         "literal"
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
-            LiteralSym::Int(_) => Some(BasicType::int()),
-            LiteralSym::Float(_) => Some(BasicType::float()),
-            LiteralSym::Str(_) => Some(BasicType::static_str()),
-            LiteralSym::Char(_) => Some(BasicType::char()),
-            LiteralSym::Date(_) => Some(BasicType::date()),
-            LiteralSym::Regexp(_) => Some(BasicType::regexp()),
-            LiteralSym::Unit => Some(BasicType::unit()),
+            Literal::Int(_) => Some(BasicType::int()),
+            Literal::Float(_) => Some(BasicType::float()),
+            Literal::Str(_) => Some(BasicType::static_str()),
+            Literal::Char(_) => Some(BasicType::char()),
+            Literal::Date(_) => Some(BasicType::date()),
+            Literal::Regexp(_) => Some(BasicType::regexp()),
+            Literal::Unit => Some(BasicType::unit()),
         }
     }
 

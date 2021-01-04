@@ -5,20 +5,20 @@ use crate::parser::ast::expressions::expression::Expression;
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub(crate) struct ParenExprSym {
+pub(crate) struct ParenExpr {
     expr: Box<dyn Symbol>,
 }
 
-impl ParenExprSym {
+impl ParenExpr {
     pub(crate) fn make(expr: &Expression) -> Box<dyn Symbol> {
         match expr {
-            Expression::Identifier(_) => Box::new(ParenExprSym { expr: expr.into() }),
+            Expression::Identifier(_) => Box::new(ParenExpr { expr: expr.into() }),
             _ => expr.into(),
         }
     }
 }
 
-impl Symbol for ParenExprSym {
+impl Symbol for ParenExpr {
     fn get_name(&self) -> &str {
         self.expr.get_name()
     }

@@ -1,25 +1,25 @@
+use std::ops::Deref;
+
 use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticSym;
-use crate::backend::modules::symbols::exprs::do_expr::DoExprSym;
-use crate::backend::modules::symbols::exprs::func_call::FuncCallSym;
-use crate::backend::modules::symbols::exprs::idents::IdSym;
-use crate::backend::modules::symbols::exprs::if_expr::IfExprSym;
-use crate::backend::modules::symbols::exprs::let_expr::LetExprSym;
-use crate::backend::modules::symbols::exprs::literals::LiteralSym;
-use crate::backend::modules::symbols::exprs::paren_expr::ParenExprSym;
-use crate::backend::modules::symbols::exprs::partial_eq::PartialEqSym;
-use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdSym;
-use crate::backend::modules::symbols::exprs::tuple_expr::TupleExprSym;
+use crate::backend::modules::symbols::exprs::do_expr::DoExpr;
+use crate::backend::modules::symbols::exprs::func_call::FuncCallExpr;
+use crate::backend::modules::symbols::exprs::if_expr::IfExpr;
+use crate::backend::modules::symbols::exprs::let_expr::LetExpr;
+use crate::backend::modules::symbols::exprs::literals::Literal;
+use crate::backend::modules::symbols::exprs::logical_expr::LogicalSym;
+use crate::backend::modules::symbols::exprs::paren_expr::ParenExpr;
+use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
+use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdExpr;
+use crate::backend::modules::symbols::exprs::tuple_expr::TupleExpr;
+use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
-use std::ops::Deref;
-use crate::backend::modules::symbols::exprs::logical_expr::LogicalSym;
 
 mod arithmetics;
 mod do_expr;
 mod func_call;
-pub(crate) mod idents;
 mod if_expr;
 mod let_expr;
 mod literals;
@@ -33,19 +33,19 @@ mod comparable_trait;
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
         match expr {
-            Expression::IntegerLiteral(l) => LiteralSym::new_int(l),
-            Expression::FloatLiteral(f) => LiteralSym::new_float(f),
-            Expression::StringLiteral(s) => LiteralSym::new_str(s),
-            Expression::CharLiteral(s) => LiteralSym::new_char(s),
-            Expression::DateLiteral(s) => LiteralSym::new_date(s),
-            Expression::RegexpLiteral(s) => LiteralSym::new_regexp(s),
-            Expression::Unit => LiteralSym::new_unit(),
+            Expression::IntegerLiteral(l) => Literal::new_int(l),
+            Expression::FloatLiteral(f) => Literal::new_float(f),
+            Expression::StringLiteral(s) => Literal::new_str(s),
+            Expression::CharLiteral(s) => Literal::new_char(s),
+            Expression::DateLiteral(s) => Literal::new_date(s),
+            Expression::RegexpLiteral(s) => Literal::new_regexp(s),
+            Expression::Unit => Literal::new_unit(),
 
             Expression::Identifier(id) => IdSym::new(id),
 
-            Expression::ParenExpr(expr) => ParenExprSym::make(expr),
+            Expression::ParenExpr(expr) => ParenExpr::make(expr),
 
-            Expression::TupleExpr(tuple) => TupleExprSym::make(vec_exprs_into(tuple)),
+            Expression::TupleExpr(tuple) => TupleExpr::make(vec_exprs_into(tuple)),
 
             Expression::AddExpr(l, r) => ArithmeticSym::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticSym::new_sub(l.into(), r.into()),
@@ -60,21 +60,21 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::OrExpr(l, r) => LogicalSym::new_or(l.into(), r.into()),
 
 
-            Expression::GtExpr(l, r) => PartialOrdSym::new_gt(l.into(), r.into()),
-            Expression::GeExpr(l, r) => PartialOrdSym::new_ge(l.into(), r.into()),
-            Expression::LtExpr(l, r) => PartialOrdSym::new_lt(l.into(), r.into()),
-            Expression::LeExpr(l, r) => PartialOrdSym::new_le(l.into(), r.into()),
+            Expression::GtExpr(l, r) => PartialOrdExpr::new_gt(l.into(), r.into()),
+            Expression::GeExpr(l, r) => PartialOrdExpr::new_ge(l.into(), r.into()),
+            Expression::LtExpr(l, r) => PartialOrdExpr::new_lt(l.into(), r.into()),
+            Expression::LeExpr(l, r) => PartialOrdExpr::new_le(l.into(), r.into()),
 
-            Expression::EqExpr(l, r) => PartialEqSym::new_eq(l.into(), r.into()),
-            Expression::NeExpr(l, r) => PartialEqSym::new_ne(l.into(), r.into()),
+            Expression::EqExpr(l, r) => PartialEqExpr::new_eq(l.into(), r.into()),
+            Expression::NeExpr(l, r) => PartialEqExpr::new_ne(l.into(), r.into()),
 
-            Expression::IfExpr(c, t, e) => IfExprSym::new(c.into(), t.into(), e.into()),
+            Expression::IfExpr(c, t, e) => IfExpr::new(c.into(), t.into(), e.into()),
 
-            Expression::LetExpr(eqs, expr) => LetExprSym::new(vec_eqs_into(eqs), expr.into()),
+            Expression::LetExpr(eqs, expr) => LetExpr::new(vec_eqs_into(eqs), expr.into()),
 
-            Expression::DoExpr(exprs) => DoExprSym::new(vec_exprs_into(exprs)),
+            Expression::DoExpr(exprs) => DoExpr::new(vec_exprs_into(exprs)),
 
-            Expression::FuncCallExpr(f, args) => FuncCallSym::new(f.into(), vec_exprs_into(args)),
+            Expression::FuncCallExpr(f, args) => FuncCallExpr::new(f.into(), vec_exprs_into(args)),
             _e => {
                 println!("not implemented for: {:?}", _e);
                 todo!()

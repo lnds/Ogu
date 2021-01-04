@@ -1,4 +1,4 @@
-use crate::backend::modules::symbols::exprs::idents::IdSym;
+use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;

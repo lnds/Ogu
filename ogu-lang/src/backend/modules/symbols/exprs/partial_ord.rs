@@ -1,49 +1,48 @@
 use crate::backend::modules::types::trait_type::TRAIT_ORD;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
-use crate::backend::scopes::types::TypeClone;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
 
 #[derive(Clone, Debug)]
-pub(crate) enum PartialOrdSym {
+pub(crate) enum PartialOrdExpr {
     Gt(Box<dyn Symbol>, Box<dyn Symbol>),
     Ge(Box<dyn Symbol>, Box<dyn Symbol>),
     Lt(Box<dyn Symbol>, Box<dyn Symbol>),
     Le(Box<dyn Symbol>, Box<dyn Symbol>),
 }
 
-impl PartialOrdSym {
+impl PartialOrdExpr {
     pub(crate) fn new_gt(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
-        Box::new(PartialOrdSym::Gt(l, r))
+        Box::new(PartialOrdExpr::Gt(l, r))
     }
 
     pub(crate) fn new_ge(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
-        Box::new(PartialOrdSym::Ge(l, r))
+        Box::new(PartialOrdExpr::Ge(l, r))
     }
 
     pub(crate) fn new_lt(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
-        Box::new(PartialOrdSym::Lt(l, r))
+        Box::new(PartialOrdExpr::Lt(l, r))
     }
 
     pub(crate) fn new_le(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
-        Box::new(PartialOrdSym::Le(l, r))
+        Box::new(PartialOrdExpr::Le(l, r))
     }
 }
 
-impl Symbol for PartialOrdSym {
+impl Symbol for PartialOrdExpr {
     fn get_name(&self) -> &str {
         "partial_ord"
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
-            PartialOrdSym::Gt(l, r)
-            | PartialOrdSym::Ge(l, r)
-            | PartialOrdSym::Lt(l, r)
-            | PartialOrdSym::Le(l, r) => match l.get_type() {
+            PartialOrdExpr::Gt(l, r)
+            | PartialOrdExpr::Ge(l, r)
+            | PartialOrdExpr::Lt(l, r)
+            | PartialOrdExpr::Le(l, r) => match l.get_type() {
                 None => None,
                 Some(lt) => match r.get_type() {
                     None => None,
@@ -62,10 +61,10 @@ impl Symbol for PartialOrdSym {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match self {
-            PartialOrdSym::Gt(l, r)
-            | PartialOrdSym::Ge(l, r)
-            | PartialOrdSym::Lt(l, r)
-            | PartialOrdSym::Le(l, r) => {
+            PartialOrdExpr::Gt(l, r)
+            | PartialOrdExpr::Ge(l, r)
+            | PartialOrdExpr::Lt(l, r)
+            | PartialOrdExpr::Le(l, r) => {
                 resolve_comparable(l, r, scope, TRAIT_ORD)?;
                 Ok(self.get_type())
             }

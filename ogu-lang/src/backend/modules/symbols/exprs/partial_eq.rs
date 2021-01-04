@@ -7,29 +7,29 @@ use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
 
 #[derive(Clone, Debug)]
-pub(crate) enum PartialEqSym {
+pub(crate) enum PartialEqExpr {
     Eq(Box<dyn Symbol>, Box<dyn Symbol>),
     Ne(Box<dyn Symbol>, Box<dyn Symbol>),
 }
 
-impl PartialEqSym {
+impl PartialEqExpr {
     pub(crate) fn new_eq(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
-        Box::new(PartialEqSym::Eq(l, r))
+        Box::new(PartialEqExpr::Eq(l, r))
     }
 
     pub(crate) fn new_ne(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
-        Box::new(PartialEqSym::Ne(l, r))
+        Box::new(PartialEqExpr::Ne(l, r))
     }
 }
 
-impl Symbol for PartialEqSym {
+impl Symbol for PartialEqExpr {
     fn get_name(&self) -> &str {
         "partial_eq"
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
-            PartialEqSym::Eq(l, r) | PartialEqSym::Ne(l, r) => match l.get_type() {
+            PartialEqExpr::Eq(l, r) | PartialEqExpr::Ne(l, r) => match l.get_type() {
                 None => None,
                 Some(lt) => match r.get_type() {
                     None => None,
@@ -48,7 +48,7 @@ impl Symbol for PartialEqSym {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match self {
-            PartialEqSym::Eq(l, r) | PartialEqSym::Ne(l, r) => {
+            PartialEqExpr::Eq(l, r) | PartialEqExpr::Ne(l, r) => {
                 resolve_comparable(l, r, scope, TRAIT_EQ)?;
                 Ok(self.get_type())
             }

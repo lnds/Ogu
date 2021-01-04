@@ -2,8 +2,8 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
-use crate::backend::modules::types::basic_type::BasicType;
-use crate::backend::modules::types::trait_type::{TRAIT_ORD, TRAIT_EQ};
+use crate::backend::modules::types::basic_type::{BasicType, BOOL_TYPE};
+use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
 
 #[derive(Clone, Debug)]
 pub(crate) enum LogicalSym {
@@ -37,23 +37,16 @@ impl Symbol for LogicalSym {
         match self {
             LogicalSym::Not(expr) => {
                 match expr.get_type() {
-                    None => Some(BasicType::bool()),
-                    Some(et) if &*et == TRAIT_ORD || &*et == TRAIT_EQ => Some(BasicType::bool()),
+                    Some(et) if &*et == BOOL_TYPE => Some(BasicType::bool()),
                     _ => None
                 }
             }
             LogicalSym::And(l, r)
             | LogicalSym::Or(l, r) => {
                 match l.get_type() {
-                    None => match r.get_type() {
-                        None => Some(BasicType::bool()),
-                        Some(rt) if &*rt == TRAIT_ORD || &*rt == TRAIT_EQ => Some(BasicType::bool()),
-                        _ => None
-                    }
+                    None => None,
                     Some(lt) => match r.get_type() {
-                        None if &*lt == TRAIT_ORD || &*lt == TRAIT_EQ => Some(BasicType::bool()),
-                        None => None,
-                        Some(rt) if &*rt == TRAIT_ORD || &*rt == TRAIT_EQ => Some(BasicType::bool()),
+                        Some(rt) if &*lt == BOOL_TYPE || &*rt == BOOL_TYPE => Some(BasicType::bool()),
                         _ => None
                     }
                 }
@@ -62,6 +55,23 @@ impl Symbol for LogicalSym {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
+        match self {
+            LogicalSym::Not(expr) => {
+                match expr.resolve_type(scope)? {
+                    None => {
+                        expr.set_type(Some(BasicType::bool()));
+                        scope.define(expr.clone());
+                    }
+                    Some(_) => {
+                        // nothing
+                    }
+                }
+            }
+            LogicalSym::And(l, r)
+            | LogicalSym::Or(l, r) => {
+                resolve_comparable(l, r, scope, BOOL_TYPE)?;
+            }
+        }
         Ok(self.get_type())
     }
 

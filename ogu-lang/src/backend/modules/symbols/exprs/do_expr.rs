@@ -4,17 +4,17 @@ use crate::backend::scopes::Scope;
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
-pub(crate) struct DoExprSym {
+pub(crate) struct DoExpr {
     exprs: Vec<Box<dyn Symbol>>,
 }
 
-impl DoExprSym {
+impl DoExpr {
     pub(crate) fn new(exprs: Vec<Box<dyn Symbol>>) -> Box<Self> {
-        Box::new(DoExprSym { exprs })
+        Box::new(DoExpr { exprs })
     }
 }
 
-impl Symbol for DoExprSym {
+impl Symbol for DoExpr {
     fn get_name(&self) -> &str {
         "do_expr"
     }

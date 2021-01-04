@@ -6,18 +6,18 @@ use anyhow::{Result, Error};
 use crate::backend::errors::OguError;
 
 #[derive(Clone, Debug)]
-pub(crate) struct LetExprSym {
+pub(crate) struct LetExpr {
     eqs: Vec<Box<dyn Symbol>>,
     expr: Box<dyn Symbol>,
 }
 
-impl LetExprSym {
+impl LetExpr {
     pub(crate) fn new(eqs: Vec<Box<dyn Symbol>>, expr: Box<dyn Symbol>) -> Box<Self> {
-        Box::new(LetExprSym { eqs, expr })
+        Box::new(LetExpr { eqs, expr })
     }
 }
 
-impl Symbol for LetExprSym {
+impl Symbol for LetExpr {
     fn get_name(&self) -> &str {
         "let_expr"
     }

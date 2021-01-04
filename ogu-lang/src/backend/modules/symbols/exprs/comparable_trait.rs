@@ -1,10 +1,9 @@
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::modules::types::trait_type::TraitType;
 use anyhow::Result;
 use crate::backend::scopes::Scope;
 use crate::backend::scopes::types::TypeClone;
 
-pub(crate) fn resolve_comparable(l: &mut Box<dyn Symbol>, r: &mut Box<dyn Symbol>, scope: &mut dyn Scope, tr: &TraitType) -> Result<()> {
+pub(crate) fn resolve_comparable(l: &mut Box<dyn Symbol>, r: &mut Box<dyn Symbol>, scope: &mut dyn Scope, tr: &dyn TypeClone) -> Result<()> {
     match l.resolve_type(scope)? {
         None => match r.resolve_type(scope)? {
             None => {

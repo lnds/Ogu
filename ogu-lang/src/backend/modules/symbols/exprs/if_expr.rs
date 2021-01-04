@@ -4,19 +4,19 @@ use crate::backend::scopes::Scope;
 use anyhow::Result;
 
 #[derive(Clone, Debug)]
-pub(crate) struct IfExprSym {
+pub(crate) struct IfExpr {
     cond: Box<dyn Symbol>,
     then_expr: Box<dyn Symbol>,
     else_expr: Box<dyn Symbol>,
 }
 
-impl IfExprSym {
+impl IfExpr {
     pub(crate) fn new(
         cond: Box<dyn Symbol>,
         then_expr: Box<dyn Symbol>,
         else_expr: Box<dyn Symbol>,
     ) -> Box<Self> {
-        Box::new(IfExprSym {
+        Box::new(IfExpr {
             cond,
             then_expr,
             else_expr,
@@ -24,7 +24,7 @@ impl IfExprSym {
     }
 }
 
-impl Symbol for IfExprSym {
+impl Symbol for IfExpr {
     fn get_name(&self) -> &str {
         "if_expr"
     }

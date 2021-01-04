@@ -8,18 +8,18 @@ use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::errors::OguError;
 
 #[derive(Debug, Clone)]
-pub(crate) struct TupleExprSym {
+pub(crate) struct TupleExpr {
     tuple: Vec<Box<dyn Symbol>>,
     assignable: bool,
 }
 
-impl TupleExprSym {
+impl TupleExpr {
     pub(crate) fn make(tuple: Vec<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Box::new(TupleExprSym { tuple, assignable:false })
+        Box::new(TupleExpr { tuple, assignable:false })
     }
 }
 
-impl Symbol for TupleExprSym {
+impl Symbol for TupleExpr {
     fn get_name(&self) -> &str {
         "tuple_expr"
     }

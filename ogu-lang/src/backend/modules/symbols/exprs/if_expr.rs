@@ -32,15 +32,11 @@ impl Symbol for IfExprSym {
     fn get_type(&self) -> Option<Box<dyn Type>> {
         let tt = self.then_expr.get_type()?;
         let et = self.else_expr.get_type()?;
-        if tt != et.clone() {
+        if &*tt != &*et {
             None
         } else {
             Some(et.clone())
         }
-    }
-
-    fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
-        unimplemented!()
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {

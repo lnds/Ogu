@@ -67,10 +67,6 @@ impl Symbol for PartialOrdSym {
         }
     }
 
-    fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
-        unimplemented!()
-    }
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match self {
             PartialOrdSym::Gt(l, r)

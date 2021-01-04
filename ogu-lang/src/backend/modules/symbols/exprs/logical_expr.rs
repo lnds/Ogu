@@ -61,10 +61,6 @@ impl Symbol for LogicalSym {
         }
     }
 
-    fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
-        unimplemented!()
-    }
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         Ok(self.get_type())
     }

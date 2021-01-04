@@ -7,7 +7,7 @@ use std::fmt::Debug;
 pub(crate) trait Symbol: SymbolClone + Debug + mopa::Any {
     fn get_name(&self) -> &str;
     fn get_type(&self) -> Option<Box<dyn Type>>;
-    fn set_type(&mut self, ty: Option<Box<dyn Type>>);
+    fn set_type(&mut self, _: Option<Box<dyn Type>>) {}
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>>;
     fn storable(&self) -> bool { false }
     fn set_storable(&mut self, _: bool) { }

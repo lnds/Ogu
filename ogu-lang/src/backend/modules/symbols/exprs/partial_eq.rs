@@ -50,10 +50,6 @@ impl Symbol for PartialEqSym {
         }
     }
 
-    fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
-        unimplemented!()
-    }
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match self {
             PartialEqSym::Eq(l, r) | PartialEqSym::Ne(l, r) => {

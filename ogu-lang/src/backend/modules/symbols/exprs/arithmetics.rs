@@ -96,8 +96,6 @@ impl Symbol for ArithmeticSym {
         }
     }
 
-    fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {}
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match self {
             ArithmeticSym::Add(l, r)

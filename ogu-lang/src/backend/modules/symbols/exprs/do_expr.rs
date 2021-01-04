@@ -24,10 +24,6 @@ impl Symbol for DoExprSym {
         last.get_type()
     }
 
-    fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
-        unimplemented!()
-    }
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         for e in self.exprs.iter_mut() {
             e.resolve_type(scope)?;

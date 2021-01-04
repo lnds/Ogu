@@ -62,10 +62,6 @@ impl Symbol for LiteralSym {
         }
     }
 
-    fn set_type(&mut self, _ty: Option<Box<dyn Type>>) {
-        // do nothing
-    }
-
     fn resolve_type(&mut self, _scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         Ok(self.get_type())
     }

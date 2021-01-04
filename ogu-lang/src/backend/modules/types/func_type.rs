@@ -1,4 +1,4 @@
-use crate::backend::modules::symbols::funcs::{vec_args_into, ArgsSym};
+use crate::backend::modules::symbols::funcs::vec_args_into;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
@@ -20,6 +20,14 @@ impl Type for FuncType {
         format!("FuncType<{}>", self.get_name())
     }
 
+    fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
+        Some(self.result.clone())
+    }
+
+    fn promotes(&self, _other: &dyn Type) -> bool {
+        unimplemented!()
+    }
+
     fn is_trait(&self) -> bool {
         match &self.args {
             None => self.result.is_trait(),
@@ -32,14 +40,6 @@ impl Type for FuncType {
                 self.result.is_trait()
             }
         }
-    }
-
-    fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
-        Some(self.result.clone())
-    }
-
-    fn promotes(&self, _other: &dyn Type) -> bool {
-        unimplemented!()
     }
 }
 
@@ -74,11 +74,11 @@ impl FuncType {
         Self::new_opt(args, result)
     }
 
-    pub(crate) fn make(args: &ArgsSym, expr: &dyn Symbol) -> Option<Box<dyn Type>> {
+    pub(crate) fn make(args: &Option<Vec<Box<dyn Symbol>>>, expr: &dyn Symbol) -> Option<Box<dyn Type>> {
         let result = expr.get_type()?;
         let args = match args {
-            ArgsSym::Unit => None,
-            ArgsSym::Many(a) => Some(
+            None => None,
+            Some(a) => Some(
                 a.iter()
                     .map(|sym| sym.get_type().unwrap_or_else(|| TRAIT_UNKNOWN.clone_box()))
                     .collect(),

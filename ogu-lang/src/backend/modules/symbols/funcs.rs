@@ -105,12 +105,6 @@ impl ArgsSym {
     pub(crate) fn new_many(args: Vec<Box<dyn Symbol>>) -> Box<Self> {
         Box::new(ArgsSym::Many(args))
     }
-}
-
-impl Scope for ArgsSym {
-    fn scope_name(&self) -> &str {
-        unimplemented!()
-    }
 
     fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>> {
         match self {
@@ -125,25 +119,6 @@ impl Scope for ArgsSym {
                 None
             }
         }
-    }
-
-    fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
-        match self {
-            ArgsSym::Unit => None,
-            ArgsSym::Many(args) => {
-                args.iter().find(|s|
-                    s.get_name() == name
-                ).cloned()
-            }
-        }
-    }
-
-    fn get_symbols(&self) -> Vec<Box<dyn Symbol>> {
-        unimplemented!()
-    }
-
-    fn set_symbols(&mut self, _symbols: Vec<Box<dyn Symbol>>) {
-        unimplemented!()
     }
 }
 

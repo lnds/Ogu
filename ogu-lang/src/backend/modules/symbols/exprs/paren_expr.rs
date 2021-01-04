@@ -39,4 +39,12 @@ impl Symbol for ParenExprSym {
         println!("RESOLVE TYPE PAREN for {:?} => {:?}", self.expr, res);
         res
     }
+
+    fn storable(&self) -> bool {
+        self.expr.storable()
+    }
+
+    fn set_storable(&mut self, s: bool) {
+        self.expr.set_storable(s);
+    }
 }

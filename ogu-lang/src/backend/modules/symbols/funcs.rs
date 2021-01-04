@@ -86,6 +86,14 @@ impl Symbol for FunctionSym {
             }
         }
     }
+
+    fn storable(&self) -> bool {
+        true
+    }
+
+    fn set_storable(&mut self, _s: bool) {
+
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -123,6 +131,14 @@ impl Symbol for ArgsSym {
     fn resolve_type(&mut self, _scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         todo!()
     }
+
+    fn storable(&self) -> bool {
+        false
+    }
+
+    fn set_storable(&mut self, _s: bool) {
+
+    }
 }
 
 impl Scope for ArgsSym {
@@ -148,7 +164,11 @@ impl Scope for ArgsSym {
     fn resolve(&self, name: &str) -> Option<Box<dyn Symbol>> {
         match self {
             ArgsSym::Unit => None,
-            ArgsSym::Many(args) => args.iter().find(|s| s.get_name() == name).cloned(),
+            ArgsSym::Many(args) => {
+                args.iter().find(|s|
+                    s.get_name() == name
+                ).cloned()
+            }
         }
     }
 

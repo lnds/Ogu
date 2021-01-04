@@ -110,4 +110,12 @@ impl Symbol for PartialOrdSym {
             }
         }
     }
+
+    fn storable(&self) -> bool {
+        false
+    }
+
+    fn set_storable(&mut self, _s: bool) {
+
+    }
 }

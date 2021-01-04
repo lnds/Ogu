@@ -42,4 +42,12 @@ impl Symbol for MacroSym {
             },
         }
     }
+
+    fn storable(&self) -> bool {
+        true
+    }
+
+    fn set_storable(&mut self, _s: bool) {
+
+    }
 }

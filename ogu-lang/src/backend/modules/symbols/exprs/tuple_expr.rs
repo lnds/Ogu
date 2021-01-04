@@ -3,18 +3,19 @@ use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
-use crate::parser::ast::expressions::expression::Expression;
-use anyhow::Result;
+use anyhow::{Result, Error};
 use crate::backend::scopes::sym_table::SymbolTable;
+use crate::backend::errors::OguError;
 
 #[derive(Debug, Clone)]
 pub(crate) struct TupleExprSym {
     tuple: Vec<Box<dyn Symbol>>,
+    assignable: bool,
 }
 
 impl TupleExprSym {
     pub(crate) fn make(tuple: Vec<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Box::new(TupleExprSym { tuple })
+        Box::new(TupleExprSym { tuple, assignable:false })
     }
 }
 
@@ -47,15 +48,29 @@ impl Symbol for TupleExprSym {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let mut sym_table = SymbolTable::new("tuple", Some(scope.clone_box()));
-        for s in self.tuple.iter() {
-            sym_table.define(s.clone());
+        if self.assignable {
+            for s in self.tuple.iter() {
+                if sym_table.define(s.clone()).is_some() {
+                    return Err(Error::new(OguError::SymbolTableError).context(format!("symbol {:?} duplicated in tuple", s.get_name())));
+                }
+            }
         }
         for s in self.tuple.iter_mut() {
             s.resolve_type(&mut *sym_table)?;
         }
-        for s in sym_table.get_symbols().iter() {
-            scope.define(s.clone());
+        if self.assignable {
+            for s in sym_table.get_symbols().iter() {
+                scope.define(s.clone());
+            }
         }
         Ok(self.get_type())
+    }
+
+    fn storable(&self) -> bool {
+        self.assignable
+    }
+
+    fn set_storable(&mut self, s: bool) {
+        self.assignable = s;
     }
 }

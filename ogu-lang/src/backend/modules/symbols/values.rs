@@ -12,8 +12,10 @@ pub(crate) struct ValueSym {
 
 impl ValueSym {
     pub(crate) fn new(name: &Expression, expr: &Expression) -> Box<Self> {
+        let mut name : Box<dyn Symbol> = name.into();
+        name.set_storable(true);
         Box::new(ValueSym {
-            name: name.into(),
+            name: name.clone(),
             expr: expr.into(),
         })
     }
@@ -21,7 +23,7 @@ impl ValueSym {
 
 impl Symbol for ValueSym {
     fn get_name(&self) -> &str {
-        &self.name.get_name()
+        self.name.get_name()
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
@@ -37,5 +39,12 @@ impl Symbol for ValueSym {
         self.name.resolve_type(scope)?;
         self.set_type(self.expr.get_type());
         Ok(self.get_type())
+    }
+
+    fn storable(&self) -> bool {
+        true
+    }
+
+    fn set_storable(&mut self, _s: bool) {
     }
 }

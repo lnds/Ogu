@@ -6,7 +6,8 @@ use crate::backend::scopes::Scope;
 use crate::parser::ast::module::decls::DeclarationAst;
 use crate::parser::ast::module::decls::DeclarationAst::{Function, Value};
 use crate::parser::ast::module::ModuleAst;
-use anyhow::Result;
+use anyhow::{Result, Error};
+use crate::backend::errors::OguError;
 
 #[derive(Debug)]
 pub struct Module {
@@ -18,7 +19,9 @@ impl Module {
         let mut sym_table = SymbolTable::new(&module_ast.get_module_name(), Some(scope));
         for decl in module_ast.get_decls().iter() {
             let sym = Module::define_decl(decl)?;
-            sym_table.define(sym);
+            if sym_table.define(sym.clone()).is_some() {
+                return Err(Error::new(OguError::SymbolTableError).context(format!("Duplicated definition not allowed for symol = {}",sym.get_name())));
+            }
         }
         let mut decls = sym_table.get_symbols();
         for d in decls.iter_mut() {
@@ -29,18 +32,24 @@ impl Module {
     }
 
     fn define_decl(decl: &DeclarationAst) -> Result<Box<dyn Symbol>> {
-        let sym: Box<dyn Symbol> = match decl {
+        Ok(decl.into())
+    }
+
+    pub(crate) fn get_decls(&self) -> Vec<Box<dyn Symbol>> {
+        self.decls.to_vec()
+    }
+}
+
+
+impl<'a> From<&DeclarationAst<'a>> for Box<dyn Symbol> {
+    fn from(decl: &DeclarationAst<'a>) -> Self {
+        match decl {
             Function(name, args, expr) => FunctionSym::new(name, args, expr),
             Value(name, expr) => ValueSym::new(name, expr),
             _d => {
                 println!("not implemented for {:?}", _d);
                 todo!()
             }
-        };
-        Ok(sym)
-    }
-
-    pub(crate) fn get_decls(&self) -> Vec<Box<dyn Symbol>> {
-        self.decls.to_vec()
+        }
     }
 }

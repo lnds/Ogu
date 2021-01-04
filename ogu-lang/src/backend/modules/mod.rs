@@ -15,39 +15,63 @@ mod tests {
     use crate::parser::ast::module::ModuleAst;
     use crate::parser::Parser;
     use indoc::indoc;
+    use anyhow::Result;
 
-    fn test_module(source: &str, sym_table: Box<dyn Scope>) -> Option<Module> {
+    fn make_module(source: &str, sym_table: Box<dyn Scope>) -> Result<Module> {
         let mut lexer = Lexer::from(source);
-        let lex = lexer.scan();
-        assert!(lex.is_ok());
-        let (tokens, strs) = lex.unwrap();
-        let parser = Parser::new(tokens, strs);
-        assert!(parser.is_ok());
-        if let Ok(parser) = parser {
-            let module_ast = ModuleAst::parse(&parser, None, 0);
-            println!("AST = {:#?}", module_ast);
-            assert!(module_ast.is_ok());
-            let module = Module::new(module_ast.unwrap(), sym_table);
-            if module.is_err() {
-                println!("module error = {:#?}", module);
-            }
-            assert!(module.is_ok());
-            Some(module.unwrap())
-        } else {
-            None
-        }
+        let (tokens, strs) =  lexer.scan()?;
+        let parser = Parser::new(tokens, strs)?;
+        let module_ast = ModuleAst::parse(&parser, None, 0)?;
+        Module::new(module_ast, sym_table)
+    }
+
+    #[test]
+    fn test_no_dups() {
+        let module = make_module(
+            indoc! {"
+                a = 1
+                a = a * 1"},
+            default_sym_table(),
+        );
+        println!("{:?}", module);
+        assert!(module.is_err());
+
+        let module = make_module(
+            indoc! {"
+                b = let a = 1, a = 2 in a + 1"},
+            default_sym_table(),
+        );
+        println!("{:?}", module);
+        assert!(module.is_err());
+
+        let module = make_module(
+            indoc! {"
+                b = let (a, a) = (1, 1) in a * a"},
+            default_sym_table(),
+        );
+        println!("{:?}", module);
+        assert!(module.is_err());
+
+        let module = make_module(
+            indoc! {"
+                a = 1
+                b = let (a, b) = (a, a) in a * b"},
+            default_sym_table(),
+        );
+        println!("{:?}", module);
+        assert!(module.is_ok());
     }
 
     #[test]
     fn test_values() {
-        let module = test_module(
+        let module = make_module(
             indoc! {"
                 a = 1
                 b = a * 1
                 c = a * b"},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         assert_eq!(decls[0].get_type(), Some(BasicType::int()));
@@ -57,8 +81,8 @@ mod tests {
 
     #[test]
     fn test_hello() {
-        let module = test_module("main () = println! \"hello world\"", default_sym_table());
-        assert!(module.is_some());
+        let module = make_module("main () = println! \"hello world\"", default_sym_table());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         assert_eq!(
@@ -69,7 +93,7 @@ mod tests {
 
     #[test]
     fn test_arithmetic() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
             a = 10
             a1 = a + 1
@@ -84,7 +108,7 @@ mod tests {
             "#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("TEST DECLS = {:#?}", decls);
@@ -105,7 +129,7 @@ mod tests {
 
     #[test]
     fn test_let() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
             -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
             str_imc w h =
@@ -117,7 +141,7 @@ mod tests {
             "#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("TEST DECLS = {:#?}", decls);
@@ -131,8 +155,32 @@ mod tests {
     }
 
     #[test]
+    fn test_let_2() {
+        let module = make_module(
+            indoc! {r#"
+            -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
+            a = let a = 10 in let a = a * 1.0 in let a = a // 2 in a
+            b = let a = 10 in let a = a * 1.0 in let a = a / 2 in a
+            "#},
+            default_sym_table(),
+        );
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("TEST DECLS = {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            Some(BasicType::int())
+        );
+        assert_eq!(
+            decls[1].get_type(),
+            Some(BasicType::float())
+        );
+    }
+
+    #[test]
     fn test_where() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
             -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
             str_imc w h =
@@ -146,7 +194,7 @@ mod tests {
             "#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("TEST DECLS = {:#?}", decls);
@@ -161,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_guards() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
             -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
             str_imc w h
@@ -177,7 +225,7 @@ mod tests {
             "#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("TEST DECLS = {:#?}", decls);
@@ -192,7 +240,7 @@ mod tests {
 
     #[test]
     fn test_guards2() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
             -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
             str_imc w h
@@ -206,7 +254,7 @@ mod tests {
             "#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("TEST DECLS = {:#?}", decls);
@@ -221,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_cond() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
             -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
             str_imc w h =
@@ -235,7 +283,7 @@ mod tests {
             "#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("TEST DECLS = {:#?}", decls);
@@ -250,13 +298,13 @@ mod tests {
 
     #[test]
     fn test_funcs_1() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
         mul x y = x * y
         m = mul"#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("DECLS: {:#?}", decls);
@@ -272,7 +320,7 @@ mod tests {
 
     #[test]
     fn test_funcs_2() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
         mul x y = x * y
 
@@ -280,7 +328,7 @@ mod tests {
         "#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("DECLS: {:#?}", decls);
@@ -302,7 +350,7 @@ mod tests {
 
     #[test]
     fn test_vals_1() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
         a = 10
         b = (a)
@@ -311,7 +359,7 @@ mod tests {
         "#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("DECLS: {:#?}", decls);
@@ -326,14 +374,14 @@ mod tests {
 
     #[test]
     fn test_args_1() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
         min x y = if x < y then x else y
         b = (min (min 10 20) 20)
         "#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("DECLS: {:#?}", decls);
@@ -349,7 +397,7 @@ mod tests {
 
     #[test]
     fn test_if_and_do() {
-        let module = test_module(
+        let module = make_module(
             indoc! {r#"
         max x y = if x > y then x else y
 
@@ -371,7 +419,7 @@ mod tests {
             println! "{} {}" (min $ 10 20) (min2 10 20)"#},
             default_sym_table(),
         );
-        assert!(module.is_some());
+        assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("DECLS: {:#?}", decls);

@@ -27,12 +27,16 @@ impl Scope for SymbolTable {
     }
 
     fn define(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>> {
-        self.symbols.push(sym.clone_box());
-        let pos = self.symbols.len() - 1;
-        let r = self.symbol_table.insert(sym.get_name().to_string(), pos);
-        match r {
-            None => None,
-            Some(p) => self.symbols.get(p).cloned(),
+        if !sym.storable() {
+            None
+        } else {
+            self.symbols.push(sym.clone_box());
+            let pos = self.symbols.len() - 1;
+            let r = self.symbol_table.insert(sym.get_name().to_string(), pos);
+            match r {
+                None => None,
+                Some(p) => self.symbols.get(p).cloned(),
+            }
         }
     }
 

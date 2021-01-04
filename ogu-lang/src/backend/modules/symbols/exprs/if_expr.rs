@@ -49,4 +49,12 @@ impl Symbol for IfExprSym {
         self.else_expr.resolve_type(scope)?;
         Ok(self.get_type())
     }
+
+    fn storable(&self) -> bool {
+        false
+    }
+
+    fn set_storable(&mut self, _s: bool) {
+
+    }
 }

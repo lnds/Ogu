@@ -90,4 +90,12 @@ impl Symbol for PartialEqSym {
             }
         }
     }
+
+    fn storable(&self) -> bool {
+        false
+    }
+
+    fn set_storable(&mut self, _s: bool) {
+
+    }
 }

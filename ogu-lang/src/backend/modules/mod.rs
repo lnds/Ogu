@@ -433,7 +433,8 @@ mod tests {
         d = a == b
         e = a <= b
         f = a >= b
-        g = not (e || f) == (not e && not f)
+        de_morgan_1 = (not (e || f)) == ((not e) && (not f))
+        de_morgan_2 = (not (e && f)) == ((not e) || (not f))
         "#},
             default_sym_table(),
         );

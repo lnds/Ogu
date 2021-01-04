@@ -110,7 +110,7 @@ pub(crate) enum Expression<'a> {
     UnaryDiv(Option<Box<Expression<'a>>>),
     UnaryAnd(Option<Box<Expression<'a>>>),
     UnaryOr(Option<Box<Expression<'a>>>),
-    UnaryNot(Option<Box<Expression<'a>>>),
+    UnaryNot,
     UnaryEq(Option<Box<Expression<'a>>>),
     UnaryNotEq(Option<Box<Expression<'a>>>),
     UnaryGt(Option<Box<Expression<'a>>>),
@@ -483,6 +483,7 @@ impl<'a> Expression<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
         match parser.get_token(pos) {
             Some(Lexeme::RightParen) => Ok((Expression::Unit, pos + 1)),
+            Some(Lexeme::Not) if parser.peek(pos+1, Lexeme::RightParen) => Ok((Expression::UnaryNot, pos+2)),
             Some(op) if is_basic_op(op) => {
                 let (opt_expr, pos) = if parser.peek(pos + 1, Lexeme::RightParen) {
                     (None, pos + 1)
@@ -502,7 +503,6 @@ impl<'a> Expression<'a> {
                     Lexeme::Mod => Ok((Expression::UnaryMod(opt_expr), pos)),
                     Lexeme::And => Ok((Expression::UnaryAnd(opt_expr), pos)),
                     Lexeme::Or => Ok((Expression::UnaryOr(opt_expr), pos)),
-                    Lexeme::Not => Ok((Expression::UnaryNot(opt_expr), pos)),
                     Lexeme::Equal => Ok((Expression::UnaryEq(opt_expr), pos)),
                     Lexeme::NotEqual => Ok((Expression::UnaryNotEq(opt_expr), pos)),
                     Lexeme::Greater => Ok((Expression::UnaryGt(opt_expr), pos)),

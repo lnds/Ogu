@@ -159,7 +159,6 @@ pub(crate) fn is_basic_op(symbol: Lexeme) -> bool {
             | Lexeme::Or
             | Lexeme::Equal
             | Lexeme::NotEqual
-            | Lexeme::Not
             | Lexeme::LessThan
             | Lexeme::LessThanOrEqual
             | Lexeme::Greater

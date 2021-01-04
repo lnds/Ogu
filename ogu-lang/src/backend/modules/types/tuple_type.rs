@@ -32,7 +32,7 @@ impl Type for TupleType {
         unimplemented!()
     }
 
-    fn promotes(&self, other: &dyn Type) -> bool {
+    fn promotes(&self, _other: &dyn Type) -> bool {
         unimplemented!()
     }
 }

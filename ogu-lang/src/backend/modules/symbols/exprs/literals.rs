@@ -9,6 +9,8 @@ pub(crate) enum LiteralSym {
     Int(String),
     Float(String),
     Str(String),
+    Char(String),
+    Unit,
 }
 
 impl LiteralSym {
@@ -20,8 +22,16 @@ impl LiteralSym {
         Box::new(LiteralSym::Str(v.to_string()))
     }
 
+    pub(crate) fn new_char(v: &str) -> Box<LiteralSym> {
+        Box::new(LiteralSym::Char(v.to_string()))
+    }
+
     pub(crate) fn new_float(v: &str) -> Box<LiteralSym> {
         Box::new(LiteralSym::Float(v.to_string()))
+    }
+
+    pub(crate) fn new_unit() -> Box<LiteralSym> {
+        Box::new(LiteralSym::Unit)
     }
 }
 
@@ -35,6 +45,8 @@ impl Symbol for LiteralSym {
             LiteralSym::Int(_) => Some(BasicType::int()),
             LiteralSym::Float(_) => Some(BasicType::float()),
             LiteralSym::Str(_) => Some(BasicType::static_str()),
+            LiteralSym::Char(_) => Some(BasicType::char()),
+            LiteralSym::Unit => Some(BasicType::unit()),
         }
     }
 

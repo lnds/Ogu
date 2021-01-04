@@ -37,7 +37,6 @@ impl FunctionSym {
     ) -> Result<()> {
         if let ArgsSym::Many(own_args) = &*self.args {
             let mut new_args: Vec<Box<dyn Symbol>> = vec![];
-            println!("replacing...");
             for (p, a) in own_args.iter().enumerate() {
                 new_args.push(IdSym::new_with_type(
                     a.get_name(),

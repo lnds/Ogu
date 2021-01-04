@@ -7,6 +7,7 @@ pub(crate) enum BasicType {
     Int,
     Float,
     StaticStr,
+    Char,
 }
 
 impl BasicType {
@@ -25,6 +26,10 @@ impl BasicType {
     pub(crate) fn static_str() -> Box<dyn Type> {
         Box::new(BasicType::StaticStr)
     }
+
+    pub(crate) fn char() -> Box<dyn Type> {
+        Box::new(BasicType::Char)
+    }
 }
 
 impl Type for BasicType {
@@ -34,6 +39,7 @@ impl Type for BasicType {
             BasicType::Int => "int".to_string(),
             BasicType::Float => "float".to_string(),
             BasicType::StaticStr => "&str".to_string(),
+            BasicType::Char => "char".to_string(),
         }
     }
 

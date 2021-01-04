@@ -33,6 +33,8 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::IntegerLiteral(l) => LiteralSym::new_int(l),
             Expression::FloatLiteral(f) => LiteralSym::new_float(f),
             Expression::StringLiteral(s) => LiteralSym::new_str(s),
+            Expression::CharLiteral(s) => LiteralSym::new_char(s),
+            Expression::Unit => LiteralSym::new_unit(),
 
             Expression::Identifier(id) => IdSym::new(id),
 

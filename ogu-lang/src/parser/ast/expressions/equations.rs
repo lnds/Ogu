@@ -95,9 +95,7 @@ impl<'a> Equation<'a> {
             let (expr, pos) = Expression::parse(parser, pos)?;
             Ok((
                 Equation::Value(
-                    Expression::TupleExpr(
-                        ids.iter().map(|id| Expression::Name(id)).collect(),
-                    ),
+                    Expression::TupleExpr(ids.iter().map(|id| Expression::Name(id)).collect()),
                     expr,
                 ),
                 pos,

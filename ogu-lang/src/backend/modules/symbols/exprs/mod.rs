@@ -18,21 +18,23 @@ use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
 
 mod arithmetics;
+mod comparable_trait;
 mod do_expr;
 mod func_call;
 mod if_expr;
 mod let_expr;
 mod literals;
+mod logical_expr;
 mod paren_expr;
 mod partial_eq;
 mod partial_ord;
 mod tuple_expr;
-mod logical_expr;
-mod comparable_trait;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
         match expr {
+            Expression::InvalidExpr => Literal::new_invalid(),
+
             Expression::IntegerLiteral(l) => Literal::new_int(l),
             Expression::FloatLiteral(f) => Literal::new_float(f),
             Expression::StringLiteral(s) => Literal::new_str(s),
@@ -58,7 +60,6 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::NotExpr(e) => LogicalSym::new_not(e.into()),
             Expression::AndExpr(l, r) => LogicalSym::new_and(l.into(), r.into()),
             Expression::OrExpr(l, r) => LogicalSym::new_or(l.into(), r.into()),
-
 
             Expression::GtExpr(l, r) => PartialOrdExpr::new_gt(l.into(), r.into()),
             Expression::GeExpr(l, r) => PartialOrdExpr::new_ge(l.into(), r.into()),

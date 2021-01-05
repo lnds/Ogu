@@ -1,9 +1,9 @@
+use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
+use crate::backend::modules::types::basic_type::{BasicType, BOOL_TYPE};
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
-use crate::backend::modules::types::basic_type::{BasicType, BOOL_TYPE};
-use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
 
 #[derive(Clone, Debug)]
 pub(crate) enum LogicalSym {
@@ -13,7 +13,6 @@ pub(crate) enum LogicalSym {
 }
 
 impl LogicalSym {
-
     pub(crate) fn new_not(expr: Box<dyn Symbol>) -> Box<Self> {
         Box::new(LogicalSym::Not(expr))
     }
@@ -25,7 +24,6 @@ impl LogicalSym {
     pub(crate) fn new_or(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
         Box::new(LogicalSym::Or(l, r))
     }
-
 }
 
 impl Symbol for LogicalSym {
@@ -35,22 +33,17 @@ impl Symbol for LogicalSym {
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
-            LogicalSym::Not(expr) => {
-                match expr.get_type() {
-                    Some(et) if &*et == BOOL_TYPE => Some(BasicType::bool()),
-                    _ => None
-                }
-            }
-            LogicalSym::And(l, r)
-            | LogicalSym::Or(l, r) => {
-                match l.get_type() {
-                    None => None,
-                    Some(lt) => match r.get_type() {
-                        Some(rt) if &*lt == BOOL_TYPE || &*rt == BOOL_TYPE => Some(BasicType::bool()),
-                        _ => None
-                    }
-                }
-            }
+            LogicalSym::Not(expr) => match expr.get_type() {
+                Some(et) if &*et == BOOL_TYPE => Some(BasicType::bool()),
+                _ => None,
+            },
+            LogicalSym::And(l, r) | LogicalSym::Or(l, r) => match l.get_type() {
+                None => None,
+                Some(lt) => match r.get_type() {
+                    Some(rt) if &*lt == BOOL_TYPE || &*rt == BOOL_TYPE => Some(BasicType::bool()),
+                    _ => None,
+                },
+            },
         }
     }
 
@@ -67,12 +60,10 @@ impl Symbol for LogicalSym {
                     }
                 }
             }
-            LogicalSym::And(l, r)
-            | LogicalSym::Or(l, r) => {
+            LogicalSym::And(l, r) | LogicalSym::Or(l, r) => {
                 resolve_comparable(l, r, scope, BOOL_TYPE)?;
             }
         }
         Ok(self.get_type())
     }
-
 }

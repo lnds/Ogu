@@ -1,9 +1,9 @@
+use crate::backend::errors::OguError;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Result, Error};
-use crate::backend::errors::OguError;
+use anyhow::{Error, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct LetExpr {
@@ -34,7 +34,10 @@ impl Symbol for LetExpr {
         let mut sym_table = SymbolTable::new("let", Some(scope.clone_box()));
         for e in self.eqs.iter() {
             if sym_table.define(e.clone()).is_some() {
-                return Err(Error::new(OguError::SymbolTableError).context(format!("duplicated symbol '{} on let declaration", e.get_name())));
+                return Err(Error::new(OguError::SymbolTableError).context(format!(
+                    "duplicated symbol '{} on let declaration",
+                    e.get_name()
+                )));
             }
         }
         for e in self.eqs.iter_mut() {
@@ -51,5 +54,4 @@ impl Symbol for LetExpr {
         }
         Ok(self.get_type())
     }
-
 }

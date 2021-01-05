@@ -61,11 +61,11 @@ pub(crate) struct HandleGuard<'a>(
 pub(crate) enum Identifier<'a> {
     Id(&'a str),
     TypeId(&'a str),
-
 }
 
 #[derive(Debug, Clone)]
 pub(crate) enum Expression<'a> {
+    InvalidExpr,
     Name(&'a str),
     QualifiedIdentifier(&'a str, Vec<&'a str>),
     StringLiteral(&'a str),
@@ -489,7 +489,9 @@ impl<'a> Expression<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
         match parser.get_token(pos) {
             Some(Lexeme::RightParen) => Ok((Expression::Unit, pos + 1)),
-            Some(Lexeme::Not) if parser.peek(pos + 1, Lexeme::RightParen) => Ok((Expression::UnaryNot, pos + 2)),
+            Some(Lexeme::Not) if parser.peek(pos + 1, Lexeme::RightParen) => {
+                Ok((Expression::UnaryNot, pos + 2))
+            }
             Some(op) if is_basic_op(op) => {
                 let (opt_expr, pos) = if parser.peek(pos + 1, Lexeme::RightParen) {
                     (None, pos + 1)
@@ -721,9 +723,7 @@ impl<'a> Expression<'a> {
                         pos = consume_symbol(parser, pos, Lexeme::Dot)?;
                         match parser.get_token(pos) {
                             Some(Lexeme::Id(id)) => q_ids.push(Identifier::Id(id)),
-                            Some(Lexeme::TypeId(tid)) => {
-                                q_ids.push(Identifier::TypeId(tid))
-                            }
+                            Some(Lexeme::TypeId(tid)) => q_ids.push(Identifier::TypeId(tid)),
                             _ => break,
                         }
                         pos += 1;
@@ -1169,7 +1169,7 @@ impl<'a> Expression<'a> {
                 Some(c) => Ok(Expression::IfExpr(
                     Box::new(c.clone()),
                     Box::new(expr.clone()),
-                    Box::new(Expression::Unit),
+                    Box::new(Expression::InvalidExpr),
                 )),
             }
         } else {

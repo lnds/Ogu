@@ -13,6 +13,7 @@ pub(crate) enum Literal {
     Date(String),
     Regexp(String),
     Unit,
+    Invalid,
 }
 
 impl Literal {
@@ -43,6 +44,10 @@ impl Literal {
     pub(crate) fn new_unit() -> Box<Literal> {
         Box::new(Literal::Unit)
     }
+
+    pub(crate) fn new_invalid() -> Box<Literal> {
+        Box::new(Literal::Invalid)
+    }
 }
 
 impl Symbol for Literal {
@@ -59,11 +64,11 @@ impl Symbol for Literal {
             Literal::Date(_) => Some(BasicType::date()),
             Literal::Regexp(_) => Some(BasicType::regexp()),
             Literal::Unit => Some(BasicType::unit()),
+            Literal::Invalid => None,
         }
     }
 
     fn resolve_type(&mut self, _scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         Ok(self.get_type())
     }
-
 }

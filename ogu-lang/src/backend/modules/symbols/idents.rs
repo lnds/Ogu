@@ -60,5 +60,4 @@ impl Symbol for IdSym {
     fn storable(&self) -> bool {
         true
     }
-
 }

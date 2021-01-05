@@ -96,5 +96,4 @@ impl Symbol for FuncCallExpr {
         }
         Ok(self.get_type())
     }
-
 }

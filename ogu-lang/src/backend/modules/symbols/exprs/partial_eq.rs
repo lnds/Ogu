@@ -1,10 +1,10 @@
-use crate::backend::modules::types::trait_type::{TRAIT_EQ};
+use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
+use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::trait_type::TRAIT_EQ;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
-use crate::backend::modules::types::basic_type::BasicType;
-use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
 
 #[derive(Clone, Debug)]
 pub(crate) enum PartialEqExpr {
@@ -34,9 +34,9 @@ impl Symbol for PartialEqExpr {
                 Some(lt) => match r.get_type() {
                     None => None,
                     Some(rt) => {
-                        if &*lt == &*rt || lt.promotes(&*rt) || rt.promotes(&*lt){
+                        if &*lt == &*rt || lt.promotes(&*rt) || rt.promotes(&*lt) {
                             Some(BasicType::bool())
-                        } else  {
+                        } else {
                             println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
                             None
                         }
@@ -54,5 +54,4 @@ impl Symbol for PartialEqExpr {
             }
         }
     }
-
 }

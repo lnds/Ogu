@@ -1,13 +1,12 @@
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;
-use crate::backend::scopes::symbol::{Symbol};
-use crate::backend::scopes::types::{Type, TypeClone};
+use crate::backend::scopes::symbol::Symbol;
+use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use anyhow::Result;
-use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -19,11 +18,11 @@ pub(crate) struct FunctionSym {
 
 impl FunctionSym {
     pub(crate) fn new(name: &str, args: &Args, expr: &Expression) -> Box<Self> {
-        let mut ty: Option<Box<dyn Type>> = FuncType::from_ast_opt(args, expr);
+        let ty: Option<Box<dyn Type>> = FuncType::from_ast_opt(args, expr);
         let expr: Box<dyn Symbol> = expr.into();
         let args: Option<Vec<Box<dyn Symbol>>> = match args {
             Args::Void => None,
-            Args::Many(args) => Some(vec_args_into(args))
+            Args::Many(args) => Some(vec_args_into(args)),
         };
 
         Box::new(FunctionSym {
@@ -33,7 +32,6 @@ impl FunctionSym {
             ty,
         })
     }
-
 
     pub(crate) fn replace_args(
         &mut self,
@@ -104,8 +102,8 @@ impl Symbol for FunctionSym {
     fn storable(&self) -> bool {
         true
     }
-
 }
+
 impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
     fn from(arg: Arg<'a>) -> Self {
         match arg {

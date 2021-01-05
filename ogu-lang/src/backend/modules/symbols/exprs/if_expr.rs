@@ -1,9 +1,9 @@
+use crate::backend::errors::OguError;
+use crate::backend::modules::types::basic_type::INVALID_TYPE;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Result, Error};
-use crate::backend::modules::types::basic_type::UNIT_TYPE;
-use crate::backend::errors::OguError;
+use anyhow::{Error, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct IfExpr {
@@ -51,21 +51,33 @@ impl Symbol for IfExpr {
         match self.then_expr.get_type() {
             None => match self.else_expr.get_type() {
                 None => println!("THEN None ELSE None "),
+                Some(et) if &*et == INVALID_TYPE => {
+                    return Err(Error::new(OguError::SemanticError).context("Invalid If or Cond"));
+                }
                 Some(et) => {
                     self.then_expr.set_type(Some(et));
                 }
-            }
+            },
             Some(tt) => match self.else_expr.get_type() {
                 None => {
-                   self.else_expr.set_type(Some(tt));
-                }// println!("THEN => {:?} ELSE None", tt),
-                Some(et) if &*et == UNIT_TYPE => {
-                    return Err(Error::new(OguError::SemanticError).context(format!("Else or Cond branches don't cover all cases")));
+                    self.else_expr.set_type(Some(tt));
+                } // println!("THEN => {:?} ELSE None", tt),
+                Some(et) if &*et == INVALID_TYPE => {
+                    return Err(Error::new(OguError::SemanticError).context("Invalid If or Cond"));
                 }
                 Some(et) => {
-                    println!("THEN => {:?} ELSE => {:?}", tt, et)
+                    println!("THEN => {:?} ELSE => {:?}", tt, et);
+                    /*
+                    if tt.promotes(&*et) {
+                        self.then_expr.set_type(Some(tt));
+                    } else if et.promotes(&*tt) {
+                        self.else_expr.set_type(Some(et));
+                    } else {
+                    }
+
+                     */
                 }
-            }
+            },
         }
         Ok(self.get_type())
     }
@@ -74,6 +86,4 @@ impl Symbol for IfExpr {
         self.then_expr.set_type(ty.clone());
         self.else_expr.set_type(ty.clone());
     }
-
-
 }

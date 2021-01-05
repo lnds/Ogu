@@ -12,7 +12,7 @@ pub(crate) struct ValueSym {
 
 impl ValueSym {
     pub(crate) fn new(name: &Expression, expr: &Expression) -> Box<Self> {
-        let mut name : Box<dyn Symbol> = name.into();
+        let mut name: Box<dyn Symbol> = name.into();
         name.set_storable(true);
         Box::new(ValueSym {
             name: name.clone(),
@@ -44,5 +44,4 @@ impl Symbol for ValueSym {
     fn storable(&self) -> bool {
         true
     }
-
 }

@@ -1,3 +1,4 @@
+use crate::backend::errors::OguError;
 use crate::backend::modules::symbols::funcs::FunctionSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::sym_table::SymbolTable;
@@ -6,8 +7,7 @@ use crate::backend::scopes::Scope;
 use crate::parser::ast::module::decls::DeclarationAst;
 use crate::parser::ast::module::decls::DeclarationAst::{Function, Value};
 use crate::parser::ast::module::ModuleAst;
-use anyhow::{Result, Error};
-use crate::backend::errors::OguError;
+use anyhow::{Error, Result};
 
 #[derive(Debug)]
 pub struct Module {
@@ -20,7 +20,10 @@ impl Module {
         for decl in module_ast.get_decls().iter() {
             let sym = Module::define_decl(decl)?;
             if sym_table.define(sym.clone()).is_some() {
-                return Err(Error::new(OguError::SymbolTableError).context(format!("Duplicated definition not allowed for symol = {}",sym.get_name())));
+                return Err(Error::new(OguError::SymbolTableError).context(format!(
+                    "Duplicated definition not allowed for symol = {}",
+                    sym.get_name()
+                )));
             }
         }
         let mut decls = sym_table.get_symbols();
@@ -39,7 +42,6 @@ impl Module {
         self.decls.to_vec()
     }
 }
-
 
 impl<'a> From<&DeclarationAst<'a>> for Box<dyn Symbol> {
     fn from(decl: &DeclarationAst<'a>) -> Self {

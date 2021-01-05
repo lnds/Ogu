@@ -14,8 +14,8 @@ mod tests {
     use crate::lexer::Lexer;
     use crate::parser::ast::module::ModuleAst;
     use crate::parser::Parser;
-    use indoc::indoc;
     use anyhow::Result;
+    use indoc::indoc;
 
     fn make_module(source: &str, sym_table: Box<dyn Scope>) -> Result<Module> {
         let mut lexer = Lexer::from(source);
@@ -39,7 +39,7 @@ mod tests {
 
         let module = make_module(
             indoc! {"
-                b = let a = 1, a = 2 in a + 1"},
+            b = let a = 1, a = 2 in a + 1"},
             default_sym_table(),
         );
         println!("{:?}", module);
@@ -47,7 +47,7 @@ mod tests {
 
         let module = make_module(
             indoc! {"
-                b = let (a, a) = (1, 1) in a * a"},
+            b = let (a, a) = (1, 1) in a * a"},
             default_sym_table(),
         );
         println!("{:?}", module);
@@ -169,14 +169,8 @@ mod tests {
         let module = module.unwrap();
         let decls = module.get_decls();
         println!("TEST DECLS = {:#?}", decls);
-        assert_eq!(
-            decls[0].get_type(),
-            Some(BasicType::int())
-        );
-        assert_eq!(
-            decls[1].get_type(),
-            Some(BasicType::float())
-        );
+        assert_eq!(decls[0].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[1].get_type(), Some(BasicType::float()));
     }
 
     #[test]
@@ -373,7 +367,6 @@ mod tests {
         assert_eq!(decls[3].get_type(), Some(BasicType::int()));
     }
 
-
     #[test]
     fn test_vals_2() {
         let module = make_module(
@@ -512,8 +505,7 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_1()
-    {
+    fn test_recursive_1() {
         let module = make_module(
             indoc! {r#"
                 siracusa n
@@ -529,20 +521,17 @@ mod tests {
         println!("DECLS: {:#?}", decls);
         assert_eq!(
             decls[0].get_type(),
-            FuncType::new_opt(
-                Some(vec![BasicType::int()]), BasicType::int()
-            )
+            FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
         );
     }
 
     #[test]
-    fn test_recursive_2()
-    {
+    fn test_recursive_2() {
         let module = make_module(
             indoc! {r#"
                ackermann m n
                     | m == 0 = n + 1
-                    | n == 0 = recur (m - 1) 1
+                    | n == 0 = ackermann (m - 1) 1
                     | otherwise  = ackermann (m - 1) (ackermann m (n - 1))"#},
             default_sym_table(),
         );
@@ -553,7 +542,8 @@ mod tests {
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(
-                Some(vec![BasicType::int(), BasicType::int()]), BasicType::int()
+                Some(vec![BasicType::int(), BasicType::int()]),
+                BasicType::int()
             )
         );
     }

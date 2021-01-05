@@ -1,11 +1,11 @@
+use crate::backend::errors::OguError;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::modules::types::tuple_type::TupleType;
+use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
-use anyhow::{Result, Error};
-use crate::backend::scopes::sym_table::SymbolTable;
-use crate::backend::errors::OguError;
+use anyhow::{Error, Result};
 
 #[derive(Debug, Clone)]
 pub(crate) struct TupleExpr {
@@ -15,7 +15,10 @@ pub(crate) struct TupleExpr {
 
 impl TupleExpr {
     pub(crate) fn make(tuple: Vec<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Box::new(TupleExpr { tuple, assignable:false })
+        Box::new(TupleExpr {
+            tuple,
+            assignable: false,
+        })
     }
 }
 
@@ -51,7 +54,8 @@ impl Symbol for TupleExpr {
         if self.assignable {
             for s in self.tuple.iter() {
                 if sym_table.define(s.clone()).is_some() {
-                    return Err(Error::new(OguError::SymbolTableError).context(format!("symbol {:?} duplicated in tuple", s.get_name())));
+                    return Err(Error::new(OguError::SymbolTableError)
+                        .context(format!("symbol {:?} duplicated in tuple", s.get_name())));
                 }
             }
         }

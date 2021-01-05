@@ -46,5 +46,4 @@ impl Symbol for MacroSym {
     fn storable(&self) -> bool {
         true
     }
-
 }

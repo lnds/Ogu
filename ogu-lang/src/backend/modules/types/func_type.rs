@@ -74,7 +74,10 @@ impl FuncType {
         Self::new_opt(args, result)
     }
 
-    pub(crate) fn make(args: &Option<Vec<Box<dyn Symbol>>>, expr: &dyn Symbol) -> Option<Box<dyn Type>> {
+    pub(crate) fn make(
+        args: &Option<Vec<Box<dyn Symbol>>>,
+        expr: &dyn Symbol,
+    ) -> Option<Box<dyn Type>> {
         let result = expr.get_type()?;
         let args = match args {
             None => None,

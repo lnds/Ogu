@@ -11,8 +11,8 @@ pub(crate) enum BasicType {
     Date,
     Regexp,
     Bool,
+    Invalid,
 }
-
 
 pub(crate) const UNIT_TYPE: &BasicType = &BasicType::Unit;
 pub(crate) const INT_TYPE: &BasicType = &BasicType::Int;
@@ -22,8 +22,7 @@ pub(crate) const CHAR_TYPE: &BasicType = &BasicType::Char;
 pub(crate) const DATE_TYPE: &BasicType = &BasicType::Date;
 pub(crate) const REGEXP_TYPE: &BasicType = &BasicType::Regexp;
 pub(crate) const BOOL_TYPE: &BasicType = &BasicType::Bool;
-
-
+pub(crate) const INVALID_TYPE: &BasicType = &BasicType::Invalid;
 
 impl BasicType {
     pub(crate) fn unit() -> Box<dyn Type> {
@@ -57,7 +56,6 @@ impl BasicType {
     pub(crate) fn regexp() -> Box<dyn Type> {
         REGEXP_TYPE.clone_box()
     }
-
 }
 
 impl Type for BasicType {
@@ -71,6 +69,7 @@ impl Type for BasicType {
             BasicType::Bool => "bool".to_string(),
             BasicType::Date => "date".to_string(),
             BasicType::Regexp => "regexp".to_string(),
+            BasicType::Invalid => "invalid".to_string(),
         }
     }
 
@@ -106,8 +105,9 @@ impl Type for BasicType {
         }
     }
 
-    fn is_basic_type(&self) -> bool { true }
-
+    fn is_basic_type(&self) -> bool {
+        true
+    }
 }
 
 impl PartialEq for BasicType {

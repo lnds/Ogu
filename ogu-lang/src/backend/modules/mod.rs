@@ -19,9 +19,10 @@ mod tests {
 
     fn make_module(source: &str, sym_table: Box<dyn Scope>) -> Result<Module> {
         let mut lexer = Lexer::from(source);
-        let (tokens, strs) =  lexer.scan()?;
+        let (tokens, strs) = lexer.scan()?;
         let parser = Parser::new(tokens, strs)?;
         let module_ast = ModuleAst::parse(&parser, None, 0)?;
+        println!("AST:\n\t{:#?}", module_ast);
         Module::new(module_ast, sym_table)
     }
 
@@ -149,7 +150,7 @@ mod tests {
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![BasicType::int(), BasicType::int()]),
-                BasicType::static_str()
+                BasicType::static_str(),
             )
         );
     }
@@ -202,7 +203,7 @@ mod tests {
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![BasicType::int(), BasicType::int()]),
-                BasicType::static_str()
+                BasicType::static_str(),
             )
         );
     }
@@ -233,7 +234,7 @@ mod tests {
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![BasicType::int(), BasicType::int()]),
-                BasicType::static_str()
+                BasicType::static_str(),
             )
         );
     }
@@ -262,7 +263,7 @@ mod tests {
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![BasicType::int(), BasicType::int()]),
-                BasicType::static_str()
+                BasicType::static_str(),
             )
         );
     }
@@ -291,7 +292,7 @@ mod tests {
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![BasicType::int(), BasicType::int()]),
-                BasicType::static_str()
+                BasicType::static_str(),
             )
         );
     }
@@ -313,7 +314,7 @@ mod tests {
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
-                TRAIT_NUM.clone_box()
+                TRAIT_NUM.clone_box(),
             )
         );
     }
@@ -336,14 +337,14 @@ mod tests {
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
-                TRAIT_NUM.clone_box()
+                TRAIT_NUM.clone_box(),
             )
         );
         assert_eq!(
             decls[1].get_type(),
             FuncType::new_opt(
                 Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
-                BasicType::float()
+                BasicType::float(),
             )
         );
     }
@@ -417,7 +418,7 @@ mod tests {
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
-                TRAIT_ORD.clone_box()
+                TRAIT_ORD.clone_box(),
             )
         );
         assert_eq!(decls[1].get_type(), Some(BasicType::int()));
@@ -451,6 +452,7 @@ mod tests {
         assert_eq!(decls[6].get_type(), Some(BasicType::bool()));
         assert_eq!(decls[7].get_type(), Some(BasicType::bool()));
     }
+
     #[test]
     fn test_if_and_do() {
         let module = make_module(
@@ -483,7 +485,7 @@ mod tests {
             decls[0].get_type(),
             FuncType::new_opt(
                 Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
-                TRAIT_ORD.clone_box()
+                TRAIT_ORD.clone_box(),
             )
         );
         assert_eq!(decls[0].get_type(), decls[1].get_type());
@@ -491,7 +493,7 @@ mod tests {
             decls[2].get_type(),
             FuncType::new_opt(
                 Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
-                TRAIT_ORD.clone_box()
+                TRAIT_ORD.clone_box(),
             )
         );
         assert_eq!(decls[2].get_type(), decls[3].get_type());
@@ -500,12 +502,59 @@ mod tests {
             decls[5].get_type(),
             FuncType::new_opt(
                 Some(vec![TRAIT_EQ.clone_box(), TRAIT_EQ.clone_box()]),
-                BasicType::static_str()
+                BasicType::static_str(),
             )
         );
         assert_eq!(
             decls[6].get_type(),
             FuncType::new_opt(None, BasicType::unit())
+        );
+    }
+
+    #[test]
+    fn test_recursive_1()
+    {
+        let module = make_module(
+            indoc! {r#"
+                siracusa n
+                | n == 1 = 4
+                | n == 2 = 1
+                | n % 2 == 0 = siracusa (n // 2)
+                | otherwise = siracusa (n * 3 + 1)"#},
+            default_sym_table(),
+        );
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(
+                Some(vec![BasicType::int()]), BasicType::int()
+            )
+        );
+    }
+
+    #[test]
+    fn test_recursive_2()
+    {
+        let module = make_module(
+            indoc! {r#"
+               ackermann m n
+                    | m == 0 = n + 1
+                    | n == 0 = recur (m - 1) 1
+                    | otherwise  = ackermann (m - 1) (ackermann m (n - 1))"#},
+            default_sym_table(),
+        );
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(
+                Some(vec![BasicType::int(), BasicType::int()]), BasicType::int()
+            )
         );
     }
 }

@@ -1,7 +1,9 @@
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::Result;
+use anyhow::{Result, Error};
+use crate::backend::modules::types::basic_type::UNIT_TYPE;
+use crate::backend::errors::OguError;
 
 #[derive(Clone, Debug)]
 pub(crate) struct IfExpr {
@@ -41,9 +43,37 @@ impl Symbol for IfExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         self.cond.resolve_type(scope)?;
+        scope.define(self.cond.clone());
         self.then_expr.resolve_type(scope)?;
+        scope.define(self.then_expr.clone());
         self.else_expr.resolve_type(scope)?;
+        scope.define(self.else_expr.clone());
+        match self.then_expr.get_type() {
+            None => match self.else_expr.get_type() {
+                None => println!("THEN None ELSE None "),
+                Some(et) => {
+                    self.then_expr.set_type(Some(et));
+                }
+            }
+            Some(tt) => match self.else_expr.get_type() {
+                None => {
+                   self.else_expr.set_type(Some(tt));
+                }// println!("THEN => {:?} ELSE None", tt),
+                Some(et) if &*et == UNIT_TYPE => {
+                    return Err(Error::new(OguError::SemanticError).context(format!("Else or Cond branches don't cover all cases")));
+                }
+                Some(et) => {
+                    println!("THEN => {:?} ELSE => {:?}", tt, et)
+                }
+            }
+        }
         Ok(self.get_type())
     }
+
+    fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
+        self.then_expr.set_type(ty.clone());
+        self.else_expr.set_type(ty.clone());
+    }
+
 
 }

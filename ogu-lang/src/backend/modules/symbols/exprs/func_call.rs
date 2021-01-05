@@ -16,7 +16,6 @@ pub(crate) struct FuncCallExpr {
 
 impl FuncCallExpr {
     pub(crate) fn new(func: Box<dyn Symbol>, args: Vec<Box<dyn Symbol>>) -> Box<Self> {
-        println!("new func call {:?} {:?}", func, args);
         Box::new(FuncCallExpr {
             func,
             args,
@@ -40,58 +39,60 @@ impl Symbol for FuncCallExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
-        if let Some(ft) = ft {
-            println!("RESOLVED as : {:#?}", self);
-
-            if let Some(ft) = ft.downcast_ref::<FuncType>() {
-                println!("ft is = {:?}", ft);
-                match ft.get_args() {
-                    None => {
-                        if !self.args.is_empty() {
+        //println!("FUNCALL {:?} SCOPE {:#?}", self.func, scope);
+        //println!("FT = {:?}", ft.clone());
+        match ft {
+            None => {}
+            Some(ft) => {
+                if let Some(ft) = ft.downcast_ref::<FuncType>() {
+                    match ft.get_args() {
+                        None => {
+                            if !self.args.is_empty() {
+                                return Err(Error::new(OguError::SemanticError).context(format!(
+                                    "function {} need no args",
+                                    self.func.get_name()
+                                )));
+                            }
+                        }
+                        Some(ft_args) if ft_args.len() > self.args.len() => {
                             return Err(Error::new(OguError::SemanticError).context(format!(
-                                "function {} need no args",
+                                "function {} receive more args than needed",
                                 self.func.get_name()
-                            )));
+                            )))
                         }
-                    }
-                    Some(ft_args) if ft_args.len() > self.args.len() => {
-                        return Err(Error::new(OguError::SemanticError).context(format!(
-                            "function {} receive more args than needed",
-                            self.func.get_name()
-                        )))
-                    }
-                    Some(ft_args) if ft_args.len() < self.args.len() => {
-                        println!("probably curry");
-                        todo!()
-                    }
-                    Some(ft_args) => {
-                        for (p, a) in self.args.iter_mut().enumerate() {
-                            a.set_type(Some(ft_args[p].clone()));
-                            scope.define(a.clone());
+                        Some(ft_args) if ft_args.len() < self.args.len() => {
+                            println!("probably curry");
+                            todo!()
                         }
-                        if let Some(func) = scope.resolve(self.func.get_name()) {
-                            if let Some(func) = func.downcast_ref::<FunctionSym>() {
-                                let mut f = func.clone();
-                                f.replace_args(self.args.to_vec(), scope)?;
-                                if self.func.get_type() != f.get_type() {
-                                    self.func = Box::new(f);
-                                    scope.define(self.func.clone()); // ojp !!
+                        Some(ft_args) => {
+                            for (p, a) in self.args.iter_mut().enumerate() {
+                                a.set_type(Some(ft_args[p].clone()));
+                                scope.define(a.clone());
+                            }
+                            if let Some(func) = scope.resolve(self.func.get_name()) {
+                                if let Some(func) = func.downcast_ref::<FunctionSym>() {
+                                    let mut f = func.clone();
+                                    f.replace_args(self.args.to_vec(), scope)?;
+                                    if self.func.get_type() != f.get_type() {
+                                        self.func = Box::new(f);
+                                        scope.define(self.func.clone()); // ojp !!
+                                    }
                                 }
                             }
                         }
                     }
+                } else if let Some(ft) = ft.downcast_ref::<VariadicType>() {
+                    // TODO
+                    println!(
+                        "!! algo hay que hacer con el variadic (tipico son las macros) {:#?}",
+                        ft
+                    );
                 }
-            } else if let Some(ft) = ft.downcast_ref::<VariadicType>() {
-                // TODO
-                println!(
-                    "!! algo hay que hacer con el variadic (tipico son las macros) {:#?}",
-                    ft
-                );
+                self.ty = match self.func.get_type() {
+                    None => None,
+                    Some(t) => t.resolve_expr_type(),
+                };
             }
-            self.ty = match self.func.get_type() {
-                None => None,
-                Some(t) => t.resolve_expr_type(),
-            };
         }
         Ok(self.get_type())
     }

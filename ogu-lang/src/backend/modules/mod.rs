@@ -531,8 +531,8 @@ mod tests {
             indoc! {r#"
                ackermann m n
                     | m == 0 = n + 1
-                    | n == 0 = ackermann (m - 1) 1
-                    | otherwise  = ackermann (m - 1) (ackermann m (n - 1))"#},
+                    | n == 0 = recur (m - 1) 1
+                    | otherwise  = recur (m - 1) (ackermann m (n - 1))"#},
             default_sym_table(),
         );
         assert!(module.is_ok());

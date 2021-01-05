@@ -10,6 +10,7 @@ use crate::backend::modules::symbols::exprs::logical_expr::LogicalSym;
 use crate::backend::modules::symbols::exprs::paren_expr::ParenExpr;
 use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdExpr;
+use crate::backend::modules::symbols::exprs::recur_call::RecurCallExpr;
 use crate::backend::modules::symbols::exprs::tuple_expr::TupleExpr;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
@@ -20,7 +21,7 @@ use crate::parser::ast::expressions::expression::Expression;
 mod arithmetics;
 mod comparable_trait;
 mod do_expr;
-mod func_call;
+pub(crate) mod func_call;
 mod if_expr;
 mod let_expr;
 mod literals;
@@ -28,6 +29,7 @@ mod logical_expr;
 mod paren_expr;
 mod partial_eq;
 mod partial_ord;
+mod recur_call;
 mod tuple_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
@@ -74,6 +76,8 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::LetExpr(eqs, expr) => LetExpr::new(vec_eqs_into(eqs), expr.into()),
 
             Expression::DoExpr(exprs) => DoExpr::new(vec_exprs_into(exprs)),
+
+            Expression::RecurExpr(args) => RecurCallExpr::new(vec_exprs_into(args)),
 
             Expression::FuncCallExpr(f, args) => FuncCallExpr::new(f.into(), vec_exprs_into(args)),
             _e => {

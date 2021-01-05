@@ -168,9 +168,13 @@ pub(crate) enum Expression<'a> {
         Box<Expression<'a>>,
         Option<Box<Expression<'a>>>,
     ),
+    // special
+    GuardedExpr(Box<Expression<'a>>, Box<Expression<'a>>), // pattern if expr ->
 }
 
 pub(crate) type ParseResult<'a> = Result<(Expression<'a>, usize)>;
+type ParseOptExprResult<'a> = Result<(Option<Expression<'a>>, usize)>;
+type OptExprTuple<'a> = (Option<Expression<'a>>, Expression<'a>);
 
 #[derive(Debug, Clone)]
 pub(crate) enum LambdaArg<'a> {
@@ -230,22 +234,12 @@ impl<'a> Expression<'a> {
     pub(crate) fn parse_cond(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::Cond)?;
         let pos = parser.skip_nl(pos);
-        let mut pos = consume_symbol(parser, pos, Lexeme::Indent)?;
-        let mut conds = vec![];
-        while !parser.peek(pos, Lexeme::Dedent) {
-            let (cond, new_pos) = Expression::parse_opt_otherwise(parser, pos)?;
-            pos = consume_symbol(parser, new_pos, Lexeme::Arrow)?;
-            let (in_indent, new_pos) = parse_opt_indent(parser, pos);
-            let (value, new_pos) = Expression::parse(parser, new_pos)?;
-            pos = parse_opt_dedent(parser, new_pos, in_indent)?;
-            pos = parser.skip_nl(pos);
-            if cond.is_none() {
-                conds.push((None, value));
-                break;
-            } else {
-                conds.push((cond, value));
-            }
-        }
+        let pos = consume_symbol(parser, pos, Lexeme::Indent)?;
+        let (conds, pos) = Expression::parse_indented_vec_of_pairs_cond_expr(
+            parser,
+            pos,
+            Expression::parse_opt_otherwise,
+        )?;
         let pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
         Ok((Expression::if_from(&conds)?, pos))
     }
@@ -262,29 +256,76 @@ impl<'a> Expression<'a> {
         }
     }
 
+    fn parse_opt_pattern(
+        parser: &'a Parser<'a>,
+        pos: usize,
+    ) -> Result<(Option<Expression<'a>>, usize)> {
+        if parser.peek(pos, Lexeme::Id("_")) {
+            Ok((None, pos + 1))
+        } else {
+            let (c, pos) = Expression::parse_primary_expr(parser, pos)?;
+            if matches!(c, Expression::StringLiteral(_) | Expression::RegexpLiteral(_)
+            | Expression::CharLiteral(_) | Expression::IntegerLiteral(_)|Expression::FloatLiteral(_)
+            | Expression::DateLiteral(_) | Expression::Unit | Expression::Name(_)
+            | Expression::EmptyList | Expression::ListExpr(_)
+            | Expression::ConsExpr(_,_) | Expression::TupleExpr(_)| Expression::TypedFuncCall(_,_,_)
+            | Expression::RangeExpr(_,_) | Expression::RangeOpenExpr(_,_)
+            | Expression::RangeInfExpr(_) | Expression::DictExpr(_) | Expression::SetExpr(_)
+            ) {
+                if parser.peek(pos, Lexeme::Guard) {
+                    let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
+                    let (if_expr, pos) = Expression::parse_logical_expr(parser, pos)?;
+                    Ok((
+                        Some(Expression::GuardedExpr(Box::new(c), Box::new(if_expr))),
+                        pos,
+                    ))
+                } else {
+                    Ok((Some(c), pos))
+                }
+            } else {
+                Err(Error::new(OguError::SemanticError)
+                    .context(format!("expression: {:?} must be a pattern in a case", c)))
+            }
+        }
+    }
+
     pub(crate) fn parse_case(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::Case)?;
         let (match_expr, pos) = Expression::parse_logical_expr(parser, pos)?;
         let pos = consume_symbol(parser, pos, Lexeme::Of)?;
         let pos = parser.skip_nl(pos);
-        let mut pos = consume_symbol(parser, pos, Lexeme::Indent)?;
-        let mut matches = vec![];
+        let pos = consume_symbol(parser, pos, Lexeme::Indent)?;
+        let (matches, pos) = Expression::parse_indented_vec_of_pairs_cond_expr(
+            parser,
+            pos,
+            Expression::parse_opt_pattern,
+        )?;
+        let pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
+        Ok((Expression::CaseExpr(Box::new(match_expr), matches), pos))
+    }
+
+    fn parse_indented_vec_of_pairs_cond_expr(
+        parser: &'a Parser<'a>,
+        pos: usize,
+        cond_parser: fn(&'a Parser<'a>, usize) -> ParseOptExprResult,
+    ) -> Result<(Vec<OptExprTuple<'a>>, usize)> {
+        let mut result = vec![];
+        let mut pos = pos;
         while !parser.peek(pos, Lexeme::Dedent) {
-            let (cond, new_pos) = Expression::parse_opt_otherwise(parser, pos)?;
+            let (cond, new_pos) = cond_parser(parser, pos)?;
             pos = consume_symbol(parser, new_pos, Lexeme::Arrow)?;
             let (in_indent, new_pos) = parse_opt_indent(parser, pos);
             let (value, new_pos) = Expression::parse(parser, new_pos)?;
             pos = parse_opt_dedent(parser, new_pos, in_indent)?;
             pos = parser.skip_nl(pos);
             if cond.is_none() {
-                matches.push((None, value));
+                result.push((None, value));
                 break;
             } else {
-                matches.push((cond, value));
+                result.push((cond, value));
             }
         }
-        let pos = consume_symbol(parser, pos, Lexeme::Dedent)?;
-        Ok((Expression::CaseExpr(Box::new(match_expr), matches), pos))
+        Ok((result, pos))
     }
 
     pub(crate) fn parse_reify(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {

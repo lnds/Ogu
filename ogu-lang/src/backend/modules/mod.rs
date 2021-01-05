@@ -292,6 +292,29 @@ mod tests {
     }
 
     #[test]
+    fn test_case_1() {
+        let module = make_module(
+            indoc! {r#"
+             siracusa n =
+                case n of
+                    1 -> 4
+                    2 -> 1
+                    n | n % 2 == 0 -> siracusa (n // 2)
+                    _ -> siracusa (n * 3 + 1)"#},
+            default_sym_table(),
+        );
+        println!("module = {:?}", module);
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("TEST DECLS = {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int(),)
+        );
+    }
+
+    #[test]
     fn test_funcs_1() {
         let module = make_module(
             indoc! {r#"

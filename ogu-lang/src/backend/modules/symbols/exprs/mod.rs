@@ -1,8 +1,10 @@
 use std::ops::Deref;
 
 use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticSym;
+use crate::backend::modules::symbols::exprs::case_expr::CaseExpr;
 use crate::backend::modules::symbols::exprs::do_expr::DoExpr;
 use crate::backend::modules::symbols::exprs::func_call::FuncCallExpr;
+use crate::backend::modules::symbols::exprs::guarded_expr::GuardedExpr;
 use crate::backend::modules::symbols::exprs::if_expr::IfExpr;
 use crate::backend::modules::symbols::exprs::let_expr::LetExpr;
 use crate::backend::modules::symbols::exprs::literals::Literal;
@@ -16,12 +18,14 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::Expression;
+use crate::parser::ast::expressions::expression::{Expression, OptExprTuple};
 
 mod arithmetics;
+mod case_expr;
 mod comparable_trait;
 mod do_expr;
 pub(crate) mod func_call;
+mod guarded_expr;
 mod if_expr;
 mod let_expr;
 mod literals;
@@ -71,6 +75,10 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::EqExpr(l, r) => PartialEqExpr::new_eq(l.into(), r.into()),
             Expression::NeExpr(l, r) => PartialEqExpr::new_ne(l.into(), r.into()),
 
+            Expression::CaseExpr(e, cases) => CaseExpr::new(e.into(), vec_exprs_tuples_into(cases)),
+
+            Expression::GuardedExpr(e, g) => GuardedExpr::new(e.into(), g.into()),
+
             Expression::IfExpr(c, t, e) => IfExpr::new(c.into(), t.into(), e.into()),
 
             Expression::LetExpr(eqs, expr) => LetExpr::new(vec_eqs_into(eqs), expr.into()),
@@ -94,6 +102,12 @@ impl<'a> From<&Box<Expression<'a>>> for Box<dyn Symbol> {
     }
 }
 
+impl<'a> From<Expression<'a>> for Box<dyn Symbol> {
+    fn from(expr: Expression<'a>) -> Self {
+        (&expr).into()
+    }
+}
+
 impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
     fn from(eq: &Equation<'a>) -> Self {
         match eq {
@@ -108,6 +122,14 @@ impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
 
 fn vec_exprs_into<'a>(args: &[Expression<'a>]) -> Vec<Box<dyn Symbol>> {
     args.iter().map(|a| a.into()).collect()
+}
+
+pub(crate) type OptSymbolTuple = (Option<Box<dyn Symbol>>, Box<dyn Symbol>);
+
+fn vec_exprs_tuples_into(args: &[OptExprTuple]) -> Vec<OptSymbolTuple> {
+    args.iter()
+        .map(|(a, b)| (a.clone().map(|e| e.into()), b.into()))
+        .collect()
 }
 
 fn vec_eqs_into<'a>(eqs: &[Equation<'a>]) -> Vec<Box<dyn Symbol>> {

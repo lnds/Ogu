@@ -49,6 +49,24 @@ impl Symbol for TupleExpr {
         }
     }
 
+    fn matches_types(&mut self, ty: Option<Box<dyn Type>>) {
+        if let Some(ty) = ty {
+            if let Some(ty) = ty.downcast_ref::<TupleType>() {
+                let other_tuple_vec: Vec<Box<dyn Type>> = ty.get_tuple();
+                for (s, t) in self.tuple.iter_mut().zip(other_tuple_vec.iter()) {
+                    match s.get_type() {
+                        None => s.set_type(Some(t.clone())),
+                        Some(tt) => {
+                            if tt.get_signature() == TRAIT_UNKNOWN.get_signature() {
+                                s.set_type(Some(t.clone()))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let mut sym_table = SymbolTable::new("tuple", Some(scope.clone_box()));
         if self.assignable {
@@ -63,6 +81,8 @@ impl Symbol for TupleExpr {
             s.resolve_type(&mut *sym_table)?;
         }
         if self.assignable {
+            println!("RESOLVE TYPE ASSIGNABLE TUPLE : {:?}", self);
+            println!("SYM TABLE {:#?}", sym_table);
             for s in sym_table.get_symbols().iter() {
                 scope.define(s.clone());
             }

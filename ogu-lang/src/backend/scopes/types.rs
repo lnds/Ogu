@@ -12,6 +12,7 @@ pub(crate) trait Type: TypeClone + Debug + mopa::Any {
     fn is_basic_type(&self) -> bool {
         false
     }
+    fn match_types(&mut self, _: &dyn Type) {}
 }
 
 mopafy!(Type);

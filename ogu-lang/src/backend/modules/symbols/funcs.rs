@@ -89,7 +89,10 @@ impl Symbol for FunctionSym {
                 sym_table.define(a.clone());
             }
         }
+
+        println!("scope antes de expr resolve = {:#?}", sym_table);
         self.expr.resolve_type(&mut *sym_table)?;
+        println!("scope despues de expr resolve = {:#?}", sym_table);
 
         for s in sym_table.get_symbols() {
             self.define_arg(s.clone_box());

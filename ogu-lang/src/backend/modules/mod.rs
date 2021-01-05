@@ -315,6 +315,32 @@ mod tests {
     }
 
     #[test]
+    fn test_case_2() {
+        let module = make_module(
+            indoc! {r#"
+            ackermann m n =
+                case (m,n) of
+                  (0, n) -> n + 1
+                  (m, 0) -> recur (m - 1) 1
+                  _ -> recur (m - 1) (recur m (n - 1))"#},
+            default_sym_table(),
+        );
+
+        println!("module = {:?}", module);
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("TEST DECLS = {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(
+                Some(vec![BasicType::int(), BasicType::int()]),
+                BasicType::int(),
+            )
+        );
+    }
+
+    #[test]
     fn test_funcs_1() {
         let module = make_module(
             indoc! {r#"

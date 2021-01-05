@@ -174,7 +174,7 @@ pub(crate) enum Expression<'a> {
 
 pub(crate) type ParseResult<'a> = Result<(Expression<'a>, usize)>;
 type ParseOptExprResult<'a> = Result<(Option<Expression<'a>>, usize)>;
-type OptExprTuple<'a> = (Option<Expression<'a>>, Expression<'a>);
+pub(crate) type OptExprTuple<'a> = (Option<Expression<'a>>, Expression<'a>);
 
 #[derive(Debug, Clone)]
 pub(crate) enum LambdaArg<'a> {

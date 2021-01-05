@@ -30,12 +30,20 @@ impl Scope for SymbolTable {
         if !sym.storable() {
             None
         } else {
-            self.symbols.push(sym.clone_box());
-            let pos = self.symbols.len() - 1;
-            let r = self.symbol_table.insert(sym.get_name().to_string(), pos);
-            match r {
-                None => None,
-                Some(p) => self.symbols.get(p).cloned(),
+            match self.symbol_table.get(sym.get_name()) {
+                None => {
+                    self.symbols.push(sym.clone_box());
+                    let pos = self.symbols.len() - 1;
+                    let r = self.symbol_table.insert(sym.get_name().to_string(), pos);
+                    match r {
+                        None => None,
+                        Some(p) => self.symbols.get(p).cloned(),
+                    }
+                }
+                Some(pos) => {
+                    self.symbols[*pos] = sym.clone();
+                    self.symbols.get(*pos).cloned()
+                }
             }
         }
     }

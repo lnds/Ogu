@@ -1,4 +1,4 @@
-use crate::backend::modules::types::trait_type::TRAIT_NUM;
+use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_UNKNOWN};
 use crate::backend::scopes::types::{Type, TypeClone};
 
 #[derive(Clone, Debug)]
@@ -84,7 +84,7 @@ impl Type for BasicType {
     fn promotes(&self, other: &dyn Type) -> bool {
         match self {
             BasicType::Int => {
-                if other == TRAIT_NUM {
+                if other == TRAIT_NUM || other == TRAIT_UNKNOWN {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
                     matches!(ot, BasicType::Int)
@@ -93,7 +93,7 @@ impl Type for BasicType {
                 }
             }
             BasicType::Float => {
-                if other == TRAIT_NUM {
+                if other == TRAIT_NUM || other == TRAIT_UNKNOWN {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
                     matches!(ot, BasicType::Int | BasicType::Float)

@@ -30,7 +30,7 @@ impl Type for TraitType {
     }
 
     fn promotes(&self, other: &dyn Type) -> bool {
-        other == TRAIT_UNKNOWN
+        other == TRAIT_UNKNOWN || self == TRAIT_UNKNOWN
     }
 
     fn is_trait(&self) -> bool {

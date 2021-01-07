@@ -34,6 +34,10 @@ impl<'a> DeclarationAst<'a> {
                     Ok(Some((DeclarationAst::Function(name, args, expr), pos)))
                 }
             }
+            Equation::FunctionWithGuards(name, args, guards) => Ok(Some((
+                DeclarationAst::FunctionWithGuards(name, args, guards, opt_where),
+                pos,
+            ))),
         }
     }
 

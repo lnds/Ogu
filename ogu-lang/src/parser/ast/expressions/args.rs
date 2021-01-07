@@ -42,9 +42,7 @@ impl<'a> Arg<'a> {
         match parser.get_token(pos) {
             None => Ok(None),
             Some(Lexeme::LeftParen) => Arg::parse_tuple(parser, pos),
-            Some(Lexeme::Assign) |
-            Some(Lexeme::Guard) |
-            Some(Lexeme::NewLine) => Ok(None),
+            Some(Lexeme::Assign) | Some(Lexeme::Guard) | Some(Lexeme::NewLine) => Ok(None),
             Some(Lexeme::Id(id)) => Ok(Some((Arg::Simple(id), pos + 1))),
             _ => {
                 let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;

@@ -4,12 +4,14 @@ pub(crate) mod types;
 use crate::parser::ast::expressions::args::Args;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::{Expression, HandleGuard};
+use crate::parser::ast::expressions::guards::GuardVec;
 use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub(crate) enum DeclarationAst<'a> {
     Value(Expression<'a>, Expression<'a>),
     Function(&'a str, Args<'a>, Expression<'a>),
+    FunctionWithGuards(&'a str, Args<'a>, GuardVec<'a>, Option<Vec<Equation<'a>>>),
     TypeDecl(
         &'a str,
         Option<Vec<&'a str>>,

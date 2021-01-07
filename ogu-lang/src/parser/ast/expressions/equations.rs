@@ -2,19 +2,18 @@ use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::consume_ids_sep_by;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::guards::{parse_guards, Guard};
+use crate::parser::ast::expressions::guards::{parse_guards, Guard, GuardVec};
 use crate::parser::{
     consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent,
     raise_parser_error, Parser,
 };
 use anyhow::Result;
-use crate::lexer::tokens::Lexeme::Lambda;
-use crate::parser::ast::expressions::args::Arg::Expr;
 
 #[derive(Debug, Clone)]
 pub(crate) enum Equation<'a> {
     Value(Expression<'a>, Expression<'a>),
     Function(&'a str, Args<'a>, Expression<'a>),
+    FunctionWithGuards(&'a str, Args<'a>, GuardVec<'a>),
 }
 
 impl<'a> Equation<'a> {
@@ -175,8 +174,7 @@ impl<'a> Equation<'a> {
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
         let (guards, pos) = parse_guards(parser, pos)?;
-        let cond = Guard::guards_to_cond(&guards)?;
-        let eq = Equation::Function(name, args, cond);
+        let eq = Equation::FunctionWithGuards(name, args, guards);
         Ok((eq, pos))
     }
 

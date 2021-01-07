@@ -1,12 +1,14 @@
+use crate::backend::errors::OguError;
 use crate::lexer::tokens::Lexeme;
+use crate::parser::ast::expressions::args::Arg::Expr;
+use crate::parser::ast::expressions::args::{Arg, Args};
+use crate::parser::ast::expressions::expression::Expression;
+use crate::parser::ast::expressions::guards::Guard;
 use crate::parser::ast::module::decls::{DeclParseResult, DeclVec, DeclarationAst};
 use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::{Error, Result};
 use std::collections::HashMap;
-use crate::backend::errors::OguError;
-use crate::parser::ast::expressions::args::{Args, Arg};
-use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::args::Arg::Expr;
+use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub(crate) struct BodyAst<'a> {
@@ -36,13 +38,19 @@ impl<'a> BodyAst<'a> {
     fn merge_functions(decls: DeclVec<'a>) -> Result<DeclVec<'a>> {
         let mut funcs = HashMap::new();
         for decl in decls.iter() {
-            if let DeclarationAst::Function(name, _,_) = decl {
+            if let DeclarationAst::Function(name, _, _) = decl {
+                funcs.entry(name).or_insert(vec![]).push(decl.clone());
+            } else if let DeclarationAst::FunctionWithGuards(name, _, _, _) = decl {
                 funcs.entry(name).or_insert(vec![]).push(decl.clone());
             }
         }
         let mut result = vec![];
         for decl in decls.iter() {
-            if let DeclarationAst::Function(name, _,_) = decl {
+            if let DeclarationAst::Function(name, _, _) = decl {
+                if let Some((_, vec_of_func)) = funcs.remove_entry(&name) {
+                    result.push(BodyAst::merge_vec_of_functions(&name, &vec_of_func)?);
+                }
+            } else if let DeclarationAst::FunctionWithGuards(name, _, _, _) = decl {
                 if let Some((_, vec_of_func)) = funcs.remove_entry(&name) {
                     result.push(BodyAst::merge_vec_of_functions(&name, &vec_of_func)?);
                 }
@@ -54,63 +62,142 @@ impl<'a> BodyAst<'a> {
         Ok(result)
     }
 
-    fn merge_vec_of_functions(name: &'a  str, vec_of_funcs: &DeclVec<'a>) -> Result<DeclarationAst<'a>> {
+    fn merge_vec_of_functions(
+        name: &'a str,
+        vec_of_funcs: &[DeclarationAst<'a>],
+    ) -> Result<DeclarationAst<'a>> {
         if vec_of_funcs.len() == 1 {
-            if let DeclarationAst::Function(_, args, _) = &vec_of_funcs[0] {
-                match args {
+            match &vec_of_funcs[0] {
+                DeclarationAst::Function(_, args, _) => match args {
                     Args::Void => return Ok(vec_of_funcs[0].clone()),
                     Args::Many(args) => {
                         if args.iter().all(|a| matches!(a, Arg::Simple(_))) {
-                            return Ok(vec_of_funcs[0].clone())
+                            return Ok(vec_of_funcs[0].clone());
                         }
                     }
-                }
+                },
+                DeclarationAst::FunctionWithGuards(_, args, guards, opt_where) => match args {
+                    Args::Void => return Ok(vec_of_funcs[0].clone()),
+                    Args::Many(args_vec) => {
+                        if args_vec.iter().all(|a| matches!(a, Arg::Simple(_))) {
+                            let expr = Guard::guards_to_cond(guards)?;
+                            return if let Some(where_decl) = opt_where {
+                                let expr = Expression::LetExpr(where_decl.clone(), Box::new(expr));
+                                Ok(DeclarationAst::Function(name, args.clone(), expr))
+                            } else {
+                                Ok(DeclarationAst::Function(name, args.clone(), expr))
+                            };
+                        }
+                    }
+                },
+                _ => {}
             }
         }
         println!("MERGE VEC OF FUNC {:#?}", vec_of_funcs);
         let mut args_count = 0; // can't be 0 args funcs
         let mut conds = vec![];
+        let mut where_conds = vec![];
+        let mut args_names: Vec<String> = vec![];
         for fun in vec_of_funcs.iter() {
-            if let DeclarationAst::Function(_, args, expr) = fun {
-                let n = match args {
-                    Args::Void => 1,
-                    Args::Many(args) => args.len()
-                };
+            let mut n = 0;
+            let mut prob_arg_names = vec![];
+            match fun {
+                DeclarationAst::Function(_, args, expr) => {
+                    let cond = match args {
+                        Args::Void => {
+                            n = 1;
+                            (Some(Expression::Unit), expr.clone())
+                        }
+                        Args::Many(args) => {
+                            n = args.len();
+                            let exprs = Expression::TupleExpr(
+                                args.iter().map(BodyAst::arg_to_expr).collect(),
+                            );
 
-                if args_count == 0 {
-                    args_count = n;
+                            if args.iter().all(|arg| matches!(arg, Arg::Simple(_))) {
+                                prob_arg_names = args.iter().map(|arg| {
+                                    match arg {
+                                        Arg::Simple(s) => s.to_string(),
+                                        _ => String::new()
+                                    }
+                                }).collect();
+                            }
+                            (Some(exprs), expr.clone())
+                        }
+                    };
+                    conds.push(cond);
                 }
-                if n != args_count {
-                    return Err(Error::new(OguError::SemanticError).context("argument count doesn't match with previous function declaration"))
-                }
-
-                let cond = match args {
-                    Args::Void => (Some(Expression::Unit), expr.clone()),
-                    Args::Many(args) => {
-                        let exprs = Expression::TupleExpr(args.iter().map(BodyAst::arg_to_expr).collect());
-                        (Some(exprs), expr.clone())
+                DeclarationAst::FunctionWithGuards(_, args, guards, _opt_where) => {
+                    let cond_expr = match args {
+                        Args::Void => {
+                            n = 1;
+                            Expression::Unit
+                        }
+                        Args::Many(args) => {
+                            n = args.len();
+                            if args.iter().all(|arg| matches!(arg, Arg::Simple(_))) {
+                                prob_arg_names = args.iter().map(|arg| {
+                                    match arg {
+                                        Arg::Simple(s) => s.to_string(),
+                                        _ => String::new()
+                                    }
+                                }).collect();
+                            }
+                            Expression::TupleExpr(args.iter().map(BodyAst::arg_to_expr).collect())
+                        }
+                    };
+                    for Guard(opt_cond, expr) in guards.iter() {
+                        if let Some(cond) = opt_cond {
+                            let cond_expr = Expression::GuardedExpr(Box::from(cond_expr.clone()), cond.clone());
+                            conds.push((Some(cond_expr), expr.deref().clone()));
+                        }
                     }
-                };
-                conds.push(cond);
+                    if let Some(where_expr) = _opt_where {
+                        where_conds.append(&mut where_expr.clone());
+                    }
+                }
+                _ => {}
+            }
+            if args_count == 0 {
+                args_count = n;
+            }
+            if prob_arg_names.len() == args_count {
+                args_names = prob_arg_names.to_vec();
+            }
+            if n != args_count {
+                return Err(Error::new(OguError::SemanticError).context(
+                    "argument count doesn't match with previous function declaration",
+                ));
             }
         }
-
-        let args_names : Vec<String> = (0..args_count).into_iter().map(|n| format!("arg_{}", n)).collect();
-        let new_args = Args::Many(args_names.into_iter().map(|s| Arg::SimpleStr(s.clone())).collect());
-        let args_names : Vec<String> = (0..args_count).into_iter().map(|n| format!("arg_{}", n)).collect();
-
+        if args_names.is_empty() {
+            args_names = (0..args_count)
+                .into_iter()
+                .map(|n| format!("arg_{}", n))
+                .collect();
+        }
+        let new_args = Args::Many(args_names.clone().into_iter().map(Arg::SimpleStr).collect());
         let new_expr = Expression::CaseExpr(
-            Box::new(Expression::TupleExpr(args_names.into_iter().map(|s| Expression::NameStr(s.clone())).collect())),
-            conds.clone());
-        Ok(DeclarationAst::Function(name, new_args, new_expr))
+            Box::new(Expression::TupleExpr(
+                args_names.into_iter().map(Expression::NameStr).collect(),
+            )),
+            conds.clone(),
+        );
+        if where_conds.is_empty() {
+            Ok(DeclarationAst::Function(name, new_args, new_expr))
+        } else {
+            Ok(DeclarationAst::Function(name, new_args, Expression::LetExpr(where_conds, Box::new(new_expr))))
+        }
     }
 
     fn arg_to_expr(arg: &Arg<'a>) -> Expression<'a> {
         match arg {
             Arg::Simple(id) => Expression::Name(id),
             Arg::SimpleStr(id) => Expression::NameStr(id.clone()),
-            Arg::Tuple(args) => Expression::TupleExpr(args.iter().map(|a| BodyAst::arg_to_expr(a)).collect()),
-            Expr(e) => *e.clone()
+            Arg::Tuple(args) => {
+                Expression::TupleExpr(args.iter().map(|a| BodyAst::arg_to_expr(a)).collect())
+            }
+            Expr(e) => *e.clone(),
         }
     }
 

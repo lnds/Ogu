@@ -50,6 +50,7 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::Unit => Literal::new_unit(),
 
             Expression::Name(id) => IdSym::new(id),
+            Expression::NameStr(id) => IdSym::new(id),
 
             Expression::ParenExpr(expr) => ParenExpr::make(expr),
 

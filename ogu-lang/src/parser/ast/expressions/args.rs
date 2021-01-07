@@ -6,6 +6,7 @@ use anyhow::Result;
 #[derive(Debug, Clone)]
 pub(crate) enum Arg<'a> {
     Simple(&'a str),
+    SimpleStr(String),
     Tuple(Vec<Arg<'a>>),
     Expr(Box<Expression<'a>>),
 }

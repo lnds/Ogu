@@ -8,6 +8,8 @@ use crate::parser::{
     raise_parser_error, Parser,
 };
 use anyhow::Result;
+use crate::lexer::tokens::Lexeme::Lambda;
+use crate::parser::ast::expressions::args::Arg::Expr;
 
 #[derive(Debug, Clone)]
 pub(crate) enum Equation<'a> {

@@ -111,6 +111,7 @@ impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
     fn from(arg: Arg<'a>) -> Self {
         match arg {
             Arg::Simple(s) => IdSym::new(s),
+            Arg::SimpleStr(s) => IdSym::new(&s),
             _ => todo!(),
         }
     }

@@ -67,6 +67,7 @@ pub(crate) enum Identifier<'a> {
 pub(crate) enum Expression<'a> {
     InvalidExpr,
     Name(&'a str),
+    NameStr(String),
     QualifiedIdentifier(&'a str, Vec<&'a str>),
     StringLiteral(&'a str),
     LargeStringLiteral(Option<String>),
@@ -388,7 +389,7 @@ impl<'a> Expression<'a> {
         }
     }
 
-    fn parse_logical_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
+    pub(crate) fn parse_logical_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         Expression::parse_logical_or_expr(parser, pos)
     }
 

@@ -32,6 +32,7 @@ impl Symbol for RecurCallExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         println!("RESOLVE TYPE FOR RECUR {:?}", scope.scope_name());
+        println!("ARGS = {:?}", self.args);
         let mut func_call: Box<dyn Symbol> =
             FuncCallExpr::new(IdSym::new(&scope.scope_name()), self.args.to_vec());
         func_call.resolve_type(scope)?;

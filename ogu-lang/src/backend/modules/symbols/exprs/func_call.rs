@@ -38,9 +38,13 @@ impl Symbol for FuncCallExpr {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
+        println!("FUNCALL {:?}", self.func.get_name());
         let ft = self.func.resolve_type(scope)?;
-        //println!("FUNCALL {:?} SCOPE {:#?}", self.func, scope);
-        //println!("FT = {:?}", ft.clone());
+        println!("scope name = {:?}", scope.scope_name());
+        println!("self name = {:?}", self.func.get_name());
+        println!("self.args = {:?}", self.args);
+        println!("FT = {:?}", ft.clone());
+        let recursive = scope.scope_name().to_string() == self.func.get_name();
         match ft {
             None => {}
             Some(ft) => {
@@ -55,6 +59,8 @@ impl Symbol for FuncCallExpr {
                             }
                         }
                         Some(ft_args) if ft_args.len() > self.args.len() => {
+                            println!("ft_args.len() = {}", ft_args.len());
+                            println!("self.args.len() = {}", self.args.len());
                             return Err(Error::new(OguError::SemanticError).context(format!(
                                 "function {} receive more args than needed",
                                 self.func.get_name()
@@ -65,14 +71,20 @@ impl Symbol for FuncCallExpr {
                             todo!()
                         }
                         Some(ft_args) => {
+                            println!("PROBABLE RECURSIVIDAD : {:?}", ft_args);
                             for (p, a) in self.args.iter_mut().enumerate() {
-                                a.set_type(Some(ft_args[p].clone()));
+                                println!("RESOVE FOR a={:?}", a);
+                                a.resolve_type(scope)?;
+                                if a.get_type().is_none() {
+                                    a.set_type(Some(ft_args[p].clone()));
+                                }
                                 scope.define(a.clone());
                             }
                             if let Some(func) = scope.resolve(self.func.get_name()) {
                                 if let Some(func) = func.downcast_ref::<FunctionSym>() {
+                                    println!("UPS func = {:?}", func);
                                     let mut f = func.clone();
-                                    f.replace_args(self.args.to_vec(), scope)?;
+                                    f.replace_args(self.args.to_vec(), scope, !recursive)?;
                                     if self.func.get_type() != f.get_type() {
                                         self.func = Box::new(f);
                                         scope.define(self.func.clone()); // ojp !!
@@ -81,12 +93,16 @@ impl Symbol for FuncCallExpr {
                             }
                         }
                     }
-                } else if let Some(ft) = ft.downcast_ref::<VariadicType>() {
+                }
+                else if let Some(ft) = ft.downcast_ref::<VariadicType>() {
                     // TODO
                     println!(
                         "!! algo hay que hacer con el variadic (tipico son las macros) {:#?}",
                         ft
                     );
+                }
+                else {
+                    return Err(Error::new(OguError::SemanticError).context(format!("{} it's not a function", self.func.get_name())))
                 }
                 self.ty = match self.func.get_type() {
                     None => None,

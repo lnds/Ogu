@@ -27,6 +27,7 @@ impl Module {
             }
         }
         let mut decls = sym_table.get_symbols();
+        //println!("DECLS ANTES: {:#?}", decls);
         for d in decls.iter_mut() {
             d.resolve_type(&mut *sym_table)?;
             sym_table.define(d.clone_box()); // redefine symbol

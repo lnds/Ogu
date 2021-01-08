@@ -225,7 +225,6 @@ impl<'a> Expression<'a> {
             Some(Lexeme::Loop) => Expression::parse_loop(parser, pos),
             Some(Lexeme::If) => Expression::parse_if(parser, pos),
             Some(Lexeme::Repeat) => Expression::parse_repeat(parser, pos),
-            Some(Lexeme::Recur) => Expression::parse_recur(parser, pos),
             Some(Lexeme::Resume) => Expression::parse_resume_expr(parser, pos),
             Some(Lexeme::Reify) => Expression::parse_reify(parser, pos),
             _ => Expression::parse_lambda_expr(parser, pos),
@@ -516,6 +515,7 @@ impl<'a> Expression<'a> {
             Some(Lexeme::Not) => Expression::parse_not_expr(parser, pos),
             Some(sym) if is_literal(sym) => Expression::parse_literal_expr(parser, pos),
             Some(Lexeme::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
+            Some(Lexeme::Recur) => Expression::parse_recur(parser, pos),
             _ => Expression::parse_func_call_expr(parser, pos),
         }
     }
@@ -791,12 +791,7 @@ impl<'a> Expression<'a> {
         }
     }
 
-    pub(crate) fn parse_recur(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let pos = consume_symbol(parser, pos, Lexeme::Recur)?;
-        let (args, pos) = consume_args(parser, pos)?;
-        println!("AFTER CONSUME ARGS = {:?}", args);
-        Ok((Expression::RecurExpr(args), pos))
-    }
+
 
     pub(crate) fn parse_perform(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::Perform)?;
@@ -830,7 +825,7 @@ impl<'a> Expression<'a> {
 
     fn parse_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
-        if is_func_call_end_symbol(parser.get_token(pos)) {
+        if is_func_call_end_symbol(parser.get_token(pos)) || !matches!(expr, Expression::ParenExpr(_)|Expression::Name(_)|Expression::NameStr(_)) {
             Ok((expr, pos))
         } else {
             let mut args = vec![];
@@ -841,6 +836,32 @@ impl<'a> Expression<'a> {
                 pos = new_pos;
             }
             Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
+        }
+    }
+
+    pub(crate) fn parse_recur(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
+        let pos = consume_symbol(parser, pos, Lexeme::Recur)?;
+        let mut args = vec![];
+        let (expr, mut pos) = Expression::parse_prim_expr(parser, pos)?;
+        args.push(expr);
+        while !is_func_call_end_symbol(parser.get_token(pos)) {
+            let (arg, new_pos) = Expression::parse_prim_expr(parser, pos)?;
+            args.push(arg);
+            pos = new_pos;
+        }
+        Ok((Expression::RecurExpr(args), pos))
+    }
+
+    fn parse_recur_expr(parser: &'a Parser<'a>, pos: usize) -> Result<(RecurValue<'a>, usize)> {
+        if parser.peek(pos, Lexeme::Let) {
+            let pos = consume_symbol(parser, pos, Lexeme::Let)?;
+            let (id, pos) = consume_id(parser, pos)?;
+            let pos = consume_symbol(parser, pos, Lexeme::Assign)?;
+            let (expr, pos) = Expression::parse(parser, pos)?;
+            Ok((RecurValue::Var(id, expr), pos))
+        } else {
+            let (expr, pos) = Expression::parse(parser, pos)?;
+            Ok((RecurValue::Value(expr), pos))
         }
     }
 
@@ -1034,18 +1055,7 @@ impl<'a> Expression<'a> {
         Ok((Expression::RepeatExpr(exprs), pos))
     }
 
-    fn parse_recur_expr(parser: &'a Parser<'a>, pos: usize) -> Result<(RecurValue<'a>, usize)> {
-        if parser.peek(pos, Lexeme::Let) {
-            let pos = consume_symbol(parser, pos, Lexeme::Let)?;
-            let (id, pos) = consume_id(parser, pos)?;
-            let pos = consume_symbol(parser, pos, Lexeme::Assign)?;
-            let (expr, pos) = Expression::parse(parser, pos)?;
-            Ok((RecurValue::Var(id, expr), pos))
-        } else {
-            let (expr, pos) = Expression::parse(parser, pos)?;
-            Ok((RecurValue::Value(expr), pos))
-        }
-    }
+
 
     fn parse_if(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         Expression::parse_inner_if(parser, pos, Lexeme::If)

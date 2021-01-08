@@ -37,6 +37,7 @@ impl FunctionSym {
         &mut self,
         args: Vec<Box<dyn Symbol>>,
         scope: &mut dyn Scope,
+        resolve: bool
     ) -> Result<()> {
         if let Some(own_args) = &self.args {
             let mut new_args: Vec<Box<dyn Symbol>> = vec![];
@@ -47,7 +48,9 @@ impl FunctionSym {
                 ))
             }
             self.args = Some(new_args);
-            self.resolve_type(scope)?;
+            if resolve {
+                self.resolve_type(scope)?;
+            }
         }
         Ok(())
     }

@@ -40,6 +40,14 @@ impl Symbol for CaseExpr {
                 if cond_type.is_none() {
                         cond_type = c.get_type();
                 }
+                else {
+                    let mut t = cond_type.clone().unwrap();
+                    if let Some(ct) = c.get_type() {
+                        t.match_types(&*ct);
+                        cond_type = Some(t);
+
+                    }
+                }
             }
             e.resolve_type(scope)?;
             if expr_type.is_none() {

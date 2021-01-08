@@ -203,7 +203,7 @@ mod tests {
         );
     }
 
-    //#[test]
+    #[test]
     fn test_func_pattern_1() {
         let module = make_module(
             indoc! {r#"
@@ -225,7 +225,7 @@ mod tests {
         );
     }
 
-    //#[test]
+    #[test]
     fn test_func_pattern_2() {
         let module = make_module(
             indoc! {r#"
@@ -393,7 +393,7 @@ mod tests {
         );
     }
 
-    //#[test]
+    #[test]
     fn test_case_2() {
         let module = make_module(
             indoc! {r#"
@@ -401,7 +401,7 @@ mod tests {
                 case (m,n) of
                   (0, n) -> n + 1
                   (m, 0) -> recur (m - 1) 1
-                  _ -> recur (m - 1) (recur m (n - 1))"#},
+                  _ -> recur (m - 1) (recur  m (n - 1))"#},
             default_sym_table(),
         );
 
@@ -437,9 +437,6 @@ mod tests {
             FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int(),)
         );
     }
-
-
-
 
     #[test]
     fn test_funcs_1() {

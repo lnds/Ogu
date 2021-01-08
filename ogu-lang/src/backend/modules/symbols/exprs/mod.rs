@@ -121,7 +121,7 @@ impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
     }
 }
 
-fn vec_exprs_into<'a>(args: &[Expression<'a>]) -> Vec<Box<dyn Symbol<'a>>> {
+fn vec_exprs_into(args: &[Expression]) -> Vec<Box<dyn Symbol>> {
     args.iter().map(|a| a.into()).collect()
 }
 
@@ -133,6 +133,6 @@ fn vec_exprs_tuples_into(args: &[OptExprTuple]) -> Vec<OptSymbolTuple> {
         .collect()
 }
 
-fn vec_eqs_into<'a>(eqs: &[Equation<'a>]) -> Vec<Box<dyn Symbol>> {
+fn vec_eqs_into(eqs: &[Equation]) -> Vec<Box<dyn Symbol>> {
     eqs.iter().map(|eq| eq.into()).collect()
 }

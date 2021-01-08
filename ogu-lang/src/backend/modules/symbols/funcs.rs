@@ -118,6 +118,6 @@ impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
     }
 }
 
-pub(crate) fn vec_args_into<'a>(args: &[Arg<'a>]) -> Vec<Box<dyn Symbol>> {
+pub(crate) fn vec_args_into(args: &[Arg]) -> Vec<Box<dyn Symbol>> {
     args.iter().map(|a| a.clone().into()).collect()
 }

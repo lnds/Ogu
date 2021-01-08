@@ -38,9 +38,9 @@ impl<'a> BodyAst<'a> {
         let mut funcs = HashMap::new();
         for decl in decls.iter() {
             if let DeclarationAst::Function(name, _, _) = decl {
-                funcs.entry(name).or_insert(vec![]).push(decl.clone());
+                funcs.entry(name).or_insert_with(Vec::new).push(decl.clone());
             } else if let DeclarationAst::FunctionWithGuards(name, _, _, _) = decl {
-                funcs.entry(name).or_insert(vec![]).push(decl.clone());
+                funcs.entry(name).or_insert_with(Vec::new).push(decl.clone());
             }
         }
         let mut result = vec![];

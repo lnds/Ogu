@@ -1,5 +1,6 @@
-use logos::{Lexer, Logos};
 use std::fmt::Display;
+
+use logos::{Lexer, Logos};
 
 pub(crate) type LineCount = usize;
 
@@ -133,7 +134,7 @@ pub(crate) enum Lexeme<'a> {
     #[token("&&", priority = 1000)]
     And,
     #[token("@", priority = 1000)]
-    Arroba,
+    At,
     #[token("->", priority = 1000)]
     Arrow,
     #[token("=", priority = 1000)]
@@ -304,8 +305,9 @@ fn extract_regex<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> Option<&'a str> {
 
 #[cfg(test)]
 mod test_tokens {
-    use crate::lexer::tokens::Lexeme;
     use logos::Logos;
+
+    use crate::lexer::tokens::Lexeme;
 
     #[test]
     fn test_symbols() {
@@ -453,7 +455,7 @@ mod test_tokens {
     fn test_ops() {
         let mut lex = Lexeme::lexer("&&  @ -> = <- : , >>");
         assert_eq!(lex.next(), Some(Lexeme::And));
-        assert_eq!(lex.next(), Some(Lexeme::Arroba));
+        assert_eq!(lex.next(), Some(Lexeme::At));
         assert_eq!(lex.next(), Some(Lexeme::Arrow));
         assert_eq!(lex.next(), Some(Lexeme::Assign));
         assert_eq!(lex.next(), Some(Lexeme::BackArrow));

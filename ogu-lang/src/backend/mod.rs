@@ -1,5 +1,6 @@
-use anyhow::Result;
 use std::{env, fs};
+
+use anyhow::Result;
 
 pub mod banner;
 pub mod compiler;

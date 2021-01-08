@@ -1,17 +1,18 @@
+use anyhow::{Error, Result};
+
 use crate::backend::errors::OguError;
 use crate::lexer::tokens::Lexeme;
-use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::Expression::TryHandleExpr;
-use crate::parser::ast::expressions::{
-    consume_args, consume_exprs_sep_by, consume_id, consume_ids_sep_by, is_basic_op,
-    is_func_call_end_symbol, is_literal, left_assoc_expr_to_expr, parse_left_assoc_expr,
-    parse_right_assoc_expr, right_assoc_expr_to_expr, LeftAssocExpr, RightAssocExpr,
-};
 use crate::parser::{
     consume_opt_symbol, consume_symbol, consume_type_id, parse_opt_dedent, parse_opt_indent,
-    raise_parser_error, Parser,
+    Parser, raise_parser_error,
 };
-use anyhow::{Error, Result};
+use crate::parser::ast::expressions::{
+    consume_args, consume_exprs_sep_by, consume_id, consume_ids_sep_by, is_basic_op,
+    is_func_call_end_symbol, is_literal, left_assoc_expr_to_expr, LeftAssocExpr,
+    parse_left_assoc_expr, parse_right_assoc_expr, right_assoc_expr_to_expr, RightAssocExpr,
+};
+use crate::parser::ast::expressions::equations::Equation;
+use crate::parser::ast::expressions::expression::Expression::TryHandleExpr;
 
 #[macro_export]
 macro_rules! parse_left_assoc {
@@ -498,7 +499,7 @@ impl<'a> Expression<'a> {
 
     parse_left_assoc!(
         parse_postfix_expr,
-        Lexeme::Arroba,
+        Lexeme::At,
         Expression::parse_primary_expr
     );
 

@@ -1,11 +1,12 @@
-pub(crate) mod funcs;
-pub(crate) mod types;
+use anyhow::Result;
 
 use crate::parser::ast::expressions::args::Args;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::{Expression, HandleGuard};
 use crate::parser::ast::expressions::guards::GuardVec;
-use anyhow::Result;
+
+pub(crate) mod funcs;
+pub(crate) mod types;
 
 #[derive(Debug, Clone)]
 pub(crate) enum DeclarationAst<'a> {

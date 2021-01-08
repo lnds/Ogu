@@ -1,13 +1,15 @@
+use std::collections::HashMap;
+
+use anyhow::{Error, Result};
+
 use crate::backend::errors::OguError;
 use crate::lexer::tokens::Lexeme;
-use crate::parser::ast::expressions::args::Arg::Expr;
+use crate::parser::{consume_symbol, Parser, raise_parser_error};
 use crate::parser::ast::expressions::args::{Arg, Args};
+use crate::parser::ast::expressions::args::Arg::Expr;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::Guard;
-use crate::parser::ast::module::decls::{DeclParseResult, DeclVec, DeclarationAst};
-use crate::parser::{consume_symbol, raise_parser_error, Parser};
-use anyhow::{Error, Result};
-use std::collections::HashMap;
+use crate::parser::ast::module::decls::{DeclarationAst, DeclParseResult, DeclVec};
 
 #[derive(Debug, Clone)]
 pub(crate) struct BodyAst<'a> {

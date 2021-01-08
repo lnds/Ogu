@@ -1,14 +1,16 @@
+use std::ops::Deref;
+
+use anyhow::Result;
+
+use crate::lexer::tokens::Lexeme;
+use crate::parser::{Parser, raise_parser_error};
+use crate::parser::ast::expressions::expression::{Expression, ParseResult};
+
 #[macro_use]
 pub mod expression;
 pub mod args;
 pub mod equations;
 pub mod guards;
-
-use crate::lexer::tokens::Lexeme;
-use crate::parser::ast::expressions::expression::{Expression, ParseResult};
-use crate::parser::{raise_parser_error, Parser};
-use anyhow::Result;
-use std::ops::Deref;
 
 pub struct LeftAssocExpr<'a>(Lexeme<'a>, Box<Expression<'a>>, Box<Expression<'a>>);
 
@@ -173,7 +175,7 @@ pub(crate) fn is_func_call_end_symbol(symbol: Option<Lexeme>) -> bool {
         Some(sym) => matches!(
             sym,
             Lexeme::NewLine
-                | Lexeme::Arroba
+                | Lexeme::At
                 | Lexeme::Arrow
                 | Lexeme::BackArrow
                 | Lexeme::Indent
@@ -269,7 +271,7 @@ pub(crate) fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
         Lexeme::Matches => Expression::MatchesExpr(left, right),
         Lexeme::NotMatches => Expression::NoMatchesExpr(left, right),
         Lexeme::Match => Expression::ReMatchExpr(left, right),
-        Lexeme::Arroba => Expression::IndexExpr(left, right),
+        Lexeme::At => Expression::IndexExpr(left, right),
         sym => {
             println!("TODO {:?}", sym);
             todo!()

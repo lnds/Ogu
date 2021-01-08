@@ -41,6 +41,11 @@ impl Symbol for IfExpr {
         }
     }
 
+    fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
+        self.then_expr.set_type(ty.clone());
+        self.else_expr.set_type(ty.clone());
+    }
+
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         self.cond.resolve_type(scope)?;
         scope.define(self.cond.clone());
@@ -80,10 +85,5 @@ impl Symbol for IfExpr {
             },
         }
         Ok(self.get_type())
-    }
-
-    fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        self.then_expr.set_type(ty.clone());
-        self.else_expr.set_type(ty.clone());
     }
 }

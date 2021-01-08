@@ -1,19 +1,19 @@
-pub mod token_stream;
-pub mod tokens;
-
-use logos::Logos;
-
-use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::{self, BufRead, Cursor};
 use std::path::PathBuf;
 
+use anyhow::{Error, Result};
+use logos::Logos;
+
 use crate::backend::errors::OguError;
 use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::Lexeme::NewLine;
 use crate::lexer::tokens::{
     IndentStack, Lexeme, LineCount, LineNumber, LineWidth, Token, TokenList,
 };
+use crate::lexer::tokens::Lexeme::NewLine;
+
+pub mod token_stream;
+pub mod tokens;
 
 type Line = (LineCount, String);
 type LineList = Vec<Line>;
@@ -212,10 +212,12 @@ fn scan_indentation<'a>(
 
 #[cfg(test)]
 mod test_lexer {
-    use crate::lexer::tokens::{Lexeme, Token};
-    use crate::lexer::{Lexer, LexerSource};
     use std::path::PathBuf;
+
     use walkdir::{DirEntry, WalkDir};
+
+    use crate::lexer::{Lexer, LexerSource};
+    use crate::lexer::tokens::{Lexeme, Token};
 
     impl Lexer {
         pub(crate) fn from(str: &str) -> Self {

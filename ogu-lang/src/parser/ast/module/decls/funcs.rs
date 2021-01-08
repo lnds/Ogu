@@ -1,9 +1,10 @@
+use anyhow::Result;
+
 use crate::lexer::tokens::Lexeme;
+use crate::parser::{consume_symbol, look_ahead_where, parse_opt_dedent, parse_opt_indent, Parser};
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::module::decls::{DeclParseResult, DeclarationAst};
-use crate::parser::{consume_symbol, look_ahead_where, parse_opt_dedent, parse_opt_indent, Parser};
-use anyhow::Result;
+use crate::parser::ast::module::decls::{DeclarationAst, DeclParseResult};
 
 impl<'a> DeclarationAst<'a> {
     pub fn parse_func_or_val(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {

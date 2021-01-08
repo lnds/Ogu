@@ -1,8 +1,8 @@
-use crate::lexer::token_stream::TokenStream;
-use crate::lexer::tokens::{Lexeme, LineNumber, LineWidth};
+use anyhow::{Error, Result};
 
 use crate::backend::errors::OguError;
-use anyhow::{Error, Result};
+use crate::lexer::token_stream::TokenStream;
+use crate::lexer::tokens::{Lexeme, LineNumber, LineWidth};
 
 pub(crate) mod ast;
 

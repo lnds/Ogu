@@ -1,6 +1,7 @@
-use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::Scope;
 use std::collections::HashMap;
+
+use crate::backend::scopes::Scope;
+use crate::backend::scopes::symbol::Symbol;
 
 #[derive(Clone, Debug)]
 pub(crate) struct SymbolTable {

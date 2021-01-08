@@ -1,9 +1,10 @@
+use std::fmt::Debug;
+
+use crate::backend::scopes::symbol::Symbol;
+
 pub(crate) mod sym_table;
 pub(crate) mod symbol;
 pub(crate) mod types;
-
-use crate::backend::scopes::symbol::Symbol;
-use std::fmt::Debug;
 
 pub(crate) trait Scope: ScopeClone + Debug {
     fn scope_name(&self) -> &str;

@@ -1,8 +1,9 @@
+use anyhow::Result;
+
 use crate::lexer::tokens::Lexeme;
+use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::ModuleName;
-use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
-use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub struct Import<'a>(ModuleName<'a>, Option<ModuleName<'a>>, Option<Exposing<'a>>);

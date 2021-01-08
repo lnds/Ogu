@@ -1,6 +1,7 @@
+use std::ops::Deref;
+
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::types::Type;
-use std::ops::Deref;
 
 #[derive(Clone, Debug)]
 pub(crate) struct TupleType {

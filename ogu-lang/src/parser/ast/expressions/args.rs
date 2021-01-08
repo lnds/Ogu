@@ -1,7 +1,8 @@
-use crate::lexer::tokens::Lexeme;
-use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
+
+use crate::lexer::tokens::Lexeme;
+use crate::parser::{consume_symbol, Parser, raise_parser_error};
+use crate::parser::ast::expressions::expression::Expression;
 
 #[derive(Debug, Clone)]
 pub(crate) enum Arg<'a> {

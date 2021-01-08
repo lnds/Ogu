@@ -1,6 +1,7 @@
-use crate::lexer::tokens::Lexeme;
-use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::Result;
+
+use crate::lexer::tokens::Lexeme;
+use crate::parser::{consume_symbol, Parser, raise_parser_error};
 
 #[derive(Debug, Clone)]
 pub(crate) enum Exposing<'a> {

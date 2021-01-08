@@ -4,6 +4,9 @@ pub(crate) mod types;
 
 #[cfg(test)]
 mod tests {
+    use anyhow::Result;
+    use indoc::indoc;
+
     use crate::backend::compiler::default_sym_table;
     use crate::backend::modules::module::Module;
     use crate::backend::modules::types::basic_type::BasicType;
@@ -11,13 +14,11 @@ mod tests {
     use crate::backend::modules::types::trait_type::{
         TRAIT_EQ, TRAIT_NUM, TRAIT_ORD,
     };
-    use crate::backend::scopes::types::TypeClone;
     use crate::backend::scopes::Scope;
+    use crate::backend::scopes::types::TypeClone;
     use crate::lexer::Lexer;
     use crate::parser::ast::module::ModuleAst;
     use crate::parser::Parser;
-    use anyhow::Result;
-    use indoc::indoc;
 
     fn make_module(source: &str, sym_table: Box<dyn Scope>) -> Result<Module> {
         let mut lexer = Lexer::from(source);

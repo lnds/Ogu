@@ -44,7 +44,7 @@ impl Symbol for FuncCallExpr {
         println!("self name = {:?}", self.func.get_name());
         println!("self.args = {:?}", self.args);
         println!("FT = {:?}", ft.clone());
-        let recursive = scope.scope_name().to_string() == self.func.get_name();
+        let recursive = scope.scope_name() == self.func.get_name();
         match ft {
             None => {}
             Some(ft) => {

@@ -261,10 +261,8 @@ mod tests {
                 normal = 25.0
             str_imc w h | w / h ^ 2 <= fat = "You're fat! Lose some weight, fatty!"
             where
-                normal = 25.0
-            str_imc w h =  "You're a whale, congratulations!"
-            where
-                fat = 30.0"#},
+                fat = 30.0
+            str_imc w h =  "You're a whale, congratulations!""#},
             default_sym_table(),
         );
         println!("module = {:?}", module);

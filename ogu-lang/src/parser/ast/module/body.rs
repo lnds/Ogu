@@ -8,7 +8,6 @@ use crate::parser::ast::module::decls::{DeclParseResult, DeclVec, DeclarationAst
 use crate::parser::{consume_symbol, raise_parser_error, Parser};
 use anyhow::{Error, Result};
 use std::collections::HashMap;
-use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub(crate) struct BodyAst<'a> {
@@ -96,51 +95,28 @@ impl<'a> BodyAst<'a> {
         let mut conds = vec![];
         let mut args_names: Vec<String> = vec![];
         for fun in vec_of_funcs.iter() {
-            let mut n = 0;
-            let mut prob_arg_names = vec![];
-            match fun {
-                DeclarationAst::Function(_, args, expr) => {
-                    let cond = match args {
+            let p_args = match fun {
+                DeclarationAst::Function(_, args, expr) =>
+                     match args {
                         Args::Void => {
-                            n = 1;
-                            (Some(Expression::Unit), expr.clone())
+                            conds.push((Some(Expression::Unit), expr.clone()));
+                            vec![]
                         }
                         Args::Many(args) => {
-                            n = args.len();
                             let exprs = Expression::TupleExpr(
                                 args.iter().map(BodyAst::arg_to_expr).collect(),
                             );
-
-                            if args.iter().all(|arg| matches!(arg, Arg::Simple(_))) {
-                                prob_arg_names = args.iter().map(|arg| {
-                                    match arg {
-                                        Arg::Simple(s) => s.to_string(),
-                                        _ => String::new()
-                                    }
-                                }).collect();
-                            }
-                            (Some(exprs), expr.clone())
+                            conds.push((Some(exprs), expr.clone()));
+                            args.to_vec()
                         }
-                    };
-                    conds.push(cond);
-                }
+                    }
                 DeclarationAst::FunctionWithGuards(_, args, guards, opt_where) => {
-                    let cond_expr = match args {
+                    let (cond_expr, p_args) = match args {
                         Args::Void => {
-                            n = 1;
-                            Expression::Unit
+                            (Expression::Unit, vec![])
                         }
                         Args::Many(args) => {
-                            n = args.len();
-                            if args.iter().all(|arg| matches!(arg, Arg::Simple(_))) {
-                                prob_arg_names = args.iter().map(|arg| {
-                                    match arg {
-                                        Arg::Simple(s) => s.to_string(),
-                                        _ => String::new()
-                                    }
-                                }).collect();
-                            }
-                            Expression::TupleExpr(args.iter().map(BodyAst::arg_to_expr).collect())
+                            (Expression::TupleExpr(args.iter().map(BodyAst::arg_to_expr).collect()), args.to_vec())
                         }
                     };
                     for Guard(opt_cond, expr) in guards.iter() {
@@ -164,30 +140,38 @@ impl<'a> BodyAst<'a> {
                                 *cond.clone()
                             });
                             let cond_expr = Expression::GuardedExpr(Box::from(cond_expr.clone()), a);
-
                             conds.push((Some(cond_expr), *expr.clone()));
                         }
                     }
+                    p_args
                 }
-                _ => {}
-            }
+                _ => {
+                    vec![]
+                }
+            };
+            let n = if p_args.is_empty() { 1 } else { p_args.len() };
             if args_count == 0 {
                 args_count = n;
-            }
-            if prob_arg_names.len() == args_count {
-                args_names = prob_arg_names.to_vec();
             }
             if n != args_count {
                 return Err(Error::new(OguError::SemanticError).context(
                     "argument count doesn't match with previous function declaration",
                 ));
             }
-        }
-        if args_names.is_empty() {
-            args_names = (0..args_count)
-                .into_iter()
-                .map(|n| format!("arg_{}", n))
-                .collect();
+            if args_names.is_empty() {
+                args_names =  (0..args_count)
+                    .into_iter()
+                    .map(|n| format!("arg_{}", n))
+                    .collect();
+            }
+            for (p, a) in p_args.iter().enumerate() {
+                match a {
+                    Arg::Simple(s) => args_names[p] = s.to_string(),
+                    Arg::SimpleStr(s) => args_names[p] = s.to_string(),
+                    _ => {}
+                }
+            }
+
         }
         let new_args = Args::Many(args_names.clone().into_iter().map(Arg::SimpleStr).collect());
         let new_expr = Expression::CaseExpr(

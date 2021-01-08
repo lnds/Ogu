@@ -1,10 +1,8 @@
-use crate::backend::errors::OguError;
 use crate::backend::modules::symbols::exprs::OptSymbolTuple;
-use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Error, Result};
+use anyhow::{Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct CaseExpr {
@@ -36,7 +34,7 @@ impl Symbol for CaseExpr {
         let mut cond_type = None;
         for (c, e) in self.cases.iter_mut() {
             if let Some(c) = c {
-                c.resolve_type(scope);
+                c.resolve_type(scope)?;
                 if cond_type.is_none() {
                         cond_type = c.get_type();
                 }

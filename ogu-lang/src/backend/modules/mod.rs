@@ -203,6 +203,80 @@ mod tests {
     }
 
     #[test]
+    fn test_func_pattern_1() {
+        let module = make_module(
+            indoc! {r#"
+             triple n = n * 3
+             siracusa 1 = 4
+             siracusa 2 = 1
+             siracusa n | n % 2 == 0 = siracusa (n // 2)
+             siracusa n = siracusa ((triple n) + 1) "#},
+            default_sym_table(),
+        );
+        println!("module = {:?}", module);
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("TEST DECLS = {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int(),)
+        );
+    }
+
+    #[test]
+    fn test_func_pattern_2() {
+        let module = make_module(
+            indoc! {r#"
+            ackermann 0 n | n >= 0 = n + 1
+            ackermann m 0 | m >= 0 = recur (m - 1) 1
+            acckermann m n  = recur (m - 1) (ackermann m (n - 1))"#},
+            default_sym_table(),
+        );
+        println!("module = {:?}", module);
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("TEST DECLS = {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(
+                Some(vec![BasicType::int(), BasicType::int()]),
+                BasicType::int(),
+            )
+        );
+    }
+
+    #[test]
+    fn test_func_pattern_3() {
+        let module = make_module(
+            indoc! {r#"
+            -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
+            str_imc w h | bmi <= skinny = "You're underweight, you emo, you!"
+            str_imc w h | bmi <= normal = "You're supposedly normal. Pffft, I bet you're ugly!"
+            str_imc w h | bmi <= fat = "You're fat! Lose some weight, fatty!"
+            str_imc w h =  "You're a whale, congratulations!"
+            where
+                bmi = w / h ^ 2
+                skinny = 18.5
+                normal = 25.0
+                fat = 30.0"#},
+            default_sym_table(),
+        );
+        println!("module = {:?}", module);
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("TEST DECLS = {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(
+                Some(vec![BasicType::int(), BasicType::int()]),
+                BasicType::static_str(),
+            )
+        );
+    }
+    #[test]
     fn test_guards_1() {
         let module = make_module(
             indoc! {r#"
@@ -360,80 +434,7 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_func_pattern_1() {
-        let module = make_module(
-            indoc! {r#"
-             triple n = n * 3
-             siracusa 1 = 4
-             siracusa 2 = 1
-             siracusa n | n % 2 == 0 = siracusa (n // 2)
-             siracusa n = siracusa ((triple n) + 1) "#},
-            default_sym_table(),
-        );
-        println!("module = {:?}", module);
-        assert!(module.is_ok());
-        let module = module.unwrap();
-        let decls = module.get_decls();
-        println!("TEST DECLS = {:#?}", decls);
-        assert_eq!(
-            decls[0].get_type(),
-            FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int(),)
-        );
-    }
 
-    #[test]
-    fn test_func_pattern_2() {
-        let module = make_module(
-            indoc! {r#"
-            ackermann 0 n | n >= 0 = n + 1
-            ackermann m 0 | m >= 0 = recur (m - 1) 1
-            acckermann m n  = recur (m - 1) (ackermann m (n - 1))"#},
-            default_sym_table(),
-        );
-        println!("module = {:?}", module);
-        assert!(module.is_ok());
-        let module = module.unwrap();
-        let decls = module.get_decls();
-        println!("TEST DECLS = {:#?}", decls);
-        assert_eq!(
-            decls[0].get_type(),
-            FuncType::new_opt(
-                Some(vec![BasicType::int(), BasicType::int()]),
-                BasicType::int(),
-            )
-        );
-    }
-
-    #[test]
-    fn test_func_pattern_3() {
-        let module = make_module(
-            indoc! {r#"
-            -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
-            str_imc w h | bmi <= skinny = "You're underweight, you emo, you!"
-            str_imc w h  | bmi <= normal = "You're supposedly normal. Pffft, I bet you're ugly!"
-            str_imc w h  | bmi <= fat = "You're fat! Lose some weight, fatty!"
-            str_imc w h  | otherwise =  "You're a whale, congratulations!"
-            where
-                bmi = w / h ^ 2
-                skinny = 18.5
-                normal = 25.0
-                fat = 30.0"#},
-            default_sym_table(),
-        );
-        println!("module = {:?}", module);
-        assert!(module.is_ok());
-        let module = module.unwrap();
-        let decls = module.get_decls();
-        println!("TEST DECLS = {:#?}", decls);
-        assert_eq!(
-            decls[0].get_type(),
-            FuncType::new_opt(
-                Some(vec![BasicType::int(), BasicType::int()]),
-                BasicType::static_str(),
-            )
-        );
-    }
 
 
     #[test]

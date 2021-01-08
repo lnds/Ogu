@@ -81,8 +81,6 @@ impl Symbol for TupleExpr {
             s.resolve_type(&mut *sym_table)?;
         }
         if self.assignable {
-            println!("RESOLVE TYPE ASSIGNABLE TUPLE : {:?}", self);
-            println!("SYM TABLE {:#?}", sym_table);
             for s in sym_table.get_symbols().iter() {
                 scope.define(s.clone());
             }

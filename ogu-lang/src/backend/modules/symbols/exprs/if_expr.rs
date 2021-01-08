@@ -67,7 +67,6 @@ impl Symbol for IfExpr {
                     return Err(Error::new(OguError::SemanticError).context("Invalid If or Cond"));
                 }
                 Some(et) => {
-                    println!("THEN => {:?} ELSE => {:?}", tt, et);
                     /*
                     if tt.promotes(&*et) {
                         self.then_expr.set_type(Some(tt));

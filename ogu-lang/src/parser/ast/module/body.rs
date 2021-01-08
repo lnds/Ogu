@@ -58,7 +58,6 @@ impl<'a> BodyAst<'a> {
                 result.push(decl.clone());
             }
         }
-        println!("MERGE : {:#?}", result);
         Ok(result)
     }
 
@@ -93,10 +92,8 @@ impl<'a> BodyAst<'a> {
                 _ => {}
             }
         }
-        println!("MERGE VEC OF FUNC {:#?}", vec_of_funcs);
         let mut args_count = 0; // can't be 0 args funcs
         let mut conds = vec![];
-        let mut where_conds = vec![];
         let mut args_names: Vec<String> = vec![];
         for fun in vec_of_funcs.iter() {
             let mut n = 0;
@@ -127,7 +124,7 @@ impl<'a> BodyAst<'a> {
                     };
                     conds.push(cond);
                 }
-                DeclarationAst::FunctionWithGuards(_, args, guards, _opt_where) => {
+                DeclarationAst::FunctionWithGuards(_, args, guards, opt_where) => {
                     let cond_expr = match args {
                         Args::Void => {
                             n = 1;
@@ -147,13 +144,13 @@ impl<'a> BodyAst<'a> {
                         }
                     };
                     for Guard(opt_cond, expr) in guards.iter() {
+                        let expr = if let Some(eq) = opt_where.clone() {
+                           Expression::LetExpr(eq, expr.clone())
+                        } else { expr.deref().clone() };
                         if let Some(cond) = opt_cond {
                             let cond_expr = Expression::GuardedExpr(Box::from(cond_expr.clone()), cond.clone());
-                            conds.push((Some(cond_expr), expr.deref().clone()));
+                            conds.push((Some(cond_expr), expr.clone()));
                         }
-                    }
-                    if let Some(where_expr) = _opt_where {
-                        where_conds.append(&mut where_expr.clone());
                     }
                 }
                 _ => {}
@@ -183,11 +180,7 @@ impl<'a> BodyAst<'a> {
             )),
             conds.clone(),
         );
-        if where_conds.is_empty() {
-            Ok(DeclarationAst::Function(name, new_args, new_expr))
-        } else {
-            Ok(DeclarationAst::Function(name, new_args, Expression::LetExpr(where_conds, Box::new(new_expr))))
-        }
+        Ok(DeclarationAst::Function(name, new_args, new_expr))
     }
 
     fn arg_to_expr(arg: &Arg<'a>) -> Expression<'a> {

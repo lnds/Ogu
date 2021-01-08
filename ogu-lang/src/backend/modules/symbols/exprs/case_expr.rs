@@ -70,13 +70,19 @@ impl Symbol for CaseExpr {
                         expr_type = Some(t);
                     }
                 },
-                Some(et) => match e.get_type() {
-                    None => {
-                        e.set_type(expr_type.clone());
-                    }
-                    Some(t) => {
-                        if *et != t {
-                            return Err(Error::new(OguError::SemanticError).context(format!("type of expression: {:?} is not the same of the rest of expressions in case ", e)));
+                Some(et) => {
+                    println!("OH MY e = {:?}, expr_type = {:?}", e, et);
+
+                    match e.get_type() {
+                        None => {
+                           // e.resolve_type(scope);
+                            println!("OH MY MY e = {:?}, expr_type = {:?}", e, et);
+                            e.set_type(expr_type.clone());
+                        }
+                        Some(t) => {
+                            if *et != t {
+                                return Err(Error::new(OguError::SemanticError).context(format!("type of expression: {:?} is not the same of the rest of expressions in case ", e)));
+                            }
                         }
                     }
                 },
@@ -85,10 +91,9 @@ impl Symbol for CaseExpr {
         let storable = self.selector.storable();
         self.selector.set_storable(true);
         if self.selector.get_type().is_none() {
-            self.selector.set_type(cond_type);
-        } else {
-            self.selector.matches_types(cond_type);
+            self.selector.set_type(cond_type.clone());
         }
+        self.selector.matches_types(cond_type);
         self.selector.resolve_type(scope)?;
         self.selector.set_storable(storable);
         scope.define(self.selector.clone());

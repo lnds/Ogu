@@ -144,12 +144,28 @@ impl<'a> BodyAst<'a> {
                         }
                     };
                     for Guard(opt_cond, expr) in guards.iter() {
-                        let expr = if let Some(eq) = opt_where.clone() {
-                           Expression::LetExpr(eq, expr.clone())
-                        } else { expr.deref().clone() };
                         if let Some(cond) = opt_cond {
-                            let cond_expr = Expression::GuardedExpr(Box::from(cond_expr.clone()), cond.clone());
-                            conds.push((Some(cond_expr), expr.clone()));
+                            /*
+                            w h | w / h ^ 2 <= skinny = "You're underweight, you emo, you!"
+                            where
+                                skinny = 18.5
+
+                             cond_expr : (w, h)
+                             cond = w / h ^ 2 <= skinny
+                             expr =  "You're underweight, you emo, you!"
+                             opt_where = Some([skinny = 18.5])
+                             eq = [skinny = 18.5]
+                             =>
+                             (w, h) | let skinny = 18.5 in w / h ^ 2 <= skinny ->  "You're underweight, you emo, you!"
+                             */
+                            let a = Box::new(if let Some(eq) = opt_where.clone() {
+                                Expression::LetExpr(eq, cond.clone())
+                            } else {
+                                *cond.clone()
+                            });
+                            let cond_expr = Expression::GuardedExpr(Box::from(cond_expr.clone()), a);
+
+                            conds.push((Some(cond_expr), *expr.clone()));
                         }
                     }
                 }

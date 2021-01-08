@@ -38,6 +38,7 @@ impl Symbol for ValueSym {
         self.expr.resolve_type(scope)?;
         self.name.resolve_type(scope)?;
         self.set_type(self.expr.get_type());
+        self.name.set_type(self.expr.get_type());
         Ok(self.get_type())
     }
 

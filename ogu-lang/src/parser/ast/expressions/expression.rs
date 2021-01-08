@@ -572,8 +572,10 @@ impl<'a> Expression<'a> {
                         | Expression::LambdaExpr(_, _)
                         | Expression::QualifiedIdentifier(_, _) => {
                             Ok((Expression::ParenExpr(Box::new(expr)), pos + 1))
-                        } //
-                        _ => Ok((expr, pos + 1)),
+                        } 
+                        _ => {
+                            Ok((expr, pos + 1))
+                        }
                     }
                 } else if parser.peek(pos, Lexeme::Comma) {
                     let mut exprs = vec![expr];
@@ -588,9 +590,15 @@ impl<'a> Expression<'a> {
                     pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
                     Ok((Expression::TupleExpr(exprs), pos))
                 } else {
-                    let (arg, pos) = Expression::parse_prim_expr(parser, pos)?;
+                    let (arg, mut pos) = Expression::parse_prim_expr(parser, pos)?;
+                    let mut args = vec![arg];
+                    while !parser.peek(pos, Lexeme::RightParen) {
+                        let (arg, new_pos) = Expression::parse_prim_expr(parser, pos)?;
+                        args.push(arg.clone());
+                        pos = new_pos;
+                    }
                     let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
-                    let f_call = Expression::FuncCallExpr(Box::new(expr), vec![arg]);
+                    let f_call = Expression::FuncCallExpr(Box::new(expr), args);
                     Ok((Expression::ParenExpr(Box::new(f_call)), pos))
                 }
             }
@@ -786,6 +794,7 @@ impl<'a> Expression<'a> {
     pub(crate) fn parse_recur(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::Recur)?;
         let (args, pos) = consume_args(parser, pos)?;
+        println!("AFTER CONSUME ARGS = {:?}", args);
         Ok((Expression::RecurExpr(args), pos))
     }
 

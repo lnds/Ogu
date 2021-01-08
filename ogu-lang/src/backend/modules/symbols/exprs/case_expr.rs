@@ -36,56 +36,14 @@ impl Symbol for CaseExpr {
         let mut cond_type = None;
         for (c, e) in self.cases.iter_mut() {
             if let Some(c) = c {
-                match &mut cond_type {
-                    None => match c.get_type() {
-                        None => {
-                            c.resolve_type(scope)?;
-                            cond_type = c.get_type();
-                        }
-                        Some(t) => {
-                            cond_type = Some(t);
-                        }
-                    },
-                    Some(ct) => match c.get_type() {
-                        None => {
-                            c.set_type(cond_type.clone());
-                        }
-                        Some(t) => {
-                            if ct.downcast_ref::<TupleType>().is_some() {
-                                if let Some(tt) = t.downcast_ref::<TupleType>() {
-                                    ct.match_types(tt);
-                                }
-                            }
-                        }
-                    },
+                c.resolve_type(scope);
+                if cond_type.is_none() {
+                        cond_type = c.get_type();
                 }
             }
-            match &expr_type {
-                None => match e.get_type() {
-                    None => {
-                        e.resolve_type(scope)?;
-                        expr_type = e.get_type();
-                    }
-                    Some(t) => {
-                        expr_type = Some(t);
-                    }
-                },
-                Some(et) => {
-                    println!("OH MY e = {:?}, expr_type = {:?}", e, et);
-
-                    match e.get_type() {
-                        None => {
-                           // e.resolve_type(scope);
-                            println!("OH MY MY e = {:?}, expr_type = {:?}", e, et);
-                            e.set_type(expr_type.clone());
-                        }
-                        Some(t) => {
-                            if *et != t {
-                                return Err(Error::new(OguError::SemanticError).context(format!("type of expression: {:?} is not the same of the rest of expressions in case ", e)));
-                            }
-                        }
-                    }
-                },
+            e.resolve_type(scope)?;
+            if expr_type.is_none() {
+                expr_type = e.get_type();
             }
         }
         let storable = self.selector.storable();

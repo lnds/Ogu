@@ -3,10 +3,10 @@ use std::ops::Deref;
 use anyhow::Result;
 
 use crate::lexer::tokens::Lexeme;
+use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::{
     consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent, Parser,
 };
-use crate::parser::ast::expressions::expression::Expression;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Guard<'a>(

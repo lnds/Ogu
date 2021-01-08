@@ -7,10 +7,10 @@ use logos::Logos;
 
 use crate::backend::errors::OguError;
 use crate::lexer::token_stream::TokenStream;
+use crate::lexer::tokens::Lexeme::NewLine;
 use crate::lexer::tokens::{
     IndentStack, Lexeme, LineCount, LineNumber, LineWidth, Token, TokenList,
 };
-use crate::lexer::tokens::Lexeme::NewLine;
 
 pub mod token_stream;
 pub mod tokens;
@@ -216,8 +216,8 @@ mod test_lexer {
 
     use walkdir::{DirEntry, WalkDir};
 
-    use crate::lexer::{Lexer, LexerSource};
     use crate::lexer::tokens::{Lexeme, Token};
+    use crate::lexer::{Lexer, LexerSource};
 
     impl Lexer {
         pub(crate) fn from(str: &str) -> Self {

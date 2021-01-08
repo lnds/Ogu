@@ -3,8 +3,8 @@ use std::ops::Deref;
 use anyhow::Result;
 
 use crate::lexer::tokens::Lexeme;
-use crate::parser::{Parser, raise_parser_error};
 use crate::parser::ast::expressions::expression::{Expression, ParseResult};
+use crate::parser::{raise_parser_error, Parser};
 
 #[macro_use]
 pub mod expression;

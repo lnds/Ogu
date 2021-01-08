@@ -20,11 +20,11 @@ pub(crate) enum DeclarationAst<'a> {
         Option<Vec<Derivation<'a>>>,
     ),
     TypeAlias(&'a str, Option<Vec<&'a str>>, BaseType<'a>),
-    TraitDecl(&'a str, Option<Vec<&'a str>>, Vec<FuncPrototype<'a>>),
+    TraitDecl(&'a str, Option<Vec<&'a str>>, Vec<(&'a str, FuncType<'a>)>),
     ExtensionDecl(&'a str, &'a str, Vec<DeclarationAst<'a>>),
-    FunctionPrototype(FuncPrototype<'a>),
+    FunctionPrototype(&'a str, FuncType<'a>),
+    EffectPrototype(&'a str, FuncType<'a>),
     MacroDecl(Box<DeclarationAst<'a>>),
-    Effect(FuncPrototype<'a>),
     Handler(&'a str, Args<'a>, Vec<HandleGuard<'a>>),
     DocString(Option<String>),
 }
@@ -37,12 +37,6 @@ pub(crate) enum FuncType<'a> {
     Complex(&'a str, Vec<AlgebraicElement<'a>>),
     Param(&'a str),
     Chain(Box<FuncType<'a>>, Box<FuncType<'a>>),
-}
-
-#[derive(Debug, Clone)]
-pub(crate) enum FuncPrototype<'a> {
-    Normal(&'a str, FuncType<'a>),
-    Effect(&'a str, FuncType<'a>),
 }
 
 #[derive(Debug, Clone)]

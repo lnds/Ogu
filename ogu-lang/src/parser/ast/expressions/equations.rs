@@ -1,14 +1,14 @@
 use anyhow::Result;
 
 use crate::lexer::tokens::Lexeme;
-use crate::parser::{
-    consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent,
-    Parser, raise_parser_error,
-};
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::consume_ids_sep_by;
 use crate::parser::ast::expressions::expression::Expression;
-use crate::parser::ast::expressions::guards::{Guard, GuardVec, parse_guards};
+use crate::parser::ast::expressions::guards::{parse_guards, Guard, GuardVec};
+use crate::parser::{
+    consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent,
+    raise_parser_error, Parser,
+};
 
 #[derive(Debug, Clone)]
 pub(crate) enum Equation<'a> {

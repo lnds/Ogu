@@ -3,12 +3,12 @@ use std::path::PathBuf;
 use anyhow::Result;
 
 use crate::lexer::tokens::Lexeme;
-use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 use crate::parser::ast::module::body::BodyAst;
 use crate::parser::ast::module::decls::DeclarationAst;
 use crate::parser::ast::module::exposing::Exposing;
 use crate::parser::ast::module::externs::Extern;
 use crate::parser::ast::module::imports::Import;
+use crate::parser::{consume_qualified_type_id, consume_symbol, Parser};
 
 pub(crate) mod body;
 pub(crate) mod decls;

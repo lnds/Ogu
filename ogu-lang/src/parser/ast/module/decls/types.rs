@@ -1,17 +1,17 @@
 use anyhow::Result;
 
 use crate::lexer::tokens::Lexeme;
-use crate::parser::{
-    consume_string, consume_symbol, consume_type_id, parse_opt_dedent, parse_opt_indent,
-    Parser, raise_parser_error,
-};
 use crate::parser::ast::expressions::args::Arg;
 use crate::parser::ast::expressions::consume_id;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::module::decls::{
-    AlgebraicElement, AlgebraicType, BaseType, DeclarationAst, DeclParseResult, Derivation,
-    FuncPrototype, FuncType, RecordElement,
+    AlgebraicElement, AlgebraicType, BaseType, DeclParseResult, DeclarationAst, Derivation,
+    FuncType, RecordElement,
+};
+use crate::parser::{
+    consume_string, consume_symbol, consume_type_id, parse_opt_dedent, parse_opt_indent,
+    raise_parser_error, Parser,
 };
 
 impl<'a> DeclarationAst<'a> {
@@ -269,13 +269,13 @@ impl<'a> DeclarationAst<'a> {
         let mut pos = consume_symbol(parser, pos, Lexeme::Indent)?;
         let mut trait_decls = vec![];
         while !parser.peek(pos, Lexeme::Dedent) {
-            let (func_proto, new_pos) = if parser.peek(pos, Lexeme::Effect) {
+            let (name, func_proto, new_pos) = if parser.peek(pos, Lexeme::Effect) {
                 DeclarationAst::parse_effect_func_prototype(parser, pos)?
             } else {
                 DeclarationAst::parse_func_prototype(parser, pos)?
             };
 
-            trait_decls.push(func_proto);
+            trait_decls.push((name, func_proto));
             pos = parser.skip_nl(new_pos);
         }
         let pos = parser.skip_nl(pos);
@@ -295,22 +295,22 @@ impl<'a> DeclarationAst<'a> {
     pub(crate) fn parse_effect_func_prototype(
         parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(FuncPrototype<'a>, usize)> {
+    ) -> Result<(&'a str, FuncType<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Lexeme::Effect)?;
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Lexeme::Colon)?;
         let (types, pos) = DeclarationAst::parse_func_types(parser, pos)?;
-        Ok((FuncPrototype::Effect(func_id, types), pos))
+        Ok((func_id, types, pos))
     }
 
     pub(crate) fn parse_func_prototype(
         parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(FuncPrototype<'a>, usize)> {
+    ) -> Result<(&'a str, FuncType<'a>, usize)> {
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Lexeme::Colon)?;
         let (types, pos) = DeclarationAst::parse_func_types(parser, pos)?;
-        Ok((FuncPrototype::Normal(func_id, types), pos))
+        Ok((func_id,  types, pos))
     }
 
     fn parse_func_types(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncType<'a>, usize)> {

@@ -4,8 +4,8 @@ use std::fmt::Debug;
 
 use anyhow::Result;
 
-use crate::backend::scopes::Scope;
 use crate::backend::scopes::types::Type;
+use crate::backend::scopes::Scope;
 
 pub(crate) trait Symbol: SymbolClone + Debug + mopa::Any {
     fn get_name(&self) -> &str;

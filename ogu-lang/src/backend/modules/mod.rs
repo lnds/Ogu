@@ -11,11 +11,9 @@ mod tests {
     use crate::backend::modules::module::Module;
     use crate::backend::modules::types::basic_type::BasicType;
     use crate::backend::modules::types::func_type::FuncType;
-    use crate::backend::modules::types::trait_type::{
-        TRAIT_EQ, TRAIT_NUM, TRAIT_ORD,
-    };
-    use crate::backend::scopes::Scope;
+    use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
     use crate::backend::scopes::types::TypeClone;
+    use crate::backend::scopes::Scope;
     use crate::lexer::Lexer;
     use crate::parser::ast::module::ModuleAst;
     use crate::parser::Parser;
@@ -694,6 +692,46 @@ mod tests {
                 Some(vec![BasicType::int(), BasicType::int()]),
                 BasicType::int()
             )
+        );
+    }
+
+    #[test]
+    fn test_recursive_3() {
+        let module = make_module(
+            indoc! {r#"
+                factorial 0 = 1
+                factorial 1 = 1
+                factorial n = n * (recur n - 1)"#},
+            default_sym_table(),
+        );
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        );
+    }
+
+    #[test]
+    fn test_proto_1() {
+        let module = make_module(
+            indoc! {r#"
+                factorial : Int -> Int
+                factorial 0 = 1
+                factorial 1 = 1
+                factorial n = n * (recur n - 1)"#},
+            default_sym_table(),
+        );
+        println!("module = {:?}", module);
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
         );
     }
 }

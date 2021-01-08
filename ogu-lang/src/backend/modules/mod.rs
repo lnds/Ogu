@@ -8,7 +8,9 @@ mod tests {
     use crate::backend::modules::module::Module;
     use crate::backend::modules::types::basic_type::BasicType;
     use crate::backend::modules::types::func_type::FuncType;
-    use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
+    use crate::backend::modules::types::trait_type::{
+        TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN,
+    };
     use crate::backend::scopes::types::TypeClone;
     use crate::backend::scopes::Scope;
     use crate::lexer::Lexer;

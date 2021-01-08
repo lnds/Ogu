@@ -572,10 +572,8 @@ impl<'a> Expression<'a> {
                         | Expression::LambdaExpr(_, _)
                         | Expression::QualifiedIdentifier(_, _) => {
                             Ok((Expression::ParenExpr(Box::new(expr)), pos + 1))
-                        } 
-                        _ => {
-                            Ok((expr, pos + 1))
                         }
+                        _ => Ok((expr, pos + 1)),
                     }
                 } else if parser.peek(pos, Lexeme::Comma) {
                     let mut exprs = vec![expr];
@@ -791,8 +789,6 @@ impl<'a> Expression<'a> {
         }
     }
 
-
-
     pub(crate) fn parse_perform(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::Perform)?;
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
@@ -825,7 +821,9 @@ impl<'a> Expression<'a> {
 
     fn parse_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, pos) = Expression::parse_prim_expr(parser, pos)?;
-        if is_func_call_end_symbol(parser.get_token(pos)) || !matches!(expr, Expression::ParenExpr(_)|Expression::Name(_)|Expression::NameStr(_)) {
+        if is_func_call_end_symbol(parser.get_token(pos))
+            || !matches!(expr, Expression::ParenExpr(_)|Expression::Name(_)|Expression::NameStr(_))
+        {
             Ok((expr, pos))
         } else {
             let mut args = vec![];
@@ -1054,8 +1052,6 @@ impl<'a> Expression<'a> {
         pos = parse_opt_dedent(parser, pos, indent)?;
         Ok((Expression::RepeatExpr(exprs), pos))
     }
-
-
 
     fn parse_if(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         Expression::parse_inner_if(parser, pos, Lexeme::If)

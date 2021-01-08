@@ -96,7 +96,7 @@ pub(crate) fn consume_exprs_sep_by<'a>(
 
 pub(crate) fn consume_args<'a>(
     parser: &'a Parser<'a>,
-    pos: usize
+    pos: usize,
 ) -> Result<(Vec<Expression<'a>>, usize)> {
     let mut args = vec![];
     let mut pos = pos;

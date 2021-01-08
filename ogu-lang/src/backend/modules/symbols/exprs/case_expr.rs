@@ -2,7 +2,7 @@ use crate::backend::modules::symbols::exprs::OptSymbolTuple;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Result};
+use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct CaseExpr {
@@ -36,14 +36,12 @@ impl Symbol for CaseExpr {
             if let Some(c) = c {
                 c.resolve_type(scope)?;
                 if cond_type.is_none() {
-                        cond_type = c.get_type();
-                }
-                else {
+                    cond_type = c.get_type();
+                } else {
                     let mut t = cond_type.clone().unwrap();
                     if let Some(ct) = c.get_type() {
                         t.match_types(&*ct);
                         cond_type = Some(t);
-
                     }
                 }
             }

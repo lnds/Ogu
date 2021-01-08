@@ -310,7 +310,7 @@ impl<'a> DeclarationAst<'a> {
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Lexeme::Colon)?;
         let (types, pos) = DeclarationAst::parse_func_types(parser, pos)?;
-        Ok((func_id,  types, pos))
+        Ok((func_id, types, pos))
     }
 
     fn parse_func_types(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncType<'a>, usize)> {

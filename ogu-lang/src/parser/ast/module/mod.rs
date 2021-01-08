@@ -14,6 +14,7 @@ pub(crate) mod body;
 pub(crate) mod decls;
 pub(crate) mod exposing;
 pub(crate) mod externs;
+mod func_merge;
 pub(crate) mod imports;
 
 #[derive(Debug, Clone)]

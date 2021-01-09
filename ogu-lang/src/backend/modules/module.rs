@@ -48,7 +48,7 @@ impl Module {
 impl<'a> From<&DeclarationAst<'a>> for Box<dyn Symbol> {
     fn from(decl: &DeclarationAst<'a>) -> Self {
         match decl {
-            Function(name, args, expr, _ft) => FunctionSym::new(name, args, expr),
+            Function(name, args, expr, ft) => FunctionSym::new(name, args, expr, ft),
             Value(name, expr) => ValueSym::new(name, expr),
             _d => {
                 println!("not implemented for {:?}", _d);

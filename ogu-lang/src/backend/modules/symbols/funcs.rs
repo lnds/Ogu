@@ -7,6 +7,7 @@ use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use anyhow::{Result};
+use crate::parser::ast::module::decls::FuncTypeAst;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -17,8 +18,11 @@ pub(crate) struct FunctionSym {
 }
 
 impl FunctionSym {
-    pub(crate) fn new(name: &str, args: &Args, expr: &Expression) -> Box<Self> {
-        let ty: Option<Box<dyn Type>> = FuncType::from_ast_opt(args, expr);
+    pub(crate) fn new(name: &str, args: &Args, expr: &Expression, ft: &Option<FuncTypeAst>) -> Box<Self> {
+        let ty: Option<Box<dyn Type>> = match ft {
+            None => FuncType::from_ast_opt(args, expr),
+            Some(_t) =>todo!("check ft")
+        };
         let expr: Box<dyn Symbol> = expr.into();
         let args: Option<Vec<Box<dyn Symbol>>> = match args {
             Args::Void => None,

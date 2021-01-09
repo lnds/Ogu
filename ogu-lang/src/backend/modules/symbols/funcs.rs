@@ -6,7 +6,7 @@ use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
-use anyhow::Result;
+use anyhow::{Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -113,7 +113,7 @@ impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
         match arg {
             Arg::Simple(s) => IdSym::new(s),
             Arg::SimpleStr(s) => IdSym::new(&s),
-            _ => todo!(),
+            _ => panic!("Invalid Arg, internal parser error")
         }
     }
 }

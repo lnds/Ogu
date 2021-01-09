@@ -7,7 +7,7 @@ use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::module::decls::{
     AlgebraicElement, AlgebraicType, BaseType, DeclParseResult, DeclarationAst, Derivation,
-    FuncType, RecordElement,
+    FuncTypeAst, RecordElement,
 };
 use crate::parser::{
     consume_string, consume_symbol, consume_type_id, parse_opt_dedent, parse_opt_indent,
@@ -295,7 +295,7 @@ impl<'a> DeclarationAst<'a> {
     pub(crate) fn parse_effect_func_prototype(
         parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(&'a str, FuncType<'a>, usize)> {
+    ) -> Result<(&'a str, FuncTypeAst<'a>, usize)> {
         let pos = consume_symbol(parser, pos, Lexeme::Effect)?;
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Lexeme::Colon)?;
@@ -306,25 +306,25 @@ impl<'a> DeclarationAst<'a> {
     pub(crate) fn parse_func_prototype(
         parser: &'a Parser<'a>,
         pos: usize,
-    ) -> Result<(&'a str, FuncType<'a>, usize)> {
+    ) -> Result<(&'a str, FuncTypeAst<'a>, usize)> {
         let (func_id, pos) = consume_id(parser, pos)?;
         let pos = consume_symbol(parser, pos, Lexeme::Colon)?;
         let (types, pos) = DeclarationAst::parse_func_types(parser, pos)?;
         Ok((func_id, types, pos))
     }
 
-    fn parse_func_types(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncType<'a>, usize)> {
+    fn parse_func_types(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncTypeAst<'a>, usize)> {
         let (t, pos) = DeclarationAst::parse_func_type(parser, pos)?;
         if parser.peek(pos, Lexeme::Arrow) {
             let pos = consume_symbol(parser, pos, Lexeme::Arrow)?;
             let (t2, pos) = DeclarationAst::parse_func_types(parser, pos)?;
-            Ok((FuncType::Chain(Box::new(t), Box::new(t2)), pos))
+            Ok((FuncTypeAst::Chain(Box::new(t), Box::new(t2)), pos))
         } else {
             Ok((t, pos))
         }
     }
 
-    fn parse_func_type(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncType<'a>, usize)> {
+    fn parse_func_type(parser: &'a Parser<'a>, pos: usize) -> Result<(FuncTypeAst<'a>, usize)> {
         match parser.get_token(pos) {
             Some(Lexeme::TypeId(_)) => {
                 let (type_id, pos) = consume_type_id(parser, pos)?;
@@ -335,14 +335,14 @@ impl<'a> DeclarationAst<'a> {
                     pos = new_pos;
                 }
                 if params.is_empty() {
-                    Ok((FuncType::Simple(type_id), pos))
+                    Ok((FuncTypeAst::Simple(type_id), pos))
                 } else {
-                    Ok((FuncType::Complex(type_id, params), pos))
+                    Ok((FuncTypeAst::Complex(type_id, params), pos))
                 }
             }
-            Some(Lexeme::Id(id)) => Ok((FuncType::Param(id), pos + 1)),
+            Some(Lexeme::Id(id)) => Ok((FuncTypeAst::Param(id), pos + 1)),
             Some(Lexeme::LeftParen) if parser.peek(pos + 1, Lexeme::RightParen) => {
-                Ok((FuncType::Void, pos + 2))
+                Ok((FuncTypeAst::Void, pos + 2))
             }
             Some(Lexeme::LeftParen) => {
                 let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
@@ -350,7 +350,7 @@ impl<'a> DeclarationAst<'a> {
                 let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
                 Ok((t, pos))
             }
-            Some(Lexeme::Macro) => Ok((FuncType::Macro, pos + 1)),
+            Some(Lexeme::Macro) => Ok((FuncTypeAst::Macro, pos + 1)),
             _ => raise_parser_error("expecting a type or a param", parser, pos, true),
         }
     }

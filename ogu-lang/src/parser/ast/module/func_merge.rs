@@ -1,10 +1,9 @@
-use crate::backend::errors::OguError;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::expressions::guards::Guard;
 use crate::parser::ast::module::body::BodyAst;
-use crate::parser::ast::module::decls::{DeclarationAst, FuncType};
-use anyhow::{Error, Result};
+use crate::parser::ast::module::decls::{DeclarationAst, FuncTypeAst};
+use anyhow::{bail, Result};
 
 type GuardType<'a> = (Option<Expression<'a>>, Expression<'a>);
 
@@ -24,7 +23,7 @@ impl<'a> BodyAst<'a> {
             .collect();
         let new_args = Args::Many(args_names.into_iter().map(Arg::SimpleStr).collect());
         let new_expr = Expression::CaseExpr(Box::new(Expression::TupleExpr(args)), conds.clone());
-        Ok(DeclarationAst::Function(name, new_args, new_expr))
+        Ok(DeclarationAst::Function(name, new_args, new_expr, _ft))
     }
 
     fn match_one_function(
@@ -35,8 +34,8 @@ impl<'a> BodyAst<'a> {
         }
         match &vec_of_funcs[0] {
             DeclarationAst::FunctionWithGuards(_, Args::Void, _, _)
-            | DeclarationAst::Function(_, Args::Void, _) => Ok(Some(vec_of_funcs[0].clone())),
-            DeclarationAst::Function(_, Args::Many(args), _) => {
+            | DeclarationAst::Function(_, Args::Void, _, _) => Ok(Some(vec_of_funcs[0].clone())),
+            DeclarationAst::Function(_, Args::Many(args), _, _) => {
                 if args.iter().all(|a| matches!(a, Arg::Simple(_))) {
                     Ok(Some(vec_of_funcs[0].clone()))
                 } else {
@@ -58,14 +57,12 @@ impl<'a> BodyAst<'a> {
                         name,
                         Args::Many(args_vec.clone()),
                         expr,
+                        None
                     )))
                 }
             }
-            DeclarationAst::FunctionPrototype(name, _) => Err(Error::new(OguError::SemanticError)
-                .context(format!(
-                    "Function prototype for {} without function declaration",
-                    name
-                ))),
+            DeclarationAst::FunctionPrototype(name, _) =>
+                bail!("Function prototype for {} without function declaration", name ),
             _ => Ok(None),
         }
     }
@@ -76,7 +73,7 @@ impl<'a> BodyAst<'a> {
     ) -> Result<(
         Vec<String>,
         Vec<GuardType<'a>>,
-        Option<FuncType<'a>>,
+        Option<FuncTypeAst<'a>>,
     )> {
         let mut args_count = 0; // can't be 0 args funcs
         let mut conds = vec![];
@@ -86,10 +83,7 @@ impl<'a> BodyAst<'a> {
             let p_args = match fun {
                 DeclarationAst::FunctionPrototype(_, ty) => {
                     if function_type.is_some() {
-                        return Err(Error::new(OguError::SemanticError).context(format!(
-                            "Function declaration for {} already has a function prototype",
-                            name
-                        )));
+                        bail!("Function declaration for {} already has a function prototype", name);
                     }
                     function_type = Some(ty.clone());
                     None
@@ -105,8 +99,7 @@ impl<'a> BodyAst<'a> {
                 args_count = n;
             }
             if n != args_count {
-                return Err(Error::new(OguError::SemanticError)
-                    .context("argument count doesn't match with previous function declaration"));
+                bail!("argument count doesn't match with previous function declaration");
             }
             if args_names.is_empty() {
                 args_names = (0..args_count)
@@ -130,11 +123,11 @@ impl<'a> BodyAst<'a> {
         conds: &mut Vec<(Option<Expression<'a>>, Expression<'a>)>,
     ) -> Option<Vec<Arg<'a>>> {
         match fun {
-            DeclarationAst::Function(_, Args::Void, expr) => {
+            DeclarationAst::Function(_, Args::Void, expr, _) => {
                 conds.push((Some(Expression::Unit), expr.clone()));
                 Some(vec![])
             }
-            DeclarationAst::Function(_, Args::Many(args), expr) => {
+            DeclarationAst::Function(_, Args::Many(args), expr, _) => {
                 let exprs = Expression::TupleExpr(args.iter().map(BodyAst::arg_to_expr).collect());
                 conds.push((Some(exprs), expr.clone()));
                 Some(args.to_vec())

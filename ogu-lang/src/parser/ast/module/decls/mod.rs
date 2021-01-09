@@ -11,7 +11,8 @@ pub(crate) mod types;
 #[derive(Debug, Clone)]
 pub(crate) enum DeclarationAst<'a> {
     Value(Expression<'a>, Expression<'a>),
-    Function(&'a str, Args<'a>, Expression<'a>),
+    Function(&'a str, Args<'a>, Expression<'a>, Option<FuncTypeAst<'a>>),
+    // internal
     FunctionWithGuards(&'a str, Args<'a>, GuardVec<'a>, Option<Vec<Equation<'a>>>),
     TypeDecl(
         &'a str,
@@ -20,23 +21,23 @@ pub(crate) enum DeclarationAst<'a> {
         Option<Vec<Derivation<'a>>>,
     ),
     TypeAlias(&'a str, Option<Vec<&'a str>>, BaseType<'a>),
-    TraitDecl(&'a str, Option<Vec<&'a str>>, Vec<(&'a str, FuncType<'a>)>),
+    TraitDecl(&'a str, Option<Vec<&'a str>>, Vec<(&'a str, FuncTypeAst<'a>)>),
     ExtensionDecl(&'a str, &'a str, Vec<DeclarationAst<'a>>),
-    FunctionPrototype(&'a str, FuncType<'a>),
-    EffectPrototype(&'a str, FuncType<'a>),
+    FunctionPrototype(&'a str, FuncTypeAst<'a>),
+    EffectPrototype(&'a str, FuncTypeAst<'a>),
     MacroDecl(Box<DeclarationAst<'a>>),
     Handler(&'a str, Args<'a>, Vec<HandleGuard<'a>>),
     DocString(Option<String>),
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum FuncType<'a> {
+pub(crate) enum FuncTypeAst<'a> {
     Void,
     Macro,
     Simple(&'a str),
     Complex(&'a str, Vec<AlgebraicElement<'a>>),
     Param(&'a str),
-    Chain(Box<FuncType<'a>>, Box<FuncType<'a>>),
+    Chain(Box<FuncTypeAst<'a>>, Box<FuncTypeAst<'a>>),
 }
 
 #[derive(Debug, Clone)]

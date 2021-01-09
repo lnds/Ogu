@@ -8,9 +8,12 @@ use crate::parser::{consume_symbol, raise_parser_error, Parser};
 pub(crate) enum Arg<'a> {
     Simple(&'a str),
     SimpleStr(String),
+    // Internal
     Tuple(Vec<Arg<'a>>),
     Expr(Box<Expression<'a>>),
 }
+
+
 
 #[derive(Debug, Clone)]
 pub(crate) enum Args<'a> {

@@ -35,7 +35,7 @@ impl<'a> BodyAst<'a> {
         let mut funcs = HashMap::new();
         for decl in decls.iter() {
             match decl {
-                DeclarationAst::Function(name, _, _)
+                DeclarationAst::Function(name, _, _, _)
                 | DeclarationAst::FunctionWithGuards(name, _, _, _)
                 | DeclarationAst::FunctionPrototype(name, _) => funcs
                     .entry(name)
@@ -47,7 +47,7 @@ impl<'a> BodyAst<'a> {
         let mut result = vec![];
         for decl in decls.iter() {
             match decl {
-                DeclarationAst::Function(name, _, _)
+                DeclarationAst::Function(name, _, _, _)
                 | DeclarationAst::FunctionWithGuards(name, _, _, _)
                 | DeclarationAst::FunctionPrototype(name, _) => {
                     if let Some((_, vec_of_func)) = funcs.remove_entry(&name) {

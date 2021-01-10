@@ -18,7 +18,8 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::{Expression, OptExprTuple};
+use crate::parser::ast::expressions::expression::{Expression, OptExprTuple, LambdaArg};
+use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
 
 mod arithmetics;
 mod case_expr;
@@ -35,6 +36,7 @@ mod partial_eq;
 mod partial_ord;
 mod recur_call;
 mod tuple_expr;
+mod lambda_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -86,6 +88,9 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::DoExpr(exprs) => DoExpr::new(vec_exprs_into(exprs)),
 
+            Expression::LambdaExpr(args, expr) =>
+                LambdaExpr::new(vec_lambda_args_into(args), expr.into()),
+
             Expression::RecurExpr(args) => RecurCallExpr::new(vec_exprs_into(args)),
 
             Expression::FuncCallExpr(f, args) => FuncCallExpr::new(f.into(), vec_exprs_into(args)),
@@ -125,6 +130,10 @@ fn vec_exprs_into(args: &[Expression]) -> Vec<Box<dyn Symbol>> {
     args.iter().map(|a| a.into()).collect()
 }
 
+fn vec_lambda_args_into(args: &[LambdaArg]) -> Vec<Box<dyn Symbol>> {
+    args.iter().map(|a| a.into()).collect()
+}
+
 pub(crate) type OptSymbolTuple = (Option<Box<dyn Symbol>>, Box<dyn Symbol>);
 
 fn vec_exprs_tuples_into(args: &[OptExprTuple]) -> Vec<OptSymbolTuple> {
@@ -135,4 +144,13 @@ fn vec_exprs_tuples_into(args: &[OptExprTuple]) -> Vec<OptSymbolTuple> {
 
 fn vec_eqs_into(eqs: &[Equation]) -> Vec<Box<dyn Symbol>> {
     eqs.iter().map(|eq| eq.into()).collect()
+}
+
+impl<'a> From<&LambdaArg<'a>> for Box<dyn Symbol> {
+    fn from(arg: &LambdaArg<'a>) -> Self {
+        match arg {
+            LambdaArg::Simple(s) => IdSym::new(&s),
+            _ => todo!()
+        }
+    }
 }

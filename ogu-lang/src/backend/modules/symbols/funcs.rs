@@ -120,8 +120,6 @@ impl Symbol for FunctionSym {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        println!("RESOLVE TYPE FOR FUN {}", self.name);
-        println!("self.ty = {:?}", self.ty);
         let mut sym_table = SymbolTable::new(&self.name, Some(scope.clone_box()));
 
         if let Some(args) = &self.args {

@@ -772,4 +772,27 @@ mod tests {
         );
         assert!(module.is_err());
     }
+
+    #[test]
+    fn test_lambda_1() {
+        let module = make_module(
+            indoc! {r#"
+            mul = \x y -> x * y
+            ten = mul 2 5"#},
+            default_sym_table(),
+        );
+        println!("module = {:?}", module);
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box())
+        );
+        assert_eq!(
+            decls[1].get_type(),
+            Some(BasicType::int())
+        );
+    }
 }

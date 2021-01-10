@@ -64,7 +64,7 @@ impl FuncType {
     pub(crate) fn make(
         args: &Option<Vec<Box<dyn Symbol>>>,
         expr: &dyn Symbol,
-    ) -> Option<Box<Self>> {
+    ) -> Option<Box<Self>>  {
         let result = expr.get_type()?;
         let args = match args {
             None => None,

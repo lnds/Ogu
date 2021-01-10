@@ -82,7 +82,9 @@ impl FuncType {
         match args {
             None if !v.is_empty() => bail!("prototype define no args, but args given for func : {}", name),
             None => Ok(Some(Box::new(FuncType { args: None, result: t.clone() }))),
+            Some(args) if v.len() != args.len() => bail!("args count doesn't match with prototype for function {}", name),
             Some(args) => {
+
                 for (p, a) in args.iter_mut().enumerate() {
                     a.set_type(Some(v[p].clone()));
                 }

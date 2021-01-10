@@ -759,4 +759,17 @@ mod tests {
             FuncType::new_opt(Some(vec![BasicType::uint(), BasicType::uint()]), BasicType::uint())
         );
     }
+
+    #[test]
+    fn test_proto_3() {
+        let module = make_module(
+            indoc! {r#"
+                factorial : Int -> Int
+                factorial 0 0 = 1
+                factorial 1 2 = 1
+                factorial n _ = n * (recur n - 1)"#},
+            default_sym_table(),
+        );
+        assert!(module.is_err());
+    }
 }

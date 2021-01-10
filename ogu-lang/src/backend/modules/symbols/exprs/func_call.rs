@@ -7,6 +7,7 @@ use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
 use crate::backend::modules::symbols::idents::IdSym;
+use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallExpr {
@@ -75,8 +76,8 @@ impl Symbol for FuncCallExpr {
                                         self.func = Box::new(f);
                                         scope.define(self.func.clone()); // ojp !!
                                     }
-                                } else if let Some(func) = func.downcast_ref::<ValueSym>() {
-                                    if let Some(id) = func.expr.downcast_ref::<IdSym>() {
+                                } else if let Some(val) = func.downcast_ref::<ValueSym>() {
+                                    if let Some(id) = val.expr.downcast_ref::<IdSym>() {
                                         match scope.resolve(id.get_name()) {
                                             None => bail!("FATAL could not find function: {}", id.get_name()),
                                             Some(fun) => {
@@ -93,27 +94,16 @@ impl Symbol for FuncCallExpr {
                                                 }
                                             }
                                         }
-                                    } else if let Some(func) = func.expr.downcast_ref::<FuncCallExpr>() {
-                                        match scope.resolve(func.get_name()) {
-                                            None => bail!("FATAL could not find function: {}", func.get_name()),
-                                            Some(fun) => {
-                                                println!("SCOPE IS : {}", scope.scope_name());
-                                                println!("FUN ES = {:?}", fun);
-                                                if let Some(func) = fun.downcast_ref::<FunctionSym>() {
-                                                    let mut f = func.clone();
-                                                    f.replace_args(self.args.to_vec(), scope, !recursive)?;
-                                                    println!("F queda asi: {:#?}", f);
-                                                    if self.func.get_type() != f.get_type() {
-                                                        println!("son tipos distintos!!!!!");
-                                                        self.func = Box::new(f);
-                                                    }
-                                                }
-                                            }
+                                    } else if let Some(lambda) = val.expr.downcast_ref::<LambdaExpr>() {
+                                        let mut l = lambda.clone();
+                                        l.replace_args(self.args.to_vec(), scope)?;
+                                        if self.func.get_type() != l.get_type() {
+                                            self.func = Box::new(l);
                                         }
                                     }
 
                                     else {
-                                        bail!("FATAL: FUNC {:?} is from invalid value!!", func);
+                                        bail!("FATAL: VAL {:?} is from invalid value!!", val);
                                     }
                                 } else {
                                     bail!("WTF func = {:#?}", func);

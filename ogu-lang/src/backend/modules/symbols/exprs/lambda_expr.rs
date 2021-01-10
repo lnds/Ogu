@@ -4,6 +4,7 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
+use crate::backend::modules::symbols::idents::IdSym;
 
 #[derive(Debug, Clone)]
 pub(crate) struct LambdaExpr {
@@ -14,6 +15,26 @@ pub(crate) struct LambdaExpr {
 impl LambdaExpr {
     pub(crate) fn new(args: Vec<Box<dyn Symbol>>, expr: Box<dyn Symbol>) -> Box<Self> {
         Box::new(LambdaExpr { args, expr })
+    }
+
+    pub(crate) fn replace_args(
+        &mut self,
+        args: Vec<Box<dyn Symbol>>,
+        scope: &mut dyn Scope,
+    ) -> Result<()> {
+        if args.len() != self.args.len() {
+            bail!("trying to call lambda with wrong args count");
+        }
+        let mut new_args: Vec<Box<dyn Symbol>> = vec![];
+        for (p, a) in self.args.iter().enumerate() {
+            new_args.push(IdSym::new_with_type(
+                a.get_name(),
+                args[p].get_type().clone(),
+            ))
+        }
+        self.args = new_args;
+        self.resolve_type(scope)?;
+        Ok(())
     }
 
     fn define_arg(&mut self, sym: Box<dyn Symbol>) -> Result<Option<Box<dyn Symbol>>> {

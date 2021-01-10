@@ -786,7 +786,8 @@ mod tests {
         let module = make_module(
             indoc! {r#"
             mul = \x y -> x * y
-            ten = mul 2 5"#},
+            ten = mul 2 5
+            three = mul 1 3.0 "#},
             default_sym_table(),
         );
         println!("module = {:?}", module);
@@ -802,5 +803,6 @@ mod tests {
             )
         );
         assert_eq!(decls[1].get_type(), Some(BasicType::int()));
+        assert_eq!(decls[2].get_type(), Some(BasicType::float()));
     }
 }

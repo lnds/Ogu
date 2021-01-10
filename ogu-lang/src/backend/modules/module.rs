@@ -4,7 +4,7 @@ use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::Scope;
 use crate::parser::ast::module::decls::DeclarationAst;
-use crate::parser::ast::module::decls::DeclarationAst::{Function, Value, FunctionWithGuards};
+use crate::parser::ast::module::decls::DeclarationAst::{Function, FunctionWithGuards, Value};
 use crate::parser::ast::module::ModuleAst;
 use anyhow::{bail, Result};
 
@@ -19,7 +19,10 @@ impl Module {
         for decl in module_ast.get_decls().iter() {
             let sym = Module::define_decl(decl)?;
             if sym_table.define(sym.clone()).is_some() {
-                bail!("Duplicated definition not allowed for symol = {}", sym.get_name());
+                bail!(
+                    "Duplicated definition not allowed for symol = {}",
+                    sym.get_name()
+                );
             }
         }
         let mut decls = sym_table.get_symbols();
@@ -33,21 +36,17 @@ impl Module {
 
     fn define_decl(decl: &DeclarationAst) -> Result<Box<dyn Symbol>> {
         match decl {
-            FunctionWithGuards(_,_,_,_) =>
-                bail!("internal error, function with guard leaked"),
-            Function(name, args, expr, ft) =>
-                FunctionSym::make(name, args, expr, ft),
+            FunctionWithGuards(_, _, _, _) => bail!("internal error, function with guard leaked"),
+            Function(name, args, expr, ft) => FunctionSym::make(name, args, expr, ft),
             Value(name, expr) => Ok(ValueSym::new(name, expr)),
             _d => {
-            println!("not implemented for {:?}", _d);
-            todo!()
+                println!("not implemented for {:?}", _d);
+                todo!()
             }
         }
-
     }
 
     pub(crate) fn get_decls(&self) -> Vec<Box<dyn Symbol>> {
         self.decls.to_vec()
     }
 }
-

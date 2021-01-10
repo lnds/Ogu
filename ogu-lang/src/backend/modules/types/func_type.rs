@@ -1,10 +1,9 @@
-use crate::backend::modules::symbols::funcs::vec_args_into;
+use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::parser::ast::module::decls::FuncTypeAst;
-use crate::backend::modules::types::basic_type::BasicType;
 use anyhow::{bail, Result};
-use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncType {
@@ -64,7 +63,7 @@ impl FuncType {
     pub(crate) fn make(
         args: &Option<Vec<Box<dyn Symbol>>>,
         expr: &dyn Symbol,
-    ) -> Option<Box<Self>>  {
+    ) -> Option<Box<Self>> {
         let result = expr.get_type()?;
         let args = match args {
             None => None,
@@ -77,30 +76,45 @@ impl FuncType {
         Some(Self::new(args, result))
     }
 
-    pub(crate) fn check_and_make(name: &str, ft : &FuncTypeAst, args: &mut Option<Vec<Box<dyn Symbol>>>) -> Result<Option<Box<Self>>> {
+    pub(crate) fn check_and_make(
+        name: &str,
+        ft: &FuncTypeAst,
+        args: &mut Option<Vec<Box<dyn Symbol>>>,
+    ) -> Result<Option<Box<Self>>> {
         let (v, t) = Self::expand_from_ast_ft(ft, vec![]);
         match args {
-            None if !v.is_empty() => bail!("prototype define no args, but args given for func : {}", name),
-            None => Ok(Some(Box::new(FuncType { args: None, result: t.clone() }))),
-            Some(args) if v.len() != args.len() => bail!("args count doesn't match with prototype for function {}", name),
+            None if !v.is_empty() => bail!(
+                "prototype define no args, but args given for func : {}",
+                name
+            ),
+            None => Ok(Some(Box::new(FuncType {
+                args: None,
+                result: t.clone(),
+            }))),
+            Some(args) if v.len() != args.len() => bail!(
+                "args count doesn't match with prototype for function {}",
+                name
+            ),
             Some(args) => {
-
                 for (p, a) in args.iter_mut().enumerate() {
                     a.set_type(Some(v[p].clone()));
                 }
                 Ok(Some(Box::new(FuncType {
                     args: Some(v.to_vec()),
-                    result: t.clone()
+                    result: t.clone(),
                 })))
             }
         }
     }
 
-    fn expand_from_ast_ft(ft: &FuncTypeAst, vec: Vec<Box<dyn Type>>) -> (Vec<Box<dyn Type>>, Box<dyn Type>) {
+    fn expand_from_ast_ft(
+        ft: &FuncTypeAst,
+        vec: Vec<Box<dyn Type>>,
+    ) -> (Vec<Box<dyn Type>>, Box<dyn Type>) {
         match ft {
             FuncTypeAst::Void => (vec, BasicType::unit()),
             FuncTypeAst::Simple("Int") => (vec, BasicType::int()), // TODO must resolve in symbol table
-            FuncTypeAst::Simple("UInt") => (vec, BasicType::uint()),// TODO must resolve in symbol table
+            FuncTypeAst::Simple("UInt") => (vec, BasicType::uint()), // TODO must resolve in symbol table
             FuncTypeAst::Simple(str) => (vec, BasicType::undefined(str)),
             FuncTypeAst::Chain(t1, t2) => {
                 let (mut v1, tt1) = Self::expand_from_ast_ft(&*t1, vec![]);
@@ -109,9 +123,7 @@ impl FuncType {
                 v1.append(&mut v2);
                 (v1, tt2)
             }
-            _ => todo!("the rest")
+            _ => todo!("the rest"),
         }
     }
 }
-
-

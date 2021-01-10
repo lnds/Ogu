@@ -70,12 +70,10 @@ impl Symbol for ArithmeticSym {
                     Some(rt) => {
                         if lt == rt.clone() {
                             Some(rt.clone())
-                        } else if lt == BasicType::int() && rt == BasicType::uint() {
-                            Some(rt.clone())
-                        } else if lt == BasicType::uint() && rt == BasicType::int() {
-                            Some(lt.clone())
-                        }
-                        else if (lt == BasicType::float() && rt == BasicType::int())
+                        } else if lt == BasicType::int() && rt == BasicType::uint()
+                        || lt == BasicType::uint() && rt == BasicType::int() {
+                            Some(BasicType::uint())
+                        } else if (lt == BasicType::float() && rt == BasicType::int())
                             || (lt == BasicType::float() && rt == BasicType::uint())
                             || (lt == BasicType::int() && rt == BasicType::float())
                             || (lt == BasicType::uint() && rt == BasicType::float())

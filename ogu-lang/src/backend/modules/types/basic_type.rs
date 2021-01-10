@@ -1,4 +1,4 @@
-use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_UNKNOWN, TRAIT_ORD, TRAIT_EQ};
+use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
 use crate::backend::scopes::types::{Type, TypeClone};
 
 #[derive(Clone, Debug)]
@@ -82,7 +82,7 @@ impl Type for BasicType {
             BasicType::Date => "date".to_string(),
             BasicType::Regexp => "regexp".to_string(),
             BasicType::Invalid => "invalid".to_string(),
-            BasicType::Undefined(s) => s.to_string()
+            BasicType::Undefined(s) => s.to_string(),
         }
     }
 
@@ -100,8 +100,11 @@ impl Type for BasicType {
         }
         match self {
             BasicType::Int | BasicType::UInt => {
-                if other == TRAIT_NUM || other == TRAIT_UNKNOWN || other == TRAIT_ORD ||
-                    other == TRAIT_EQ {
+                if other == TRAIT_NUM
+                    || other == TRAIT_UNKNOWN
+                    || other == TRAIT_ORD
+                    || other == TRAIT_EQ
+                {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
                     matches!(ot, BasicType::Int | BasicType::UInt)
@@ -110,17 +113,20 @@ impl Type for BasicType {
                 }
             }
             BasicType::Float => {
-                if other == TRAIT_NUM || other == TRAIT_UNKNOWN || other == TRAIT_ORD
-                || other == TRAIT_EQ {
+                if other == TRAIT_NUM
+                    || other == TRAIT_UNKNOWN
+                    || other == TRAIT_ORD
+                    || other == TRAIT_EQ
+                {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
-                    matches!(ot, BasicType::Int | BasicType::UInt| BasicType::Float)
+                    matches!(ot, BasicType::Int | BasicType::UInt | BasicType::Float)
                 } else {
                     false
                 }
             }
             BasicType::StaticStr => {
-                 other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
+                other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
             }
             _ => false,
         }

@@ -1,11 +1,12 @@
-use crate::backend::errors::OguError;
 use crate::backend::modules::symbols::funcs::FunctionSym;
+use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::variadic_type::VariadicType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Error, Result};
+use anyhow::{bail, Result};
+use crate::backend::modules::symbols::idents::IdSym;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallExpr {
@@ -47,18 +48,13 @@ impl Symbol for FuncCallExpr {
                     match ft.get_args() {
                         None => {
                             if !self.args.is_empty() {
-                                return Err(Error::new(OguError::SemanticError).context(format!(
-                                    "function {} need no args",
-                                    self.func.get_name()
-                                )));
+                                bail!("function {} need no args", self.func.get_name());
                             }
                         }
-                        Some(ft_args) if ft_args.len() > self.args.len() => {
-                            return Err(Error::new(OguError::SemanticError).context(format!(
-                                "function {} receive more args than needed",
-                                self.func.get_name()
-                            )))
-                        }
+                        Some(ft_args) if ft_args.len() > self.args.len() => bail!(
+                            "function {} receive more args than needed",
+                            self.func.get_name()
+                        ),
                         Some(ft_args) if ft_args.len() < self.args.len() => {
                             println!("probably curry");
                             todo!()
@@ -79,6 +75,48 @@ impl Symbol for FuncCallExpr {
                                         self.func = Box::new(f);
                                         scope.define(self.func.clone()); // ojp !!
                                     }
+                                } else if let Some(func) = func.downcast_ref::<ValueSym>() {
+                                    if let Some(id) = func.expr.downcast_ref::<IdSym>() {
+                                        match scope.resolve(id.get_name()) {
+                                            None => bail!("FATAL could not find function: {}", id.get_name()),
+                                            Some(fun) => {
+                                                println!("SCOPE IS : {}", scope.scope_name());
+                                                println!("FUN ES = {:?}", fun);
+                                                if let Some(func) = fun.downcast_ref::<FunctionSym>() {
+                                                    let mut f = func.clone();
+                                                    f.replace_args(self.args.to_vec(), scope, !recursive)?;
+                                                    println!("F queda asi: {:#?}", f);
+                                                    if self.func.get_type() != f.get_type() {
+                                                        println!("son tipos distintos!!!!!");
+                                                        self.func = Box::new(f);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else if let Some(func) = func.expr.downcast_ref::<FuncCallExpr>() {
+                                        match scope.resolve(func.get_name()) {
+                                            None => bail!("FATAL could not find function: {}", func.get_name()),
+                                            Some(fun) => {
+                                                println!("SCOPE IS : {}", scope.scope_name());
+                                                println!("FUN ES = {:?}", fun);
+                                                if let Some(func) = fun.downcast_ref::<FunctionSym>() {
+                                                    let mut f = func.clone();
+                                                    f.replace_args(self.args.to_vec(), scope, !recursive)?;
+                                                    println!("F queda asi: {:#?}", f);
+                                                    if self.func.get_type() != f.get_type() {
+                                                        println!("son tipos distintos!!!!!");
+                                                        self.func = Box::new(f);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    else {
+                                        bail!("FATAL: FUNC {:?} is from invalid value!!", func);
+                                    }
+                                } else {
+                                    bail!("WTF func = {:#?}", func);
                                 }
                             }
                         }
@@ -90,8 +128,7 @@ impl Symbol for FuncCallExpr {
                         ft
                     );
                 } else {
-                    return Err(Error::new(OguError::SemanticError)
-                        .context(format!("{} it's not a function", self.func.get_name())));
+                    bail!("{} it's not a function", self.func.get_name());
                 }
                 self.ty = match self.func.get_type() {
                     None => None,

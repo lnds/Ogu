@@ -13,8 +13,6 @@ pub(crate) enum Arg<'a> {
     Expr(Box<Expression<'a>>),
 }
 
-
-
 #[derive(Debug, Clone)]
 pub(crate) enum Args<'a> {
     Void,

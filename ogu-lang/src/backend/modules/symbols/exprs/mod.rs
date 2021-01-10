@@ -6,6 +6,7 @@ use crate::backend::modules::symbols::exprs::do_expr::DoExpr;
 use crate::backend::modules::symbols::exprs::func_call::FuncCallExpr;
 use crate::backend::modules::symbols::exprs::guarded_expr::GuardedExpr;
 use crate::backend::modules::symbols::exprs::if_expr::IfExpr;
+use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
 use crate::backend::modules::symbols::exprs::let_expr::LetExpr;
 use crate::backend::modules::symbols::exprs::literals::Literal;
 use crate::backend::modules::symbols::exprs::logical_expr::LogicalSym;
@@ -18,8 +19,7 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::{Expression, OptExprTuple, LambdaArg};
-use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
+use crate::parser::ast::expressions::expression::{Expression, LambdaArg, OptExprTuple};
 
 mod arithmetics;
 mod case_expr;
@@ -28,6 +28,7 @@ mod do_expr;
 pub(crate) mod func_call;
 mod guarded_expr;
 mod if_expr;
+mod lambda_expr;
 mod let_expr;
 mod literals;
 mod logical_expr;
@@ -36,7 +37,6 @@ mod partial_eq;
 mod partial_ord;
 mod recur_call;
 mod tuple_expr;
-mod lambda_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -88,8 +88,9 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::DoExpr(exprs) => DoExpr::new(vec_exprs_into(exprs)),
 
-            Expression::LambdaExpr(args, expr) =>
-                LambdaExpr::new(vec_lambda_args_into(args), expr.into()),
+            Expression::LambdaExpr(args, expr) => {
+                LambdaExpr::new(vec_lambda_args_into(args), expr.into())
+            }
 
             Expression::RecurExpr(args) => RecurCallExpr::new(vec_exprs_into(args)),
 
@@ -150,7 +151,7 @@ impl<'a> From<&LambdaArg<'a>> for Box<dyn Symbol> {
     fn from(arg: &LambdaArg<'a>) -> Self {
         match arg {
             LambdaArg::Simple(s) => IdSym::new(&s),
-            _ => todo!()
+            _ => todo!(),
         }
     }
 }

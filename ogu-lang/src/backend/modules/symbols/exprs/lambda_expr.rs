@@ -1,11 +1,9 @@
+use crate::backend::modules::types::func_type::FuncType;
+use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::parser::ast::expressions::expression::LambdaArg;
-use crate::backend::modules::symbols::idents::IdSym;
-use crate::backend::scopes::sym_table::SymbolTable;
-use crate::backend::modules::types::func_type::FuncType;
 
 #[derive(Debug, Clone)]
 pub(crate) struct LambdaExpr {
@@ -19,29 +17,33 @@ impl LambdaExpr {
     }
 
     fn define_arg(&mut self, sym: Box<dyn Symbol>) -> Result<Option<Box<dyn Symbol>>> {
-        match self.args.iter_mut().find(|a| a.get_name() == sym.get_name()) {
+        match self
+            .args
+            .iter_mut()
+            .find(|a| a.get_name() == sym.get_name())
+        {
             None => Ok(None),
-            Some(a) => {
-                match a.get_type() {
-                    None => {
-                        *a = sym.clone_box();
-                        Ok(Some(a.clone_box()))
-                    }
-                    Some(at) => {
-                        match sym.get_type() {
-                            None => Ok(None),
-                            Some(st) => {
-                                if !st.promotes(&*at) {
-                                    bail!("incompatible  type for argument {}, st = {:?} at = {:?}",
-                                            a.get_name(), st, at)
-                                } else {
-                                    Ok(Some(a.clone_box()))
-                                }
-                            }
+            Some(a) => match a.get_type() {
+                None => {
+                    *a = sym.clone_box();
+                    Ok(Some(a.clone_box()))
+                }
+                Some(at) => match sym.get_type() {
+                    None => Ok(None),
+                    Some(st) => {
+                        if !st.promotes(&*at) {
+                            bail!(
+                                "incompatible  type for argument {}, st = {:?} at = {:?}",
+                                a.get_name(),
+                                st,
+                                at
+                            )
+                        } else {
+                            Ok(Some(a.clone_box()))
                         }
                     }
-                }
-            }
+                },
+            },
         }
     }
 }
@@ -56,7 +58,7 @@ impl Symbol for LambdaExpr {
         match ty {
             None => None,
             Some(ty) => {
-                let tb: Box<dyn Type> = ty.clone();
+                let tb: Box<dyn Type> = ty;
                 Some(tb)
             }
         }
@@ -75,5 +77,3 @@ impl Symbol for LambdaExpr {
         Ok(self.get_type())
     }
 }
-
-

@@ -57,12 +57,14 @@ impl<'a> BodyAst<'a> {
                         name,
                         Args::Many(args_vec.clone()),
                         expr,
-                        None
+                        None,
                     )))
                 }
             }
-            DeclarationAst::FunctionPrototype(name, _) =>
-                bail!("Function prototype for {} without function declaration", name ),
+            DeclarationAst::FunctionPrototype(name, _) => bail!(
+                "Function prototype for {} without function declaration",
+                name
+            ),
             _ => Ok(None),
         }
     }
@@ -70,11 +72,7 @@ impl<'a> BodyAst<'a> {
     fn extract_args(
         name: &'a str,
         vec_of_funcs: &[DeclarationAst<'a>],
-    ) -> Result<(
-        Vec<String>,
-        Vec<GuardType<'a>>,
-        Option<FuncTypeAst<'a>>,
-    )> {
+    ) -> Result<(Vec<String>, Vec<GuardType<'a>>, Option<FuncTypeAst<'a>>)> {
         let mut args_count = 0; // can't be 0 args funcs
         let mut conds = vec![];
         let mut args_names: Vec<String> = vec![];
@@ -83,7 +81,10 @@ impl<'a> BodyAst<'a> {
             let p_args = match fun {
                 DeclarationAst::FunctionPrototype(_, ty) => {
                     if function_type.is_some() {
-                        bail!("Function declaration for {} already has a function prototype", name);
+                        bail!(
+                            "Function declaration for {} already has a function prototype",
+                            name
+                        );
                     }
                     function_type = Some(ty.clone());
                     None

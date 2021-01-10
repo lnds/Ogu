@@ -30,9 +30,15 @@ impl<'a> DeclarationAst<'a> {
             Equation::Function(name, args, expr) => {
                 if let Some(where_decl) = opt_where {
                     let expr = Expression::LetExpr(where_decl, Box::new(expr));
-                    Ok(Some((DeclarationAst::Function(name, args, expr, None), pos)))
+                    Ok(Some((
+                        DeclarationAst::Function(name, args, expr, None),
+                        pos,
+                    )))
                 } else {
-                    Ok(Some((DeclarationAst::Function(name, args, expr, None), pos)))
+                    Ok(Some((
+                        DeclarationAst::Function(name, args, expr, None),
+                        pos,
+                    )))
                 }
             }
             Equation::FunctionWithGuards(name, args, guards) => Ok(Some((

@@ -2,12 +2,12 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::{Type};
+use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
-use anyhow::{bail, Result};
 use crate::parser::ast::module::decls::FuncTypeAst;
+use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -18,7 +18,12 @@ pub(crate) struct FunctionSym {
 }
 
 impl FunctionSym {
-    pub(crate) fn make(name: &str, args: &Args, expr: &Expression, ft: &Option<FuncTypeAst>) -> Result<Box<dyn Symbol>> {
+    pub(crate) fn make(
+        name: &str,
+        args: &Args,
+        expr: &Expression,
+        ft: &Option<FuncTypeAst>,
+    ) -> Result<Box<dyn Symbol>> {
         let expr: Box<dyn Symbol> = expr.into();
         let mut args: Option<Vec<Box<dyn Symbol>>> = match args {
             Args::Void => None,
@@ -27,7 +32,7 @@ impl FunctionSym {
 
         let ty = match ft {
             None => FuncType::make(&args, &*expr),
-            Some(ft) => FuncType::check_and_make(name, ft, &mut args)?
+            Some(ft) => FuncType::check_and_make(name, ft, &mut args)?,
         };
 
         Ok(Box::new(FunctionSym {
@@ -60,7 +65,6 @@ impl FunctionSym {
         Ok(())
     }
 
-
     fn define_arg(&mut self, sym: Box<dyn Symbol>) -> Result<Option<Box<dyn Symbol>>> {
         match &mut self.args {
             None => Ok(None),
@@ -73,19 +77,17 @@ impl FunctionSym {
                                 *a = sym.clone_box();
                                 Ok(Some(a.clone_box()))
                             }
-                            Some(at) => {
-                                match sym.get_type() {
-                                    None => Ok(None),
-                                    Some(st) => {
-                                        if !st.promotes(&*at) {
-                                            bail!("incompatible  type for argument {}, st = {:?} at = {:?}",
+                            Some(at) => match sym.get_type() {
+                                None => Ok(None),
+                                Some(st) => {
+                                    if !st.promotes(&*at) {
+                                        bail!("incompatible  type for argument {}, st = {:?} at = {:?}",
                                             a.get_name(), st, at)
-                                        } else {
-                                            Ok(Some(a.clone_box()))
-                                        }
+                                    } else {
+                                        Ok(Some(a.clone_box()))
                                     }
                                 }
-                            }
+                            },
                         }
                     }
                 }
@@ -138,10 +140,13 @@ impl Symbol for FunctionSym {
         if let Some(ft1) = self.ty.clone() {
             if let Some(ft2) = ty.clone() {
                 if !ft1.result.promotes(&*ft2.result) {
-                    bail!("incompatible type for return type in function {}, ft1 = {:?} ft2 = {:?}",
-                                            self.name, ft1, ft2)
+                    bail!(
+                        "incompatible type for return type in function {}, ft1 = {:?} ft2 = {:?}",
+                        self.name,
+                        ft1,
+                        ft2
+                    )
                 }
-
             }
         }
         self.ty = ty;
@@ -158,7 +163,7 @@ impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
         match arg {
             Arg::Simple(s) => IdSym::new(s),
             Arg::SimpleStr(s) => IdSym::new(&s),
-            _ => panic!("Invalid Arg, internal parser error")
+            _ => panic!("Invalid Arg, internal parser error"),
         }
     }
 }

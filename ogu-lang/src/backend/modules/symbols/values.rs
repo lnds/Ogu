@@ -6,8 +6,8 @@ use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ValueSym {
-    name: Box<dyn Symbol>,
-    expr: Box<dyn Symbol>,
+    pub(crate) name: Box<dyn Symbol>,
+    pub(crate) expr: Box<dyn Symbol>,
 }
 
 impl ValueSym {

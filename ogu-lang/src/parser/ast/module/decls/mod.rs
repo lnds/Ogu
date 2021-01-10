@@ -21,7 +21,11 @@ pub(crate) enum DeclarationAst<'a> {
         Option<Vec<Derivation<'a>>>,
     ),
     TypeAlias(&'a str, Option<Vec<&'a str>>, BaseType<'a>),
-    TraitDecl(&'a str, Option<Vec<&'a str>>, Vec<(&'a str, FuncTypeAst<'a>)>),
+    TraitDecl(
+        &'a str,
+        Option<Vec<&'a str>>,
+        Vec<(&'a str, FuncTypeAst<'a>)>,
+    ),
     ExtensionDecl(&'a str, &'a str, Vec<DeclarationAst<'a>>),
     FunctionPrototype(&'a str, FuncTypeAst<'a>),
     EffectPrototype(&'a str, FuncTypeAst<'a>),

@@ -2,11 +2,11 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type};
 use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
-use anyhow::{Result};
+use anyhow::{bail, Result};
 use crate::parser::ast::module::decls::FuncTypeAst;
 
 #[derive(Clone, Debug)]
@@ -14,27 +14,28 @@ pub(crate) struct FunctionSym {
     name: String,
     args: Option<Vec<Box<dyn Symbol>>>,
     expr: Box<dyn Symbol>,
-    ty: Option<Box<dyn Type>>,
+    ty: Option<Box<FuncType>>,
 }
 
 impl FunctionSym {
-    pub(crate) fn new(name: &str, args: &Args, expr: &Expression, ft: &Option<FuncTypeAst>) -> Box<Self> {
-        let ty: Option<Box<dyn Type>> = match ft {
-            None => FuncType::from_ast_opt(args, expr),
-            Some(_t) =>todo!("check ft")
-        };
+    pub(crate) fn make(name: &str, args: &Args, expr: &Expression, ft: &Option<FuncTypeAst>) -> Result<Box<dyn Symbol>> {
         let expr: Box<dyn Symbol> = expr.into();
-        let args: Option<Vec<Box<dyn Symbol>>> = match args {
+        let mut args: Option<Vec<Box<dyn Symbol>>> = match args {
             Args::Void => None,
             Args::Many(args) => Some(vec_args_into(args)),
         };
 
-        Box::new(FunctionSym {
+        let ty = match ft {
+            None => FuncType::make(&args, &*expr),
+            Some(ft) => FuncType::check_and_make(name, ft, &mut args)?
+        };
+
+        Ok(Box::new(FunctionSym {
             name: name.to_string(),
             args,
             expr,
             ty,
-        })
+        }))
     }
 
     pub(crate) fn replace_args(
@@ -59,17 +60,35 @@ impl FunctionSym {
         Ok(())
     }
 
-    fn define_arg(&mut self, sym: Box<dyn Symbol>) -> Option<Box<dyn Symbol>> {
+
+    fn define_arg(&mut self, sym: Box<dyn Symbol>) -> Result<Option<Box<dyn Symbol>>> {
         match &mut self.args {
-            None => None,
+            None => Ok(None),
             Some(args) => {
-                for a in args.iter_mut() {
-                    if a.get_name() == sym.get_name() {
-                        *a = sym.clone_box();
-                        return Some(a.clone_box());
+                match args.iter_mut().find(|a| a.get_name() == sym.get_name()) {
+                    None => Ok(None),
+                    Some(a) => {
+                        match a.get_type() {
+                            None => {
+                                *a = sym.clone_box();
+                                Ok(Some(a.clone_box()))
+                            }
+                            Some(at) => {
+                                match sym.get_type() {
+                                    None => Ok(None),
+                                    Some(st) => {
+                                        if !st.promotes(&*at) {
+                                            bail!("incompatible  type for argument {}, st = {:?} at = {:?}",
+                                            a.get_name(), st, at)
+                                        } else {
+                                            Ok(Some(a.clone_box()))
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-                None
             }
         }
     }
@@ -81,14 +100,28 @@ impl Symbol for FunctionSym {
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
-        self.ty.clone()
+        match &self.ty {
+            None => None,
+            Some(ty) => {
+                let tb: Box<dyn Type> = ty.clone();
+                Some(tb)
+            }
+        }
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        self.ty = ty.clone()
+        if self.ty.is_none() {
+            if let Some(ty) = ty {
+                if let Some(ty) = ty.downcast_ref::<FuncType>() {
+                    self.ty = Some(Box::new(ty.clone()))
+                }
+            }
+        }
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
+        println!("RESOLVE TYPE FOR FUN {}", self.name);
+        println!("self.ty = {:?}", self.ty);
         let mut sym_table = SymbolTable::new(&self.name, Some(scope.clone_box()));
 
         if let Some(args) = &self.args {
@@ -100,9 +133,19 @@ impl Symbol for FunctionSym {
         self.expr.resolve_type(&mut *sym_table)?;
 
         for s in sym_table.get_symbols() {
-            self.define_arg(s.clone_box());
+            self.define_arg(s.clone_box())?;
         }
-        let ty: Option<Box<dyn Type>> = FuncType::make(&self.args, &*self.expr);
+        let ty = FuncType::make(&self.args, &*self.expr);
+
+        if let Some(ft1) = self.ty.clone() {
+            if let Some(ft2) = ty.clone() {
+                if !ft1.result.promotes(&*ft2.result) {
+                    bail!("incompatible type for return type in function {}, ft1 = {:?} ft2 = {:?}",
+                                            self.name, ft1, ft2)
+                }
+
+            }
+        }
         self.ty = ty;
         Ok(self.get_type())
     }

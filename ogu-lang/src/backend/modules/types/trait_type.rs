@@ -1,4 +1,5 @@
 use crate::backend::scopes::types::Type;
+use crate::backend::modules::types::basic_type::BasicType;
 
 #[derive(Clone, Debug)]
 pub(crate) struct TraitType {
@@ -30,7 +31,13 @@ impl Type for TraitType {
     }
 
     fn promotes(&self, other: &dyn Type) -> bool {
-        other == TRAIT_UNKNOWN || self == TRAIT_UNKNOWN
+        if let Some(ot) = other.downcast_ref::<BasicType>() {
+            ot.promotes(self)
+        }else {
+            self.get_signature() == other.get_signature() ||
+                other == TRAIT_UNKNOWN || self == TRAIT_UNKNOWN
+
+        }
     }
 
     fn is_trait(&self) -> bool {

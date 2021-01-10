@@ -144,6 +144,7 @@ mod tests {
             "#},
             default_sym_table(),
         );
+        println!("module: {:?}", module);
         assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
@@ -191,6 +192,7 @@ mod tests {
             "#},
             default_sym_table(),
         );
+        println!("module = {:?}", module);
         assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
@@ -469,6 +471,7 @@ mod tests {
         "#},
             default_sym_table(),
         );
+        println!("module = {:?}", module);
         assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
@@ -617,6 +620,7 @@ mod tests {
             println! "{} {}" (min $ 10 20) (min2 10 20)"#},
             default_sym_table(),
         );
+        println!("module = {:?}", module);
         assert!(module.is_ok());
         let module = module.unwrap();
         let decls = module.get_decls();
@@ -732,6 +736,27 @@ mod tests {
         assert_eq!(
             decls[0].get_type(),
             FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        );
+    }
+
+    #[test]
+    fn test_proto_2() {
+        let module = make_module(
+            indoc! {r#"
+            ackermann : UInt -> UInt -> UInt
+            ackermann 0 n = n + 1
+            ackermann m 0 = recur (m - 1) 1
+            acckermann m n = recur (m - 1) (ackermann m (n - 1))"#},
+            default_sym_table(),
+        );
+        println!("module = {:?}", module);
+        assert!(module.is_ok());
+        let module = module.unwrap();
+        let decls = module.get_decls();
+        println!("DECLS: {:#?}", decls);
+        assert_eq!(
+            decls[0].get_type(),
+            FuncType::new_opt(Some(vec![BasicType::uint(), BasicType::uint()]), BasicType::uint())
         );
     }
 }

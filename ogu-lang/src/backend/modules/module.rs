@@ -34,8 +34,14 @@ impl Module {
     fn define_decl(decl: &DeclarationAst) -> Result<Box<dyn Symbol>> {
         match decl {
             FunctionWithGuards(_,_,_,_) =>
-                panic!("internal error, function with guard leaked"),
-            _ => Ok(decl.into())
+                bail!("internal error, function with guard leaked"),
+            Function(name, args, expr, ft) =>
+                FunctionSym::make(name, args, expr, ft),
+            Value(name, expr) => Ok(ValueSym::new(name, expr)),
+            _d => {
+            println!("not implemented for {:?}", _d);
+            todo!()
+            }
         }
 
     }
@@ -45,15 +51,3 @@ impl Module {
     }
 }
 
-impl<'a> From<&DeclarationAst<'a>> for Box<dyn Symbol> {
-    fn from(decl: &DeclarationAst<'a>) -> Self {
-        match decl {
-            Function(name, args, expr, ft) => FunctionSym::new(name, args, expr, ft),
-            Value(name, expr) => ValueSym::new(name, expr),
-            _d => {
-                println!("not implemented for {:?}", _d);
-                todo!()
-            }
-        }
-    }
-}

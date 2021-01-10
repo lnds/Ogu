@@ -1,14 +1,15 @@
 use crate::backend::modules::symbols::funcs::vec_args_into;
-use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
-use crate::parser::ast::expressions::args::Args;
-use crate::parser::ast::expressions::expression::Expression;
+use crate::parser::ast::module::decls::FuncTypeAst;
+use crate::backend::modules::types::basic_type::BasicType;
+use anyhow::{bail, Result};
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncType {
-    args: Option<Vec<Box<dyn Type>>>,
-    result: Box<dyn Type>,
+    pub(crate) args: Option<Vec<Box<dyn Type>>>,
+    pub(crate) result: Box<dyn Type>,
 }
 
 impl Type for FuncType {
@@ -48,6 +49,7 @@ impl FuncType {
         Box::new(FuncType { args, result })
     }
 
+    #[allow(dead_code)]
     pub(crate) fn new_opt(
         args: Option<Vec<Box<dyn Type>>>,
         result: Box<dyn Type>,
@@ -59,25 +61,10 @@ impl FuncType {
         self.args.clone()
     }
 
-    pub(crate) fn from_ast_opt(args: &Args, expr: &Expression) -> Option<Box<dyn Type>> {
-        let sym: Box<dyn Symbol> = expr.into();
-        let result = sym.get_type()?;
-        let args = match args {
-            Args::Void => None,
-            Args::Many(a) => Some(
-                vec_args_into(a)
-                    .iter()
-                    .map(|sym| sym.get_type().unwrap_or_else(|| TRAIT_UNKNOWN.clone_box()))
-                    .collect(),
-            ),
-        };
-        Self::new_opt(args, result)
-    }
-
     pub(crate) fn make(
         args: &Option<Vec<Box<dyn Symbol>>>,
         expr: &dyn Symbol,
-    ) -> Option<Box<dyn Type>> {
+    ) -> Option<Box<Self>> {
         let result = expr.get_type()?;
         let args = match args {
             None => None,
@@ -87,6 +74,42 @@ impl FuncType {
                     .collect(),
             ),
         };
-        Self::new_opt(args, result)
+        Some(Self::new(args, result))
+    }
+
+    pub(crate) fn check_and_make(name: &str, ft : &FuncTypeAst, args: &mut Option<Vec<Box<dyn Symbol>>>) -> Result<Option<Box<Self>>> {
+        let (v, t) = Self::expand_from_ast_ft(ft, vec![]);
+        match args {
+            None if !v.is_empty() => bail!("prototype define no args, but args given for func : {}", name),
+            None => Ok(Some(Box::new(FuncType { args: None, result: t.clone() }))),
+            Some(args) => {
+                for (p, a) in args.iter_mut().enumerate() {
+                    a.set_type(Some(v[p].clone()));
+                }
+                Ok(Some(Box::new(FuncType {
+                    args: Some(v.to_vec()),
+                    result: t.clone()
+                })))
+            }
+        }
+    }
+
+    fn expand_from_ast_ft(ft: &FuncTypeAst, vec: Vec<Box<dyn Type>>) -> (Vec<Box<dyn Type>>, Box<dyn Type>) {
+        match ft {
+            FuncTypeAst::Void => (vec, BasicType::unit()),
+            FuncTypeAst::Simple("Int") => (vec, BasicType::int()), // TODO must resolve in symbol table
+            FuncTypeAst::Simple("UInt") => (vec, BasicType::uint()),// TODO must resolve in symbol table
+            FuncTypeAst::Simple(str) => (vec, BasicType::undefined(str)),
+            FuncTypeAst::Chain(t1, t2) => {
+                let (mut v1, tt1) = Self::expand_from_ast_ft(&*t1, vec![]);
+                let (mut v2, tt2) = Self::expand_from_ast_ft(&*t2, vec![]);
+                v1.push(tt1);
+                v1.append(&mut v2);
+                (v1, tt2)
+            }
+            _ => todo!("the rest")
+        }
     }
 }
+
+

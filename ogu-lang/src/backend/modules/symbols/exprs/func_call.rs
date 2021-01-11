@@ -136,7 +136,6 @@ impl Symbol for FuncCallExpr {
                                     } else if let Some(lambda) =
                                         val.expr.downcast_ref::<LambdaExpr>()
                                     {
-                                        println!("UN LAMDBDA POR ACA: {:?}", lambda);
                                         let mut l = lambda.clone();
                                         l.replace_args(self.args.to_vec(), scope)?;
                                         if self.func.get_type() != l.get_type() {

@@ -15,19 +15,19 @@ pub(crate) enum PartialOrdExpr {
 }
 
 impl PartialOrdExpr {
-    pub(crate) fn new_gt(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
+    pub(crate) fn new_gt(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(PartialOrdExpr::Gt(l, r))
     }
 
-    pub(crate) fn new_ge(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
+    pub(crate) fn new_ge(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(PartialOrdExpr::Ge(l, r))
     }
 
-    pub(crate) fn new_lt(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
+    pub(crate) fn new_lt(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(PartialOrdExpr::Lt(l, r))
     }
 
-    pub(crate) fn new_le(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
+    pub(crate) fn new_le(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(PartialOrdExpr::Le(l, r))
     }
 }

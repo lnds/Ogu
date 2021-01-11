@@ -13,11 +13,11 @@ pub(crate) enum PartialEqExpr {
 }
 
 impl PartialEqExpr {
-    pub(crate) fn new_eq(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
+    pub(crate) fn new_eq(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(PartialEqExpr::Eq(l, r))
     }
 
-    pub(crate) fn new_ne(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<Self> {
+    pub(crate) fn new_ne(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(PartialEqExpr::Ne(l, r))
     }
 }

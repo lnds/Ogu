@@ -1,10 +1,9 @@
 use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::module::Module;
 use crate::backend::modules::tests::make_module;
-use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::basic_type::{BasicType, BOOL_TYPE};
 use crate::backend::modules::types::func_type::FuncType;
-use crate::backend::modules::types::trait_type::TRAIT_NUM;
-use crate::backend::scopes::symbol::Symbol;
+use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
 use crate::backend::scopes::types::{Type, TypeClone};
 use anyhow::Result;
 use indoc::indoc;
@@ -27,6 +26,11 @@ fn test_add() {
     println!("module = {:?}", module);
     validate_decls(
         module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+            TRAIT_NUM.clone_box(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -54,6 +58,11 @@ fn test_sub() {
     println!("module = {:?}", module);
     validate_decls(
         module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+            TRAIT_NUM.clone_box(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -81,6 +90,11 @@ fn test_mul() {
     assert!(module.is_ok());
     validate_decls(
         module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+            TRAIT_NUM.clone_box(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -108,6 +122,11 @@ fn test_div() {
     assert!(module.is_ok());
     validate_decls(
         module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+            TRAIT_NUM.clone_box(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::float()),
@@ -135,6 +154,11 @@ fn test_mod() {
     assert!(module.is_ok());
     validate_decls(
         module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+            TRAIT_NUM.clone_box(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -162,6 +186,11 @@ fn test_pow() {
     assert!(module.is_ok());
     validate_decls(
         module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+            TRAIT_NUM.clone_box(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -189,6 +218,11 @@ fn test_intdiv() {
     assert!(module.is_ok());
     validate_decls(
         module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+            TRAIT_NUM.clone_box(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -198,23 +232,214 @@ fn test_intdiv() {
     );
 }
 
-fn validate_decls(module: Result<Module>, t: Vec<Option<Box<dyn Type>>>) {
+#[test]
+fn test_eq() {
+    let module = make_module(
+        indoc! {r#"
+        eq x y = (== x y)
+        eq' = (==)
+        unit = (== 1)
+        a = 10
+        b = unit a
+        c = eq (eq' a 1.0) b
+        d = eq (eq' a 1) b
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_EQ.clone_box(), TRAIT_EQ.clone_box()]),
+            BasicType::bool(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_EQ.clone_box()]), BasicType::bool()),
+        vec![
+            Some(BasicType::int()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+        ],
+    );
+}
+
+#[test]
+fn test_ne() {
+    let module = make_module(
+        indoc! {r#"
+        ne x y = (/= x y)
+        ne' = (/=)
+        unit = (/= 1)
+        a = 10
+        b = unit a
+        c = ne (ne' a 1.0) b
+        d = ne (ne' a 1) b
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_EQ.clone_box(), TRAIT_EQ.clone_box()]),
+            BasicType::bool(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_EQ.clone_box()]), BasicType::bool()),
+        vec![
+            Some(BasicType::int()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+        ],
+    );
+}
+
+
+#[test]
+fn test_gt() {
+    let module = make_module(
+        indoc! {r#"
+        gt x y = (> x y)
+        gt' = (>)
+        pos = (> 0)
+        a = 10
+        b = pos a
+        c = gt (gt' a 0.0) b
+        d = gt (gt' a 0) b
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
+            BasicType::bool(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_ORD.clone_box()]), BasicType::bool()),
+        vec![
+            Some(BasicType::int()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+        ],
+    );
+}
+
+#[test]
+fn test_ge() {
+    let module = make_module(
+        indoc! {r#"
+        ge x y = (>= x y)
+        ge' = (>=)
+        pos = (>= 0)
+        a = 10
+        b = pos a
+        c = ge (ge' a 0.0) b
+        d = ge (ge' a 0) b
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
+            BasicType::bool(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_ORD.clone_box()]), BasicType::bool()),
+        vec![
+            Some(BasicType::int()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+        ],
+    );
+}
+
+
+
+#[test]
+fn test_lt() {
+    let module = make_module(
+        indoc! {r#"
+        lt x y = (< x y)
+        lt' = (<)
+        neg = (< 0)
+        a = 10
+        b = neg a
+        c = lt (lt' a 0.0) b
+        d = lt (lt' a 0) b
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
+            BasicType::bool(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_ORD.clone_box()]), BasicType::bool()),
+        vec![
+            Some(BasicType::int()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+        ],
+    );
+}
+
+#[test]
+fn test_le() {
+    let module = make_module(
+        indoc! {r#"
+        le x y = (<= x y)
+        le' = (<=)
+        neg = (<= 0)
+        a = 10
+        b = neg a
+        c = le (le' a 0.0) b
+        d = le (le' a 0) b
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(
+            Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
+            BasicType::bool(),
+        ),
+        FuncType::new_opt(Some(vec![TRAIT_ORD.clone_box()]), BasicType::bool()),
+        vec![
+            Some(BasicType::int()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+        ],
+    );
+}
+
+fn validate_decls(
+    module: Result<Module>,
+    ft1: Option<Box<dyn Type>>,
+    ft2: Option<Box<dyn Type>>,
+    t: Vec<Option<Box<dyn Type>>>,
+) {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
     println!("DECLS: {:#?}", decls);
-    assert_eq!(
-        decls[0].get_type(),
-        FuncType::new_opt(
-            Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
-            TRAIT_NUM.clone_box()
-        )
-    );
+    assert_eq!(decls[0].get_type(), ft1);
     assert_eq!(decls[0].get_type(), decls[1].get_type());
-    assert_eq!(
-        decls[2].get_type(),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box())
-    );
+    assert_eq!(decls[2].get_type(), ft2);
     assert_eq!(decls[3].get_type(), t[0]);
     assert_eq!(decls[4].get_type(), t[1]);
     assert_eq!(decls[5].get_type(), t[2]);

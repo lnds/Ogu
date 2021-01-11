@@ -82,6 +82,30 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
                 UnaryOpExpr::new_pow(expr.deref().as_ref().map(|e| e.into()))
             }
 
+            Expression::UnaryEq(expr) => {
+                UnaryOpExpr::new_eq(expr.deref().as_ref().map(|e| e.into()))
+            }
+
+            Expression::UnaryNotEq(expr) => {
+                UnaryOpExpr::new_ne(expr.deref().as_ref().map(|e| e.into()))
+            }
+
+            Expression::UnaryGt(expr) => {
+                UnaryOpExpr::new_gt(expr.deref().as_ref().map(|e| e.into()))
+            }
+
+            Expression::UnaryGe(expr) => {
+                UnaryOpExpr::new_ge(expr.deref().as_ref().map(|e| e.into()))
+            }
+
+            Expression::UnaryLt(expr) => {
+                UnaryOpExpr::new_lt(expr.deref().as_ref().map(|e| e.into()))
+            }
+
+            Expression::UnaryLe(expr) => {
+                UnaryOpExpr::new_le(expr.deref().as_ref().map(|e| e.into()))
+            }
+
             Expression::AddExpr(l, r) => ArithmeticSym::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticSym::new_sub(l.into(), r.into()),
             Expression::MulExpr(l, r) => ArithmeticSym::new_mul(l.into(), r.into()),

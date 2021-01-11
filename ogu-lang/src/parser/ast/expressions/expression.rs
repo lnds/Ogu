@@ -536,6 +536,11 @@ impl<'a> Expression<'a> {
             Some(Lexeme::Not) if parser.peek(pos + 1, Lexeme::RightParen) => {
                 Ok((Expression::UnaryNot, pos + 2))
             }
+            Some(Lexeme::Not) => {
+                let (expr, pos) = Expression::parse(parser, pos + 1)?;
+                let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
+                Ok((Expression::NotExpr(Box::new(expr)), pos))
+            }
             Some(op) if is_basic_op(op) => {
                 let (opt_expr, pos) = if parser.peek(pos + 1, Lexeme::RightParen) {
                     (None, pos + 1)

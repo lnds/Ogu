@@ -30,10 +30,6 @@ impl Symbol for ValueSym {
         self.expr.get_type()
     }
 
-    fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        self.name.set_type(ty)
-    }
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         self.expr.resolve_type(scope)?;
         if let Some(curry) = self.expr.get_curry() {
@@ -41,7 +37,7 @@ impl Symbol for ValueSym {
         }
         self.name.resolve_type(scope)?;
         self.set_type(self.expr.get_type());
-        self.name.set_type(self.expr.get_type());
+        //self.name.set_type(self.expr.get_type());
         Ok(self.get_type())
     }
 

@@ -41,18 +41,6 @@ impl Symbol for FuncCallExpr {
         self.ty = ty;
     }
 
-    fn is_curry(&self) -> bool {
-        self.curried
-    }
-
-    fn get_curry(&self) -> Option<Box<dyn Symbol>> {
-        if self.curried {
-            Some(self.func.clone_box())
-        } else {
-            None
-        }
-    }
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
         let recursive = scope.scope_name() == self.func.get_name();
@@ -121,7 +109,6 @@ impl Symbol for FuncCallExpr {
                                     f.replace_args(self.args.to_vec(), scope, !recursive)?;
                                     if self.func.get_type() != f.get_type() {
                                         self.func = Box::new(f);
-                                        scope.define(self.func.clone()); // ojp !!
                                     }
                                 } else if let Some(val) = func.downcast_ref::<ValueSym>() {
                                     if let Some(id) = val.expr.downcast_ref::<IdSym>() {
@@ -149,6 +136,7 @@ impl Symbol for FuncCallExpr {
                                     } else if let Some(lambda) =
                                         val.expr.downcast_ref::<LambdaExpr>()
                                     {
+                                        println!("UN LAMDBDA POR ACA: {:?}", lambda);
                                         let mut l = lambda.clone();
                                         l.replace_args(self.args.to_vec(), scope)?;
                                         if self.func.get_type() != l.get_type() {
@@ -179,5 +167,17 @@ impl Symbol for FuncCallExpr {
             }
         }
         Ok(self.get_type())
+    }
+
+    fn is_curry(&self) -> bool {
+        self.curried
+    }
+
+    fn get_curry(&self) -> Option<Box<dyn Symbol>> {
+        if self.curried {
+            Some(self.func.clone_box())
+        } else {
+            None
+        }
     }
 }

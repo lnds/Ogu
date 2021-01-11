@@ -19,30 +19,31 @@ pub(crate) enum ArithmeticSym {
 }
 
 impl ArithmeticSym {
-    pub(crate) fn new_add(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
+    pub(crate) fn new_add(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(ArithmeticSym::Add(l, r))
     }
 
-    pub(crate) fn new_sub(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
+    pub(crate) fn new_sub(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(ArithmeticSym::Sub(l, r))
     }
-    pub(crate) fn new_mul(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
+
+    pub(crate) fn new_mul(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(ArithmeticSym::Mul(l, r))
     }
 
-    pub(crate) fn new_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
+    pub(crate) fn new_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(ArithmeticSym::Div(l, r))
     }
 
-    pub(crate) fn new_int_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
+    pub(crate) fn new_int_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(ArithmeticSym::IntDiv(l, r))
     }
 
-    pub(crate) fn new_mod(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
+    pub(crate) fn new_mod(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(ArithmeticSym::Mod(l, r))
     }
 
-    pub(crate) fn new_pow(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<ArithmeticSym> {
+    pub(crate) fn new_pow(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
         Box::new(ArithmeticSym::Pow(l, r))
     }
 }
@@ -86,20 +87,50 @@ impl Symbol for ArithmeticSym {
                     }
                 },
             },
-            ArithmeticSym::IntDiv(l, r) => {
-                if l.get_type().is_none() && r.get_type().is_none() {
-                    None
-                } else {
-                    Some(BasicType::int())
-                }
-            }
-            ArithmeticSym::Div(l, r) => {
-                if l.get_type().is_none() && r.get_type().is_none() {
-                    None
-                } else {
-                    Some(BasicType::float())
-                }
-            }
+            ArithmeticSym::IntDiv(l, r) => match l.get_type() {
+                None => match r.get_type() {
+                    None => None,
+                    Some(rt) => {
+                        if &*rt == TRAIT_NUM {
+                            Some(TRAIT_NUM.clone_box())
+                        } else {
+                            Some(BasicType::int())
+                        }
+                    }
+                },
+                Some(lt) => match r.get_type() {
+                    None => None,
+                    Some(rt) => {
+                        if &*lt == TRAIT_NUM && &*rt == TRAIT_NUM {
+                            Some(TRAIT_NUM.clone_box())
+                        } else {
+                            Some(BasicType::int())
+                        }
+                    }
+                },
+            },
+            ArithmeticSym::Div(l, r) => match l.get_type() {
+                None => match r.get_type() {
+                    None => None,
+                    Some(rt) => {
+                        if &*rt == TRAIT_NUM {
+                            Some(TRAIT_NUM.clone_box())
+                        } else {
+                            Some(BasicType::float())
+                        }
+                    }
+                },
+                Some(lt) => match r.get_type() {
+                    None => None,
+                    Some(rt) => {
+                        if &*lt == TRAIT_NUM && &*rt == TRAIT_NUM {
+                            Some(TRAIT_NUM.clone_box())
+                        } else {
+                            Some(BasicType::float())
+                        }
+                    }
+                },
+            },
         }
     }
 

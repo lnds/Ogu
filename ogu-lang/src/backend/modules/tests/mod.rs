@@ -4,6 +4,7 @@ mod func_decls;
 mod lambdas;
 mod letswheres;
 mod logical;
+mod paren_ops;
 mod protos;
 mod recursives;
 mod simple;

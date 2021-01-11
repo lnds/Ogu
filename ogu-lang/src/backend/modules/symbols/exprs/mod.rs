@@ -15,6 +15,7 @@ use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdExpr;
 use crate::backend::modules::symbols::exprs::recur_call::RecurCallExpr;
 use crate::backend::modules::symbols::exprs::tuple_expr::TupleExpr;
+use crate::backend::modules::symbols::exprs::unary_op_expr::UnaryOpExpr;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
@@ -37,6 +38,7 @@ mod partial_eq;
 mod partial_ord;
 mod recur_call;
 mod tuple_expr;
+mod unary_op_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -57,6 +59,28 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::ParenExpr(expr) => ParenExpr::make(expr),
 
             Expression::TupleExpr(tuple) => TupleExpr::make(vec_exprs_into(tuple)),
+
+            Expression::UnaryAdd(expr) => {
+                UnaryOpExpr::new_add(expr.deref().as_ref().map(|e| e.into()))
+            }
+            Expression::UnarySub(expr) => {
+                UnaryOpExpr::new_sub(expr.deref().as_ref().map(|e| e.into()))
+            }
+            Expression::UnaryMul(expr) => {
+                UnaryOpExpr::new_mul(expr.deref().as_ref().map(|e| e.into()))
+            }
+            Expression::UnaryDiv(expr) => {
+                UnaryOpExpr::new_div(expr.deref().as_ref().map(|e| e.into()))
+            }
+            Expression::UnaryDivDiv(expr) => {
+                UnaryOpExpr::new_intdiv(expr.deref().as_ref().map(|e| e.into()))
+            }
+            Expression::UnaryMod(expr) => {
+                UnaryOpExpr::new_mod(expr.deref().as_ref().map(|e| e.into()))
+            }
+            Expression::UnaryPow(expr) => {
+                UnaryOpExpr::new_pow(expr.deref().as_ref().map(|e| e.into()))
+            }
 
             Expression::AddExpr(l, r) => ArithmeticSym::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticSym::new_sub(l.into(), r.into()),
@@ -100,6 +124,12 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
                 todo!()
             }
         }
+    }
+}
+
+impl<'a> From<Box<Expression<'a>>> for Box<dyn Symbol> {
+    fn from(expr: Box<Expression<'a>>) -> Self {
+        expr.deref().into()
     }
 }
 

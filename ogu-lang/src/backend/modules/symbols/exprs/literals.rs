@@ -1,6 +1,7 @@
 use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use anyhow::Result;
 
@@ -57,8 +58,20 @@ impl Symbol for Literal {
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
-            Literal::Int(_) => Some(BasicType::int()),
-            Literal::Float(_) => Some(BasicType::float()),
+            Literal::Int(s) => {
+                if s.ends_with('N') {
+                    Some(TRAIT_NUM.clone_box())
+                } else {
+                    Some(BasicType::int())
+                }
+            }
+            Literal::Float(s) => {
+                if s.ends_with('M') {
+                    Some(TRAIT_NUM.clone_box())
+                } else {
+                    Some(BasicType::float())
+                }
+            }
             Literal::Str(_) => Some(BasicType::static_str()),
             Literal::Char(_) => Some(BasicType::char()),
             Literal::Date(_) => Some(BasicType::date()),

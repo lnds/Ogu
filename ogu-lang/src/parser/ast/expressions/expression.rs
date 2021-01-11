@@ -569,29 +569,62 @@ impl<'a> Expression<'a> {
                     let (right_expr, pos) = Expression::parse_prim_expr(parser, pos)?;
                     let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
                     match op {
-                        Lexeme::Cons => Ok((Expression::ConsExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::Plus => Ok((Expression::AddExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::PlusPlus => Ok((Expression::ConcatExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::Minus => Ok((Expression::SubExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::Mult => Ok((Expression::MulExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::Pow => Ok((Expression::PowExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::Div => Ok((Expression::DivExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::DivDiv => Ok((Expression::IntDivExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::Mod => Ok((Expression::ModExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::And => Ok((Expression::AndExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::Or => Ok((Expression::OrExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::Equal => Ok((Expression::EqExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::NotEqual => Ok((Expression::NeExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::Greater => Ok((Expression::GtExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::GreaterOrEqual => Ok((Expression::GeExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::LessThan => Ok((Expression::LtExpr(left_expr, Box::new(right_expr)), pos)),
-                        Lexeme::LessThanOrEqual => Ok((Expression::LeExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Cons => {
+                            Ok((Expression::ConsExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::Plus => {
+                            Ok((Expression::AddExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::PlusPlus => {
+                            Ok((Expression::ConcatExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::Minus => {
+                            Ok((Expression::SubExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::Mult => {
+                            Ok((Expression::MulExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::Pow => {
+                            Ok((Expression::PowExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::Div => {
+                            Ok((Expression::DivExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::DivDiv => {
+                            Ok((Expression::IntDivExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::Mod => {
+                            Ok((Expression::ModExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::And => {
+                            Ok((Expression::AndExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::Or => {
+                            Ok((Expression::OrExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::Equal => {
+                            Ok((Expression::EqExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::NotEqual => {
+                            Ok((Expression::NeExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::Greater => {
+                            Ok((Expression::GtExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::GreaterOrEqual => {
+                            Ok((Expression::GeExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::LessThan => {
+                            Ok((Expression::LtExpr(left_expr, Box::new(right_expr)), pos))
+                        }
+                        Lexeme::LessThanOrEqual => {
+                            Ok((Expression::LeExpr(left_expr, Box::new(right_expr)), pos))
+                        }
                         _ => raise_parser_error("Expecting an operator", parser, pos, true),
                     }
                 } else {
                     raise_parser_error("Expecting an expression", parser, pos, true)
                 }
-
             }
             Some(_) => {
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;

@@ -813,7 +813,10 @@ mod tests {
             indoc! {r#"
             mul x y = x * y
             double x = mul 2 x
-            double' = mul 2 "#},
+            double' = mul 2
+            ten = double' 5
+            add x y z = x + y + z
+            add2 x y = add 0"#},
             default_sym_table(),
         );
         println!("module = {:?}", module);
@@ -839,6 +842,24 @@ mod tests {
             decls[2].get_type(),
             FuncType::new_opt(
                 Some(vec![TRAIT_NUM.clone_box()]),
+                TRAIT_NUM.clone_box()
+            )
+        );
+        assert_eq!(
+            decls[3].get_type(),
+            Some(BasicType::int())
+        );
+        assert_eq!(
+            decls[4].get_type(),
+            FuncType::new_opt(
+                Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+                TRAIT_NUM.clone_box()
+            )
+        );
+        assert_eq!(
+            decls[5].get_type(),
+            FuncType::new_opt(
+                Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
                 TRAIT_NUM.clone_box()
             )
         );

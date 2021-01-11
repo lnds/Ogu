@@ -131,25 +131,31 @@ impl Symbol for FunctionSym {
         }
 
         self.expr.resolve_type(&mut *sym_table)?;
+        let curry = self.expr.is_curry();
+        if let Some(curry) = self.expr.get_curry() {
+            self.expr = curry;
+            self.set_type(self.expr.get_type())
+        }
 
         for s in sym_table.get_symbols() {
             self.define_arg(s.clone_box())?;
         }
-        let ty = FuncType::make(&self.args, &*self.expr);
-
-        if let Some(ft1) = self.ty.clone() {
-            if let Some(ft2) = ty.clone() {
-                if !ft1.result.promotes(&*ft2.result) {
-                    bail!(
+        if !curry {
+            let ty = FuncType::make(&self.args, &*self.expr);
+            if let Some(ft1) = self.ty.clone() {
+                if let Some(ft2) = ty.clone() {
+                    if !ft1.result.promotes(&*ft2.result) {
+                        bail!(
                         "incompatible type for return type in function {}, ft1 = {:?} ft2 = {:?}",
                         self.name,
                         ft1,
                         ft2
                     )
+                    }
                 }
             }
+            self.ty = ty;
         }
-        self.ty = ty;
         Ok(self.get_type())
     }
 

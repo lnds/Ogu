@@ -2,7 +2,7 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::expression::Expression;
-use anyhow::{Result};
+use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ValueSym {
@@ -36,7 +36,7 @@ impl Symbol for ValueSym {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         self.expr.resolve_type(scope)?;
-        if let Some(curry) =  self.expr.get_curry() {
+        if let Some(curry) = self.expr.get_curry() {
             self.expr = curry;
         }
         self.name.resolve_type(scope)?;

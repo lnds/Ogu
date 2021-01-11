@@ -806,7 +806,6 @@ mod tests {
         assert_eq!(decls[2].get_type(), Some(BasicType::float()));
     }
 
-
     #[test]
     fn test_curry_1() {
         let module = make_module(
@@ -833,26 +832,21 @@ mod tests {
         );
         assert_eq!(
             decls[1].get_type(),
-            FuncType::new_opt(
-                Some(vec![TRAIT_NUM.clone_box()]),
-                TRAIT_NUM.clone_box()
-            )
+            FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box())
         );
         assert_eq!(
             decls[2].get_type(),
-            FuncType::new_opt(
-                Some(vec![TRAIT_NUM.clone_box()]),
-                TRAIT_NUM.clone_box()
-            )
+            FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box())
         );
-        assert_eq!(
-            decls[3].get_type(),
-            Some(BasicType::int())
-        );
+        assert_eq!(decls[3].get_type(), Some(BasicType::int()));
         assert_eq!(
             decls[4].get_type(),
             FuncType::new_opt(
-                Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+                Some(vec![
+                    TRAIT_NUM.clone_box(),
+                    TRAIT_NUM.clone_box(),
+                    TRAIT_NUM.clone_box()
+                ]),
                 TRAIT_NUM.clone_box()
             )
         );

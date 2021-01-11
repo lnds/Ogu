@@ -1,10 +1,10 @@
+use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::backend::modules::symbols::idents::IdSym;
 
 #[derive(Debug, Clone)]
 pub(crate) struct LambdaExpr {

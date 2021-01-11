@@ -1,5 +1,5 @@
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::{ Type};
+use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
 
@@ -31,7 +31,7 @@ pub(crate) fn resolve_comparable(
                 l.set_type(Some(rt.clone()));
                 scope.define(l.clone());
             }
-            Some(rt) if rt.is_trait() && &*rt != tr  && !lt.is_trait() => {
+            Some(rt) if rt.is_trait() && &*rt != tr && !lt.is_trait() => {
                 r.set_type(Some(lt.clone()));
                 scope.define(r.clone());
             }

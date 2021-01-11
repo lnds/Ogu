@@ -66,22 +66,22 @@ pub(crate) enum Identifier<'a> {
 
 #[derive(Debug, Clone)]
 pub(crate) enum Expression<'a> {
-    InvalidExpr,
-    Name(&'a str),
-    NameStr(String),
+    InvalidExpr, // ok
+    Name(&'a str), // ok
+    NameStr(String), // ok
     QualifiedIdentifier(&'a str, Vec<&'a str>),
-    StringLiteral(&'a str),
-    LargeStringLiteral(Option<String>),
-    RegexpLiteral(&'a str),
-    CharLiteral(&'a str),
-    IntegerLiteral(&'a str),
-    FloatLiteral(&'a str),
-    DateLiteral(&'a str),
+    StringLiteral(&'a str), // ok
+    LargeStringLiteral(Option<String>), // ok
+    RegexpLiteral(&'a str), // ok
+    CharLiteral(&'a str), // ok
+    IntegerLiteral(&'a str), // ok
+    FloatLiteral(&'a str), // ok
+    DateLiteral(&'a str), // ok
     FormatString(&'a str),
-    Unit,
+    Unit, // ok
     EmptyList,
-    ParenExpr(Box<Expression<'a>>),
-    NotExpr(Box<Expression<'a>>),
+    ParenExpr(Box<Expression<'a>>), // ok
+    NotExpr(Box<Expression<'a>>), // ok
     LazyExpr(Box<Expression<'a>>),
     YieldExpr(Box<Expression<'a>>),
     ReifyExpr(&'a str, Vec<Equation<'a>>),
@@ -100,51 +100,51 @@ pub(crate) enum Expression<'a> {
     SetExpr(Vec<Expression<'a>>),
     RecordExpr(Vec<(&'a str, Expression<'a>)>),
     TypedFuncCall(String, Vec<Identifier<'a>>, Vec<Expression<'a>>),
-    FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>),
-    LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>),
+    FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>), // ok
+    LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>), // ok
     MatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     NoMatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     ReMatchExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     ConsExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    PowExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    PowExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     IndexExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     UnaryCons(Option<Box<Expression<'a>>>),
-    UnaryAdd(Option<Box<Expression<'a>>>),
+    UnaryAdd(Option<Box<Expression<'a>>>), // ok
     UnaryConcat(Option<Box<Expression<'a>>>),
-    UnarySub(Option<Box<Expression<'a>>>),
-    UnaryMul(Option<Box<Expression<'a>>>),
-    UnaryPow(Option<Box<Expression<'a>>>),
-    UnaryMod(Option<Box<Expression<'a>>>),
-    UnaryDiv(Option<Box<Expression<'a>>>),
-    UnaryDivDiv(Option<Box<Expression<'a>>>),
-    UnaryAnd(Option<Box<Expression<'a>>>),
-    UnaryOr(Option<Box<Expression<'a>>>),
+    UnarySub(Option<Box<Expression<'a>>>),// ok
+    UnaryMul(Option<Box<Expression<'a>>>),// ok
+    UnaryPow(Option<Box<Expression<'a>>>),// ok
+    UnaryMod(Option<Box<Expression<'a>>>),// ok
+    UnaryDiv(Option<Box<Expression<'a>>>),// ok
+    UnaryDivDiv(Option<Box<Expression<'a>>>),// ok
+    UnaryAnd(Option<Box<Expression<'a>>>), // ok
+    UnaryOr(Option<Box<Expression<'a>>>), // ok
     UnaryNot,
-    UnaryEq(Option<Box<Expression<'a>>>),
-    UnaryNotEq(Option<Box<Expression<'a>>>),
-    UnaryGt(Option<Box<Expression<'a>>>),
-    UnaryGe(Option<Box<Expression<'a>>>),
-    UnaryLt(Option<Box<Expression<'a>>>),
-    UnaryLe(Option<Box<Expression<'a>>>),
-    OrExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    AndExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    LeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    LtExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    GeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    GtExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    EqExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    NeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    AddExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    UnaryEq(Option<Box<Expression<'a>>>),// ok
+    UnaryNotEq(Option<Box<Expression<'a>>>),// ok
+    UnaryGt(Option<Box<Expression<'a>>>),// ok
+    UnaryGe(Option<Box<Expression<'a>>>),// ok
+    UnaryLt(Option<Box<Expression<'a>>>),// ok
+    UnaryLe(Option<Box<Expression<'a>>>),// ok
+    OrExpr(Box<Expression<'a>>, Box<Expression<'a>>),// ok
+    AndExpr(Box<Expression<'a>>, Box<Expression<'a>>),// ok
+    LeExpr(Box<Expression<'a>>, Box<Expression<'a>>),// ok
+    LtExpr(Box<Expression<'a>>, Box<Expression<'a>>),// ok
+    GeExpr(Box<Expression<'a>>, Box<Expression<'a>>),// ok
+    GtExpr(Box<Expression<'a>>, Box<Expression<'a>>),// ok
+    EqExpr(Box<Expression<'a>>, Box<Expression<'a>>),// ok
+    NeExpr(Box<Expression<'a>>, Box<Expression<'a>>),// ok
+    AddExpr(Box<Expression<'a>>, Box<Expression<'a>>),// ok
     ConcatExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    SubExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    MulExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    DivExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    IntDivExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    ModExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    SubExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    MulExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    DivExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    IntDivExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    ModExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     ComposeFwdExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     ComposeBckExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    TupleExpr(Vec<Expression<'a>>),
-    DoExpr(Vec<Expression<'a>>),
+    TupleExpr(Vec<Expression<'a>>), // ok
+    DoExpr(Vec<Expression<'a>>), // ok
     TryHandleExpr(Box<Expression<'a>>, Vec<HandleGuard<'a>>),
     RepeatExpr(Vec<RecurValue<'a>>),
     RecurExpr(Vec<Expression<'a>>),
@@ -153,16 +153,16 @@ pub(crate) enum Expression<'a> {
         Option<Vec<Expression<'a>>>,
         Option<Box<Expression<'a>>>,
     ),
-    LetExpr(Vec<Equation<'a>>, Box<Expression<'a>>),
+    LetExpr(Vec<Equation<'a>>, Box<Expression<'a>>), // ok
     CaseExpr(
         Box<Expression<'a>>,
         Vec<(Option<Expression<'a>>, Expression<'a>)>,
-    ),
+    ), // ok
     IfExpr(
         Box<Expression<'a>>,
         Box<Expression<'a>>,
         Box<Expression<'a>>,
-    ),
+    ), // ok
     MacroExpandExpr(Box<Expression<'a>>),
     ResumeExpr(Option<Box<Expression<'a>>>, Option<Vec<Expression<'a>>>),
     LoopExpr(
@@ -172,7 +172,7 @@ pub(crate) enum Expression<'a> {
         Option<Box<Expression<'a>>>,
     ),
     // special
-    GuardedExpr(Box<Expression<'a>>, Box<Expression<'a>>), // pattern if expr ->
+    GuardedExpr(Box<Expression<'a>>, Box<Expression<'a>>), // pattern if expr -> // ok
 }
 
 pub(crate) type ParseResult<'a> = Result<(Expression<'a>, usize)>;

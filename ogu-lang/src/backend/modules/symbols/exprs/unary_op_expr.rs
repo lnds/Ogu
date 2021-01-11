@@ -6,6 +6,8 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
+use crate::backend::modules::symbols::exprs::logical_expr::LogicalExpr;
+use crate::backend::modules::types::basic_type::BOOL_TYPE;
 
 pub(crate) struct UnaryOpExpr;
 
@@ -62,6 +64,14 @@ impl UnaryOpExpr {
 
     pub(crate) fn new_le(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
         Self::make_lambda(expr, TRAIT_ORD, PartialOrdExpr::new_le)
+    }
+
+    pub(crate) fn new_or(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
+        Self::make_lambda(expr, BOOL_TYPE, LogicalExpr::new_or)
+    }
+
+    pub(crate) fn new_and(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
+        Self::make_lambda(expr, BOOL_TYPE, LogicalExpr::new_and)
     }
 
     fn make_lambda(expr: Option<Box<dyn Symbol>>, tr: &dyn Type, new: NewFn) -> Box<dyn Symbol> {

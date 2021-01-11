@@ -9,7 +9,7 @@ use crate::backend::modules::symbols::exprs::if_expr::IfExpr;
 use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
 use crate::backend::modules::symbols::exprs::let_expr::LetExpr;
 use crate::backend::modules::symbols::exprs::literals::Literal;
-use crate::backend::modules::symbols::exprs::logical_expr::LogicalSym;
+use crate::backend::modules::symbols::exprs::logical_expr::LogicalExpr;
 use crate::backend::modules::symbols::exprs::paren_expr::ParenExpr;
 use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdExpr;
@@ -106,6 +106,14 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
                 UnaryOpExpr::new_le(expr.deref().as_ref().map(|e| e.into()))
             }
 
+            Expression::UnaryAnd(expr) => {
+                UnaryOpExpr::new_and(expr.deref().as_ref().map(|e| e.into()))
+            }
+
+            Expression::UnaryOr(expr) => {
+                UnaryOpExpr::new_or(expr.deref().as_ref().map(|e| e.into()))
+            }
+
             Expression::AddExpr(l, r) => ArithmeticSym::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticSym::new_sub(l.into(), r.into()),
             Expression::MulExpr(l, r) => ArithmeticSym::new_mul(l.into(), r.into()),
@@ -114,9 +122,9 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::ModExpr(l, r) => ArithmeticSym::new_mod(l.into(), r.into()),
             Expression::PowExpr(l, r) => ArithmeticSym::new_pow(l.into(), r.into()),
 
-            Expression::NotExpr(e) => LogicalSym::new_not(e.into()),
-            Expression::AndExpr(l, r) => LogicalSym::new_and(l.into(), r.into()),
-            Expression::OrExpr(l, r) => LogicalSym::new_or(l.into(), r.into()),
+            Expression::NotExpr(e) => LogicalExpr::new_not(e.into()),
+            Expression::AndExpr(l, r) => LogicalExpr::new_and(l.into(), r.into()),
+            Expression::OrExpr(l, r) => LogicalExpr::new_or(l.into(), r.into()),
 
             Expression::GtExpr(l, r) => PartialOrdExpr::new_gt(l.into(), r.into()),
             Expression::GeExpr(l, r) => PartialOrdExpr::new_ge(l.into(), r.into()),

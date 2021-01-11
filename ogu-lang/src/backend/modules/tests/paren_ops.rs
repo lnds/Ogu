@@ -1,7 +1,7 @@
 use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::module::Module;
 use crate::backend::modules::tests::make_module;
-use crate::backend::modules::types::basic_type::{BasicType, BOOL_TYPE};
+use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
 use crate::backend::scopes::types::{Type, TypeClone};
@@ -426,6 +426,74 @@ fn test_le() {
         ],
     );
 }
+
+
+#[test]
+fn test_or() {
+    let module = make_module(
+        indoc! {r#"
+        or x y = (|| x y)
+        or' = (||)
+        neg = (|| (0 == 1))
+        a = (0 == 0)
+        b = neg a
+        c = or (or' a (0 == 1)) b
+        d = or (or' a (0 == 0)) b
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(
+            Some(vec![BasicType::bool(), BasicType::bool()]),
+            BasicType::bool(),
+        ),
+        FuncType::new_opt(Some(vec![BasicType::bool()]), BasicType::bool()),
+        vec![
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+        ],
+    );
+}
+
+
+
+#[test]
+fn test_and() {
+    let module = make_module(
+        indoc! {r#"
+        and x y = (&& x y)
+        and' = (&&)
+        neg = (&& (0 == 1))
+        a = (0 == 0)
+        b = neg a
+        c = and (and' a (0 == 1)) b
+        d = and (and' a (0 == 0)) b
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(
+            Some(vec![BasicType::bool(), BasicType::bool()]),
+            BasicType::bool(),
+        ),
+        FuncType::new_opt(Some(vec![BasicType::bool()]), BasicType::bool()),
+        vec![
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+        ],
+    );
+}
+
 
 fn validate_decls(
     module: Result<Module>,

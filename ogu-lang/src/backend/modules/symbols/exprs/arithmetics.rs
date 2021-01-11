@@ -65,8 +65,8 @@ impl Symbol for ArithmeticSym {
                 },
                 Some(lt) => match r.get_type() {
                     None => Some(lt.clone()),
-                    Some(rt) if lt.is_trait() => Some(rt.clone()),
-                    Some(rt) if rt.is_trait() => Some(lt.clone()),
+                    Some(rt) if lt.is_trait() && &*lt != TRAIT_NUM => Some(rt.clone()),
+                    Some(rt) if rt.is_trait() && &*rt != TRAIT_NUM => Some(lt.clone()),
                     Some(rt) => {
                         if lt == rt.clone() {
                             Some(rt.clone())

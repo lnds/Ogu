@@ -17,6 +17,8 @@ pub(crate) trait Symbol: SymbolClone + Debug + mopa::Any {
         false
     }
     fn set_storable(&mut self, _: bool) {}
+    fn is_curry(&self) -> bool { false }
+    fn get_curry(&self) -> Option<Box<dyn Symbol>> { None }
 }
 
 mopafy!(Symbol);

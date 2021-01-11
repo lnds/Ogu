@@ -2,7 +2,7 @@ use crate::backend::modules::symbols::funcs::FunctionSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::variadic_type::VariadicType;
-use crate::backend::scopes::symbol::Symbol;
+use crate::backend::scopes::symbol::{Symbol, SymbolClone};
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
@@ -14,6 +14,7 @@ pub(crate) struct FuncCallExpr {
     func: Box<dyn Symbol>,
     args: Vec<Box<dyn Symbol>>,
     ty: Option<Box<dyn Type>>,
+    curried: bool,
 }
 
 impl FuncCallExpr {
@@ -22,6 +23,7 @@ impl FuncCallExpr {
             func,
             args,
             ty: None,
+            curried: false,
         })
     }
 }
@@ -39,6 +41,16 @@ impl Symbol for FuncCallExpr {
         self.ty = ty;
     }
 
+    fn is_curry(&self) -> bool { self.curried }
+
+    fn get_curry(&self) -> Option<Box<dyn Symbol>> {
+        if self.curried {
+            Some(self.func.clone_box())
+        } else {
+            None
+        }
+    }
+
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
         let recursive = scope.scope_name() == self.func.get_name();
@@ -52,13 +64,36 @@ impl Symbol for FuncCallExpr {
                                 bail!("function {} need no args", self.func.get_name());
                             }
                         }
-                        Some(ft_args) if ft_args.len() > self.args.len() => bail!(
-                            "function {} receive more args than needed",
+                        Some(ft_args) if ft_args.len() < self.args.len() => bail!(
+                            "function {} received more args than needed",
                             self.func.get_name()
                         ),
-                        Some(ft_args) if ft_args.len() < self.args.len() => {
-                            println!("probably curry");
-                            todo!()
+                        Some(ft_args) if ft_args.len() > self.args.len() => { // curry
+                            match scope.resolve(self.func.get_name()) {
+                                None => bail!("can't find a function to curry {} ", self.func.get_name()),
+                                Some(func) => {
+                                    println!("func = {:?}", func);
+                                    match func.downcast_ref::<FunctionSym>() {
+                                        None => bail!("can't infer a function to curry {:?} ", func.get_name()),
+                                        Some(_) => {
+                                            let n = ft_args.len() - self.args.len();
+                                            let mut n_args = vec![];
+                                            for (i, ft) in ft_args.iter().enumerate().take(n) {
+                                                let mut sym: Box<dyn Symbol> = IdSym::new(&format!("x_{}", i));
+                                                sym.set_type(Some(ft.clone()));
+                                                n_args.push(sym)
+                                            }
+                                            let mut call_args = self.args.to_vec();
+                                            call_args.append(&mut n_args.to_vec());
+                                            let expr = FuncCallExpr::new(self.func.clone_box(), call_args);
+                                            let mut lambda = LambdaExpr::new(n_args.to_vec(), expr.clone_box());
+                                            lambda.resolve_type(scope)?;
+                                            self.curried = true;
+                                            self.func = lambda
+                                        }
+                                    }
+                                }
+                            }
                         }
                         Some(ft_args) => {
                             for (p, a) in self.args.iter_mut().enumerate() {
@@ -81,14 +116,10 @@ impl Symbol for FuncCallExpr {
                                         match scope.resolve(id.get_name()) {
                                             None => bail!("FATAL could not find function: {}", id.get_name()),
                                             Some(fun) => {
-                                                println!("SCOPE IS : {}", scope.scope_name());
-                                                println!("FUN ES = {:?}", fun);
                                                 if let Some(func) = fun.downcast_ref::<FunctionSym>() {
                                                     let mut f = func.clone();
                                                     f.replace_args(self.args.to_vec(), scope, !recursive)?;
-                                                    println!("F queda asi: {:#?}", f);
                                                     if self.func.get_type() != f.get_type() {
-                                                        println!("son tipos distintos!!!!!");
                                                         self.func = Box::new(f);
                                                     }
                                                 }
@@ -100,9 +131,7 @@ impl Symbol for FuncCallExpr {
                                         if self.func.get_type() != l.get_type() {
                                             self.func = Box::new(l);
                                         }
-                                    }
-
-                                    else {
+                                    } else {
                                         bail!("FATAL: VAL {:?} is from invalid value!!", val);
                                     }
                                 } else {

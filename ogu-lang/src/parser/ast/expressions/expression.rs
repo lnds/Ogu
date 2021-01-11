@@ -116,6 +116,7 @@ pub(crate) enum Expression<'a> {
     UnaryPow(Option<Box<Expression<'a>>>),
     UnaryMod(Option<Box<Expression<'a>>>),
     UnaryDiv(Option<Box<Expression<'a>>>),
+    UnaryDivDiv(Option<Box<Expression<'a>>>),
     UnaryAnd(Option<Box<Expression<'a>>>),
     UnaryOr(Option<Box<Expression<'a>>>),
     UnaryNot,
@@ -539,29 +540,58 @@ impl<'a> Expression<'a> {
                 let (opt_expr, pos) = if parser.peek(pos + 1, Lexeme::RightParen) {
                     (None, pos + 1)
                 } else {
-                    let (expr, pos) = Expression::parse_lambda_expr(parser, pos + 1)?;
+                    let (expr, pos) = Expression::parse_prim_expr(parser, pos + 1)?;
                     (Some(Box::new(expr)), pos)
                 };
-                let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
-                match op {
-                    Lexeme::Cons => Ok((Expression::UnaryCons(opt_expr), pos)),
-                    Lexeme::Plus => Ok((Expression::UnaryAdd(opt_expr), pos)),
-                    Lexeme::PlusPlus => Ok((Expression::UnaryConcat(opt_expr), pos)),
-                    Lexeme::Minus => Ok((Expression::UnarySub(opt_expr), pos)),
-                    Lexeme::Mult => Ok((Expression::UnaryMul(opt_expr), pos)),
-                    Lexeme::Pow => Ok((Expression::UnaryPow(opt_expr), pos)),
-                    Lexeme::Div => Ok((Expression::UnaryDiv(opt_expr), pos)),
-                    Lexeme::Mod => Ok((Expression::UnaryMod(opt_expr), pos)),
-                    Lexeme::And => Ok((Expression::UnaryAnd(opt_expr), pos)),
-                    Lexeme::Or => Ok((Expression::UnaryOr(opt_expr), pos)),
-                    Lexeme::Equal => Ok((Expression::UnaryEq(opt_expr), pos)),
-                    Lexeme::NotEqual => Ok((Expression::UnaryNotEq(opt_expr), pos)),
-                    Lexeme::Greater => Ok((Expression::UnaryGt(opt_expr), pos)),
-                    Lexeme::GreaterOrEqual => Ok((Expression::UnaryGe(opt_expr), pos)),
-                    Lexeme::LessThan => Ok((Expression::UnaryLt(opt_expr), pos)),
-                    Lexeme::LessThanOrEqual => Ok((Expression::UnaryLe(opt_expr), pos)),
-                    _ => raise_parser_error("Expecting an operator", parser, pos, true),
+                if parser.peek(pos, Lexeme::RightParen) {
+                    let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
+                    match op {
+                        Lexeme::Cons => Ok((Expression::UnaryCons(opt_expr), pos)),
+                        Lexeme::Plus => Ok((Expression::UnaryAdd(opt_expr), pos)),
+                        Lexeme::PlusPlus => Ok((Expression::UnaryConcat(opt_expr), pos)),
+                        Lexeme::Minus => Ok((Expression::UnarySub(opt_expr), pos)),
+                        Lexeme::Mult => Ok((Expression::UnaryMul(opt_expr), pos)),
+                        Lexeme::Pow => Ok((Expression::UnaryPow(opt_expr), pos)),
+                        Lexeme::Div => Ok((Expression::UnaryDiv(opt_expr), pos)),
+                        Lexeme::DivDiv => Ok((Expression::UnaryDivDiv(opt_expr), pos)),
+                        Lexeme::Mod => Ok((Expression::UnaryMod(opt_expr), pos)),
+                        Lexeme::And => Ok((Expression::UnaryAnd(opt_expr), pos)),
+                        Lexeme::Or => Ok((Expression::UnaryOr(opt_expr), pos)),
+                        Lexeme::Equal => Ok((Expression::UnaryEq(opt_expr), pos)),
+                        Lexeme::NotEqual => Ok((Expression::UnaryNotEq(opt_expr), pos)),
+                        Lexeme::Greater => Ok((Expression::UnaryGt(opt_expr), pos)),
+                        Lexeme::GreaterOrEqual => Ok((Expression::UnaryGe(opt_expr), pos)),
+                        Lexeme::LessThan => Ok((Expression::UnaryLt(opt_expr), pos)),
+                        Lexeme::LessThanOrEqual => Ok((Expression::UnaryLe(opt_expr), pos)),
+                        _ => raise_parser_error("Expecting an operator", parser, pos, true),
+                    }
+                } else if let Some(left_expr) = opt_expr {
+                    let (right_expr, pos) = Expression::parse_prim_expr(parser, pos)?;
+                    let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
+                    match op {
+                        Lexeme::Cons => Ok((Expression::ConsExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Plus => Ok((Expression::AddExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::PlusPlus => Ok((Expression::ConcatExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Minus => Ok((Expression::SubExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Mult => Ok((Expression::MulExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Pow => Ok((Expression::PowExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Div => Ok((Expression::DivExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::DivDiv => Ok((Expression::IntDivExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Mod => Ok((Expression::ModExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::And => Ok((Expression::AndExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Or => Ok((Expression::OrExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Equal => Ok((Expression::EqExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::NotEqual => Ok((Expression::NeExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::Greater => Ok((Expression::GtExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::GreaterOrEqual => Ok((Expression::GeExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::LessThan => Ok((Expression::LtExpr(left_expr, Box::new(right_expr)), pos)),
+                        Lexeme::LessThanOrEqual => Ok((Expression::LeExpr(left_expr, Box::new(right_expr)), pos)),
+                        _ => raise_parser_error("Expecting an operator", parser, pos, true),
+                    }
+                } else {
+                    raise_parser_error("Expecting an expression", parser, pos, true)
                 }
+
             }
             Some(_) => {
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;

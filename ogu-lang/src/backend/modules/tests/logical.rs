@@ -13,8 +13,8 @@ fn test_logical() {
         d = a == b
         e = a <= b
         f = a >= b
-        de_morgan_1 = (not (e || f)) == ((not e) && (not f))
-        de_morgan_2 = (not (e && f)) == ((not e) || (not f))
+        de_morgan_1 = (!(e || f)) == (!e && !f)
+        de_morgan_2 = (!(e && f)) == (!e || !f)
         "#},
         default_sym_table(),
     );

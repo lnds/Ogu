@@ -1,12 +1,12 @@
 use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::module::Module;
 use crate::backend::modules::tests::make_module;
-use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
 use crate::backend::scopes::types::{Type, TypeClone};
 use anyhow::Result;
 use indoc::indoc;
+use crate::backend::modules::types::basic_type::BasicType;
 
 #[test]
 fn test_add() {
@@ -268,9 +268,9 @@ fn test_eq() {
 fn test_ne() {
     let module = make_module(
         indoc! {r#"
-        ne x y = (/= x y)
-        ne' = (/=)
-        unit = (/= 1)
+        ne x y = (!= x y)
+        ne' = (!=)
+        unit = (!= 1)
         a = 10
         b = unit a
         c = ne (ne' a 1.0) b
@@ -295,7 +295,6 @@ fn test_ne() {
         ],
     );
 }
-
 
 #[test]
 fn test_gt() {
@@ -361,8 +360,6 @@ fn test_ge() {
     );
 }
 
-
-
 #[test]
 fn test_lt() {
     let module = make_module(
@@ -427,7 +424,6 @@ fn test_le() {
     );
 }
 
-
 #[test]
 fn test_or() {
     let module = make_module(
@@ -459,8 +455,6 @@ fn test_or() {
         ],
     );
 }
-
-
 
 #[test]
 fn test_and() {
@@ -494,6 +488,34 @@ fn test_and() {
     );
 }
 
+#[test]
+fn test_not() {
+    let module = make_module(
+        indoc! {r#"
+        not x = (! x)
+        not' = (!)
+        neg = (!)
+        a = (0 == 0)
+        b = neg a
+        c = not (not' b)
+        d = not (not' a)
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(Some(vec![BasicType::bool()]), BasicType::bool()),
+        FuncType::new_opt(Some(vec![BasicType::bool()]), BasicType::bool()),
+        vec![
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+            Some(BasicType::bool()),
+        ],
+    );
+}
 
 fn validate_decls(
     module: Result<Module>,

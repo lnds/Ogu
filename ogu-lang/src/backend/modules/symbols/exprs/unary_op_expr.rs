@@ -1,13 +1,13 @@
 use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticSym;
 use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
+use crate::backend::modules::symbols::exprs::logical_expr::LogicalExpr;
 use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdExpr;
 use crate::backend::modules::symbols::idents::IdSym;
+use crate::backend::modules::types::basic_type::BOOL_TYPE;
 use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
-use crate::backend::modules::symbols::exprs::logical_expr::LogicalExpr;
-use crate::backend::modules::types::basic_type::BOOL_TYPE;
+use crate::backend::scopes::types::{Type, TypeClone};
 
 pub(crate) struct UnaryOpExpr;
 
@@ -72,6 +72,12 @@ impl UnaryOpExpr {
 
     pub(crate) fn new_and(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
         Self::make_lambda(expr, BOOL_TYPE, LogicalExpr::new_and)
+    }
+
+    pub(crate) fn new_not() -> Box<dyn Symbol> {
+        let x = IdSym::new_with_type("x", Some(BOOL_TYPE.clone_box()));
+        let expr = LogicalExpr::new_not(x.clone());
+        LambdaExpr::new(vec![x], expr)
     }
 
     fn make_lambda(expr: Option<Box<dyn Symbol>>, tr: &dyn Type, new: NewFn) -> Box<dyn Symbol> {

@@ -93,7 +93,7 @@ pub(crate) enum Lexeme<'a> {
     Macro,
     #[token("module", priority = 2000)]
     Module,
-    #[token("not", priority = 2000)]
+    #[token("!", priority = 2000)]
     Not,
     #[token("of", priority = 2000)]
     Of,
@@ -207,7 +207,7 @@ pub(crate) enum Lexeme<'a> {
     Mod,
     #[token("*", priority = 1000)]
     Mult,
-    #[token("/=", priority = 1000)]
+    #[token("!=", priority = 1000)]
     NotEqual,
     #[token("||", priority = 1000)]
     Or,
@@ -421,13 +421,12 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex = Lexeme::lexer(
-            "let loop macro module not of otherwise perform primitive repeat recur reify resume return then trait try until",
+            "let loop macro module of otherwise perform primitive repeat recur reify resume return then trait try until",
         );
         assert_eq!(lex.next(), Some(Lexeme::Let));
         assert_eq!(lex.next(), Some(Lexeme::Loop));
         assert_eq!(lex.next(), Some(Lexeme::Macro));
         assert_eq!(lex.next(), Some(Lexeme::Module));
-        assert_eq!(lex.next(), Some(Lexeme::Not));
         assert_eq!(lex.next(), Some(Lexeme::Of));
         assert_eq!(lex.next(), Some(Lexeme::Otherwise));
         assert_eq!(lex.next(), Some(Lexeme::Perform));
@@ -453,7 +452,7 @@ mod test_tokens {
 
     #[test]
     fn test_ops() {
-        let mut lex = Lexeme::lexer("&&  @ -> = <- : , >>");
+        let mut lex = Lexeme::lexer("&&  @ -> = <- : , >> !");
         assert_eq!(lex.next(), Some(Lexeme::And));
         assert_eq!(lex.next(), Some(Lexeme::At));
         assert_eq!(lex.next(), Some(Lexeme::Arrow));
@@ -462,6 +461,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::Colon));
         assert_eq!(lex.next(), Some(Lexeme::Comma));
         assert_eq!(lex.next(), Some(Lexeme::ComposeForward));
+        assert_eq!(lex.next(), Some(Lexeme::Not));
         assert_eq!(lex.next(), None);
 
         let mut lex = Lexeme::lexer("<< :: / // $ ... ..< .. . ");
@@ -490,7 +490,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::LeftParen));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Lexeme::lexer("< ~ =~ - % * /= || <|");
+        let mut lex = Lexeme::lexer("< ~ =~ - % *  != || <|");
         assert_eq!(lex.next(), Some(Lexeme::LessThan));
         assert_eq!(lex.next(), Some(Lexeme::Match));
         assert_eq!(lex.next(), Some(Lexeme::Matches));

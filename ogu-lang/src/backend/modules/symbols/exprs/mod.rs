@@ -114,6 +114,8 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
                 UnaryOpExpr::new_or(expr.deref().as_ref().map(|e| e.into()))
             }
 
+            Expression::UnaryNot => UnaryOpExpr::new_not(),
+
             Expression::AddExpr(l, r) => ArithmeticSym::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticSym::new_sub(l.into(), r.into()),
             Expression::MulExpr(l, r) => ArithmeticSym::new_mul(l.into(), r.into()),

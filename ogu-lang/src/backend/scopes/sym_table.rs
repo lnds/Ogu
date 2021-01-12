@@ -9,6 +9,7 @@ pub(crate) struct SymbolTable {
     enclosing_scope: Option<Box<dyn Scope>>,
     symbol_table: HashMap<String, usize>,
     symbols: Vec<Box<dyn Symbol>>,
+    function_name: Option<String>,
 }
 
 impl SymbolTable {
@@ -18,7 +19,12 @@ impl SymbolTable {
             enclosing_scope,
             symbol_table: HashMap::new(),
             symbols: vec![],
+            function_name: None,
         })
+    }
+
+    pub(crate) fn set_function_name(&mut self, name: &str) {
+        self.function_name = Some(name.to_string())
     }
 }
 
@@ -68,6 +74,13 @@ impl Scope for SymbolTable {
         self.symbol_table.clear();
         for (i, sym) in self.symbols.iter().enumerate() {
             self.symbol_table.insert(sym.get_name().to_string(), i);
+        }
+    }
+
+    fn function_scope_name(&self) -> String {
+        match &self.function_name {
+            None => String::new(),
+            Some(s) => s.to_string(),
         }
     }
 }

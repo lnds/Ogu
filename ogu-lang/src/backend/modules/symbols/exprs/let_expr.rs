@@ -32,6 +32,7 @@ impl Symbol for LetExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let mut sym_table = SymbolTable::new("let", Some(scope.clone_box()));
+        sym_table.set_function_name(&scope.function_scope_name());
         for e in self.eqs.iter() {
             if sym_table.define(e.clone()).is_some() {
                 return Err(Error::new(OguError::SymbolTableError).context(format!(

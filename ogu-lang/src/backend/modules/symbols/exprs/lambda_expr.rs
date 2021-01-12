@@ -87,6 +87,7 @@ impl Symbol for LambdaExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let mut sym_table = SymbolTable::new("lambda_expr", Some(scope.clone_box()));
+        sym_table.set_function_name(&scope.function_scope_name());
         for a in self.args.iter() {
             sym_table.define(a.clone());
         }

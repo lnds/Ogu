@@ -43,7 +43,7 @@ impl Symbol for FuncCallExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
-        let recursive = scope.scope_name() == self.func.get_name();
+        let recursive = scope.function_scope_name() == self.func.get_name();
         match ft {
             None => {}
             Some(ft) => {

@@ -13,6 +13,10 @@ impl TupleType {
         TupleType { tuple }
     }
 
+    pub(crate) fn new_box(tuple: Vec<Box<dyn Type>>) -> Box<dyn Type> {
+        Box::new(TupleType { tuple })
+    }
+
     pub(crate) fn get_tuple(&self) -> Vec<Box<dyn Type>> {
         self.tuple.to_vec()
     }

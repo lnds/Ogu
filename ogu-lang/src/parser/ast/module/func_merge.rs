@@ -16,13 +16,20 @@ impl<'a> BodyAst<'a> {
             return Ok(decl);
         }
         let (args_names, conds, _ft) = Self::extract_args(name, vec_of_funcs)?;
-        let args = args_names
+        let args: Vec<Expression> = args_names
             .clone()
             .into_iter()
             .map(Expression::NameStr)
             .collect();
         let new_args = Args::Many(args_names.into_iter().map(Arg::SimpleStr).collect());
-        let new_expr = Expression::CaseExpr(Box::new(Expression::TupleExpr(args)), conds.clone());
+        let new_expr = Expression::CaseExpr(
+            Box::new(if args.len() == 1 {
+                args[0].clone()
+            } else {
+                Expression::TupleExpr(args)
+            }),
+            conds.clone(),
+        );
         Ok(DeclarationAst::Function(name, new_args, new_expr, _ft))
     }
 
@@ -129,17 +136,14 @@ impl<'a> BodyAst<'a> {
                 Some(vec![])
             }
             DeclarationAst::Function(_, Args::Many(args), expr, _) => {
-                let exprs = Expression::TupleExpr(args.iter().map(BodyAst::arg_to_expr).collect());
+                let exprs = BodyAst::args_to_expr(args);
                 conds.push((Some(exprs), expr.clone()));
                 Some(args.to_vec())
             }
             DeclarationAst::FunctionWithGuards(_, args, guards, opt_where) => {
                 let (cond_expr, p_args) = match args {
                     Args::Void => (Expression::Unit, vec![]),
-                    Args::Many(args) => (
-                        Expression::TupleExpr(args.iter().map(BodyAst::arg_to_expr).collect()),
-                        args.to_vec(),
-                    ),
+                    Args::Many(args) => (BodyAst::args_to_expr(args), args.to_vec()),
                 };
                 for Guard(opt_cond, expr) in guards.iter() {
                     if let Some(cond) = opt_cond {
@@ -164,9 +168,21 @@ impl<'a> BodyAst<'a> {
             Arg::Simple(id) => Expression::Name(id),
             Arg::SimpleStr(id) => Expression::NameStr(id.clone()),
             Arg::Tuple(args) => {
-                Expression::TupleExpr(args.iter().map(|a| BodyAst::arg_to_expr(a)).collect())
+                if args.len() == 1 {
+                    BodyAst::arg_to_expr(&args[0])
+                } else {
+                    Expression::TupleExpr(args.iter().map(|a| BodyAst::arg_to_expr(a)).collect())
+                }
             }
             Arg::Expr(e) => *e.clone(),
+        }
+    }
+
+    fn args_to_expr(args: &[Arg<'a>]) -> Expression<'a> {
+        if args.len() == 1 {
+            BodyAst::arg_to_expr(&args[0])
+        } else {
+            Expression::TupleExpr(args.iter().map(BodyAst::arg_to_expr).collect())
         }
     }
 }

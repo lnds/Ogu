@@ -9,7 +9,7 @@ use anyhow::{Error, Result};
 
 #[derive(Debug, Clone)]
 pub(crate) struct TupleExpr {
-    tuple: Vec<Box<dyn Symbol>>,
+    pub(crate) tuple: Vec<Box<dyn Symbol>>,
     assignable: bool,
 }
 
@@ -69,6 +69,7 @@ impl Symbol for TupleExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let mut sym_table = SymbolTable::new("tuple", Some(scope.clone_box()));
+        sym_table.set_function_name(&scope.function_scope_name());
         if self.assignable {
             for s in self.tuple.iter() {
                 if sym_table.define(s.clone()).is_some() {

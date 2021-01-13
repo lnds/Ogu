@@ -13,6 +13,7 @@ impl TupleType {
         TupleType { tuple }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn new_box(tuple: Vec<Box<dyn Type>>) -> Box<dyn Type> {
         Box::new(TupleType { tuple })
     }
@@ -59,8 +60,6 @@ impl Type for TupleType {
             for (s, o) in self.tuple.iter_mut().zip(other_tuple_vec.iter_mut()) {
                 if TRAIT_UNKNOWN.get_signature() == s.get_signature() {
                     *s = o.clone();
-                } else if o.get_signature() == TRAIT_UNKNOWN.get_signature() {
-                    *o = s.clone();
                 }
             }
         }

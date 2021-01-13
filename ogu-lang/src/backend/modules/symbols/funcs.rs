@@ -126,7 +126,6 @@ impl Symbol for FunctionSym {
         sym_table.set_function_name(&self.name);
 
         if let Some(args) = &self.args {
-            println!("RESOLVE TYPE FUNC ARGS = {:#?}", self.args);
             for a in args.iter() {
                 sym_table.define(a.clone());
             }

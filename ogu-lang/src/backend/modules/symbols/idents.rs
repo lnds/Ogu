@@ -1,6 +1,7 @@
 use crate::backend::errors::OguError;
+use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use anyhow::{Error, Result};
 
@@ -40,6 +41,29 @@ impl Symbol for IdSym {
             None => self.ty = ty.clone(),
             Some(t) if t.is_trait() => self.ty = ty.clone(),
             _ => {}
+        }
+    }
+
+    fn matches_types(&mut self, arg_ty: Option<Box<dyn Type>>) {
+        println!("MATCHES TYPES {:?}", self.name);
+        if let Some(ty) = &arg_ty {
+            if let Some(tt) = ty.downcast_ref::<TupleType>() {
+                if let Some(sty) = &self.ty {
+                    if let Some(stt) = sty.downcast_ref::<TupleType>() {
+                        println!("STT = {:?}", stt);
+                        println!("TT = {:?}", tt);
+                        let mut stt = stt.clone();
+                        stt.match_types(tt);
+                        self.ty = Some(stt.clone_box());
+                    } else {
+                        self.ty = arg_ty.clone();
+                    }
+                }
+            } else {
+                self.ty = arg_ty.clone();
+            }
+        } else {
+            self.ty = arg_ty.clone();
         }
     }
 

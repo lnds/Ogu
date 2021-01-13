@@ -1,12 +1,12 @@
 use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::module::Module;
 use crate::backend::modules::tests::make_module;
+use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
 use crate::backend::scopes::types::{Type, TypeClone};
 use anyhow::Result;
 use indoc::indoc;
-use crate::backend::modules::types::basic_type::BasicType;
 
 #[test]
 fn test_add() {

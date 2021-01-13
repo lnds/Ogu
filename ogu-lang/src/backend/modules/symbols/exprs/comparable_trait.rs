@@ -35,7 +35,9 @@ pub(crate) fn resolve_comparable(
                 r.set_type(Some(lt.clone()));
                 scope.define(r.clone());
             }
-            _ => {}
+            Some(rt) => {
+                println!("!!!! WAT lt = {:?}  rt = {:?}", lt, rt);
+            }
         },
     };
     Ok(())

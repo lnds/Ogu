@@ -3,6 +3,7 @@ use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_ORD};
+use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
 
@@ -224,7 +225,7 @@ fn test_args_1() {
     let module = make_module(
         indoc! {r#"
         min x y = if x < y then x else y
-        b = (min (min 10 20) 20)
+        b = (min 10 20)
         "#},
         default_sym_table(),
     );
@@ -241,4 +242,30 @@ fn test_args_1() {
         )
     );
     assert_eq!(decls[1].get_type(), Some(BasicType::int()));
+}
+
+#[test]
+fn test_args_2() {
+    let module = make_module(
+        indoc! {r#"
+        min (x, y) = if x < y then x else y
+        --b = min (10, 20)
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("DECLS: {:#?}", decls);
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(
+            Some(vec![TupleType::new_box(vec![
+                TRAIT_ORD.clone_box(),
+                TRAIT_ORD.clone_box()
+            ])]),
+            TRAIT_ORD.clone_box())
+    );
+    //assert_eq!(decls[1].get_type(), Some(BasicType::int()));
 }

@@ -1,8 +1,7 @@
-use crate::backend::modules::symbols::exprs::tuple_expr::TupleExpr;
 use crate::backend::modules::symbols::exprs::OptSymbolTuple;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::scopes::sym_table::SymbolTable;
-use crate::backend::scopes::symbol::{Symbol, SymbolClone};
+use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::Result;
@@ -11,11 +10,16 @@ use anyhow::Result;
 pub(crate) struct CaseExpr {
     selector: Box<dyn Symbol>,
     cases: Vec<OptSymbolTuple>,
+    ty: Option<Box<dyn Type>>,
 }
 
 impl CaseExpr {
     pub(crate) fn new(selector: Box<dyn Symbol>, cases: Vec<OptSymbolTuple>) -> Box<Self> {
-        Box::new(CaseExpr { selector, cases })
+        Box::new(CaseExpr {
+            selector,
+            cases,
+            ty: None,
+        })
     }
 }
 
@@ -25,11 +29,7 @@ impl Symbol for CaseExpr {
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
-        if self.cases.is_empty() {
-            None
-        } else {
-            self.cases[0].1.get_type()
-        }
+        self.ty.clone()
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
@@ -41,19 +41,22 @@ impl Symbol for CaseExpr {
             if sym.get_type().is_some() {
                 self.selector.set_type(sym.get_type());
             }
+        } else if self.selector.is_seq() {
+            let syms = scope.resolve_seq(self.selector.get_seq());
+            self.selector.set_seq(syms);
+            cond_type = self.selector.get_type();
         }
         for (c, e) in self.cases.iter_mut() {
             let mut sym_table = SymbolTable::new("cond", Some(scope.clone_box()));
+            self.selector.define_into(&mut *sym_table);
             sym_table.set_function_name(&scope.function_scope_name());
             if let Some(c) = c {
                 if let Some(c) = c.downcast_ref::<IdSym>() {
-                    sym_table.define(c.clone_box());
-                } else if let Some(t) = c.downcast_ref::<TupleExpr>() {
-                    let mut t = t.clone();
+                    c.define_into(&mut *sym_table);
+                } else if c.is_seq() {
+                    let mut t = c.clone();
                     t.matches_types(cond_type.clone());
-                    for s in t.tuple.iter() {
-                        sym_table.define(s.clone());
-                    }
+                    t.define_into(&mut *sym_table);
                 }
             }
             let r = e.resolve_type(scope);
@@ -62,6 +65,7 @@ impl Symbol for CaseExpr {
             }
             if expr_type.is_none() {
                 expr_type = e.get_type();
+                e.define_into(&mut *sym_table);
             }
 
             if let Some(c) = c {
@@ -76,11 +80,13 @@ impl Symbol for CaseExpr {
                     if let Some(ct) = c.get_type() {
                         t.match_types(&*ct);
                         cond_type = Some(t);
+                        c.matches_types(cond_type.clone());
                     }
                 }
             }
         }
 
+        self.ty = expr_type;
         let storable = self.selector.storable();
         self.selector.set_storable(true);
         if self.selector.get_type().is_none() {

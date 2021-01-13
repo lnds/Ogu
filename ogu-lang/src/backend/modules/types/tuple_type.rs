@@ -29,7 +29,7 @@ impl Type for TupleType {
     }
 
     fn get_signature(&self) -> String {
-        unimplemented!()
+        format!("Tuple ({:?})", self.tuple)
     }
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
@@ -61,7 +61,13 @@ impl Type for TupleType {
                 if TRAIT_UNKNOWN.get_signature() == s.get_signature()
                     || s.is_trait() && !o.is_trait()
                 {
-                    *s = o.clone();
+                    if s.is::<TupleType>() {
+                        s.match_types(o.deref().deref());
+                    } else {
+                        *s = o.clone();
+                    }
+                } else {
+                    s.match_types(o.deref().deref());
                 }
             }
         }

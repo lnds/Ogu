@@ -56,12 +56,8 @@ impl Symbol for TupleExpr {
                 for (s, t) in self.tuple.iter_mut().zip(other_tuple_vec.iter()) {
                     match s.get_type() {
                         None => s.set_type(Some(t.clone())),
-                        Some(tt) => {
-                            if tt.get_signature() == TRAIT_UNKNOWN.get_signature()
-                                || tt.is_trait() && !t.is_trait()
-                            {
-                                s.set_type(Some(t.clone()))
-                            }
+                        Some(_) => {
+                            s.matches_types(Some(t.clone()));
                         }
                     }
                 }
@@ -97,5 +93,27 @@ impl Symbol for TupleExpr {
 
     fn set_storable(&mut self, s: bool) {
         self.assignable = s;
+    }
+
+    fn define_into(&self, scope: &mut dyn Scope) {
+        println!("define into");
+        for s in self.tuple.iter() {
+            println!("S = {:?}", s);
+            s.define_into(scope);
+        }
+    }
+
+    fn is_seq(&self) -> bool {
+        true
+    }
+
+    fn get_seq(&self) -> Option<Vec<Box<dyn Symbol>>> {
+        Some(self.tuple.to_vec())
+    }
+
+    fn set_seq(&mut self, seq: Option<Vec<Box<dyn Symbol>>>) {
+        if let Some(seq) = seq {
+            self.tuple = seq;
+        }
     }
 }

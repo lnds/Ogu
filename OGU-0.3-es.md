@@ -31,7 +31,7 @@ Es una expresión válida, pero se prefiere que se escriba así:
     
     1 + 1
         
-Esto es muy importante, porque 
+Esto es muy importante, porque:
 
     a+1 
     
@@ -59,10 +59,10 @@ y pueden contener los caracteres  *, +, !, -, _, ', ?, <, > y =.
 
 Ejemplos:
 
-    lost+found = true
+    lost+found = True
     max-intentos = 10
     parametros* = 200
-    _es-finalista? = false
+    _es-finalista? = False
     
 Siempre se debe colocar su valor inicial usando el operador =.
 
@@ -305,12 +305,12 @@ En Ogú las funciones son objetos de primera clase, es decir, las funciones pued
 
 La forma de declarar una función es la siguiente
 
-    nombreDeLaFuncion args = expresión
+    nombre-de-la-funcion args = expresión
 
 Ejemplos:
 
 
-    factorial n = if n == 0 then 1 else n * factorial (n-1)
+    factorial n = if n == 0 then 1 else n * factorial (n - 1)
 
 Esto es similar a Haskell o a Elm.
 

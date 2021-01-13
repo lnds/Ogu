@@ -38,22 +38,13 @@ impl Symbol for IdSym {
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
         self.ty = ty.clone();
-        /*
-        match &self.ty {
-            None => self.ty = ty.clone(),
-            Some(t) if t.is_trait() => self.ty = ty.clone(),
-            _ => {}
-        }*/
     }
 
     fn matches_types(&mut self, arg_ty: Option<Box<dyn Type>>) {
-        println!("MATCHES TYPES {:?}", self.name);
         if let Some(ty) = &arg_ty {
             if let Some(tt) = ty.downcast_ref::<TupleType>() {
                 if let Some(sty) = &self.ty {
                     if let Some(stt) = sty.downcast_ref::<TupleType>() {
-                        println!("STT = {:?}", stt);
-                        println!("TT = {:?}", tt);
                         let mut stt = stt.clone();
                         stt.match_types(tt);
                         self.ty = Some(stt.clone_box());

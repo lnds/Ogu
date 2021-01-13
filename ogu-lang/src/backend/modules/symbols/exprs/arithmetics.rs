@@ -148,4 +148,19 @@ impl Symbol for ArithmeticSym {
             }
         }
     }
+
+    fn define_into(&self, scope: &mut dyn Scope) {
+        match self {
+            ArithmeticSym::Add(l, r)
+            | ArithmeticSym::Sub(l, r)
+            | ArithmeticSym::Mul(l, r)
+            | ArithmeticSym::IntDiv(l, r)
+            | ArithmeticSym::Div(l, r)
+            | ArithmeticSym::Mod(l, r)
+            | ArithmeticSym::Pow(l, r) => {
+                scope.define(l.clone());
+                scope.define(r.clone());
+            }
+        }
+    }
 }

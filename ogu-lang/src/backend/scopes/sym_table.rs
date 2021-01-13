@@ -83,4 +83,20 @@ impl Scope for SymbolTable {
             Some(s) => s.to_string(),
         }
     }
+
+    fn resolve_seq(&self, seq: Option<Vec<Box<dyn Symbol>>>) -> Option<Vec<Box<dyn Symbol>>> {
+        match seq {
+            None => None,
+            Some(seq) => {
+                let mut result = vec![];
+                for s in seq.iter() {
+                    match self.resolve(s.get_name()) {
+                        None => result.push(s.clone()),
+                        Some(s) => result.push(s.clone_box()),
+                    }
+                }
+                Some(result)
+            }
+        }
+    }
 }

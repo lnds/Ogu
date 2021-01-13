@@ -25,6 +25,17 @@ pub(crate) trait Symbol: SymbolClone + Debug + mopa::Any {
     fn get_curry(&self) -> Option<Box<dyn Symbol>> {
         None
     }
+    fn define_into(&self, scope: &mut dyn Scope) {
+        scope.define(self.clone_box());
+    }
+
+    fn is_seq(&self) -> bool {
+        false
+    } // for tuples, list, arrays, etc
+    fn get_seq(&self) -> Option<Vec<Box<dyn Symbol>>> {
+        None
+    }
+    fn set_seq(&mut self, _: Option<Vec<Box<dyn Symbol>>>) {}
 }
 
 mopafy!(Symbol);

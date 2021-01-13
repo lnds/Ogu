@@ -13,6 +13,7 @@ pub(crate) trait Scope: ScopeClone + Debug {
     fn get_symbols(&self) -> Vec<Box<dyn Symbol>>;
     fn set_symbols(&mut self, symbols: Vec<Box<dyn Symbol>>);
     fn function_scope_name(&self) -> String;
+    fn resolve_seq(&self, seq: Option<Vec<Box<dyn Symbol>>>) -> Option<Vec<Box<dyn Symbol>>>;
 }
 
 pub(crate) trait ScopeClone {

@@ -249,7 +249,7 @@ fn test_args_2() {
     let module = make_module(
         indoc! {r#"
         min (x, y) = if x < y then x else y
-        --b = min (10, 20)
+        b = min (10, 20)
         "#},
         default_sym_table(),
     );
@@ -265,7 +265,8 @@ fn test_args_2() {
                 TRAIT_ORD.clone_box(),
                 TRAIT_ORD.clone_box()
             ])]),
-            TRAIT_ORD.clone_box())
+            TRAIT_ORD.clone_box()
+        )
     );
-    //assert_eq!(decls[1].get_type(), Some(BasicType::int()));
+    assert_eq!(decls[1].get_type(), Some(BasicType::int()));
 }

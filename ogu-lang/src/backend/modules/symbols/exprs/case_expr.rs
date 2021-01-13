@@ -35,9 +35,13 @@ impl Symbol for CaseExpr {
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let mut expr_type = None;
         let mut cond_type = None;
-        println!("selector = {:?}", self.selector.get_name());
-        println!("selector = {:?}", self.selector);
 
+        if let Some(sym) = scope.resolve(self.selector.get_name()) {
+            cond_type = sym.get_type();
+            if sym.get_type().is_some() {
+                self.selector.set_type(sym.get_type());
+            }
+        }
         for (c, e) in self.cases.iter_mut() {
             let mut sym_table = SymbolTable::new("cond", Some(scope.clone_box()));
             sym_table.set_function_name(&scope.function_scope_name());
@@ -45,6 +49,8 @@ impl Symbol for CaseExpr {
                 if let Some(c) = c.downcast_ref::<IdSym>() {
                     sym_table.define(c.clone_box());
                 } else if let Some(t) = c.downcast_ref::<TupleExpr>() {
+                    let mut t = t.clone();
+                    t.matches_types(cond_type.clone());
                     for s in t.tuple.iter() {
                         sym_table.define(s.clone());
                     }
@@ -73,31 +79,6 @@ impl Symbol for CaseExpr {
                     }
                 }
             }
-
-            /*
-            println!("SYM TABLE FOR \nc= {:?}\ne= {:?}\n{:#?}", c, e, sym_table);
-            if let Some(cc) = c {
-
-                if let Some(cc) = c.downcast_ref::<IdSym>() {
-                    println!("sc = {:?}", sym_table.resolve(cc.get_name()));
-                }
-                else if let Some(t) = cc.downcast_ref::<TupleExpr>() {
-                    let mut t = t.clone();
-                    println!("T BEFORE: {:#?}", t);
-                    for s in t.tuple.iter_mut() {
-                        if let Some(sym) = sym_table.resolve(s.get_name()) {
-                            if s.get_type() != sym.get_type() {
-                                s.set_type(sym.get_type())
-                            }
-                        }
-                    }
-                    println!("T = {:#?}", t);
-                }
-
-
-            }
-
-             */
         }
 
         let storable = self.selector.storable();
@@ -109,8 +90,6 @@ impl Symbol for CaseExpr {
         self.selector.resolve_type(scope)?;
         self.selector.set_storable(storable);
         scope.define(self.selector.clone());
-        println!("SELECTOR TYPE FINAL = {:#?}", self.selector.get_type());
-        println!("SELF TYPE = {:?}", self.get_type());
         Ok(self.get_type())
     }
 }

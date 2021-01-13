@@ -58,7 +58,9 @@ impl Type for TupleType {
         if let Some(other) = other.downcast_ref::<TupleType>() {
             let mut other_tuple_vec = other.get_tuple();
             for (s, o) in self.tuple.iter_mut().zip(other_tuple_vec.iter_mut()) {
-                if TRAIT_UNKNOWN.get_signature() == s.get_signature() {
+                if TRAIT_UNKNOWN.get_signature() == s.get_signature()
+                    || s.is_trait() && !o.is_trait()
+                {
                     *s = o.clone();
                 }
             }

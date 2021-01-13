@@ -57,7 +57,9 @@ impl Symbol for TupleExpr {
                     match s.get_type() {
                         None => s.set_type(Some(t.clone())),
                         Some(tt) => {
-                            if tt.get_signature() == TRAIT_UNKNOWN.get_signature() {
+                            if tt.get_signature() == TRAIT_UNKNOWN.get_signature()
+                                || tt.is_trait() && !t.is_trait()
+                            {
                                 s.set_type(Some(t.clone()))
                             }
                         }

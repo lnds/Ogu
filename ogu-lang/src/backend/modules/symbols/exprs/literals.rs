@@ -13,6 +13,8 @@ pub(crate) enum Literal {
     Char(String),
     Date(String),
     Regexp(String),
+    True,
+    False,
     Unit,
     Invalid,
 }
@@ -49,6 +51,16 @@ impl Literal {
     pub(crate) fn new_invalid() -> Box<Literal> {
         Box::new(Literal::Invalid)
     }
+
+    pub(crate) fn new_true() -> Box<Literal> {
+        Box::new(Literal::True)
+    }
+
+    pub(crate) fn new_false() -> Box<Literal> {
+        Box::new(Literal::False)
+    }
+
+
 }
 
 impl Symbol for Literal {
@@ -78,6 +90,7 @@ impl Symbol for Literal {
             Literal::Regexp(_) => Some(BasicType::regexp()),
             Literal::Unit => Some(BasicType::unit()),
             Literal::Invalid => None,
+            Literal::True|Literal::False => Some(BasicType::bool()),
         }
     }
 

@@ -67,6 +67,8 @@ pub(crate) enum Lexeme<'a> {
     TyF32,
     #[token("f64", priority = 2000)]
     TyF64,
+    #[token("false", priority = 2000)]
+    False,
     #[token("for", priority = 2000)]
     For,
     #[token("from", priority = 2000)]
@@ -117,6 +119,8 @@ pub(crate) enum Lexeme<'a> {
     Then,
     #[token("trait", priority = 2000)]
     Trait,
+    #[token("true", priority = 2000)]
+    True,
     #[token("try", priority = 2000)]
     Try,
     #[token("type", priority = 2000)]
@@ -406,10 +410,11 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex =
-            Lexeme::lexer("exposing extends extern for from if handle handler in is lazy");
+            Lexeme::lexer("exposing extends extern false for from if handle handler in is lazy");
         assert_eq!(lex.next(), Some(Lexeme::Exposing));
         assert_eq!(lex.next(), Some(Lexeme::Extends));
         assert_eq!(lex.next(), Some(Lexeme::Extern));
+        assert_eq!(lex.next(), Some(Lexeme::False));
         assert_eq!(lex.next(), Some(Lexeme::For));
         assert_eq!(lex.next(), Some(Lexeme::From));
         assert_eq!(lex.next(), Some(Lexeme::If));
@@ -421,7 +426,7 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex = Lexeme::lexer(
-            "let loop macro module of otherwise perform primitive repeat recur reify resume return then trait try until",
+            "let loop macro module of otherwise perform primitive repeat recur reify resume return then trait true try until",
         );
         assert_eq!(lex.next(), Some(Lexeme::Let));
         assert_eq!(lex.next(), Some(Lexeme::Loop));
@@ -438,6 +443,7 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::Return));
         assert_eq!(lex.next(), Some(Lexeme::Then));
         assert_eq!(lex.next(), Some(Lexeme::Trait));
+        assert_eq!(lex.next(), Some(Lexeme::True));
         assert_eq!(lex.next(), Some(Lexeme::Try));
         assert_eq!(lex.next(), Some(Lexeme::Until));
         assert_eq!(lex.next(), None);

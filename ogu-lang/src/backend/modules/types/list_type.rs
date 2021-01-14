@@ -12,7 +12,7 @@ impl ListType {
         Box::new(ListType::Empty)
     }
 
-    pub(crate) fn new_list(ty: Box<dyn Type>) -> Box<Self> {
+    pub(crate) fn new_list(ty: Box<dyn Type>) -> Box<dyn Type> {
         Box::new(ListType::List(ty))
     }
 }

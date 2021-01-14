@@ -2,6 +2,9 @@ use crate::backend::modules::tests::make_module;
 use crate::backend::compiler::default_sym_table;
 use indoc::indoc;
 use crate::backend::modules::types::list_type::ListType;
+use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::trait_type::TRAIT_NUM;
+use crate::backend::scopes::types::TypeClone;
 
 #[test]
 fn test_simple_list() {
@@ -12,7 +15,9 @@ fn test_simple_list() {
             a = [1]
             b = ['a', 'b']
             c = ["hello", "world"]
-            d = [1, 2, 3]
+            d = [1.0, 2.0, 3.0]
+            e = [1N, 2N, 3N]
+            f = [0 == 0, 0 != 1, 0 < 1, true, false]
             "#},
         default_sym_table(),
     );
@@ -21,7 +26,13 @@ fn test_simple_list() {
     let module = module.unwrap();
     let decls = module.get_decls();
     println!("TEST DECLS = {:#?}", decls);
-    assert_eq!(decls[0].get_type(), Some(ListType::new_empty()))
+    assert_eq!(decls[0].get_type(), Some(ListType::new_empty()));
+    assert_eq!(decls[1].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(decls[2].get_type(), Some(ListType::new_list(BasicType::char())));
+    assert_eq!(decls[3].get_type(), Some(ListType::new_list(BasicType::static_str())));
+    assert_eq!(decls[4].get_type(), Some(ListType::new_list(BasicType::float())));
+    assert_eq!(decls[5].get_type(), Some(ListType::new_list(TRAIT_NUM.clone_box())));
+    assert_eq!(decls[6].get_type(), Some(ListType::new_list(BasicType::bool())));
 }
 
 #[test]

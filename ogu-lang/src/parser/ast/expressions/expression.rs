@@ -78,6 +78,8 @@ pub(crate) enum Expression<'a> {
     FloatLiteral(&'a str),              // ok
     DateLiteral(&'a str),               // ok
     FormatString(&'a str),
+    True,
+    False,
     Unit, // ok
     EmptyList,
     ParenExpr(Box<Expression<'a>>), // ok
@@ -85,7 +87,7 @@ pub(crate) enum Expression<'a> {
     LazyExpr(Box<Expression<'a>>),
     YieldExpr(Box<Expression<'a>>),
     ReifyExpr(&'a str, Vec<Equation<'a>>),
-    ListExpr(Vec<Expression<'a>>),
+    ListExpr(Vec<Expression<'a>>), // ok
     ListByComprehension(
         Vec<Expression<'a>>,
         Vec<Equation<'a>>,
@@ -268,6 +270,7 @@ impl<'a> Expression<'a> {
             let (c, pos) = Expression::parse_primary_expr(parser, pos)?;
             if matches!(c, Expression::StringLiteral(_) | Expression::RegexpLiteral(_)
             | Expression::CharLiteral(_) | Expression::IntegerLiteral(_)|Expression::FloatLiteral(_)
+            | Expression::True | Expression::False
             | Expression::DateLiteral(_) | Expression::Unit | Expression::Name(_)
             | Expression::EmptyList | Expression::ListExpr(_)
             | Expression::ConsExpr(_,_) | Expression::TupleExpr(_)| Expression::TypedFuncCall(_,_,_)
@@ -822,6 +825,8 @@ impl<'a> Expression<'a> {
             Some(Lexeme::FormatString(f_str)) => Ok((Expression::FormatString(f_str), pos + 1)),
             Some(Lexeme::Char(chr)) => Ok((Expression::CharLiteral(chr), pos + 1)),
             Some(Lexeme::RegExp(expr)) => Ok((Expression::RegexpLiteral(expr), pos + 1)),
+            Some(Lexeme::False) => Ok((Expression::False, pos+1)),
+            Some(Lexeme::True) => Ok((Expression::True, pos+1)),
             sym => {
                 println!("parse literal sym = {:?}", sym);
                 todo!()

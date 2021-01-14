@@ -142,7 +142,9 @@ pub(crate) fn is_literal(symbol: Lexeme) -> bool {
         |Lexeme::FormatString(_)
         |Lexeme::RegExp(_)
         |Lexeme::Char(_)
-        |Lexeme::IsoDate(_))
+        |Lexeme::IsoDate(_)
+        |Lexeme::True
+        |Lexeme::False)
 }
 
 pub(crate) fn is_basic_op(symbol: Lexeme) -> bool {

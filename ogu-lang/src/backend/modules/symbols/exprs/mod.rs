@@ -21,6 +21,7 @@ use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::{Expression, LambdaArg, OptExprTuple};
+use crate::backend::modules::symbols::exprs::list_expr::ListExpr;
 
 mod arithmetics;
 mod case_expr;
@@ -39,6 +40,7 @@ mod partial_ord;
 mod recur_call;
 mod tuple_expr;
 mod unary_op_expr;
+mod list_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -59,6 +61,10 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::ParenExpr(expr) => ParenExpr::make(expr),
 
             Expression::TupleExpr(tuple) => TupleExpr::make(vec_exprs_into(tuple)),
+
+            Expression::EmptyList => ListExpr::new_empty(),
+
+            Expression::ListExpr(exprs) => ListExpr::new_list(vec_exprs_into(exprs)),
 
             Expression::UnaryAdd(expr) => {
                 UnaryOpExpr::new_add(expr.deref().as_ref().map(|e| e.into()))

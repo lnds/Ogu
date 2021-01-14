@@ -9,6 +9,7 @@ mod protos;
 mod recursives;
 mod simple;
 mod val_decls;
+mod lists_exprs;
 
 use crate::backend::modules::module::Module;
 use crate::backend::scopes::Scope;

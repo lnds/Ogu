@@ -165,10 +165,6 @@ pub(crate) enum Lexeme<'a> {
     Dollar,
     #[token("${", priority = 1000)]
     DollarCurly,
-    #[token("...", priority = 1000)]
-    DotDotDot,
-    #[token("..<", priority = 1000)]
-    DotDotLess,
     #[token("..", priority = 1000)]
     DotDot,
     #[token(".", priority = 1000)]
@@ -470,14 +466,12 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::Not));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Lexeme::lexer("<< :: / // $ ... ..< .. . ");
+        let mut lex = Lexeme::lexer("<< :: / // $  .. . ");
         assert_eq!(lex.next(), Some(Lexeme::ComposeBackward));
         assert_eq!(lex.next(), Some(Lexeme::Cons));
         assert_eq!(lex.next(), Some(Lexeme::Div));
         assert_eq!(lex.next(), Some(Lexeme::DivDiv));
         assert_eq!(lex.next(), Some(Lexeme::Dollar));
-        assert_eq!(lex.next(), Some(Lexeme::DotDotDot));
-        assert_eq!(lex.next(), Some(Lexeme::DotDotLess));
         assert_eq!(lex.next(), Some(Lexeme::DotDot));
         assert_eq!(lex.next(), Some(Lexeme::Dot));
         assert_eq!(lex.next(), None);
@@ -572,15 +566,15 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::Integer("2")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Lexeme::lexer("1..<2");
+        let mut lex = Lexeme::lexer("1..2");
         assert_eq!(lex.next(), Some(Lexeme::Integer("1")));
-        assert_eq!(lex.next(), Some(Lexeme::DotDotLess));
+        assert_eq!(lex.next(), Some(Lexeme::DotDot));
         assert_eq!(lex.next(), Some(Lexeme::Integer("2")));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Lexeme::lexer("1...");
+        let mut lex = Lexeme::lexer("1..");
         assert_eq!(lex.next(), Some(Lexeme::Integer("1")));
-        assert_eq!(lex.next(), Some(Lexeme::DotDotDot));
+        assert_eq!(lex.next(), Some(Lexeme::DotDot));
         assert_eq!(lex.next(), None);
 
         let mut lex = Lexeme::lexer("1.4..3.4");

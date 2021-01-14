@@ -190,7 +190,6 @@ pub(crate) fn is_func_call_end_symbol(symbol: Option<Lexeme>) -> bool {
                 | Lexeme::Case
                 | Lexeme::Dot
                 | Lexeme::DotDot
-                | Lexeme::DotDotDot
                 | Lexeme::Cons
                 | Lexeme::FatArrow
                 | Lexeme::Let

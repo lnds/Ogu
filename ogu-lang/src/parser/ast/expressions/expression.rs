@@ -66,24 +66,24 @@ pub(crate) enum Identifier<'a> {
 
 #[derive(Debug, Clone)]
 pub(crate) enum Expression<'a> {
-    InvalidExpr,     // ok
-    Name(&'a str),   // ok
+    InvalidExpr, // ok
+    Name(&'a str), // ok
     NameStr(String), // ok
     QualifiedIdentifier(&'a str, Vec<&'a str>),
-    StringLiteral(&'a str),             // ok
+    StringLiteral(&'a str), // ok
     LargeStringLiteral(Option<String>), // ok
-    RegexpLiteral(&'a str),             // ok
-    CharLiteral(&'a str),               // ok
-    IntegerLiteral(&'a str),            // ok
-    FloatLiteral(&'a str),              // ok
-    DateLiteral(&'a str),               // ok
+    RegexpLiteral(&'a str), // ok
+    CharLiteral(&'a str), // ok
+    IntegerLiteral(&'a str), // ok
+    FloatLiteral(&'a str), // ok
+    DateLiteral(&'a str), // ok
     FormatString(&'a str),
-    True,
-    False,
+    True, // ok
+    False, //ok
     Unit, // ok
     EmptyList,
     ParenExpr(Box<Expression<'a>>), // ok
-    NotExpr(Box<Expression<'a>>),   // ok
+    NotExpr(Box<Expression<'a>>), // ok
     LazyExpr(Box<Expression<'a>>),
     YieldExpr(Box<Expression<'a>>),
     ReifyExpr(&'a str, Vec<Equation<'a>>),
@@ -94,16 +94,15 @@ pub(crate) enum Expression<'a> {
         Vec<Expression<'a>>,
         Vec<Equation<'a>>,
     ),
-    RangeExpr(Vec<Expression<'a>>, Box<Expression<'a>>),
-    RangeOpenExpr(Vec<Expression<'a>>, Box<Expression<'a>>),
-    RangeInfExpr(Vec<Expression<'a>>),
-    // [exprs...]
+    RangeExpr(Box<Expression<'a>>, Box<Expression<'a>>),//ok
+    RangeExprInfinite(Box<Expression<'a>>, Box<Expression<'a>>),//ok
+    RangeExpr3(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>),//ok
     DictExpr(Vec<(Expression<'a>, Expression<'a>)>),
     SetExpr(Vec<Expression<'a>>),
     RecordExpr(Vec<(&'a str, Expression<'a>)>),
     TypedFuncCall(String, Vec<Identifier<'a>>, Vec<Expression<'a>>),
     FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>), // ok
-    LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>),    // ok
+    LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>), // ok
     MatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     NoMatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     ReMatchExpr(Box<Expression<'a>>, Box<Expression<'a>>),
@@ -113,29 +112,29 @@ pub(crate) enum Expression<'a> {
     UnaryCons(Option<Box<Expression<'a>>>),
     UnaryAdd(Option<Box<Expression<'a>>>), // ok
     UnaryConcat(Option<Box<Expression<'a>>>),
-    UnarySub(Option<Box<Expression<'a>>>),    // ok
-    UnaryMul(Option<Box<Expression<'a>>>),    // ok
-    UnaryPow(Option<Box<Expression<'a>>>),    // ok
-    UnaryMod(Option<Box<Expression<'a>>>),    // ok
-    UnaryDiv(Option<Box<Expression<'a>>>),    // ok
+    UnarySub(Option<Box<Expression<'a>>>), // ok
+    UnaryMul(Option<Box<Expression<'a>>>), // ok
+    UnaryPow(Option<Box<Expression<'a>>>), // ok
+    UnaryMod(Option<Box<Expression<'a>>>), // ok
+    UnaryDiv(Option<Box<Expression<'a>>>), // ok
     UnaryDivDiv(Option<Box<Expression<'a>>>), // ok
-    UnaryAnd(Option<Box<Expression<'a>>>),    // ok
-    UnaryOr(Option<Box<Expression<'a>>>),     // ok
-    UnaryNot,
-    UnaryEq(Option<Box<Expression<'a>>>),              // ok
-    UnaryNotEq(Option<Box<Expression<'a>>>),           // ok
-    UnaryGt(Option<Box<Expression<'a>>>),              // ok
-    UnaryGe(Option<Box<Expression<'a>>>),              // ok
-    UnaryLt(Option<Box<Expression<'a>>>),              // ok
-    UnaryLe(Option<Box<Expression<'a>>>),              // ok
-    OrExpr(Box<Expression<'a>>, Box<Expression<'a>>),  // ok
+    UnaryAnd(Option<Box<Expression<'a>>>), // ok
+    UnaryOr(Option<Box<Expression<'a>>>), // ok
+    UnaryNot,//ok
+    UnaryEq(Option<Box<Expression<'a>>>), // ok
+    UnaryNotEq(Option<Box<Expression<'a>>>), // ok
+    UnaryGt(Option<Box<Expression<'a>>>), // ok
+    UnaryGe(Option<Box<Expression<'a>>>), // ok
+    UnaryLt(Option<Box<Expression<'a>>>), // ok
+    UnaryLe(Option<Box<Expression<'a>>>), // ok
+    OrExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     AndExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    LeExpr(Box<Expression<'a>>, Box<Expression<'a>>),  // ok
-    LtExpr(Box<Expression<'a>>, Box<Expression<'a>>),  // ok
-    GeExpr(Box<Expression<'a>>, Box<Expression<'a>>),  // ok
-    GtExpr(Box<Expression<'a>>, Box<Expression<'a>>),  // ok
-    EqExpr(Box<Expression<'a>>, Box<Expression<'a>>),  // ok
-    NeExpr(Box<Expression<'a>>, Box<Expression<'a>>),  // ok
+    LeExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    LtExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    GeExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    GtExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    EqExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    NeExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     AddExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     ConcatExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     SubExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
@@ -146,10 +145,10 @@ pub(crate) enum Expression<'a> {
     ComposeFwdExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     ComposeBckExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     TupleExpr(Vec<Expression<'a>>), // ok
-    DoExpr(Vec<Expression<'a>>),    // ok
+    DoExpr(Vec<Expression<'a>>), // ok
     TryHandleExpr(Box<Expression<'a>>, Vec<HandleGuard<'a>>),
     RepeatExpr(Vec<RecurValue<'a>>),
-    RecurExpr(Vec<Expression<'a>>),
+    RecurExpr(Vec<Expression<'a>>),// ok
     PerformExpr(
         Box<Expression<'a>>,
         Option<Vec<Expression<'a>>>,
@@ -274,8 +273,8 @@ impl<'a> Expression<'a> {
             | Expression::DateLiteral(_) | Expression::Unit | Expression::Name(_)
             | Expression::EmptyList | Expression::ListExpr(_)
             | Expression::ConsExpr(_,_) | Expression::TupleExpr(_)| Expression::TypedFuncCall(_,_,_)
-            | Expression::RangeExpr(_,_) | Expression::RangeOpenExpr(_,_)
-            | Expression::RangeInfExpr(_) | Expression::DictExpr(_) | Expression::SetExpr(_)
+            | Expression::RangeExpr(_,_) | Expression::RangeExpr3(_,_,_) | Expression::RangeExprInfinite(_,_)
+            | Expression::DictExpr(_) | Expression::SetExpr(_)
             ) {
                 if parser.peek(pos, Lexeme::Guard) {
                     let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
@@ -684,21 +683,37 @@ impl<'a> Expression<'a> {
                 let (exprs, pos) = consume_exprs_sep_by(parser, pos, Lexeme::Comma)?;
                 if parser.peek(pos, Lexeme::RightBracket) {
                     Ok((Expression::ListExpr(exprs), pos + 1))
-                } else if parser.peek(pos, Lexeme::DotDotDot) {
-                    let pos = consume_symbol(parser, pos + 1, Lexeme::RightBracket)?;
-                    Ok((Expression::RangeInfExpr(exprs), pos))
                 } else if parser.peek(pos, Lexeme::DotDot) {
-                    let (expr, pos) = Expression::parse(parser, pos + 1)?;
-                    if parser.peek(pos, Lexeme::RightBracket) {
-                        return Ok((Expression::RangeExpr(exprs, Box::new(expr)), pos + 1));
+                    if parser.peek(pos+1, Lexeme::RightBracket) {
+                        let pos = consume_symbol(parser, pos+1, Lexeme::RightBracket)?;
+                        if exprs.len() == 2 {
+                            Ok((Expression::RangeExprInfinite(Box::new(exprs[0].clone()), Box::new(exprs[1].clone())), pos))
+                        } else {
+                            raise_parser_error("range expression invalid", parser, pos, false)
+                        }
+                    } else {
+                        let (expr, pos) = Expression::parse(parser, pos + 1)?;
+                        return if parser.peek(pos, Lexeme::DotDot) {
+                            let pos = consume_symbol(parser, pos, Lexeme::DotDot)?;
+                            let pos = consume_symbol(parser, pos, Lexeme::RightBracket)?;
+                            if exprs.len() == 1 {
+                                Ok((Expression::RangeExprInfinite(Box::new(exprs[0].clone()), Box::new(expr)), pos))
+                            } else {
+                                raise_parser_error("range expression invalid", parser, pos, false)
+                            }
+                        } else {
+                            let pos = consume_symbol(parser, pos, Lexeme::RightBracket)?;
+                            if exprs.len() == 1 {
+                                Ok((Expression::RangeExpr(Box::new(exprs[0].clone()), Box::new(expr)), pos))
+                            } else if exprs.len() == 2 {
+                                Ok((Expression::RangeExpr3(Box::new(exprs[0].clone()), Box::new(exprs[1].clone()), Box::new(expr)), pos))
+                            } else {
+                                raise_parser_error("range expression invalid", parser, pos, false)
+                            }
+                        }
                     }
-                    todo!()
-                } else if parser.peek(pos, Lexeme::DotDotLess) {
-                    let (expr, pos) = Expression::parse(parser, pos + 1)?;
-                    if parser.peek(pos, Lexeme::RightBracket) {
-                        return Ok((Expression::RangeOpenExpr(exprs, Box::new(expr)), pos + 1));
-                    }
-                    todo!()
+
+
                 } else if parser.peek(pos, Lexeme::Guard) {
                     let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
                     let (eq, mut pos) = Equation::parse_back_arrow_eq(parser, pos)?;
@@ -825,8 +840,8 @@ impl<'a> Expression<'a> {
             Some(Lexeme::FormatString(f_str)) => Ok((Expression::FormatString(f_str), pos + 1)),
             Some(Lexeme::Char(chr)) => Ok((Expression::CharLiteral(chr), pos + 1)),
             Some(Lexeme::RegExp(expr)) => Ok((Expression::RegexpLiteral(expr), pos + 1)),
-            Some(Lexeme::False) => Ok((Expression::False, pos+1)),
-            Some(Lexeme::True) => Ok((Expression::True, pos+1)),
+            Some(Lexeme::False) => Ok((Expression::False, pos + 1)),
+            Some(Lexeme::True) => Ok((Expression::True, pos + 1)),
             sym => {
                 println!("parse literal sym = {:?}", sym);
                 todo!()

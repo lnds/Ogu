@@ -153,7 +153,7 @@ impl Symbol for FuncCallExpr {
                 } else if let Some(ft) = ft.downcast_ref::<VariadicType>() {
                     // TODO
                     println!(
-                        "!! algo hay que hacer con el variadic (tipico son las macros) {:#?}",
+                        "!! variadic {:#?}",
                         ft
                     );
                 } else {

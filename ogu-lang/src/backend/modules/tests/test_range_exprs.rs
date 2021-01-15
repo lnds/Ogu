@@ -1,7 +1,6 @@
 use crate::backend::modules::tests::make_module;
 use crate::backend::compiler::default_sym_table;
 use indoc::indoc;
-use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::types::TypeClone;

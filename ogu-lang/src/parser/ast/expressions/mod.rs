@@ -184,7 +184,6 @@ pub(crate) fn is_func_call_end_symbol(symbol: Option<Lexeme>) -> bool {
                 | Lexeme::Dedent
                 | Lexeme::Assign
                 | Lexeme::Dollar
-                | Lexeme::DollarCurly
                 | Lexeme::Comma
                 | Lexeme::Cond
                 | Lexeme::Case

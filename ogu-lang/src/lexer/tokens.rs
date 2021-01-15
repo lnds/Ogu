@@ -163,8 +163,6 @@ pub(crate) enum Lexeme<'a> {
     DivDiv,
     #[token("$", priority = 1000)]
     Dollar,
-    #[token("${", priority = 1000)]
-    DollarCurly,
     #[token("..", priority = 1000)]
     DotDot,
     #[token(".", priority = 1000)]
@@ -262,7 +260,6 @@ impl<'a> Lexeme<'a> {
                 | Lexeme::LeftCurly
                 | Lexeme::LeftCurlyCurly
                 | Lexeme::HashCurly
-                | Lexeme::DollarCurly
         )
     }
 

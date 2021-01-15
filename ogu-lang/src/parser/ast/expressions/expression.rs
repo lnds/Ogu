@@ -98,7 +98,6 @@ pub(crate) enum Expression<'a> {
     RangeExprInfinite(Box<Expression<'a>>, Box<Expression<'a>>),//ok
     RangeExpr3(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>),//ok
     DictExpr(Vec<(Expression<'a>, Expression<'a>)>),
-    SetExpr(Vec<Expression<'a>>),
     RecordExpr(Vec<(&'a str, Expression<'a>)>),
     TypedFuncCall(String, Vec<Identifier<'a>>, Vec<Expression<'a>>),
     FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>), // ok
@@ -273,8 +272,6 @@ impl<'a> Expression<'a> {
             | Expression::DateLiteral(_) | Expression::Unit | Expression::Name(_)
             | Expression::EmptyList | Expression::ListExpr(_)
             | Expression::ConsExpr(_,_) | Expression::TupleExpr(_)| Expression::TypedFuncCall(_,_,_)
-            | Expression::RangeExpr(_,_) | Expression::RangeExpr3(_,_,_) | Expression::RangeExprInfinite(_,_)
-            | Expression::DictExpr(_) | Expression::SetExpr(_)
             ) {
                 if parser.peek(pos, Lexeme::Guard) {
                     let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
@@ -512,7 +509,6 @@ impl<'a> Expression<'a> {
             Some(Lexeme::LeftCurly) => Expression::parse_record_expr(parser, pos),
             Some(Lexeme::LeftCurlyCurly) => Expression::parse_macro_expand_expr(parser, pos),
             Some(Lexeme::HashCurly) => Expression::parse_dict_expr(parser, pos),
-            Some(Lexeme::DollarCurly) => Expression::parse_set_expr(parser, pos),
             Some(Lexeme::Lazy) => Expression::parse_lazy_expr(parser, pos),
             Some(Lexeme::Yield) => Expression::parse_yield_expr(parser, pos),
             Some(Lexeme::Perform) => Expression::parse_perform(parser, pos),
@@ -791,22 +787,6 @@ impl<'a> Expression<'a> {
         }
         pos = consume_symbol(parser, pos, Lexeme::RightCurly)?;
         Ok((Expression::DictExpr(pairs), pos))
-    }
-
-    fn parse_set_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let mut pos = consume_symbol(parser, pos, Lexeme::DollarCurly)?;
-        let mut elems = vec![];
-        while !parser.peek(pos, Lexeme::RightCurly) {
-            let (val, new_pos) = Expression::parse_primary_expr(parser, pos)?;
-            if parser.peek(new_pos, Lexeme::Comma) {
-                pos = consume_symbol(parser, new_pos, Lexeme::Comma)?;
-            } else {
-                pos = new_pos;
-            }
-            elems.push(val);
-        }
-        pos = consume_symbol(parser, pos, Lexeme::RightCurly)?;
-        Ok((Expression::SetExpr(elems), pos))
     }
 
     fn parse_lazy_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {

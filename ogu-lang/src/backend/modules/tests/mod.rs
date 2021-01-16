@@ -11,6 +11,7 @@ mod test_simple;
 mod test_val_decls;
 mod test_lists_exprs;
 mod test_range_exprs;
+mod test_dict_exprs;
 
 use crate::backend::modules::module::Module;
 use crate::backend::scopes::Scope;

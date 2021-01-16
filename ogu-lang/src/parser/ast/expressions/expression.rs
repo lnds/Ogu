@@ -776,7 +776,7 @@ impl<'a> Expression<'a> {
         while !parser.peek(pos, Lexeme::RightCurly) {
             let (key, new_pos) = Expression::parse_primary_expr(parser, pos)?;
 
-            pos = consume_symbol(parser, new_pos, Lexeme::FatArrow)?;
+            pos = consume_symbol(parser, new_pos, Lexeme::Colon)?;
             let (val, new_pos) = Expression::parse_primary_expr(parser, pos)?;
             if parser.peek(new_pos, Lexeme::Comma) {
                 pos = consume_symbol(parser, new_pos, Lexeme::Comma)?;

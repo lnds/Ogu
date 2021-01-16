@@ -22,6 +22,7 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::{Expression, LambdaArg, OptExprTuple};
 use crate::backend::modules::symbols::exprs::list_expr::ListExpr;
+use crate::backend::modules::symbols::exprs::dict_expr::DictExpr;
 use crate::backend::modules::symbols::exprs::range_expr::RangeExpr;
 
 mod arithmetics;
@@ -43,6 +44,7 @@ mod tuple_expr;
 mod unary_op_expr;
 mod list_expr;
 mod range_expr;
+mod dict_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -76,6 +78,10 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::RangeExpr3(a, b, c) => RangeExpr::new_step_range(a.into(), b.into(), c.into()),
 
+            Expression::DictExpr(exprs) => {
+                let exprs = exprs.iter().map(|(k, v)| (k.into(), v.into())).collect();
+                DictExpr::new_dict(exprs)
+            }
 
             Expression::UnaryAdd(expr) => {
                 UnaryOpExpr::new_add(expr.deref().as_ref().map(|e| e.into()))

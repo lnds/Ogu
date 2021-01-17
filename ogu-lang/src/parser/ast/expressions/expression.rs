@@ -81,7 +81,7 @@ pub(crate) enum Expression<'a> {
     True, // ok
     False, //ok
     Unit, // ok
-    EmptyList,
+    EmptyList,// ok
     ParenExpr(Box<Expression<'a>>), // ok
     NotExpr(Box<Expression<'a>>), // ok
     LazyExpr(Box<Expression<'a>>),
@@ -89,7 +89,7 @@ pub(crate) enum Expression<'a> {
     ReifyExpr(&'a str, Vec<Equation<'a>>),
     ListExpr(Vec<Expression<'a>>), // ok
     ListByComprehension(
-        Vec<Expression<'a>>,
+        Box<Expression<'a>>,
         Vec<Equation<'a>>,
         Vec<Expression<'a>>,
         Vec<Equation<'a>>,
@@ -97,14 +97,11 @@ pub(crate) enum Expression<'a> {
     RangeExpr(Box<Expression<'a>>, Box<Expression<'a>>),//ok
     RangeExprInfinite(Box<Expression<'a>>, Box<Expression<'a>>),//ok
     RangeExpr3(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>),//ok
-    DictExpr(Vec<(Expression<'a>, Expression<'a>)>),
+    DictExpr(Vec<(Expression<'a>, Expression<'a>)>),// ok
     RecordExpr(Vec<(&'a str, Expression<'a>)>),
     TypedFuncCall(String, Vec<Identifier<'a>>, Vec<Expression<'a>>),
     FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>), // ok
     LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>), // ok
-    MatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    NoMatchesExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    ReMatchExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     ConsExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     PowExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     IndexExpr(Box<Expression<'a>>, Box<Expression<'a>>),
@@ -430,28 +427,6 @@ impl<'a> Expression<'a> {
     parse_left_assoc!(
         parse_ne_expr,
         Lexeme::NotEqual,
-        Expression::parse_regex_expr
-    );
-
-    fn parse_regex_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        Expression::parse_matches_expr(parser, pos)
-    }
-
-    parse_left_assoc!(
-        parse_matches_expr,
-        Lexeme::Matches,
-        Expression::parse_nomatch_expr
-    );
-
-    parse_left_assoc!(
-        parse_nomatch_expr,
-        Lexeme::NotMatches,
-        Expression::parse_rematch_expr
-    );
-
-    parse_left_assoc!(
-        parse_rematch_expr,
-        Lexeme::Match,
         Expression::parse_cons_expr
     );
 
@@ -711,6 +686,9 @@ impl<'a> Expression<'a> {
 
 
                 } else if parser.peek(pos, Lexeme::Guard) {
+                    if exprs.len() != 1 {
+                        return raise_parser_error("invalid list comprehension declaration", parser, pos, false);
+                    }
                     let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
                     let (eq, mut pos) = Equation::parse_back_arrow_eq(parser, pos)?;
                     let mut eqs = vec![];
@@ -741,7 +719,7 @@ impl<'a> Expression<'a> {
                     }
                     pos = consume_symbol(parser, pos, Lexeme::RightBracket)?;
                     Ok((
-                        Expression::ListByComprehension(exprs, eqs, guards, lets),
+                        Expression::ListByComprehension(Box::new(exprs[0].clone()), eqs, guards, lets),
                         pos,
                     ))
                 } else {

@@ -3,9 +3,32 @@ All notable changes to this project will be documented in this file. This change
 
 ## [Unreleased]
 
+### Added
+
+- static type checking
+- type inference
+- true and false literal values
+- curry functions
+- algebraic effects
+- macros
+
 ### Changed
 
 - args pass
+- not is an operator: !
+- case expression accepts guards:
+    case e of
+       pattern | cond -> expr
+- functions always have at leas one arg  
+
+
+### Removed
+
+- regular expression operators
+- sets (${})
+- remove !> >! >| and |< operators
+- atoms (:atom)
+- classes
 
 ## [0.2.5] - 2019-3-3
 

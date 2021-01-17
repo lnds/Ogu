@@ -193,12 +193,6 @@ pub(crate) enum Lexeme<'a> {
     LeftParen,
     #[token("<", priority = 1000)]
     LessThan,
-    #[token("~", priority = 1000)]
-    Match,
-    #[token("=~", priority = 1000)]
-    Matches,
-    #[token("!~", priority = 1000)]
-    NotMatches,
     #[token("-", priority = 1000)]
     Minus,
     #[token("%", priority = 1000)]
@@ -487,10 +481,8 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::LeftParen));
         assert_eq!(lex.next(), None);
 
-        let mut lex = Lexeme::lexer("< ~ =~ - % *  != || <|");
+        let mut lex = Lexeme::lexer("<  - % *  != || <|");
         assert_eq!(lex.next(), Some(Lexeme::LessThan));
-        assert_eq!(lex.next(), Some(Lexeme::Match));
-        assert_eq!(lex.next(), Some(Lexeme::Matches));
         assert_eq!(lex.next(), Some(Lexeme::Minus));
         assert_eq!(lex.next(), Some(Lexeme::Mod));
         assert_eq!(lex.next(), Some(Lexeme::Mult));
@@ -640,16 +632,8 @@ mod test_tokens {
 
     #[test]
     fn test_regex() {
-        let mut lex = Lexeme::lexer("\"aaabbb\" =~ #/(a|b)+/#");
+        let mut lex = Lexeme::lexer("\"aaabbb\"  #`(a|b|/)+`#");
         assert_eq!(lex.next(), Some(Lexeme::String("aaabbb")));
-        assert_eq!(lex.next(), Some(Lexeme::Matches));
-        assert_eq!(lex.next(), Some(Lexeme::RegExp("(a|b)+")));
-        assert_eq!(lex.next(), None);
-
-        let mut lex = Lexeme::lexer("\"aaabbb\" =~ #`(a|b|/)+`#");
-        assert_eq!(lex.next(), Some(Lexeme::String("aaabbb")));
-        assert_eq!(lex.next(), Some(Lexeme::Matches));
-
         assert_eq!(lex.next(), Some(Lexeme::RegExp("(a|b|/)+")));
         assert_eq!(lex.next(), None);
     }

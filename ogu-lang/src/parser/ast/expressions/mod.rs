@@ -268,9 +268,6 @@ pub(crate) fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
         Lexeme::DivDiv => Expression::IntDivExpr(left, right),
         Lexeme::Mod => Expression::ModExpr(left, right),
         Lexeme::ComposeBackward => Expression::ComposeBckExpr(left, right),
-        Lexeme::Matches => Expression::MatchesExpr(left, right),
-        Lexeme::NotMatches => Expression::NoMatchesExpr(left, right),
-        Lexeme::Match => Expression::ReMatchExpr(left, right),
         Lexeme::At => Expression::IndexExpr(left, right),
         sym => {
             println!("TODO {:?}", sym);

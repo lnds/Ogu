@@ -102,7 +102,7 @@ pub(crate) enum Expression<'a> {
     TypedFuncCall(String, Vec<Identifier<'a>>, Vec<Expression<'a>>),
     FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>), // ok
     LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>), // ok
-    ConsExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    ConsExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     PowExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     IndexExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     UnaryCons(Option<Box<Expression<'a>>>),
@@ -132,7 +132,7 @@ pub(crate) enum Expression<'a> {
     EqExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     NeExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     AddExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    ConcatExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    ConcatExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     SubExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     MulExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
     DivExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok

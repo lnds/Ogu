@@ -46,16 +46,38 @@ impl Symbol for ListExpr {
                     Some(t) => Some(ListType::new_list(t.clone_box()))
                 }
             }
-            ListExpr::Cons(_, l) => {
+            ListExpr::Cons(a, l) => {
                 match l.get_type() {
                     None => None,
-                    Some(t) => Some(t)
+                    Some(lt) =>
+                        match lt.downcast_ref::<ListType>() {
+                            None => None,
+                            Some(ListType::Empty) => {
+                                match a.get_type() {
+                                    None => None,
+                                    Some(ty) => Some(ListType::new_list(ty.clone_box()))
+                                }
+                            }
+                            _ => l.get_type()
+                        }
                 }
             }
             ListExpr::Concat(l1, l2) => {
                 match l1.get_type() {
                     None => l2.get_type(),
-                    Some(t) => Some(t)
+                    Some(l1t) => match l2.get_type() {
+                        None => l1.get_type(),
+                        Some(l2t) => {
+                            match l1t.downcast_ref::<ListType>() {
+                                None => None,
+                                Some(_) => match l2t.downcast_ref::<ListType>() {
+                                    None => l1.get_type(),
+                                    Some(ListType::Empty) => l1.get_type(),
+                                    _ => l2.get_type()
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -95,36 +117,21 @@ impl Symbol for ListExpr {
                         Some(lt) => {
                             match lt.downcast_ref::<ListType>() {
                                 None => bail!("attempt to make a cons without a list"),
-                                Some(lt) => {
-                                    match lt {
-                                        ListType::Empty => Ok(None),
-                                        ListType::List(ty) => {
-                                            Ok(Some(ty.clone()))
-                                        }
-                                    }
-                                }
+                                Some(ListType::Empty) => Ok(None),
+                                Some(ListType::List(ty)) => Ok(Some(ty.clone()))
                             }
                         }
                     }
-                    Some(at) => match list.get_type()  {
+                    Some(at) => match list.get_type() {
                         None => Ok(None),
-                        Some(lt) => {
+                        Some(lt) =>
                             match lt.downcast_ref::<ListType>() {
                                 None => bail!("attempt to make a cons without a list"),
-                                Some(lt) => {
-                                    match lt {
-                                        ListType::Empty => Ok(Some(ListType::new_list(at.clone_box()))),
-                                        ListType::List(ty) => {
-                                            if *ty != at {
-                                                bail!("incompatible types in cons expression")
-                                            } else {
-                                                Ok(Some(ty.clone()))
-                                            }
-                                        }
-                                    }
-                                }
+                                Some(ListType::Empty) => Ok(Some(ListType::new_list(at.clone_box()))),
+                                Some(ListType::List(ty)) if *ty != at =>
+                                    bail!("incompatible types in cons expression"),
+                                Some(ListType::List(ty)) => Ok(Some(ty.clone()))
                             }
-                        }
                     }
                 }
             }
@@ -142,34 +149,25 @@ impl Symbol for ListExpr {
                     Some(lt1) => match list2.get_type() {
                         None => Ok(None),
                         Some(lt2) => {
-                            if let Some(lt1) = lt1.downcast_ref::<ListType>() {
-                                if let Some(lt2) = lt2.downcast_ref::<ListType>() {
-                                    match lt1 {
-                                        ListType::Empty => match lt2 {
-                                            ListType::Empty => Ok(Some(ListType::new_empty())),
-                                            ListType::List(_) => {
-                                                Ok(list2.get_type())
-                                            }
-                                        }
-                                        ListType::List(ty1) => match lt2 {
-                                            ListType::Empty => Ok(list1.get_type()),
-                                            ListType::List(ty2) => {
-                                                if ty1 != ty2 {
-                                                    bail!("concat expression of different list types")
-                                                } else {
-                                                    Ok(list1.get_type())
-                                                }
-                                            }
-                                        }
+                            match lt1.downcast_ref::<ListType>() {
+                                None => bail!("concat expression left side is not a list"),
+                                Some(ListType::Empty) =>
+                                    match lt2.downcast_ref::<ListType>() {
+                                        None =>
+                                            bail!("concat expression right side is not a list"),
+                                        Some(ListType::Empty) => Ok(Some(ListType::new_empty())),
+                                        _ => Ok(list2.get_type())
                                     }
-                                } else {
-                                    bail!("concat expression right side is not a list")
-                                }
+                                Some(ListType::List(ty1)) =>
+                                    match lt2.downcast_ref::<ListType>() {
+                                        None =>
+                                            bail!("concat expression right side is not a list"),
+                                        Some(ListType::Empty) => Ok(list1.get_type()),
+                                        Some(ListType::List(ty2)) if ty1 != ty2 =>
+                                            bail!("concat expression of different list types"),
+                                        _ => Ok(list1.get_type())
+                                    }
                             }
-                            else {
-                                bail!("concat expression left side is not a list")
-                            }
-
                         }
                     }
                 }

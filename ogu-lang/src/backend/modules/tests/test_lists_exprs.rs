@@ -96,6 +96,13 @@ fn test_list_ops() {
     let module = module.unwrap();
     let decls = module.get_decls();
     println!("TEST DECLS = {:#?}", decls);
+    assert_eq!(decls[0].get_type(), Some(ListType::new_empty()));
+    assert_eq!(decls[1].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(decls[2].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(decls[3].get_type(), Some(ListType::new_list(BasicType::char())));
+    assert_eq!(decls[4].get_type(), Some(ListType::new_list(BasicType::static_str())));
+    assert_eq!(decls[5].get_type(), Some(ListType::new_list(BasicType::int())));
+
 }
 
 
@@ -156,6 +163,26 @@ fn test_invalid_list_ops() {
     println!("module: {:?}", module);
     assert!(module.is_err());
 }
+
+/*
+#[test]
+fn test_str_are_lists() {
+    let module = make_module(
+        indoc! {r#"
+            hello = "hello"
+            world = "world"
+            hell_world = hello ++ " " ++ world
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("TEST DECLS = {:#?}", decls);
+}
+
+ */
 
 #[test]
 fn test_list_func1() {

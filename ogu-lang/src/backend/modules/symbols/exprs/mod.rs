@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticSym;
+use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticExpr;
 use crate::backend::modules::symbols::exprs::case_expr::CaseExpr;
 use crate::backend::modules::symbols::exprs::do_expr::DoExpr;
 use crate::backend::modules::symbols::exprs::func_call::FuncCallExpr;
@@ -45,6 +45,7 @@ mod unary_op_expr;
 mod list_expr;
 mod range_expr;
 mod dict_expr;
+mod list_ops;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -139,13 +140,13 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::UnaryNot => UnaryOpExpr::new_not(),
 
-            Expression::AddExpr(l, r) => ArithmeticSym::new_add(l.into(), r.into()),
-            Expression::SubExpr(l, r) => ArithmeticSym::new_sub(l.into(), r.into()),
-            Expression::MulExpr(l, r) => ArithmeticSym::new_mul(l.into(), r.into()),
-            Expression::IntDivExpr(l, r) => ArithmeticSym::new_int_div(l.into(), r.into()),
-            Expression::DivExpr(l, r) => ArithmeticSym::new_div(l.into(), r.into()),
-            Expression::ModExpr(l, r) => ArithmeticSym::new_mod(l.into(), r.into()),
-            Expression::PowExpr(l, r) => ArithmeticSym::new_pow(l.into(), r.into()),
+            Expression::AddExpr(l, r) => ArithmeticExpr::new_add(l.into(), r.into()),
+            Expression::SubExpr(l, r) => ArithmeticExpr::new_sub(l.into(), r.into()),
+            Expression::MulExpr(l, r) => ArithmeticExpr::new_mul(l.into(), r.into()),
+            Expression::IntDivExpr(l, r) => ArithmeticExpr::new_int_div(l.into(), r.into()),
+            Expression::DivExpr(l, r) => ArithmeticExpr::new_div(l.into(), r.into()),
+            Expression::ModExpr(l, r) => ArithmeticExpr::new_mod(l.into(), r.into()),
+            Expression::PowExpr(l, r) => ArithmeticExpr::new_pow(l.into(), r.into()),
 
             Expression::NotExpr(e) => LogicalExpr::new_not(e.into()),
             Expression::AndExpr(l, r) => LogicalExpr::new_and(l.into(), r.into()),

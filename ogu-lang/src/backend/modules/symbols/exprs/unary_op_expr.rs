@@ -1,4 +1,4 @@
-use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticSym;
+use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticExpr;
 use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
 use crate::backend::modules::symbols::exprs::logical_expr::LogicalExpr;
 use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
@@ -15,31 +15,31 @@ type NewFn = fn(Box<dyn Symbol>, Box<dyn Symbol>) -> Box<dyn Symbol>;
 
 impl UnaryOpExpr {
     pub(crate) fn new_add(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Self::make_lambda(expr, TRAIT_NUM, ArithmeticSym::new_add)
+        Self::make_lambda(expr, TRAIT_NUM, ArithmeticExpr::new_add)
     }
 
     pub(crate) fn new_mul(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Self::make_lambda(expr, TRAIT_NUM, ArithmeticSym::new_mul)
+        Self::make_lambda(expr, TRAIT_NUM, ArithmeticExpr::new_mul)
     }
 
     pub(crate) fn new_sub(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Self::make_lambda(expr, TRAIT_NUM, ArithmeticSym::new_sub)
+        Self::make_lambda(expr, TRAIT_NUM, ArithmeticExpr::new_sub)
     }
 
     pub(crate) fn new_div(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Self::make_lambda(expr, TRAIT_NUM, ArithmeticSym::new_div)
+        Self::make_lambda(expr, TRAIT_NUM, ArithmeticExpr::new_div)
     }
 
     pub(crate) fn new_intdiv(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Self::make_lambda(expr, TRAIT_NUM, ArithmeticSym::new_int_div)
+        Self::make_lambda(expr, TRAIT_NUM, ArithmeticExpr::new_int_div)
     }
 
     pub(crate) fn new_mod(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Self::make_lambda(expr, TRAIT_NUM, ArithmeticSym::new_mod)
+        Self::make_lambda(expr, TRAIT_NUM, ArithmeticExpr::new_mod)
     }
 
     pub(crate) fn new_pow(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        Self::make_lambda(expr, TRAIT_NUM, ArithmeticSym::new_pow)
+        Self::make_lambda(expr, TRAIT_NUM, ArithmeticExpr::new_pow)
     }
 
     pub(crate) fn new_eq(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {

@@ -8,7 +8,7 @@ use crate::backend::scopes::Scope;
 use anyhow::Result;
 
 #[derive(Clone, Debug)]
-pub(crate) enum ArithmeticSym {
+pub(crate) enum ArithmeticExpr {
     Add(Box<dyn Symbol>, Box<dyn Symbol>),
     Sub(Box<dyn Symbol>, Box<dyn Symbol>),
     Mul(Box<dyn Symbol>, Box<dyn Symbol>),
@@ -18,48 +18,48 @@ pub(crate) enum ArithmeticSym {
     Pow(Box<dyn Symbol>, Box<dyn Symbol>),
 }
 
-impl ArithmeticSym {
+impl ArithmeticExpr {
     pub(crate) fn new_add(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticSym::Add(l, r))
+        Box::new(ArithmeticExpr::Add(l, r))
     }
 
     pub(crate) fn new_sub(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticSym::Sub(l, r))
+        Box::new(ArithmeticExpr::Sub(l, r))
     }
 
     pub(crate) fn new_mul(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticSym::Mul(l, r))
+        Box::new(ArithmeticExpr::Mul(l, r))
     }
 
     pub(crate) fn new_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticSym::Div(l, r))
+        Box::new(ArithmeticExpr::Div(l, r))
     }
 
     pub(crate) fn new_int_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticSym::IntDiv(l, r))
+        Box::new(ArithmeticExpr::IntDiv(l, r))
     }
 
     pub(crate) fn new_mod(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticSym::Mod(l, r))
+        Box::new(ArithmeticExpr::Mod(l, r))
     }
 
     pub(crate) fn new_pow(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticSym::Pow(l, r))
+        Box::new(ArithmeticExpr::Pow(l, r))
     }
 }
 
-impl Symbol for ArithmeticSym {
+impl Symbol for ArithmeticExpr {
     fn get_name(&self) -> &str {
         "arithmetic operation"
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self {
-            ArithmeticSym::Add(l, r)
-            | ArithmeticSym::Sub(l, r)
-            | ArithmeticSym::Mul(l, r)
-            | ArithmeticSym::Mod(l, r)
-            | ArithmeticSym::Pow(l, r) => match l.get_type() {
+            ArithmeticExpr::Add(l, r)
+            | ArithmeticExpr::Sub(l, r)
+            | ArithmeticExpr::Mul(l, r)
+            | ArithmeticExpr::Mod(l, r)
+            | ArithmeticExpr::Pow(l, r) => match l.get_type() {
                 None => match r.get_type() {
                     None => Some(TRAIT_NUM.clone_box()),
                     Some(rt) => Some(rt.clone()),
@@ -87,7 +87,7 @@ impl Symbol for ArithmeticSym {
                     }
                 },
             },
-            ArithmeticSym::IntDiv(l, r) => match l.get_type() {
+            ArithmeticExpr::IntDiv(l, r) => match l.get_type() {
                 None => match r.get_type() {
                     None => None,
                     Some(rt) => {
@@ -109,7 +109,7 @@ impl Symbol for ArithmeticSym {
                     }
                 },
             },
-            ArithmeticSym::Div(l, r) => match l.get_type() {
+            ArithmeticExpr::Div(l, r) => match l.get_type() {
                 None => match r.get_type() {
                     None => None,
                     Some(rt) => {
@@ -136,13 +136,13 @@ impl Symbol for ArithmeticSym {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match self {
-            ArithmeticSym::Add(l, r)
-            | ArithmeticSym::Sub(l, r)
-            | ArithmeticSym::Mul(l, r)
-            | ArithmeticSym::IntDiv(l, r)
-            | ArithmeticSym::Div(l, r)
-            | ArithmeticSym::Mod(l, r)
-            | ArithmeticSym::Pow(l, r) => {
+            ArithmeticExpr::Add(l, r)
+            | ArithmeticExpr::Sub(l, r)
+            | ArithmeticExpr::Mul(l, r)
+            | ArithmeticExpr::IntDiv(l, r)
+            | ArithmeticExpr::Div(l, r)
+            | ArithmeticExpr::Mod(l, r)
+            | ArithmeticExpr::Pow(l, r) => {
                 resolve_comparable(l, r, scope, TRAIT_NUM)?;
                 Ok(self.get_type())
             }
@@ -151,13 +151,13 @@ impl Symbol for ArithmeticSym {
 
     fn define_into(&self, scope: &mut dyn Scope) {
         match self {
-            ArithmeticSym::Add(l, r)
-            | ArithmeticSym::Sub(l, r)
-            | ArithmeticSym::Mul(l, r)
-            | ArithmeticSym::IntDiv(l, r)
-            | ArithmeticSym::Div(l, r)
-            | ArithmeticSym::Mod(l, r)
-            | ArithmeticSym::Pow(l, r) => {
+            ArithmeticExpr::Add(l, r)
+            | ArithmeticExpr::Sub(l, r)
+            | ArithmeticExpr::Mul(l, r)
+            | ArithmeticExpr::IntDiv(l, r)
+            | ArithmeticExpr::Div(l, r)
+            | ArithmeticExpr::Mod(l, r)
+            | ArithmeticExpr::Pow(l, r) => {
                 scope.define(l.clone());
                 scope.define(r.clone());
             }

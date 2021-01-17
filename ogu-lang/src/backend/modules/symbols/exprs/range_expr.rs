@@ -1,10 +1,10 @@
-use crate::backend::scopes::types::{Type};
+use crate::backend::modules::types::basic_type::{CHAR_TYPE, FLOAT_TYPE, INT_TYPE};
+use crate::backend::modules::types::range_type::RangeType;
+use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::symbol::Symbol;
+use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::backend::modules::types::trait_type::TRAIT_NUM;
-use crate::backend::modules::types::basic_type::{INT_TYPE, CHAR_TYPE, FLOAT_TYPE};
-use crate::backend::modules::types::range_type::RangeType;
 
 #[derive(Debug, Clone)]
 pub(crate) struct RangeExpr {
@@ -19,28 +19,34 @@ impl RangeExpr {
         Box::new(RangeExpr {
             inferior,
             second: None,
-            superior: Some(superior)
+            superior: Some(superior),
         })
     }
 
-    pub(crate) fn new_range_infinite(inferior: Box<dyn Symbol>, second: Box<dyn Symbol>) -> Box<Self> {
+    pub(crate) fn new_range_infinite(
+        inferior: Box<dyn Symbol>,
+        second: Box<dyn Symbol>,
+    ) -> Box<Self> {
         // [1,3..]
         Box::new(RangeExpr {
             inferior,
             second: Some(second),
-            superior: None
+            superior: None,
         })
     }
 
-    pub(crate) fn new_step_range(inferior: Box<dyn Symbol>, second: Box<dyn Symbol>, superior: Box<dyn Symbol>) -> Box<Self> {
+    pub(crate) fn new_step_range(
+        inferior: Box<dyn Symbol>,
+        second: Box<dyn Symbol>,
+        superior: Box<dyn Symbol>,
+    ) -> Box<Self> {
         // [1,3..21]
         Box::new(RangeExpr {
             inferior,
             second: Some(second),
-            superior: Some(superior)
+            superior: Some(superior),
         })
     }
-
 }
 
 impl Symbol for RangeExpr {
@@ -51,9 +57,8 @@ impl Symbol for RangeExpr {
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self.inferior.get_type() {
             None => None,
-            Some(ty) =>  Some(RangeType::new_range(ty))
+            Some(ty) => Some(RangeType::new_range(ty)),
         }
-
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
@@ -75,7 +80,8 @@ impl Symbol for RangeExpr {
         match self.inferior.get_type() {
             None => Ok(None),
             Some(ty) => {
-                if &*ty == TRAIT_NUM || &*ty == INT_TYPE || &*ty == CHAR_TYPE || &*ty == FLOAT_TYPE {
+                if &*ty == TRAIT_NUM || &*ty == INT_TYPE || &*ty == CHAR_TYPE || &*ty == FLOAT_TYPE
+                {
                     Ok(Some(ty))
                 } else {
                     bail!("invalid type for range")

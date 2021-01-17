@@ -2,17 +2,20 @@ use std::ops::Deref;
 
 use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticExpr;
 use crate::backend::modules::symbols::exprs::case_expr::CaseExpr;
+use crate::backend::modules::symbols::exprs::dict_expr::DictExpr;
 use crate::backend::modules::symbols::exprs::do_expr::DoExpr;
 use crate::backend::modules::symbols::exprs::func_call::FuncCallExpr;
 use crate::backend::modules::symbols::exprs::guarded_expr::GuardedExpr;
 use crate::backend::modules::symbols::exprs::if_expr::IfExpr;
 use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
 use crate::backend::modules::symbols::exprs::let_expr::LetExpr;
+use crate::backend::modules::symbols::exprs::list_expr::ListExpr;
 use crate::backend::modules::symbols::exprs::literals::Literal;
 use crate::backend::modules::symbols::exprs::logical_expr::LogicalExpr;
 use crate::backend::modules::symbols::exprs::paren_expr::ParenExpr;
 use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdExpr;
+use crate::backend::modules::symbols::exprs::range_expr::RangeExpr;
 use crate::backend::modules::symbols::exprs::recur_call::RecurCallExpr;
 use crate::backend::modules::symbols::exprs::tuple_expr::TupleExpr;
 use crate::backend::modules::symbols::exprs::unary_op_expr::UnaryOpExpr;
@@ -21,30 +24,27 @@ use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::{Expression, LambdaArg, OptExprTuple};
-use crate::backend::modules::symbols::exprs::list_expr::ListExpr;
-use crate::backend::modules::symbols::exprs::dict_expr::DictExpr;
-use crate::backend::modules::symbols::exprs::range_expr::RangeExpr;
 
 mod arithmetics;
 mod case_expr;
 mod comparable_trait;
+mod dict_expr;
 mod do_expr;
 pub(crate) mod func_call;
 mod guarded_expr;
 mod if_expr;
 mod lambda_expr;
 mod let_expr;
+mod list_expr;
 mod literals;
 mod logical_expr;
 mod paren_expr;
 mod partial_eq;
 mod partial_ord;
+mod range_expr;
 mod recur_call;
 mod tuple_expr;
 mod unary_op_expr;
-mod list_expr;
-mod range_expr;
-mod dict_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -78,9 +78,13 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::RangeExpr(a, b) => RangeExpr::new_range(a.into(), b.into()),
 
-            Expression::RangeExprInfinite(a, b) => RangeExpr::new_range_infinite(a.into(), b.into()),
+            Expression::RangeExprInfinite(a, b) => {
+                RangeExpr::new_range_infinite(a.into(), b.into())
+            }
 
-            Expression::RangeExpr3(a, b, c) => RangeExpr::new_step_range(a.into(), b.into(), c.into()),
+            Expression::RangeExpr3(a, b, c) => {
+                RangeExpr::new_step_range(a.into(), b.into(), c.into())
+            }
 
             Expression::DictExpr(exprs) => {
                 let exprs = exprs.iter().map(|(k, v)| (k.into(), v.into())).collect();

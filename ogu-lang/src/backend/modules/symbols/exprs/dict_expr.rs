@@ -1,8 +1,8 @@
-use crate::backend::scopes::types::{Type};
+use crate::backend::modules::types::dict_type::DictType;
 use crate::backend::scopes::symbol::Symbol;
+use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::backend::modules::types::dict_type::DictType;
 
 #[derive(Debug, Clone)]
 pub(crate) enum DictExpr {
@@ -20,7 +20,6 @@ impl DictExpr {
             DictExpr::new_empty()
         } else {
             Box::new(DictExpr::Dict(exprs))
-
         }
     }
 }
@@ -40,10 +39,9 @@ impl Symbol for DictExpr {
                     None => None,
                     Some(kt) => match v.get_type() {
                         None => None,
-                        Some(vt) =>  Some(DictType::new_dict(kt, vt))
-                    }
+                        Some(vt) => Some(DictType::new_dict(kt, vt)),
+                    },
                 }
-
             }
         }
     }
@@ -58,23 +56,24 @@ impl Symbol for DictExpr {
                     v.resolve_type(scope)?;
                 }
                 if let Some(ty) = exprs[0].0.get_type() {
-                    let not_same = exprs.iter().any(|t|
-                        match t.0.get_type() {
-                            None => true,
-                            Some(t) => &*t != &*ty
-                        });
+                    let not_same = exprs.iter().any(|t| match t.0.get_type() {
+                        None => true,
+                        Some(t) => &*t != &*ty,
+                    });
                     if not_same {
                         bail!("dict  must have all key elements of same type {:#?}", exprs);
                     }
                 }
                 if let Some(ty) = exprs[0].1.get_type() {
-                    let not_same = exprs.iter().any(|t|
-                        match t.1.get_type() {
-                            None => true,
-                            Some(t) => &*t != &*ty
-                        });
+                    let not_same = exprs.iter().any(|t| match t.1.get_type() {
+                        None => true,
+                        Some(t) => &*t != &*ty,
+                    });
                     if not_same {
-                         bail!("dict  must have all value elements of same type {:#?}", exprs);
+                        bail!(
+                            "dict  must have all value elements of same type {:#?}",
+                            exprs
+                        );
                     }
                 }
                 Ok(self.get_type())

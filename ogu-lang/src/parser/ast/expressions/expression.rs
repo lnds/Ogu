@@ -424,11 +424,7 @@ impl<'a> Expression<'a> {
 
     parse_left_assoc!(parse_eq_expr, Lexeme::Equal, Expression::parse_ne_expr);
 
-    parse_left_assoc!(
-        parse_ne_expr,
-        Lexeme::NotEqual,
-        Expression::parse_cons_expr
-    );
+    parse_left_assoc!(parse_ne_expr, Lexeme::NotEqual, Expression::parse_cons_expr);
 
     parse_right_assoc!(parse_cons_expr, Lexeme::Cons, Expression::parse_add_expr);
 
@@ -655,10 +651,16 @@ impl<'a> Expression<'a> {
                 if parser.peek(pos, Lexeme::RightBracket) {
                     Ok((Expression::ListExpr(exprs), pos + 1))
                 } else if parser.peek(pos, Lexeme::DotDot) {
-                    if parser.peek(pos+1, Lexeme::RightBracket) {
-                        let pos = consume_symbol(parser, pos+1, Lexeme::RightBracket)?;
+                    if parser.peek(pos + 1, Lexeme::RightBracket) {
+                        let pos = consume_symbol(parser, pos + 1, Lexeme::RightBracket)?;
                         if exprs.len() == 2 {
-                            Ok((Expression::RangeExprInfinite(Box::new(exprs[0].clone()), Box::new(exprs[1].clone())), pos))
+                            Ok((
+                                Expression::RangeExprInfinite(
+                                    Box::new(exprs[0].clone()),
+                                    Box::new(exprs[1].clone()),
+                                ),
+                                pos,
+                            ))
                         } else {
                             raise_parser_error("range expression invalid", parser, pos, false)
                         }
@@ -668,26 +670,48 @@ impl<'a> Expression<'a> {
                             let pos = consume_symbol(parser, pos, Lexeme::DotDot)?;
                             let pos = consume_symbol(parser, pos, Lexeme::RightBracket)?;
                             if exprs.len() == 1 {
-                                Ok((Expression::RangeExprInfinite(Box::new(exprs[0].clone()), Box::new(expr)), pos))
+                                Ok((
+                                    Expression::RangeExprInfinite(
+                                        Box::new(exprs[0].clone()),
+                                        Box::new(expr),
+                                    ),
+                                    pos,
+                                ))
                             } else {
                                 raise_parser_error("range expression invalid", parser, pos, false)
                             }
                         } else {
                             let pos = consume_symbol(parser, pos, Lexeme::RightBracket)?;
                             if exprs.len() == 1 {
-                                Ok((Expression::RangeExpr(Box::new(exprs[0].clone()), Box::new(expr)), pos))
+                                Ok((
+                                    Expression::RangeExpr(
+                                        Box::new(exprs[0].clone()),
+                                        Box::new(expr),
+                                    ),
+                                    pos,
+                                ))
                             } else if exprs.len() == 2 {
-                                Ok((Expression::RangeExpr3(Box::new(exprs[0].clone()), Box::new(exprs[1].clone()), Box::new(expr)), pos))
+                                Ok((
+                                    Expression::RangeExpr3(
+                                        Box::new(exprs[0].clone()),
+                                        Box::new(exprs[1].clone()),
+                                        Box::new(expr),
+                                    ),
+                                    pos,
+                                ))
                             } else {
                                 raise_parser_error("range expression invalid", parser, pos, false)
                             }
-                        }
+                        };
                     }
-
-
                 } else if parser.peek(pos, Lexeme::Guard) {
                     if exprs.len() != 1 {
-                        return raise_parser_error("invalid list comprehension declaration", parser, pos, false);
+                        return raise_parser_error(
+                            "invalid list comprehension declaration",
+                            parser,
+                            pos,
+                            false,
+                        );
                     }
                     let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
                     let (eq, mut pos) = Equation::parse_back_arrow_eq(parser, pos)?;
@@ -719,7 +743,12 @@ impl<'a> Expression<'a> {
                     }
                     pos = consume_symbol(parser, pos, Lexeme::RightBracket)?;
                     Ok((
-                        Expression::ListByComprehension(Box::new(exprs[0].clone()), eqs, guards, lets),
+                        Expression::ListByComprehension(
+                            Box::new(exprs[0].clone()),
+                            eqs,
+                            guards,
+                            lets,
+                        ),
                         pos,
                     ))
                 } else {

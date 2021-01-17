@@ -152,10 +152,7 @@ impl Symbol for FuncCallExpr {
                     }
                 } else if let Some(ft) = ft.downcast_ref::<VariadicType>() {
                     // TODO
-                    println!(
-                        "!! variadic {:#?}",
-                        ft
-                    );
+                    println!("!! variadic {:#?}", ft);
                 } else {
                     bail!("{} it's not a function", self.func.get_name());
                 }

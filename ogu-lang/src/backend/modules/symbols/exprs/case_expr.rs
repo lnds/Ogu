@@ -78,6 +78,7 @@ impl Symbol for CaseExpr {
                 } else {
                     let mut t = cond_type.clone().unwrap();
                     if let Some(ct) = c.get_type() {
+                        println!("MATCH TYPES t={:?} => {:?}", t, ct);
                         t.match_types(&*ct);
                         cond_type = Some(t);
                         c.matches_types(cond_type.clone());

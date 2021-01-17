@@ -44,7 +44,10 @@ impl Type for FuncType {
 }
 
 impl FuncType {
-    pub(crate) fn new(args: Option<Vec<Box<dyn Type>>>, result: Box<dyn Type>) -> Box<Self> {
+    pub(crate) fn new_func_type(
+        args: Option<Vec<Box<dyn Type>>>,
+        result: Box<dyn Type>,
+    ) -> Box<dyn Type> {
         Box::new(FuncType { args, result })
     }
 
@@ -53,7 +56,7 @@ impl FuncType {
         args: Option<Vec<Box<dyn Type>>>,
         result: Box<dyn Type>,
     ) -> Option<Box<dyn Type>> {
-        Some(Self::new(args, result))
+        Some(Self::new_func_type(args, result))
     }
 
     pub(crate) fn get_args(&self) -> Option<Vec<Box<dyn Type>>> {
@@ -73,7 +76,7 @@ impl FuncType {
                     .collect(),
             ),
         };
-        Some(Self::new(args, result))
+        Some(Box::new(FuncType { args, result }))
     }
 
     pub(crate) fn check_and_make(

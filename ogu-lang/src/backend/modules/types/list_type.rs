@@ -1,15 +1,15 @@
 use crate::backend::scopes::types::{Type, TypeClone};
+use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub(crate) enum ListType {
-    Empty,
-    List(Box<dyn Type>)
+    EmptyList,
+    List(Box<dyn Type>),
 }
 
 impl ListType {
-
     pub(crate) fn new_empty() -> Box<dyn Type> {
-        Box::new(ListType::Empty)
+        Box::new(ListType::EmptyList)
     }
 
     pub(crate) fn new_list(ty: Box<dyn Type>) -> Box<dyn Type> {
@@ -20,7 +20,7 @@ impl ListType {
 impl Type for ListType {
     fn get_name(&self) -> String {
         match self {
-            ListType::Empty => "EmptyList".to_string(),
+            ListType::EmptyList => "EmptyList".to_string(),
             ListType::List(t) => format!("List of {}", t.get_name()),
         }
     }
@@ -30,10 +30,30 @@ impl Type for ListType {
     }
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
-       Some(self.clone_box())
+        Some(self.clone_box())
     }
 
-    fn promotes(&self, _: &dyn Type) -> bool {
-        unimplemented!()
+    fn promotes(&self, other: &dyn Type) -> bool {
+        match other.downcast_ref::<ListType>() {
+            None => false,
+            Some(ListType::EmptyList) => false,
+            Some(ListType::List(ty)) => match &self {
+                ListType::EmptyList => true,
+                ListType::List(sty) => sty.promotes(ty.deref().deref()),
+            },
+        }
+    }
+
+    fn match_types(&mut self, other: &dyn Type) {
+        if let Some(other) = other.downcast_ref::<ListType>() {
+            println!(
+                "LIST TYPE MATCH TYPES self = {:?} other = {:?}",
+                self, other
+            );
+            match other {
+                ListType::EmptyList => {}
+                ListType::List(ty) => *self = ListType::List(ty.clone()),
+            }
+        }
     }
 }

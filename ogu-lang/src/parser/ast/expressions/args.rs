@@ -45,7 +45,9 @@ impl<'a> Arg<'a> {
             None => Ok(None),
             Some(Lexeme::LeftParen) => Arg::parse_tuple(parser, pos),
             Some(Lexeme::Assign) | Some(Lexeme::Guard) | Some(Lexeme::NewLine) => Ok(None),
-            Some(Lexeme::Id(id)) if !parser.peek(pos + 1, Lexeme::Cons) => Ok(Some((Arg::Simple(id), pos + 1))),
+            Some(Lexeme::Id(id)) if !parser.peek(pos + 1, Lexeme::Cons) => {
+                Ok(Some((Arg::Simple(id), pos + 1)))
+            }
             _ => {
                 let (expr, pos) = Expression::parse_lambda_expr(parser, pos)?;
                 if let Expression::Name(id) = expr {

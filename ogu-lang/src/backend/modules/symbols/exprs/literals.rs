@@ -59,8 +59,6 @@ impl Literal {
     pub(crate) fn new_false() -> Box<Literal> {
         Box::new(Literal::False)
     }
-
-
 }
 
 impl Symbol for Literal {
@@ -90,7 +88,7 @@ impl Symbol for Literal {
             Literal::Regexp(_) => Some(BasicType::regexp()),
             Literal::Unit => Some(BasicType::unit()),
             Literal::Invalid => None,
-            Literal::True|Literal::False => Some(BasicType::bool()),
+            Literal::True | Literal::False => Some(BasicType::bool()),
         }
     }
 

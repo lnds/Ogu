@@ -1,17 +1,17 @@
 mod test_cond_exprs;
 mod test_curry;
+mod test_dict_exprs;
 mod test_func_decls;
 mod test_lambdas;
 mod test_lets_wheres;
+mod test_lists_exprs;
 mod test_logical;
 mod test_paren_ops;
 mod test_protos;
+mod test_range_exprs;
 mod test_recursives;
 mod test_simple;
 mod test_val_decls;
-mod test_lists_exprs;
-mod test_range_exprs;
-mod test_dict_exprs;
 
 use crate::backend::modules::module::Module;
 use crate::backend::scopes::Scope;

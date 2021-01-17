@@ -3,11 +3,10 @@ use crate::backend::scopes::types::{Type, TypeClone};
 #[derive(Debug, Clone)]
 pub(crate) enum DictType {
     Empty,
-    Dict(Box<dyn Type>, Box<dyn Type>)
+    Dict(Box<dyn Type>, Box<dyn Type>),
 }
 
 impl DictType {
-
     pub(crate) fn new_empty() -> Box<dyn Type> {
         Box::new(DictType::Empty)
     }
@@ -30,7 +29,7 @@ impl Type for DictType {
     }
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
-       Some(self.clone_box())
+        Some(self.clone_box())
     }
 
     fn promotes(&self, _: &dyn Type) -> bool {

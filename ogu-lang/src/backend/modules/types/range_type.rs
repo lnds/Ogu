@@ -2,11 +2,10 @@ use crate::backend::scopes::types::{Type, TypeClone};
 
 #[derive(Debug, Clone)]
 pub(crate) struct RangeType {
-    ty: Box<dyn Type>
+    ty: Box<dyn Type>,
 }
 
 impl RangeType {
-
     pub(crate) fn new_range(ty: Box<dyn Type>) -> Box<dyn Type> {
         Box::new(RangeType { ty })
     }
@@ -22,7 +21,7 @@ impl Type for RangeType {
     }
 
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>> {
-       Some(self.clone_box())
+        Some(self.clone_box())
     }
 
     fn promotes(&self, _: &dyn Type) -> bool {

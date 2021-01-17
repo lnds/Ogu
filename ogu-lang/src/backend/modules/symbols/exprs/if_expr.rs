@@ -55,7 +55,7 @@ impl Symbol for IfExpr {
         scope.define(self.else_expr.clone());
         match self.then_expr.get_type() {
             None => match self.else_expr.get_type() {
-                None => { }
+                None => {}
                 Some(et) if &*et == INVALID_TYPE => {
                     return Err(Error::new(OguError::SemanticError)
                         .context("Invalid If, Cond or Guard expression"));

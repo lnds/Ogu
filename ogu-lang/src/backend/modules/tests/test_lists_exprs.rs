@@ -196,14 +196,13 @@ fn test_invalid_list_ops() {
     assert!(module.is_err());
 }
 
-/*
 #[test]
 fn test_str_are_lists() {
     let module = make_module(
         indoc! {r#"
             hello = "hello"
             world = "world"
-            hell_world = hello ++ " " ++ world
+            hello_world = hello ++ " " ++ world
             "#},
         default_sym_table(),
     );
@@ -213,8 +212,6 @@ fn test_str_are_lists() {
     let decls = module.get_decls();
     println!("TEST DECLS = {:#?}", decls);
 }
-
- */
 
 #[test]
 fn test_list_func1() {

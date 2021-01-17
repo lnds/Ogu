@@ -1,5 +1,6 @@
 use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
 use crate::backend::scopes::types::{Type, TypeClone};
+use crate::backend::modules::types::list_type::ListType;
 
 #[derive(Clone, Debug)]
 pub(crate) enum BasicType {
@@ -7,7 +8,6 @@ pub(crate) enum BasicType {
     Int,
     UInt,
     Float,
-    StaticStr,
     Char,
     Date,
     Regexp,
@@ -20,7 +20,6 @@ pub(crate) const UNIT_TYPE: &BasicType = &BasicType::Unit;
 pub(crate) const INT_TYPE: &BasicType = &BasicType::Int;
 pub(crate) const UINT_TYPE: &BasicType = &BasicType::UInt;
 pub(crate) const FLOAT_TYPE: &BasicType = &BasicType::Float;
-pub(crate) const STATIC_STR_TYPE: &BasicType = &BasicType::StaticStr;
 pub(crate) const CHAR_TYPE: &BasicType = &BasicType::Char;
 pub(crate) const DATE_TYPE: &BasicType = &BasicType::Date;
 pub(crate) const REGEXP_TYPE: &BasicType = &BasicType::Regexp;
@@ -45,7 +44,7 @@ impl BasicType {
     }
 
     pub(crate) fn static_str() -> Box<dyn Type> {
-        STATIC_STR_TYPE.clone_box()
+        ListType::new_list(BasicType::char())
     }
 
     pub(crate) fn char() -> Box<dyn Type> {
@@ -76,7 +75,6 @@ impl Type for BasicType {
             BasicType::Int => "int".to_string(),
             BasicType::UInt => "uint".to_string(),
             BasicType::Float => "float".to_string(),
-            BasicType::StaticStr => "&str".to_string(),
             BasicType::Char => "char".to_string(),
             BasicType::Bool => "bool".to_string(),
             BasicType::Date => "date".to_string(),
@@ -124,9 +122,6 @@ impl Type for BasicType {
                 } else {
                     false
                 }
-            }
-            BasicType::StaticStr => {
-                other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
             }
             _ => false,
         }

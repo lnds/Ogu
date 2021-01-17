@@ -156,3 +156,19 @@ fn test_invalid_list_ops() {
     println!("module: {:?}", module);
     assert!(module.is_err());
 }
+
+#[test]
+fn test_list_func1() {
+    let module = make_module(
+        indoc! {r#"
+            sum [] = 0
+            sum (head :: tail) = head + sum tail
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("TEST DECLS = {:#?}", decls);
+}

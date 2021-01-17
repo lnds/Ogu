@@ -96,9 +96,7 @@ impl Symbol for TupleExpr {
     }
 
     fn define_into(&self, scope: &mut dyn Scope) {
-        println!("define into");
         for s in self.tuple.iter() {
-            println!("S = {:?}", s);
             s.define_into(scope);
         }
     }

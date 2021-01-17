@@ -176,4 +176,27 @@ impl Symbol for ListExpr {
             }
         }
     }
+
+    fn is_seq(&self) -> bool {
+        true
+    }
+
+    fn define_into(&self, scope: &mut dyn Scope) {
+        match self {
+            ListExpr::Empty => {}
+            ListExpr::List(v) => {
+                for e in v.iter() {
+                    e.define_into(scope)
+                }
+            }
+            ListExpr::Cons(a, l) => {
+                a.define_into(scope);
+                l.define_into(scope);
+            }
+            ListExpr::Concat(l, r) => {
+                l.define_into(scope);
+                r.define_into(scope)
+            }
+        }
+    }
 }

@@ -77,3 +77,82 @@ fn test_invalid_lists() {
     println!("module: {:?}", module);
     assert!(module.is_err());
 }
+
+#[test]
+fn test_list_ops() {
+    let module = make_module(
+        indoc! {r#"
+            empty = []
+            a = [1]
+            b = a ++ empty
+            c = 'a' :: []
+            d = "hello" :: "world" :: []
+            e = 1 :: [2]
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("TEST DECLS = {:#?}", decls);
+}
+
+
+#[test]
+fn test_invalid_list_ops() {
+    let module = make_module(
+        indoc! {r#"
+            a = [1, 'a']
+            b = []
+            c = a + b
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_err());
+    let module = make_module(
+        indoc! {r#"
+            a = [1, 2.0]
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_err());
+    let module = make_module(
+        indoc! {r#"
+            a = "hello" :: 'a'
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_err());
+    let module = make_module(
+        indoc! {r#"
+            a = "hello" :: [3]
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_err());
+    let module = make_module(
+        indoc! {r#"
+            a = [1, 2, 3]
+            b = 'b' :: a
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_err());
+
+    let module = make_module(
+        indoc! {r#"
+            a = [1, 2, 3]
+            b = [1.0, 2.0]
+            c = a ++ b
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_err());
+}

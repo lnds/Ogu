@@ -45,7 +45,6 @@ mod unary_op_expr;
 mod list_expr;
 mod range_expr;
 mod dict_expr;
-mod list_ops;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -72,6 +71,10 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::EmptyList => ListExpr::new_empty(),
 
             Expression::ListExpr(exprs) => ListExpr::new_list(vec_exprs_into(exprs)),
+
+            Expression::ConsExpr(a, l) => ListExpr::new_cons(a.into(), l.into()),
+
+            Expression::ConcatExpr(l1, l2) => ListExpr::new_concat(l1.into(), l2.into()),
 
             Expression::RangeExpr(a, b) => RangeExpr::new_range(a.into(), b.into()),
 

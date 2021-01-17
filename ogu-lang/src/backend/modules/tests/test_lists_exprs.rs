@@ -213,6 +213,53 @@ fn test_str_are_lists() {
     println!("TEST DECLS = {:#?}", decls);
 }
 
+
+#[test]
+fn test_lists_are_eq() {
+    let module = make_module(
+        indoc! {r#"
+            a = "hello" != "world"
+            b = [1, 2, 3]
+            c = [3, 2, 1]
+            d = b != c
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("TEST DECLS = {:#?}", decls);
+    assert_eq!(decls[0].get_type(), Some(BasicType::bool()));
+    assert_eq!(decls[1].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(decls[2].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(decls[3].get_type(), Some(BasicType::bool()));
+}
+
+
+#[test]
+fn test_lists_are_ord() {
+    let module = make_module(
+        indoc! {r#"
+            a = "hello" < "world"
+            b = [1, 2, 3]
+            c = [3, 2, 1]
+            d = b > c
+            "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("TEST DECLS = {:#?}", decls);
+    assert_eq!(decls[0].get_type(), Some(BasicType::bool()));
+    assert_eq!(decls[1].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(decls[2].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(decls[3].get_type(), Some(BasicType::bool()));
+}
+
+
 #[test]
 fn test_list_func1() {
     let module = make_module(

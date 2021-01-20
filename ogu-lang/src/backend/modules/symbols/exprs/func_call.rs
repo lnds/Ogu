@@ -42,12 +42,11 @@ impl Symbol for FuncCallExpr {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-
         let ft = self.func.resolve_type(scope)?;
         let recursive = scope.function_scope_name() == self.func.get_name();
         match ft {
             None => {
-                for  a in self.args.iter_mut() {
+                for a in self.args.iter_mut() {
                     a.resolve_type(scope)?;
                     a.define_into(scope);
                 }
@@ -58,8 +57,7 @@ impl Symbol for FuncCallExpr {
                         if self.func.get_type() != f.get_type() {
                             self.func = Box::new(f);
                         }
-                    }
-                    else {
+                    } else {
                         todo!("ESTE OTRO CASO func = {:?}", func);
                     }
                 }
@@ -83,33 +81,31 @@ impl Symbol for FuncCallExpr {
                                     "can't find a function to curry {} ",
                                     self.func.get_name()
                                 ),
-                                Some(func) => {
-                                    match func.downcast_ref::<FunctionSym>() {
-                                        None => bail!(
-                                            "can't infer a function to curry {:?} ",
-                                            func.get_name()
-                                        ),
-                                        Some(_) => {
-                                            let n = ft_args.len() - self.args.len();
-                                            let mut n_args = vec![];
-                                            for (i, ft) in ft_args.iter().enumerate().take(n) {
-                                                let mut sym: Box<dyn Symbol> =
-                                                    IdSym::new(&format!("x_{}", i));
-                                                sym.set_type(Some(ft.clone()));
-                                                n_args.push(sym)
-                                            }
-                                            let mut call_args = self.args.to_vec();
-                                            call_args.append(&mut n_args.to_vec());
-                                            let expr =
-                                                FuncCallExpr::new(self.func.clone_box(), call_args);
-                                            let mut lambda =
-                                                LambdaExpr::new(n_args.to_vec(), expr.clone_box());
-                                            lambda.resolve_type(scope)?;
-                                            self.curried = true;
-                                            self.func = lambda
+                                Some(func) => match func.downcast_ref::<FunctionSym>() {
+                                    None => bail!(
+                                        "can't infer a function to curry {:?} ",
+                                        func.get_name()
+                                    ),
+                                    Some(_) => {
+                                        let n = ft_args.len() - self.args.len();
+                                        let mut n_args = vec![];
+                                        for (i, ft) in ft_args.iter().enumerate().take(n) {
+                                            let mut sym: Box<dyn Symbol> =
+                                                IdSym::new(&format!("x_{}", i));
+                                            sym.set_type(Some(ft.clone()));
+                                            n_args.push(sym)
                                         }
+                                        let mut call_args = self.args.to_vec();
+                                        call_args.append(&mut n_args.to_vec());
+                                        let expr =
+                                            FuncCallExpr::new(self.func.clone_box(), call_args);
+                                        let mut lambda =
+                                            LambdaExpr::new(n_args.to_vec(), expr.clone_box());
+                                        lambda.resolve_type(scope)?;
+                                        self.curried = true;
+                                        self.func = lambda
                                     }
-                                }
+                                },
                             }
                         }
                         Some(ft_args) => {

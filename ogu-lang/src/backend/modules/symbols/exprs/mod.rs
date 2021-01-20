@@ -9,6 +9,7 @@ use crate::backend::modules::symbols::exprs::guarded_expr::GuardedExpr;
 use crate::backend::modules::symbols::exprs::if_expr::IfExpr;
 use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
 use crate::backend::modules::symbols::exprs::let_expr::LetExpr;
+use crate::backend::modules::symbols::exprs::list_comp::ListComprehension;
 use crate::backend::modules::symbols::exprs::list_expr::ListExpr;
 use crate::backend::modules::symbols::exprs::literals::Literal;
 use crate::backend::modules::symbols::exprs::logical_expr::LogicalExpr;
@@ -23,8 +24,9 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::{Expression, LambdaArg, OptExprTuple, ListComprehensionGuard};
-use crate::backend::modules::symbols::exprs::list_comp::ListComprehension;
+use crate::parser::ast::expressions::expression::{
+    Expression, LambdaArg, ListComprehensionGuard, OptExprTuple,
+};
 
 mod arithmetics;
 mod case_expr;
@@ -36,7 +38,9 @@ mod guarded_expr;
 mod if_expr;
 mod lambda_expr;
 mod let_expr;
+mod list_comp;
 mod list_expr;
+mod list_guards;
 mod literals;
 mod logical_expr;
 mod paren_expr;
@@ -46,8 +50,6 @@ mod range_expr;
 mod recur_call;
 mod tuple_expr;
 mod unary_op_expr;
-mod list_comp;
-mod list_guards;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -257,7 +259,6 @@ impl<'a> From<&LambdaArg<'a>> for Box<dyn Symbol> {
         }
     }
 }
-
 
 fn vec_list_comp_guars_int(guards: &[ListComprehensionGuard]) -> Vec<Box<dyn Symbol>> {
     guards.iter().map(|g| g.into()).collect()

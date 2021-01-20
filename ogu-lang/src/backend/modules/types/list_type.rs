@@ -39,8 +39,7 @@ impl Type for ListType {
             Some(ListType::EmptyList) => false,
             Some(ListType::List(ty)) => match &self {
                 ListType::EmptyList => true,
-                ListType::List(sty) =>
-                    sty.promotes(ty.deref().deref())
+                ListType::List(sty) => sty.promotes(ty.deref().deref()),
             },
         }
     }
@@ -49,15 +48,11 @@ impl Type for ListType {
         if let Some(other) = other.downcast_ref::<ListType>() {
             match other {
                 ListType::EmptyList => {}
-                ListType::List(ty) => {
-                    match &self {
-                        ListType::EmptyList => {
-                            *self = ListType::List(ty.clone())
-                        }
-                        ListType::List(lty) => {
-                            if self.is_trait() && lty.promotes(ty.deref().deref()) {
-                                *self = ListType::List(ty.clone());
-                            }
+                ListType::List(ty) => match &self {
+                    ListType::EmptyList => *self = ListType::List(ty.clone()),
+                    ListType::List(lty) => {
+                        if self.is_trait() && lty.promotes(ty.deref().deref()) {
+                            *self = ListType::List(ty.clone());
                         }
                     }
                 },
@@ -68,8 +63,7 @@ impl Type for ListType {
     fn is_trait(&self) -> bool {
         match self {
             ListType::EmptyList => true,
-            ListType::List(ty) => ty.is_trait()
+            ListType::List(ty) => ty.is_trait(),
         }
     }
-
 }

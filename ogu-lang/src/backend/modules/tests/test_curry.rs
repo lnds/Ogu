@@ -59,5 +59,4 @@ fn test_curry_1() {
         )
     );
     assert_eq!(decls[6].get_type(), Some(BasicType::float()));
-
 }

@@ -69,28 +69,23 @@ impl Symbol for IdSym {
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let t = match &self.ty {
             Some(ty) if !ty.is_trait() => Ok(Some(ty.clone())),
-            Some(_) => {
-                match scope.resolve(&self.name) {
+            Some(_) => match scope.resolve(&self.name) {
+                None => Ok(self.get_type()),
+                Some(sym) => match sym.get_type() {
                     None => Ok(self.get_type()),
-                    Some(sym) => {
-                        match  sym.get_type() {
-                            None =>Ok(self.get_type()),
-                            Some(new_ty) => {
-                                self.ty = Some(new_ty);
-                                Ok(self.get_type())
-                            }
-                        }
-
+                    Some(new_ty) => {
+                        self.ty = Some(new_ty);
+                        Ok(self.get_type())
                     }
-                }
-            }
+                },
+            },
             None => match scope.resolve(&self.name) {
                 None => bail!("Symbol not found : {}", self.name),
                 Some(sym) => {
                     self.ty = sym.get_type();
                     Ok(self.get_type())
                 }
-            }
+            },
         };
         t
     }

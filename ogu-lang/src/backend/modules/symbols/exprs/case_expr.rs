@@ -51,7 +51,6 @@ impl Symbol for CaseExpr {
             self.selector.define_into(&mut *sym_table);
             sym_table.set_function_name(&scope.function_scope_name());
             if let Some(c) = c {
-
                 if let Some(c) = c.downcast_ref::<IdSym>() {
                     c.define_into(&mut *sym_table);
                 } else if c.is_seq() {
@@ -59,7 +58,6 @@ impl Symbol for CaseExpr {
                     t.matches_types(cond_type.clone());
                     t.define_into(&mut *sym_table);
                 }
-
             }
 
             let r = e.resolve_type(&mut *sym_table);
@@ -94,7 +92,6 @@ impl Symbol for CaseExpr {
                     }
                 }
             }
-
         }
         self.ty = expr_type;
         let storable = self.selector.storable();

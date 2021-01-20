@@ -1,9 +1,9 @@
 use crate::backend::modules::types::list_type::ListType;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 
 #[derive(Debug, Clone)]
 pub(crate) enum ListExpr {
@@ -47,17 +47,17 @@ impl Symbol for ListExpr {
             ListExpr::Cons(a, l) => match l.get_type() {
                 None => match a.get_type() {
                     None => Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())),
-                    Some(ty) => Some(ListType::new_list(ty.clone_box()))
+                    Some(ty) => Some(ListType::new_list(ty.clone_box())),
                 },
                 Some(lt) => match lt.downcast_ref::<ListType>() {
                     None => match a.get_type() {
                         None => Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())),
-                        Some(ty) => Some(ListType::new_list(ty.clone_box()))
+                        Some(ty) => Some(ListType::new_list(ty.clone_box())),
                     },
                     Some(ListType::EmptyList) => match a.get_type() {
                         None => match a.get_type() {
                             None => Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())),
-                            Some(ty) => Some(ListType::new_list(ty))
+                            Some(ty) => Some(ListType::new_list(ty)),
                         },
                         Some(ty) => Some(ListType::new_list(ty.clone_box())),
                     },
@@ -67,19 +67,19 @@ impl Symbol for ListExpr {
             ListExpr::Concat(l1, l2) => match l1.get_type() {
                 None => match l2.get_type() {
                     None => Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())),
-                    Some(ty) => Some(ListType::new_list(ty.clone_box()))
-                }
+                    Some(ty) => Some(ListType::new_list(ty.clone_box())),
+                },
                 Some(l1t) => match l2.get_type() {
                     None => match l1.get_type() {
                         None => Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())),
-                        Some(ty) => Some(ListType::new_list(ty.clone_box()))
-                    }
+                        Some(ty) => Some(ListType::new_list(ty.clone_box())),
+                    },
                     Some(l2t) => match l1t.downcast_ref::<ListType>() {
                         None => Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())),
                         Some(_) => match l2t.downcast_ref::<ListType>() {
                             None => match l1.get_type() {
                                 None => Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())),
-                                Some(ty) => Some(ListType::new_list(ty.clone_box()))
+                                Some(ty) => Some(ListType::new_list(ty.clone_box())),
                             },
                             Some(ListType::EmptyList) => l1.get_type(),
                             _ => l2.get_type(),
@@ -96,28 +96,25 @@ impl Symbol for ListExpr {
             if let Some(ty) = bty.downcast_ref::<ListType>() {
                 match ty {
                     ListType::EmptyList => {}
-                    ListType::List(tyb) => {
-                        match self {
-                            ListExpr::EmptyList => {}
-                            ListExpr::List(vec) => {
-                                for v in vec.iter_mut() {
-                                    v.matches_types(Some(tyb.clone()))
-                                }
-                            }
-                            ListExpr::Cons(a, b) => {
-                                a.matches_types(Some(tyb.clone()));
-                                b.matches_types(Some(bty.clone()));
-                            }
-                            ListExpr::Concat(a, b) => {
-                                a.matches_types(Some(bty.clone()));
-                                b.matches_types(Some(bty.clone()));
+                    ListType::List(tyb) => match self {
+                        ListExpr::EmptyList => {}
+                        ListExpr::List(vec) => {
+                            for v in vec.iter_mut() {
+                                v.matches_types(Some(tyb.clone()))
                             }
                         }
-                    }
+                        ListExpr::Cons(a, b) => {
+                            a.matches_types(Some(tyb.clone()));
+                            b.matches_types(Some(bty.clone()));
+                        }
+                        ListExpr::Concat(a, b) => {
+                            a.matches_types(Some(bty.clone()));
+                            b.matches_types(Some(bty.clone()));
+                        }
+                    },
                 }
             }
         }
-
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
@@ -155,7 +152,7 @@ impl Symbol for ListExpr {
                             list.set_type(Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
                             scope.define(list.clone());
                             Ok(Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())))
-                        },
+                        }
                         Some(lt) => match lt.downcast_ref::<ListType>() {
                             None => bail!("attempt to make a cons without a list"),
                             Some(ListType::EmptyList) => {
@@ -164,41 +161,45 @@ impl Symbol for ListExpr {
                                 list.set_type(Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
                                 scope.define(list.clone());
                                 Ok(Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())))
-                            },
+                            }
                             _ => Ok(list.get_type()),
                         },
                     },
-                    Some(at) => match list.get_type() {
-                        None => {
-                            list.set_type(Some(ListType::new_list(at)));
-                            scope.define(list.clone());
-                            Ok(list.get_type())
-                        }
-                        Some(lt) => match lt.downcast_ref::<ListType>() {
-                            None => bail!("attempt to make a cons without a list"),
-                            Some(ListType::EmptyList) => {
-                                list.set_type(Some(ListType::new_list(at.clone_box())));
+                    Some(at) => {
+                        match list.get_type() {
+                            None => {
+                                list.set_type(Some(ListType::new_list(at)));
                                 scope.define(list.clone());
-                                Ok(Some(ListType::new_list(at.clone_box())))
-                            }
-                            Some(ListType::List(ty)) if !ty.promotes(&*at.clone()) => {
-                                bail!("incompatible types in cons expression ty = {:?}, at = {:?}", ty, at)
-                            }
-                            Some(ListType::List(ty)) if ty.get_signature() != at.get_signature() => {
-                                if at.is_trait() {
-                                    atom.set_type(Some(ty.clone()));
-                                    scope.define(atom.clone());
-                                } else if ty.is_trait() {
-                                    list.set_type(Some(ListType::new_list(at.clone_box())));
-                                    scope.define(list.clone());
-                                } else {
-                                    bail!("cons expression of different list types at = {:?}. lt={:?}", at, lt);
-                                }
                                 Ok(list.get_type())
                             }
-                            Some(ListType::List(ty)) => Ok(Some(ty.clone())),
-                        },
-                    },
+                            Some(lt) => match lt.downcast_ref::<ListType>() {
+                                None => bail!("attempt to make a cons without a list"),
+                                Some(ListType::EmptyList) => {
+                                    list.set_type(Some(ListType::new_list(at.clone_box())));
+                                    scope.define(list.clone());
+                                    Ok(Some(ListType::new_list(at.clone_box())))
+                                }
+                                Some(ListType::List(ty)) if !ty.promotes(&*at.clone()) => {
+                                    bail!("incompatible types in cons expression ty = {:?}, at = {:?}", ty, at)
+                                }
+                                Some(ListType::List(ty))
+                                    if ty.get_signature() != at.get_signature() =>
+                                {
+                                    if at.is_trait() {
+                                        atom.set_type(Some(ty.clone()));
+                                        scope.define(atom.clone());
+                                    } else if ty.is_trait() {
+                                        list.set_type(Some(ListType::new_list(at.clone_box())));
+                                        scope.define(list.clone());
+                                    } else {
+                                        bail!("cons expression of different list types at = {:?}. lt={:?}", at, lt);
+                                    }
+                                    Ok(list.get_type())
+                                }
+                                Some(ListType::List(ty)) => Ok(Some(ty.clone())),
+                            },
+                        }
+                    }
                 }
             }
             ListExpr::Concat(list1, list2) => {
@@ -212,7 +213,7 @@ impl Symbol for ListExpr {
                             scope.define(list1.clone());
                             scope.define(list2.clone());
                             Ok(Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())))
-                        },
+                        }
                         Some(lt2) => {
                             list1.set_type(Some(lt2.clone_box()));
                             scope.define(list1.clone());
@@ -224,7 +225,7 @@ impl Symbol for ListExpr {
                             list2.set_type(list1.get_type());
                             scope.define(list2.clone());
                             Ok(list1.get_type())
-                        },
+                        }
                         Some(lt2) => match lt1.downcast_ref::<ListType>() {
                             None => bail!("concat expression left side is not a list"),
                             Some(ListType::EmptyList) => match lt2.downcast_ref::<ListType>() {
@@ -234,7 +235,7 @@ impl Symbol for ListExpr {
                                     list1.set_type(list2.get_type());
                                     scope.define(list1.clone());
                                     Ok(list2.get_type())
-                                },
+                                }
                             },
                             Some(ListType::List(ty1)) => match lt2.downcast_ref::<ListType>() {
                                 None => bail!("concat expression right side is not a list"),
@@ -242,7 +243,7 @@ impl Symbol for ListExpr {
                                     list2.set_type(list1.get_type());
                                     scope.define(list2.clone());
                                     Ok(list1.get_type())
-                                },
+                                }
                                 Some(ListType::List(ty2)) if ty1 != ty2 => {
                                     if ty1.is_trait() {
                                         list1.set_type(list2.get_type());

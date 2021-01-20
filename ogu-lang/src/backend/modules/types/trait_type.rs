@@ -43,9 +43,6 @@ impl Type for TraitType {
     fn is_trait(&self) -> bool {
         true
     }
-
-    fn match_types(&mut self, o: &dyn Type) {
-    }
 }
 
 impl PartialEq for TraitType {

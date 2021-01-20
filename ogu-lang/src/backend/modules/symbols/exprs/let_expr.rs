@@ -34,9 +34,7 @@ impl Symbol for LetExpr {
         sym_table.set_function_name(&scope.function_scope_name());
         for e in self.eqs.iter() {
             if sym_table.define(e.clone()).is_some() {
-                bail!("duplicated symbol '{} on let declaration",
-                    e.get_name()
-                );
+                bail!("duplicated symbol '{} on let declaration", e.get_name());
             }
         }
         for e in self.eqs.iter_mut() {
@@ -51,7 +49,6 @@ impl Symbol for LetExpr {
         }
 
         for s in sym_table.get_symbols().iter() {
-
             scope.define(s.clone());
         }
         Ok(self.get_type())

@@ -1,6 +1,6 @@
+use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
 use crate::backend::scopes::types::{Type, TypeClone};
-use crate::backend::modules::types::list_type::ListType;
 
 #[derive(Clone, Debug)]
 pub(crate) enum BasicType {

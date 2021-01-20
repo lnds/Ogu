@@ -1,9 +1,8 @@
-use crate::backend::errors::OguError;
 use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
-use anyhow::{Error, Result};
+use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct IdSym {
@@ -13,6 +12,13 @@ pub(crate) struct IdSym {
 
 impl IdSym {
     pub(crate) fn new(id: &str) -> Box<Self> {
+        Box::new(IdSym {
+            name: id.to_string(),
+            ty: None,
+        })
+    }
+
+    pub(crate) fn new_id(id: &str) -> Box<dyn Symbol> {
         Box::new(IdSym {
             name: id.to_string(),
             ty: None,
@@ -63,14 +69,15 @@ impl Symbol for IdSym {
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match &self.ty {
             Some(ty) if !ty.is_trait() => Ok(Some(ty.clone())),
-            _ => match scope.resolve(&self.name) {
-                None => Err(Error::new(OguError::SymbolTableError)
-                    .context(format!("Symbol not found : {}", self.name))),
-                Some(sym) => {
-                    self.ty = sym.get_type();
-                    Ok(self.get_type())
+            _ => {
+                match scope.resolve(&self.name) {
+                    None => bail!("Symbol not found : {}", self.name),
+                    Some(sym) => {
+                        self.ty = sym.get_type();
+                        Ok(self.get_type())
+                    }
                 }
-            },
+            }
         }
     }
 

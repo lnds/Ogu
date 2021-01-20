@@ -101,7 +101,7 @@ impl Symbol for FuncCallExpr {
                                 if a.get_type().is_none() {
                                     a.set_type(Some(ft_args[p].clone()));
                                 }
-                                scope.define(a.clone());
+                                a.define_into(scope);
                             }
                             if let Some(func) = scope.resolve(self.func.get_name()) {
                                 if let Some(func) = func.downcast_ref::<FunctionSym>() {

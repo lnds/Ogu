@@ -319,7 +319,6 @@ fn test_args_4() {
         decls[0].get_type(),
         FuncType::new_opt(
             Some(vec![
-                // TODO: check this
                 TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
                 TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()])
             ]),

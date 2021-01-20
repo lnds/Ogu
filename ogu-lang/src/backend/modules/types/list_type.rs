@@ -39,20 +39,28 @@ impl Type for ListType {
             Some(ListType::EmptyList) => false,
             Some(ListType::List(ty)) => match &self {
                 ListType::EmptyList => true,
-                ListType::List(sty) => sty.promotes(ty.deref().deref()),
+                ListType::List(sty) =>
+                    sty.promotes(ty.deref().deref())
             },
         }
     }
 
     fn match_types(&mut self, other: &dyn Type) {
         if let Some(other) = other.downcast_ref::<ListType>() {
-            println!(
-                "LIST TYPE MATCH TYPES self = {:?} other = {:?}",
-                self, other
-            );
             match other {
                 ListType::EmptyList => {}
-                ListType::List(ty) => *self = ListType::List(ty.clone()),
+                ListType::List(ty) => {
+                    match &self {
+                        ListType::EmptyList => {
+                            *self = ListType::List(ty.clone())
+                        }
+                        ListType::List(lty) => {
+                            if self.is_trait() && lty.promotes(ty.deref().deref()) {
+                                *self = ListType::List(ty.clone());
+                            }
+                        }
+                    }
+                },
             }
         }
     }

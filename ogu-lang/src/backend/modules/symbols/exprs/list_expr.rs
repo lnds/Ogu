@@ -118,8 +118,8 @@ impl Symbol for ListExpr {
                             Some(ListType::EmptyList) => {
                                 Ok(Some(ListType::new_list(at.clone_box())))
                             }
-                            Some(ListType::List(ty)) if *ty != at => {
-                                bail!("incompatible types in cons expression")
+                            Some(ListType::List(ty)) if !ty.promotes(&*at.clone()) => {
+                                bail!("incompatible types in cons expression ty = {:?}, at = {:?}", ty, at)
                             }
                             Some(ListType::List(ty)) => Ok(Some(ty.clone())),
                         },
@@ -183,4 +183,33 @@ impl Symbol for ListExpr {
     fn is_seq(&self) -> bool {
         true
     }
+
+    fn matches_types(&mut self, aty: Option<Box<dyn Type>>) {
+        if let Some(bty) = aty {
+            if let Some(ty) = bty.downcast_ref::<ListType>() {
+                match ty {
+                    ListType::EmptyList => {}
+                    ListType::List(tyb) => {
+                        match self {
+                            ListExpr::EmptyList => {},
+                            ListExpr::List(vec) => {
+                                for v in vec.iter_mut() {
+                                    v.matches_types(Some(tyb.clone()))
+                                }
+                            }
+                            ListExpr::Cons(a, b) => {
+                                a.matches_types(Some(tyb.clone()));
+                                b.matches_types(Some(bty.clone()));
+                            }
+                            ListExpr::Concat(a, b) => {
+                                a.matches_types(Some(bty.clone()));
+                                b.matches_types(Some(bty.clone()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }

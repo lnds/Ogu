@@ -107,6 +107,8 @@ impl Symbol for FuncCallExpr {
                                 if let Some(func) = func.downcast_ref::<FunctionSym>() {
                                     let mut f = func.clone();
                                     f.replace_args(self.args.to_vec(), scope, !recursive)?;
+                                    println!("func {} change args to {:?} and type is = {:?}", f.get_name(),
+                                    self.args.to_vec(), f.get_type());
                                     if self.func.get_type() != f.get_type() {
                                         self.func = Box::new(f);
                                     }

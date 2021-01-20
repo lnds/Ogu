@@ -23,7 +23,8 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::{Expression, LambdaArg, OptExprTuple};
+use crate::parser::ast::expressions::expression::{Expression, LambdaArg, OptExprTuple, ListComprehensionGuard};
+use crate::backend::modules::symbols::exprs::list_comp::ListComprehension;
 
 mod arithmetics;
 mod case_expr;
@@ -45,6 +46,8 @@ mod range_expr;
 mod recur_call;
 mod tuple_expr;
 mod unary_op_expr;
+mod list_comp;
+mod list_guards;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -84,6 +87,10 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::RangeExpr3(a, b, c) => {
                 RangeExpr::new_step_range(a.into(), b.into(), c.into())
+            }
+
+            Expression::ListByComprehension(e, g) => {
+                ListComprehension::new_list_comp(e.into(), vec_list_comp_guars_int(g))
             }
 
             Expression::DictExpr(exprs) => {
@@ -249,4 +256,9 @@ impl<'a> From<&LambdaArg<'a>> for Box<dyn Symbol> {
             _ => todo!(),
         }
     }
+}
+
+
+fn vec_list_comp_guars_int(guards: &[ListComprehensionGuard]) -> Vec<Box<dyn Symbol>> {
+    guards.iter().map(|g| g.into()).collect()
 }

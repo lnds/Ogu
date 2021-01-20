@@ -42,10 +42,28 @@ impl Symbol for FuncCallExpr {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
+
         let ft = self.func.resolve_type(scope)?;
         let recursive = scope.function_scope_name() == self.func.get_name();
         match ft {
-            None => {}
+            None => {
+                for  a in self.args.iter_mut() {
+                    a.resolve_type(scope)?;
+                    a.define_into(scope);
+                }
+                if let Some(func) = scope.resolve(self.func.get_name()) {
+                    if let Some(func) = func.downcast_ref::<FunctionSym>() {
+                        let mut f = func.clone();
+                        f.replace_args(self.args.to_vec(), scope, !recursive)?;
+                        if self.func.get_type() != f.get_type() {
+                            self.func = Box::new(f);
+                        }
+                    }
+                    else {
+                        todo!("ESTE OTRO CASO func = {:?}", func);
+                    }
+                }
+            }
             Some(ft) => {
                 if let Some(ft) = ft.downcast_ref::<FuncType>() {
                     match ft.get_args() {
@@ -66,7 +84,6 @@ impl Symbol for FuncCallExpr {
                                     self.func.get_name()
                                 ),
                                 Some(func) => {
-                                    println!("func = {:?}", func);
                                     match func.downcast_ref::<FunctionSym>() {
                                         None => bail!(
                                             "can't infer a function to curry {:?} ",
@@ -107,8 +124,6 @@ impl Symbol for FuncCallExpr {
                                 if let Some(func) = func.downcast_ref::<FunctionSym>() {
                                     let mut f = func.clone();
                                     f.replace_args(self.args.to_vec(), scope, !recursive)?;
-                                    println!("func {} change args to {:?} and type is = {:?}", f.get_name(),
-                                    self.args.to_vec(), f.get_type());
                                     if self.func.get_type() != f.get_type() {
                                         self.func = Box::new(f);
                                     }

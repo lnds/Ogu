@@ -45,7 +45,6 @@ impl Type for TraitType {
     }
 
     fn match_types(&mut self, o: &dyn Type) {
-        println!("match typ from other = {:?}, me = {:?}", o, self.name);
     }
 }
 

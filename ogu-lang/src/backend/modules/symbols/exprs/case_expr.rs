@@ -46,30 +46,22 @@ impl Symbol for CaseExpr {
             self.selector.set_seq(syms);
             cond_type = self.selector.get_type();
         }
-        println!("COND_TYPE = {:?}", cond_type);
         for (c, e) in self.cases.iter_mut() {
             let mut sym_table = SymbolTable::new("cond", Some(scope.clone_box()));
             self.selector.define_into(&mut *sym_table);
             sym_table.set_function_name(&scope.function_scope_name());
             if let Some(c) = c {
-                println!("C! = {:?}", c);
-                println!("C.IS_SEQ = {:?}", c.is_seq());
 
                 if let Some(c) = c.downcast_ref::<IdSym>() {
                     c.define_into(&mut *sym_table);
                 } else if c.is_seq() {
                     let mut t = c.clone();
                     t.matches_types(cond_type.clone());
-                    println!("T = {:?}", t);
                     t.define_into(&mut *sym_table);
                 }
-                println!("C!! = {:?}", c);
 
             }
 
-            println!("about to resolve e ={:?}", e);
-            println!("X = {:?}", sym_table.resolve("x"));
-            println!("XS = {:?}", sym_table.resolve("xs"));
             let r = e.resolve_type(&mut *sym_table);
             if r.is_err() {
                 e.resolve_type(scope)?;
@@ -80,20 +72,17 @@ impl Symbol for CaseExpr {
                     e.define_into(&mut *sym_table);
                 }
                 Some(t) => {
-                    println!("T = {:?} e.get_type() = {:?}", t, e.get_type());
                     if let Some(et) = e.get_type() {
                         t.match_types(&*et);
                         expr_type = Some(t.clone());
                     }
                 }
             };
-
             if let Some(c) = c {
                 let r = c.resolve_type(&mut *sym_table);
                 if r.is_err() {
                     c.resolve_type(scope)?;
                 }
-                println!("C!!! = {:?}", c);
                 if cond_type.is_none() {
                     cond_type = c.get_type();
                 } else {
@@ -105,13 +94,8 @@ impl Symbol for CaseExpr {
                     }
                 }
             }
-            println!("LOOP EXIT EXPR_TYPE = {:?}", expr_type);
-            println!("LOOP EXIT COND_TYPE = {:?}", cond_type);
-            println!("");
 
         }
-        println!("");
-        println!("");
         self.ty = expr_type;
         let storable = self.selector.storable();
         self.selector.set_storable(true);

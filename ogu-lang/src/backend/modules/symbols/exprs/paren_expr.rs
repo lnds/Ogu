@@ -35,9 +35,7 @@ impl Symbol for ParenExpr {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        let res = self.expr.resolve_type(scope);
-        println!("RESOLVE TYPE PAREN for {:?} => {:?}", self.expr, res);
-        res
+        self.expr.resolve_type(scope)
     }
 
     fn storable(&self) -> bool {

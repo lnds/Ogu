@@ -1,11 +1,12 @@
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::parser::ast::expressions::expression::ListComprehensionGuard;
 use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::tuple_type::TupleType;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 
 #[derive(Debug, Clone)]
 pub(crate) enum ListGuard {
@@ -49,7 +50,10 @@ impl Symbol for ListGuard {
            ListGuard::Let(id, l)|
            ListGuard::Generator(id, l) => {
                match id.get_type() {
-                   None => l.get_type(),
+                   None => match l.get_type() {
+                       None => Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())),
+                       Some(_) => l.get_type()
+                   },
                    Some(_) => id.get_type()
                }
            }
@@ -92,6 +96,7 @@ impl Symbol for ListGuard {
             }
             ListGuard::Expr(expr) => {
                 expr.resolve_type(scope)?;
+                expr.define_into(scope);
             }
             _ => todo!()
         }

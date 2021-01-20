@@ -37,7 +37,6 @@ impl Symbol for PartialEqExpr {
                         if &*lt == &*rt || lt.promotes(&*rt) || rt.promotes(&*lt) {
                             Some(BasicType::bool())
                         } else {
-                            println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
                             None
                         }
                     }

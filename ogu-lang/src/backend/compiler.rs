@@ -13,7 +13,6 @@ use std::path::PathBuf;
 
 pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> Result<Module> {
     let mut lexer = Lexer::new(&path)?;
-    println!("parsing {:?}", &path);
     let (tokens, strs) = lexer.scan()?;
     if show_tokens {
         let syms: Vec<Lexeme> = tokens.iter().map(|t| t.lexeme).collect();

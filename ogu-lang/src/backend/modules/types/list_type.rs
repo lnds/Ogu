@@ -64,4 +64,12 @@ impl Type for ListType {
             }
         }
     }
+
+    fn is_trait(&self) -> bool {
+        match self {
+            ListType::EmptyList => true,
+            ListType::List(ty) => ty.is_trait()
+        }
+    }
+
 }

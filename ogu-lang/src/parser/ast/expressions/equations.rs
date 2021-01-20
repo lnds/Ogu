@@ -108,7 +108,6 @@ impl<'a> Equation<'a> {
         parser: &'a Parser<'a>,
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
-        println!("parsing func...");
 
         let (args, pos) = Arg::parse(parser, pos)?;
         if parser.peek(pos, Lexeme::Assign) {

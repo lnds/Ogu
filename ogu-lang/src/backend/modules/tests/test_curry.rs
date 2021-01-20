@@ -15,7 +15,8 @@ fn test_curry_1() {
             double' = mul 2
             ten = double' 5
             add x y z = x + y + z
-            add2 x y = add 0"#},
+            add2 x y = add 0
+            tenf = double' 5.0 "#},
         default_sym_table(),
     );
     println!("module = {:?}", module);
@@ -57,4 +58,6 @@ fn test_curry_1() {
             TRAIT_NUM.clone_box()
         )
     );
+    assert_eq!(decls[6].get_type(), Some(BasicType::float()));
+
 }

@@ -44,33 +44,6 @@ impl<'a> Equation<'a> {
         Equation::parse_value_assign2(parser, pos, Lexeme::BackArrow, Lexeme::Assign)
     }
 
-    pub(crate) fn parse_back_arrow_eq(
-        parser: &'a Parser<'a>,
-        pos: usize,
-    ) -> Result<(Equation<'a>, usize)> {
-        Equation::parse_value_assign(parser, pos, Lexeme::BackArrow)
-    }
-
-    pub(crate) fn parse_value(parser: &'a Parser<'a>, pos: usize) -> Result<(Equation<'a>, usize)> {
-        Equation::parse_value_assign(parser, pos, Lexeme::Assign)
-    }
-
-    fn parse_value_assign(
-        parser: &'a Parser<'a>,
-        pos: usize,
-        symbol: Lexeme,
-    ) -> Result<(Equation<'a>, usize)> {
-        if let Some(Lexeme::Id(id)) = parser.get_token(pos) {
-            let pos = consume_symbol(parser, pos + 1, symbol)?;
-            Equation::parse_val(id, parser, pos)
-        } else {
-            let (l_expr, pos) = Expression::parse_primary_expr(parser, pos)?;
-            let pos = consume_symbol(parser, pos, symbol)?;
-            let (expr, pos) = Expression::parse(parser, pos)?;
-            Ok((Equation::Value(l_expr, expr), pos))
-        }
-    }
-
     fn parse_value_assign2(
         parser: &'a Parser<'a>,
         pos: usize,

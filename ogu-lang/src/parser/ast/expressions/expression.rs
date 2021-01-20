@@ -90,9 +90,7 @@ pub(crate) enum Expression<'a> {
     ListExpr(Vec<Expression<'a>>), // ok
     ListByComprehension(
         Box<Expression<'a>>,
-        Vec<Equation<'a>>,
-        Vec<Expression<'a>>,
-        Vec<Equation<'a>>,
+        Vec<ListComprehensionGuard<'a>>
     ),
     RangeExpr(Box<Expression<'a>>, Box<Expression<'a>>),//ok
     RangeExprInfinite(Box<Expression<'a>>, Box<Expression<'a>>),//ok
@@ -169,7 +167,16 @@ pub(crate) enum Expression<'a> {
         Option<Box<Expression<'a>>>,
     ),
     // special
-    GuardedExpr(Box<Expression<'a>>, Box<Expression<'a>>), // pattern if expr -> // ok
+    GuardedExpr(Box<Expression<'a>>, Box<Expression<'a>>), // pattern | expr -> // ok
+}
+
+#[derive(Debug, Clone)]
+pub(crate) enum ListComprehensionGuard<'a> {
+    Generator(&'a str, Expression<'a>), // id <- expr
+    TupleGenerator(Vec<&'a str>, Expression<'a>), // (id, id..) <- expr
+    Let(&'a str, Expression<'a>), // let id = expr
+    LetTuple(Vec<&'a str>, Expression<'a>), // let id = expr
+    Expr(Expression<'a>), // , expr
 }
 
 pub(crate) type ParseResult<'a> = Result<(Expression<'a>, usize)>;
@@ -713,49 +720,66 @@ impl<'a> Expression<'a> {
                             false,
                         );
                     }
+                    let expr = Box::new(exprs[0].clone());
                     let pos = consume_symbol(parser, pos, Lexeme::Guard)?;
-                    let (eq, mut pos) = Equation::parse_back_arrow_eq(parser, pos)?;
-                    let mut eqs = vec![];
+                    let (guard, mut pos) = Expression::parse_list_comprehension_guard(parser, pos)?;
                     let mut guards = vec![];
-                    let mut lets = vec![];
-                    eqs.push(eq);
-                    while parser.peek(pos, Lexeme::Comma) {
+                    guards.push(guard);
+                    while !parser.peek(pos, Lexeme::RightBracket) {
                         pos = consume_symbol(parser, pos, Lexeme::Comma)?;
-                        match Equation::parse_back_arrow_eq(parser, pos) {
-                            Ok((eq, new_pos)) => {
-                                eqs.push(eq);
-                                pos = new_pos;
-                            }
-                            Err(_) => {
-                                if parser.peek(pos, Lexeme::Let) {
-                                    pos = consume_symbol(parser, pos, Lexeme::Let)?;
-                                    let (eq, new_pos) = Equation::parse_value(parser, pos)?;
-                                    lets.push(eq);
-                                    pos = new_pos;
-                                } else {
-                                    let (expr, new_pos) =
-                                        Expression::parse_logical_expr(parser, pos)?;
-                                    guards.push(expr);
-                                    pos = new_pos;
-                                }
-                            }
-                        }
+                        let (guard, new_pos) = Expression::parse_list_comprehension_guard(parser, pos)?;
+                        guards.push(guard);
+                        pos = new_pos;
                     }
                     pos = consume_symbol(parser, pos, Lexeme::RightBracket)?;
-                    Ok((
-                        Expression::ListByComprehension(
-                            Box::new(exprs[0].clone()),
-                            eqs,
-                            guards,
-                            lets,
-                        ),
-                        pos,
-                    ))
+                    Ok((Expression::ListByComprehension(expr, guards), pos))
                 } else {
                     todo!()
                 }
             }
             None => raise_parser_error("unexpected eof", parser, pos, true),
+        }
+    }
+
+    fn parse_list_comprehension_guard(parser: &'a Parser<'a>, pos: usize) -> Result<(ListComprehensionGuard, usize)> {
+        // let id = expr
+        // id <- list
+        // expr
+        match parser.get_token(pos) {
+            Some(Lexeme::Let) => {
+                let pos = consume_symbol(parser, pos, Lexeme::Let)?;
+                if parser.peek(pos, Lexeme::LeftParen) {
+                    let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
+                    let (ids, pos) = consume_ids_sep_by(parser, pos, Lexeme::Comma)?;
+                    let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
+                    let pos = consume_symbol(parser, pos, Lexeme::Assign)?;
+                    let (expr, pos) = Expression::parse(parser, pos)?;
+                    Ok((ListComprehensionGuard::LetTuple(ids, expr), pos))
+                } else {
+                    let (id, pos) = consume_id(parser, pos)?;
+                    let pos = consume_symbol(parser, pos, Lexeme::Assign)?;
+                    let (expr, pos) = Expression::parse(parser, pos)?;
+                    Ok((ListComprehensionGuard::Let(id, expr), pos))
+                }
+
+            }
+            Some(Lexeme::Id(id)) if parser.peek(pos+1, Lexeme::BackArrow) => {
+                let pos = consume_symbol(parser, pos+1, Lexeme::BackArrow)?;
+                let (expr, pos) = Expression::parse(parser, pos)?;
+                Ok((ListComprehensionGuard::Generator(id, expr), pos))
+            }
+            Some(Lexeme::LeftParen) => {
+                let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
+                let (ids, pos) = consume_ids_sep_by(parser, pos, Lexeme::Comma)?;
+                let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
+                let pos = consume_symbol(parser, pos+1, Lexeme::BackArrow)?;
+                let (expr, pos) = Expression::parse(parser, pos)?;
+                Ok((ListComprehensionGuard::TupleGenerator(ids, expr), pos))
+            }
+            _ => {
+                let (expr, pos) = Expression::parse(parser, pos)?;
+                Ok((ListComprehensionGuard::Expr(expr), pos))
+            }
         }
     }
 

@@ -10,10 +10,14 @@ use anyhow::{bail, Result};
 
 #[derive(Debug, Clone)]
 pub(crate) enum ListGuard {
-    Generator(Box<dyn Symbol>, Box<dyn Symbol>), // id <- expr
-    TupleGenerator(Vec<Box<dyn Symbol>>, Box<dyn Symbol>), // (id, id..) <- expr
-    Let(Box<dyn Symbol>, Box<dyn Symbol>),       // let id = expr
-    LetTuple(Vec<Box<dyn Symbol>>, Box<dyn Symbol>), // let id = expr
+    Generator(Box<dyn Symbol>, Box<dyn Symbol>),
+    // id <- expr
+    TupleGenerator(Vec<Box<dyn Symbol>>, Box<dyn Symbol>),
+    // (id, id..) <- expr
+    Let(Box<dyn Symbol>, Box<dyn Symbol>),
+    // let id = expr
+    LetTuple(Vec<Box<dyn Symbol>>, Box<dyn Symbol>),
+    // let id = expr
     Expr(Box<dyn Symbol>),                       // , expr
 }
 
@@ -92,13 +96,59 @@ impl Symbol for ListGuard {
                         bail!("generator must come from a list");
                     }
                 }
-                scope.define(id.clone());
+                id.define_into(scope);
+            }
+            ListGuard::TupleGenerator(tuple, lst) => {
+                lst.resolve_type(scope)?;
+                if let Some(lt) = lst.get_type() {
+                    match lt.downcast_ref::<ListType>() {
+                        None => bail!("generator must come from a list"),
+                        Some(lt) =>
+                            match lt {
+                                ListType::EmptyList => {
+                                    bail!("can't generate anything from an empty list!")
+                                }
+                                ListType::List(tty) => {
+                                    match tty.downcast_ref::<TupleType>() {
+                                        None => bail!("right side of expression must be a list of tuples"),
+                                        Some(tuple_type) => {
+                                            if tuple_type.tuple.len() != tuple.len() {
+                                                bail!("left side must be a tuple of len = {}", tuple.len())
+                                            } else {
+                                                for (p, e) in tuple.iter_mut().enumerate() {
+                                                    e.set_type(Some(tuple_type.tuple[p].clone()))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                    }
+                }
+                for e in tuple.iter() {
+                    e.define_into(scope);
+                }
+            }
+            ListGuard::Let(id, val) => {
+                val.resolve_type(scope)?;
+                if let Some(vt) = val.get_type() {
+                    id.set_type(Some(vt.clone()));
+                }
+                id.define_into(scope);
+            }
+            ListGuard::LetTuple(t, val) => {
+                val.resolve_type(scope)?;
+                for e in t.iter_mut() {
+                    e.resolve_type(scope)?;
+                }
+                for e in t.iter() {
+                    e.define_into(scope);
+                }
             }
             ListGuard::Expr(expr) => {
                 expr.resolve_type(scope)?;
                 expr.define_into(scope);
             }
-            _ => todo!(),
         }
         Ok(self.get_type())
     }
@@ -108,10 +158,22 @@ impl Symbol for ListGuard {
             ListGuard::Generator(id, _) => {
                 id.define_into(scope);
             }
+            ListGuard::TupleGenerator(tuple, _) => {
+                for e in tuple.iter() {
+                    e.define_into(scope);
+                }
+            }
+            ListGuard::Let(id, _) => {
+                id.define_into(scope);
+            }
+            ListGuard::LetTuple(tuple, _) => {
+                for e in tuple.iter() {
+                    e.define_into(scope);
+                }
+            }
             ListGuard::Expr(expr) => {
                 expr.define_into(scope);
             }
-            _ => todo!(),
         }
     }
 

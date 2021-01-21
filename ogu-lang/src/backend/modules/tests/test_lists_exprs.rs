@@ -6,6 +6,7 @@ use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
 use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
+use crate::backend::modules::types::tuple_type::TupleType;
 
 #[test]
 fn test_simple_list() {

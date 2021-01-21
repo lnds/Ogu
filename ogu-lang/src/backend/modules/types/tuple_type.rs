@@ -5,7 +5,7 @@ use crate::backend::scopes::types::Type;
 
 #[derive(Clone, Debug)]
 pub(crate) struct TupleType {
-    tuple: Vec<Box<dyn Type>>,
+    pub(crate) tuple: Vec<Box<dyn Type>>,
 }
 
 impl TupleType {
@@ -25,7 +25,7 @@ impl TupleType {
 
 impl Type for TupleType {
     fn get_name(&self) -> String {
-        unimplemented!()
+        self.get_signature()
     }
 
     fn get_signature(&self) -> String {

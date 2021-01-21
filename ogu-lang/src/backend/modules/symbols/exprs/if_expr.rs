@@ -35,7 +35,13 @@ impl Symbol for IfExpr {
         let tt = self.then_expr.get_type()?;
         let et = self.else_expr.get_type()?;
         if &*tt != &*et {
-            None
+            if tt.promotes(&*et) {
+                Some(tt.clone())
+            } else if et.promotes(&*tt) {
+                Some(et.clone_box())
+            } else {
+                None
+            }
         } else {
             Some(et.clone())
         }

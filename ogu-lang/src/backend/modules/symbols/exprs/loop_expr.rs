@@ -1,15 +1,16 @@
 use crate::backend::errors::OguError;
 use crate::backend::modules::types::basic_type::INVALID_TYPE;
-use crate::backend::scopes::symbol::Symbol;
+use crate::backend::scopes::symbol::{Symbol, SymbolClone};
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Error, Result};
+use anyhow::{bail, Result};
+use crate::backend::scopes::sym_table::SymbolTable;
 
 #[derive(Clone, Debug)]
 pub(crate) struct LoopExpr {
-    decls: Option<Vec<Box<dyn Symbol>>>,
+    pub(crate) decls: Option<Vec<Box<dyn Symbol>>>,
     cond: Option<Box<dyn Symbol>>,
-    expr: Box<dyn Symbol>,
+    pub(crate) expr: Box<dyn Symbol>,
     ret_expr: Option<Box<dyn Symbol>>,
 }
 
@@ -31,7 +32,7 @@ impl LoopExpr {
 
 impl Symbol for LoopExpr {
     fn get_name(&self) -> &str {
-        "loop_expr"
+        "loop"
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
@@ -43,6 +44,27 @@ impl Symbol for LoopExpr {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
+        let mut sym_table = SymbolTable::new("loop", Some(scope.clone_box()));
+        sym_table.define(self.clone_box());
+        if let Some(decls) = &mut self.decls {
+            for d in decls.iter() {
+                if sym_table.define(d.clone()).is_some() {
+                    bail!("duplicated symbol '{} on loop for declaration", d.get_name());
+                }
+            }
+            for d in decls.iter_mut() {
+                d.resolve_type(&mut *sym_table)?;
+            }
+        }
+        self.expr.resolve_type(&mut *sym_table)?;
+        for d in sym_table.get_symbols() {
+            d.define_into(scope);
+        }
         Ok(self.get_type())
     }
+
+    fn storable(&self) -> bool {
+        true
+    }
 }
+

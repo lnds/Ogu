@@ -2,11 +2,7 @@ use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
-use crate::backend::modules::types::list_type::ListType;
-use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
-use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
-use crate::backend::modules::types::tuple_type::TupleType;
 
 
 #[test]
@@ -51,4 +47,25 @@ fn test_rev_loop() {
     assert_eq!(decls[2].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::bool())));
 
 }
+
+
+#[test]
+fn test_let_in_loop() {
+    let module = make_module(
+        indoc! {r#"
+          calc n =
+            for i = 1, out = 0 loop
+                if i == n then out
+                else repeat let i' = inc i, let out = i' * 2
+          "#},
+        default_sym_table(),
+    );
+    println!("module: {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(decls[0].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int())));
+
+}
+
 

@@ -1,5 +1,3 @@
-use crate::backend::errors::OguError;
-use crate::backend::modules::types::basic_type::INVALID_TYPE;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
@@ -40,7 +38,7 @@ impl Symbol for RepeatExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let recurse = scope.scope_name() == "loop";
-        if let Some(mut loop_expr_sym) = scope.resolve("loop") {
+        if let Some(loop_expr_sym) = scope.resolve("loop") {
             match loop_expr_sym.downcast_ref::<LoopExpr>() {
                 None => bail!("repeat can only be called inside a loop"),
                 Some(loop_expr) => {
@@ -51,8 +49,6 @@ impl Symbol for RepeatExpr {
                         }
                         let mut sym_table = SymbolTable::new("repeat", Some(scope.clone_box()));
                         for (i, r) in self.reps.iter_mut().enumerate() {
-                            println!("1. R = {:?} => {:?}", r, r.get_type());
-                            println!("1. decls[{}] = {:?} => {:?}", i, decls[i], decls[i].get_type());
                             match r.get_type() {
                                 None => match decls[i].get_type() {
                                     None => {
@@ -63,25 +59,20 @@ impl Symbol for RepeatExpr {
                                         r.set_type(Some(t));
                                     }
                                 }
-                                Some(rt) => match decls[i].get_type() {
+                                Some(_) => match decls[i].get_type() {
                                     None => {
-                                        println!("DEBEMOS CAMBIAR TYPE PARA {:?} a {:?}", decls[i], r.get_type());
                                         decls[i].set_type(r.get_type());
                                     }
                                     Some(t) =>
                                         decls[i].matches_types(Some(t.clone_box()))
                                 }
                             }
-                            println!("2. R = {:?} => {:?}", r, r.get_type());
-                            println!("2. decls[{}] = {:?} => {:?}", i, decls[i], decls[i].get_type());
                             decls[i].define_into(&mut *sym_table);
                                 decls[i].define_into(scope);
                         }
                         if recurse {
                             loop_expr.expr.resolve_type(&mut *sym_table)?;
                             self.set_type(loop_expr.expr.get_type());
-                            println!("sym_table.resolve(num) = {:?}", sym_table.resolve("num"));
-                            println!("scope.resolve(num) = {:?}", scope.resolve("num"));
                         }
                     }
 

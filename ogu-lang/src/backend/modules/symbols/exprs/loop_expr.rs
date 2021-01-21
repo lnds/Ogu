@@ -1,5 +1,3 @@
-use crate::backend::errors::OguError;
-use crate::backend::modules::types::basic_type::INVALID_TYPE;
 use crate::backend::scopes::symbol::{Symbol, SymbolClone};
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;

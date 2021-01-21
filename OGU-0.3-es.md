@@ -135,7 +135,7 @@ En ese caso si se quiere rescatar los valores de retorno de la tupla en forma se
 En una expresión podemos declarar una declaración local de la siguiente manera
 
     let x = 10
-     in x + 10
+    in x + 10
      
 Acá x sólo tiene un valor en la expresión x + 10.
 

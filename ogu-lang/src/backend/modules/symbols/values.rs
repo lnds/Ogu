@@ -14,13 +14,9 @@ impl ValueSym {
     pub(crate) fn new(name: &Expression, expr: &Expression) -> Box<Self> {
         let mut name: Box<dyn Symbol> = name.into();
         name.set_storable(true);
-        let mut expr: Box<dyn Symbol> = expr.into();
-        //if name.get_type().is_none() {
-        //    name.set_type(expr.get_type());
-        //}
         Box::new(ValueSym {
             name: name.clone(),
-            expr,
+            expr: expr.into(),
         })
     }
 

@@ -360,6 +360,45 @@ fn test_list_comprehension_2() {
     );
 }
 
+
+#[test]
+fn test_list_comprehension_3() {
+    let module = make_module(
+        indoc! {r#"
+        l = [2, 7, 23, 12, 1, 44, 89, 5, 32, 23, 10, 105, 13]
+        l2 = [(x, x) | x <- l]
+        b = [r | a <- l, a < 50, let r = a * 1.0]
+        c = [(x, y, z) | x <- l, y <- l, x < y, let z = 1.0 * (x + y)]
+        d = [t | x <- l, y <- l, x < y, let t = (x * 1.0, y * 1N, (x + y))]
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(
+        decls[0].get_type(),
+        Some(ListType::new_list(BasicType::int()))
+    );
+    assert_eq!(
+        decls[1].get_type(),
+        Some(ListType::new_list(TupleType::new_box(vec![BasicType::int(), BasicType::int()])))
+    );
+    assert_eq!(
+        decls[2].get_type(),
+        Some(ListType::new_list(BasicType::float()))
+    );
+    assert_eq!(
+        decls[3].get_type(),
+        Some(ListType::new_list(TupleType::new_box(vec![BasicType::int(), BasicType::int(), BasicType::float()])))
+    );
+    assert_eq!(
+        decls[4].get_type(),
+        Some(ListType::new_list(TupleType::new_box(vec![BasicType::float(), TRAIT_NUM.clone_box(), BasicType::int()])))
+    );
+}
+
 #[test]
 fn test_list_func1() {
     let module = make_module(
@@ -403,8 +442,6 @@ fn test_list_func2() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("d0.type = {:?}", decls[0].get_type());
-    println!("d1.type = {:?}", decls[1].get_type());
     assert_eq!(
         decls[0].get_type(),
         Some(FuncType::new_func_type(
@@ -416,4 +453,22 @@ fn test_list_func2() {
         decls[1].get_type(),
         Some(ListType::new_list(BasicType::int()))
     );
+}
+
+
+#[test]
+fn test_list_fib() {
+    let module = make_module(
+        indoc! {r#"
+        fib-seq = fib 0 1
+            where fib a b = lazy a :: fib b (a + b)
+
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(decls[0].get_type(), Some(ListType::new_list(BasicType::int())));
 }

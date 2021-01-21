@@ -84,14 +84,11 @@ pub(crate) enum Expression<'a> {
     EmptyList,// ok
     ParenExpr(Box<Expression<'a>>), // ok
     NotExpr(Box<Expression<'a>>), // ok
-    LazyExpr(Box<Expression<'a>>),
+    LazyExpr(Box<Expression<'a>>), // ok
     YieldExpr(Box<Expression<'a>>),
     ReifyExpr(&'a str, Vec<Equation<'a>>),
     ListExpr(Vec<Expression<'a>>), // ok
-    ListByComprehension(
-        Box<Expression<'a>>,
-        Vec<ListComprehensionGuard<'a>>
-    ),
+    ListByComprehension(Box<Expression<'a>>, Vec<ListComprehensionGuard<'a>>), // ok
     RangeExpr(Box<Expression<'a>>, Box<Expression<'a>>),//ok
     RangeExprInfinite(Box<Expression<'a>>, Box<Expression<'a>>),//ok
     RangeExpr3(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>),//ok
@@ -149,23 +146,11 @@ pub(crate) enum Expression<'a> {
         Option<Box<Expression<'a>>>,
     ),
     LetExpr(Vec<Equation<'a>>, Box<Expression<'a>>), // ok
-    CaseExpr(
-        Box<Expression<'a>>,
-        Vec<(Option<Expression<'a>>, Expression<'a>)>,
-    ), // ok
-    IfExpr(
-        Box<Expression<'a>>,
-        Box<Expression<'a>>,
-        Box<Expression<'a>>,
-    ), // ok
+    CaseExpr(Box<Expression<'a>>, Vec<(Option<Expression<'a>>, Expression<'a>)>), // ok
+    IfExpr(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>), // ok
     MacroExpandExpr(Box<Expression<'a>>),
     ResumeExpr(Option<Box<Expression<'a>>>, Option<Vec<Expression<'a>>>),
-    LoopExpr(
-        Option<Vec<Equation<'a>>>,
-        Option<LoopCond<'a>>,
-        Box<Expression<'a>>,
-        Option<Box<Expression<'a>>>,
-    ),
+    LoopExpr(Option<Vec<Equation<'a>>>, Option<LoopCond<'a>>, Box<Expression<'a>>, Option<Box<Expression<'a>>>),
     // special
     GuardedExpr(Box<Expression<'a>>, Box<Expression<'a>>), // pattern | expr -> // ok
 }

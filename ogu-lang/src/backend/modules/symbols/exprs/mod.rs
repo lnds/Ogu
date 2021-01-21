@@ -27,6 +27,8 @@ use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::{
     Expression, LambdaArg, ListComprehensionGuard, OptExprTuple,
 };
+use crate::backend::modules::symbols::exprs::lazy_call::LazyExpr;
+use crate::backend::modules::symbols::funcs::FunctionSym;
 
 mod arithmetics;
 mod case_expr;
@@ -50,6 +52,7 @@ mod range_expr;
 mod recur_call;
 mod tuple_expr;
 mod unary_op_expr;
+mod lazy_call;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -190,6 +193,9 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
                 LambdaExpr::new(vec_lambda_args_into(args), expr.into())
             }
 
+            Expression::LazyExpr(e) => {
+                LazyExpr::new(e.into())
+            }
             Expression::RecurExpr(args) => RecurCallExpr::new(vec_exprs_into(args)),
 
             Expression::FuncCallExpr(f, args) => FuncCallExpr::new(f.into(), vec_exprs_into(args)),
@@ -223,6 +229,7 @@ impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
     fn from(eq: &Equation<'a>) -> Self {
         match eq {
             Equation::Value(id, expr) => ValueSym::new(id, expr),
+            Equation::Function(name, args, expr) => FunctionSym::make_box(name, args, expr),
             _e => {
                 println!("not implemented for {:?}", _e);
                 todo!()

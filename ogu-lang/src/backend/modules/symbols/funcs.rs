@@ -34,13 +34,31 @@ impl FunctionSym {
             None => FuncType::make(&args, &*expr),
             Some(ft) => FuncType::check_and_make(name, ft, &mut args)?,
         };
-
         Ok(Box::new(FunctionSym {
             name: name.to_string(),
             args,
             expr,
             ty,
         }))
+    }
+
+    pub(crate) fn make_box(
+        name: &str,
+        args: &Args,
+        expr: &Expression
+    ) -> Box<dyn Symbol> {
+        let expr: Box<dyn Symbol> = expr.into();
+        let args: Option<Vec<Box<dyn Symbol>>> = match args {
+            Args::Void => None,
+            Args::Many(args) => Some(vec_args_into(args)),
+        };
+        let ty =FuncType::make(&args, &*expr);
+        Box::new(FunctionSym {
+            name: name.to_string(),
+            args,
+            expr,
+            ty
+        })
     }
 
     pub(crate) fn replace_args(

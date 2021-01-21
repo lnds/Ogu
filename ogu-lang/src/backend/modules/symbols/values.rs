@@ -19,6 +19,12 @@ impl ValueSym {
             expr: expr.into(),
         })
     }
+
+    pub(crate) fn make(name: Box<dyn Symbol>, expr: Box<dyn Symbol>) -> Box<dyn Symbol> {
+        Box::new(ValueSym {
+            name, expr
+        })
+    }
 }
 
 impl Symbol for ValueSym {

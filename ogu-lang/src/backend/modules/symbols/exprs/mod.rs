@@ -24,11 +24,12 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::{
-    Expression, LambdaArg, ListComprehensionGuard, OptExprTuple,
-};
+use crate::parser::ast::expressions::expression::{Expression, LambdaArg, ListComprehensionGuard, OptExprTuple, LoopCond, RecurValue};
 use crate::backend::modules::symbols::exprs::lazy_call::LazyExpr;
 use crate::backend::modules::symbols::funcs::FunctionSym;
+use crate::backend::modules::symbols::exprs::loop_expr::LoopExpr;
+use crate::backend::modules::symbols::exprs::loop_cond::LoopGuard;
+use crate::backend::modules::symbols::exprs::repeat_expr::RepeatExpr;
 
 mod arithmetics;
 mod case_expr;
@@ -53,6 +54,9 @@ mod recur_call;
 mod tuple_expr;
 mod unary_op_expr;
 mod lazy_call;
+mod loop_expr;
+mod loop_cond;
+mod repeat_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -185,6 +189,12 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::IfExpr(c, t, e) => IfExpr::new(c.into(), t.into(), e.into()),
 
+            Expression::LoopExpr(for_expr, cond, expr, ret) =>
+                LoopExpr::new(for_expr.as_ref().map(|fe| vec_eqs_into(&fe)), cond.as_ref().map(|lc| lc.into()), expr.into(), ret.as_ref().map(|r| r.into())),
+
+            Expression::RepeatExpr(reps) =>
+                RepeatExpr::new(vec_recval_into(&reps)),
+
             Expression::LetExpr(eqs, expr) => LetExpr::new(vec_eqs_into(eqs), expr.into()),
 
             Expression::DoExpr(exprs) => DoExpr::new(vec_exprs_into(exprs)),
@@ -258,6 +268,11 @@ fn vec_eqs_into(eqs: &[Equation]) -> Vec<Box<dyn Symbol>> {
     eqs.iter().map(|eq| eq.into()).collect()
 }
 
+fn vec_recval_into(eqs: &[RecurValue]) -> Vec<Box<dyn Symbol>> {
+    eqs.iter().map(|eq| eq.into()).collect()
+}
+
+
 impl<'a> From<&LambdaArg<'a>> for Box<dyn Symbol> {
     fn from(arg: &LambdaArg<'a>) -> Self {
         match arg {
@@ -269,4 +284,22 @@ impl<'a> From<&LambdaArg<'a>> for Box<dyn Symbol> {
 
 fn vec_list_comp_guars_int(guards: &[ListComprehensionGuard]) -> Vec<Box<dyn Symbol>> {
     guards.iter().map(|g| g.into()).collect()
+}
+
+impl<'a> From<&LoopCond<'a>> for Box<dyn Symbol> {
+    fn from(guard: &LoopCond<'a>) -> Self {
+        match guard {
+            LoopCond::UntilExpr(e) => Box::new(LoopGuard::Until(e.into())),
+            LoopCond::WhileExpr(e) => Box::new(LoopGuard::While(e.into()))
+        }
+    }
+}
+
+impl<'a> From<&RecurValue<'a>> for Box<dyn Symbol> {
+    fn from(guard: &RecurValue<'a>) -> Self {
+        match guard {
+            RecurValue::Value(e) => e.into(),
+            RecurValue::Var(id, e) => ValueSym::make(IdSym::new_id(id), e.into())
+        }
+    }
 }

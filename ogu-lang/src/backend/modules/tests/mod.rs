@@ -12,6 +12,7 @@ mod test_range_exprs;
 mod test_recursives;
 mod test_simple;
 mod test_val_decls;
+mod test_loops;
 
 use crate::backend::modules::module::Module;
 use crate::backend::scopes::Scope;

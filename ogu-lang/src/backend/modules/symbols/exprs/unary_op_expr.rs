@@ -83,7 +83,6 @@ impl UnaryOpExpr {
     }
 
     pub(crate) fn new_cons(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
-        println!("NEW CONS {:?}", expr);
         match expr {
             None => {
                 let x = IdSym::new_with_type("x", Some(TRAIT_UNKNOWN.clone_box()));
@@ -93,6 +92,20 @@ impl UnaryOpExpr {
             Some(expr) => {
                 let xs = IdSym::new_with_type("xs", expr.get_type().map(|t| ListType::new_list(t.clone_box())));
                 LambdaExpr::new(vec![xs.clone()], ListExpr::new_cons(expr, xs))
+            }
+        }
+    }
+
+    pub(crate) fn new_concat(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
+        match expr {
+            None => {
+                let x = IdSym::new_with_type("x", Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
+                let xs = IdSym::new_with_type("xs", Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
+                LambdaExpr::new(vec![x.clone(), xs.clone()], ListExpr::new_concat(x, xs))
+            }
+            Some(expr) => {
+                let xs = IdSym::new_with_type("xs", expr.get_type());
+                LambdaExpr::new(vec![xs.clone()], ListExpr::new_concat(expr, xs))
             }
         }
     }

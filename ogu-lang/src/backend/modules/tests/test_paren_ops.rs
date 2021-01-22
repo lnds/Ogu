@@ -79,6 +79,39 @@ fn test_cons() {
 }
 
 #[test]
+fn test_concat() {
+    let module = make_module(
+        indoc! {r#"
+        concat x xs = (++ x xs)
+        concat' = (++)
+        concat_1 = (++ [1])
+
+        a = [1]
+        b = concat_1 a
+        c = concat [1] (concat' [0]  b)
+        d = concat [1] (concat' [0] a)
+
+        e = (++) [1] [2]
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box()), ListType::new_list(TRAIT_UNKNOWN.clone_box())]), ListType::new_list(TRAIT_UNKNOWN.clone_box())),
+        FuncType::new_opt(Some(vec![ListType::new_list(BasicType::int())]), ListType::new_list(BasicType::int())),
+        vec![
+            Some(ListType::new_list(BasicType::int())),
+            Some(ListType::new_list(BasicType::int())),
+            Some(ListType::new_list(BasicType::int())),
+            Some(ListType::new_list(BasicType::int())),
+            Some(ListType::new_list(BasicType::int())),
+        ],
+    );
+}
+
+#[test]
 fn test_sub() {
     let module = make_module(
         indoc! {r#"

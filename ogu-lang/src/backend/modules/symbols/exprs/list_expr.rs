@@ -245,6 +245,7 @@ impl Symbol for ListExpr {
                                     Ok(list1.get_type())
                                 }
                                 Some(ListType::List(ty2)) if ty1 != ty2 => {
+                                    println!("CONCAT list1={:?} list2={:?}", list1, list2);
                                     if ty1.is_trait() {
                                         list1.set_type(list2.get_type());
                                         scope.define(list1.clone());
@@ -252,7 +253,7 @@ impl Symbol for ListExpr {
                                         list2.set_type(list1.get_type());
                                         scope.define(list2.clone());
                                     } else {
-                                        bail!("concat expression of different list types ty1 = {:?}. ty2={:?}", ty1, ty2);
+                                        bail!("concat expression of different list types ty1 = {:?} ty2={:?}", ty1, ty2);
                                     }
                                     Ok(list1.get_type())
                                 }

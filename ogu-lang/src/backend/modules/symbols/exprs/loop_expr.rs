@@ -6,24 +6,18 @@ use crate::backend::scopes::sym_table::SymbolTable;
 
 #[derive(Clone, Debug)]
 pub(crate) struct LoopExpr {
-    pub(crate) decls: Option<Vec<Box<dyn Symbol>>>,
-    cond: Option<Box<dyn Symbol>>,
+    pub(crate) decls: Vec<Box<dyn Symbol>>,
     pub(crate) expr: Box<dyn Symbol>,
-    ret_expr: Option<Box<dyn Symbol>>,
 }
 
 impl LoopExpr {
     pub(crate) fn new(
-        decls: Option<Vec<Box<dyn Symbol>>>,
-        cond: Option<Box<dyn Symbol>>,
+        decls: Vec<Box<dyn Symbol>>,
         expr: Box<dyn Symbol>,
-        ret_expr: Option<Box<dyn Symbol>>
     ) -> Box<Self> {
         Box::new(LoopExpr {
             decls,
-            cond,
             expr,
-            ret_expr
         })
     }
 }
@@ -44,15 +38,13 @@ impl Symbol for LoopExpr {
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let mut sym_table = SymbolTable::new("loop", Some(scope.clone_box()));
         sym_table.define(self.clone_box());
-        if let Some(decls) = &mut self.decls {
-            for d in decls.iter() {
-                if sym_table.define(d.clone()).is_some() {
-                    bail!("duplicated symbol '{} on loop for declaration", d.get_name());
-                }
+        for d in self.decls.iter() {
+            if sym_table.define(d.clone()).is_some() {
+                bail!("duplicated symbol '{} on loop for declaration", d.get_name());
             }
-            for d in decls.iter_mut() {
-                d.resolve_type(&mut *sym_table)?;
-            }
+        }
+        for d in self.decls.iter_mut() {
+            d.resolve_type(&mut *sym_table)?;
         }
         self.expr.resolve_type(&mut *sym_table)?;
         for d in sym_table.get_symbols() {

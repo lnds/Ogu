@@ -24,11 +24,10 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::{Expression, LambdaArg, ListComprehensionGuard, OptExprTuple, LoopCond, RecurValue};
+use crate::parser::ast::expressions::expression::{Expression, LambdaArg, ListComprehensionGuard, OptExprTuple, RecurValue};
 use crate::backend::modules::symbols::exprs::lazy_call::LazyExpr;
 use crate::backend::modules::symbols::funcs::FunctionSym;
 use crate::backend::modules::symbols::exprs::loop_expr::LoopExpr;
-use crate::backend::modules::symbols::exprs::loop_cond::LoopGuard;
 use crate::backend::modules::symbols::exprs::repeat_expr::RepeatExpr;
 
 mod arithmetics;
@@ -55,7 +54,6 @@ mod tuple_expr;
 mod unary_op_expr;
 mod lazy_call;
 mod loop_expr;
-mod loop_cond;
 mod repeat_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
@@ -189,8 +187,8 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::IfExpr(c, t, e) => IfExpr::new(c.into(), t.into(), e.into()),
 
-            Expression::LoopExpr(for_expr, cond, expr, ret) =>
-                LoopExpr::new(for_expr.as_ref().map(|fe| vec_eqs_into(&fe)), cond.as_ref().map(|lc| lc.into()), expr.into(), ret.as_ref().map(|r| r.into())),
+            Expression::LoopExpr(fe, expr) =>
+                LoopExpr::new(vec_eqs_into(&fe),  expr.into()),
 
             Expression::RepeatExpr(reps) =>
                 RepeatExpr::new(vec_recval_into(&reps)),
@@ -286,14 +284,6 @@ fn vec_list_comp_guars_int(guards: &[ListComprehensionGuard]) -> Vec<Box<dyn Sym
     guards.iter().map(|g| g.into()).collect()
 }
 
-impl<'a> From<&LoopCond<'a>> for Box<dyn Symbol> {
-    fn from(guard: &LoopCond<'a>) -> Self {
-        match guard {
-            LoopCond::UntilExpr(e) => Box::new(LoopGuard::Until(e.into())),
-            LoopCond::WhileExpr(e) => Box::new(LoopGuard::While(e.into()))
-        }
-    }
-}
 
 impl<'a> From<&RecurValue<'a>> for Box<dyn Symbol> {
     fn from(guard: &RecurValue<'a>) -> Self {

@@ -45,12 +45,6 @@ pub(crate) enum RecurValue<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum LoopCond<'a> {
-    WhileExpr(Box<Expression<'a>>),
-    UntilExpr(Box<Expression<'a>>),
-}
-
-#[derive(Debug, Clone)]
 pub(crate) struct HandleGuard<'a>(
     Expression<'a>,
     Option<Expression<'a>>,
@@ -66,101 +60,169 @@ pub(crate) enum Identifier<'a> {
 
 #[derive(Debug, Clone)]
 pub(crate) enum Expression<'a> {
-    InvalidExpr, // ok
-    Name(&'a str), // ok
-    NameStr(String), // ok
+    InvalidExpr,
+    // ok
+    Name(&'a str),
+    // ok
+    NameStr(String),
+    // ok
     QualifiedIdentifier(&'a str, Vec<&'a str>),
-    StringLiteral(&'a str), // ok
-    LargeStringLiteral(Option<String>), // ok
-    RegexpLiteral(&'a str), // ok
-    CharLiteral(&'a str), // ok
-    IntegerLiteral(&'a str), // ok
-    FloatLiteral(&'a str), // ok
-    DateLiteral(&'a str), // ok
+    StringLiteral(&'a str),
+    // ok
+    LargeStringLiteral(Option<String>),
+    // ok
+    RegexpLiteral(&'a str),
+    // ok
+    CharLiteral(&'a str),
+    // ok
+    IntegerLiteral(&'a str),
+    // ok
+    FloatLiteral(&'a str),
+    // ok
+    DateLiteral(&'a str),
+    // ok
     FormatString(&'a str),
-    True, // ok
-    False, //ok
-    Unit, // ok
-    EmptyList,// ok
-    ParenExpr(Box<Expression<'a>>), // ok
-    NotExpr(Box<Expression<'a>>), // ok
-    LazyExpr(Box<Expression<'a>>), // ok
+    True,
+    // ok
+    False,
+    //ok
+    Unit,
+    // ok
+    EmptyList,
+    // ok
+    ParenExpr(Box<Expression<'a>>),
+    // ok
+    NotExpr(Box<Expression<'a>>),
+    // ok
+    LazyExpr(Box<Expression<'a>>),
+    // ok
     YieldExpr(Box<Expression<'a>>),
     ReifyExpr(&'a str, Vec<Equation<'a>>),
-    ListExpr(Vec<Expression<'a>>), // ok
-    ListByComprehension(Box<Expression<'a>>, Vec<ListComprehensionGuard<'a>>), // ok
-    RangeExpr(Box<Expression<'a>>, Box<Expression<'a>>),//ok
-    RangeExprInfinite(Box<Expression<'a>>, Box<Expression<'a>>),//ok
-    RangeExpr3(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>),//ok
-    DictExpr(Vec<(Expression<'a>, Expression<'a>)>),// ok
+    ListExpr(Vec<Expression<'a>>),
+    // ok
+    ListByComprehension(Box<Expression<'a>>, Vec<ListComprehensionGuard<'a>>),
+    // ok
+    RangeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    //ok
+    RangeExprInfinite(Box<Expression<'a>>, Box<Expression<'a>>),
+    //ok
+    RangeExpr3(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>),
+    //ok
+    DictExpr(Vec<(Expression<'a>, Expression<'a>)>),
+    // ok
     RecordExpr(Vec<(&'a str, Expression<'a>)>),
     TypedFuncCall(String, Vec<Identifier<'a>>, Vec<Expression<'a>>),
-    FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>), // ok
-    LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>), // ok
-    ConsExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    PowExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    FuncCallExpr(Box<Expression<'a>>, Vec<Expression<'a>>),
+    // ok
+    LambdaExpr(Vec<LambdaArg<'a>>, Box<Expression<'a>>),
+    // ok
+    ConsExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    PowExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
     IndexExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     UnaryCons(Option<Box<Expression<'a>>>),
-    UnaryAdd(Option<Box<Expression<'a>>>), // ok
+    UnaryAdd(Option<Box<Expression<'a>>>),
+    // ok
     UnaryConcat(Option<Box<Expression<'a>>>),
-    UnarySub(Option<Box<Expression<'a>>>), // ok
-    UnaryMul(Option<Box<Expression<'a>>>), // ok
-    UnaryPow(Option<Box<Expression<'a>>>), // ok
-    UnaryMod(Option<Box<Expression<'a>>>), // ok
-    UnaryDiv(Option<Box<Expression<'a>>>), // ok
-    UnaryDivDiv(Option<Box<Expression<'a>>>), // ok
-    UnaryAnd(Option<Box<Expression<'a>>>), // ok
-    UnaryOr(Option<Box<Expression<'a>>>), // ok
-    UnaryNot,//ok
-    UnaryEq(Option<Box<Expression<'a>>>), // ok
-    UnaryNotEq(Option<Box<Expression<'a>>>), // ok
-    UnaryGt(Option<Box<Expression<'a>>>), // ok
-    UnaryGe(Option<Box<Expression<'a>>>), // ok
-    UnaryLt(Option<Box<Expression<'a>>>), // ok
-    UnaryLe(Option<Box<Expression<'a>>>), // ok
-    OrExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    AndExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    LeExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    LtExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    GeExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    GtExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    EqExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    NeExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    AddExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    ConcatExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    SubExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    MulExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    DivExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    IntDivExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
-    ModExpr(Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    UnarySub(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryMul(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryPow(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryMod(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryDiv(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryDivDiv(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryAnd(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryOr(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryNot,
+    //ok
+    UnaryEq(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryNotEq(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryGt(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryGe(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryLt(Option<Box<Expression<'a>>>),
+    // ok
+    UnaryLe(Option<Box<Expression<'a>>>),
+    // ok
+    OrExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    AndExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    LeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    LtExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    GeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    GtExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    EqExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    NeExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    AddExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    ConcatExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    SubExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    MulExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    DivExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    IntDivExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
+    ModExpr(Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
     ComposeFwdExpr(Box<Expression<'a>>, Box<Expression<'a>>),
     ComposeBckExpr(Box<Expression<'a>>, Box<Expression<'a>>),
-    TupleExpr(Vec<Expression<'a>>), // ok
-    DoExpr(Vec<Expression<'a>>), // ok
+    TupleExpr(Vec<Expression<'a>>),
+    // ok
+    DoExpr(Vec<Expression<'a>>),
+    // ok
     TryHandleExpr(Box<Expression<'a>>, Vec<HandleGuard<'a>>),
     RepeatExpr(Vec<RecurValue<'a>>),
-    RecurExpr(Vec<Expression<'a>>),// ok
+    RecurExpr(Vec<Expression<'a>>),
+    // ok
     PerformExpr(
         Box<Expression<'a>>,
         Option<Vec<Expression<'a>>>,
         Option<Box<Expression<'a>>>,
     ),
-    LetExpr(Vec<Equation<'a>>, Box<Expression<'a>>), // ok
-    CaseExpr(Box<Expression<'a>>, Vec<(Option<Expression<'a>>, Expression<'a>)>), // ok
-    IfExpr(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>), // ok
+    LetExpr(Vec<Equation<'a>>, Box<Expression<'a>>),
+    // ok
+    CaseExpr(Box<Expression<'a>>, Vec<(Option<Expression<'a>>, Expression<'a>)>),
+    // ok
+    IfExpr(Box<Expression<'a>>, Box<Expression<'a>>, Box<Expression<'a>>),
+    // ok
     MacroExpandExpr(Box<Expression<'a>>),
     ResumeExpr(Option<Box<Expression<'a>>>, Option<Vec<Expression<'a>>>),
-    LoopExpr(Option<Vec<Equation<'a>>>, Option<LoopCond<'a>>, Box<Expression<'a>>, Option<Box<Expression<'a>>>),
+    LoopExpr(Vec<Equation<'a>>, Box<Expression<'a>>),
     // special
     GuardedExpr(Box<Expression<'a>>, Box<Expression<'a>>), // pattern | expr -> // ok
 }
 
 #[derive(Debug, Clone)]
 pub(crate) enum ListComprehensionGuard<'a> {
-    Generator(&'a str, Expression<'a>), // id <- expr
-    TupleGenerator(Vec<&'a str>, Expression<'a>), // (id, id..) <- expr
-    Let(&'a str, Expression<'a>), // let id = expr
-    LetTuple(Vec<&'a str>, Expression<'a>), // let id = expr
+    Generator(&'a str, Expression<'a>),
+    // id <- expr
+    TupleGenerator(Vec<&'a str>, Expression<'a>),
+    // (id, id..) <- expr
+    Let(&'a str, Expression<'a>),
+    // let id = expr
+    LetTuple(Vec<&'a str>, Expression<'a>),
+    // let id = expr
     Expr(Expression<'a>), // , expr
 }
 
@@ -746,10 +808,9 @@ impl<'a> Expression<'a> {
                     let (expr, pos) = Expression::parse(parser, pos)?;
                     Ok((ListComprehensionGuard::Let(id, expr), pos))
                 }
-
             }
-            Some(Lexeme::Id(id)) if parser.peek(pos+1, Lexeme::BackArrow) => {
-                let pos = consume_symbol(parser, pos+1, Lexeme::BackArrow)?;
+            Some(Lexeme::Id(id)) if parser.peek(pos + 1, Lexeme::BackArrow) => {
+                let pos = consume_symbol(parser, pos + 1, Lexeme::BackArrow)?;
                 let (expr, pos) = Expression::parse(parser, pos)?;
                 Ok((ListComprehensionGuard::Generator(id, expr), pos))
             }
@@ -757,7 +818,7 @@ impl<'a> Expression<'a> {
                 let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
                 let (ids, pos) = consume_ids_sep_by(parser, pos, Lexeme::Comma)?;
                 let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
-                let pos = consume_symbol(parser, pos+1, Lexeme::BackArrow)?;
+                let pos = consume_symbol(parser, pos + 1, Lexeme::BackArrow)?;
                 let (expr, pos) = Expression::parse(parser, pos)?;
                 Ok((ListComprehensionGuard::TupleGenerator(ids, expr), pos))
             }
@@ -1034,49 +1095,17 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_loop(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let (for_part, pos) = if parser.peek(pos, Lexeme::For) {
-            let (eqs, pos) = Expression::parse_for(parser, pos)?;
-            (Some(eqs), pos)
-        } else {
-            (None, pos)
-        };
-        let pos = parser.skip_nl(pos);
-        let (opt_while_or_until_part, pos) = if parser.peek(pos, Lexeme::While) {
-            let (while_part, pos) = Expression::parse_while(parser, pos)?;
-            (Some(while_part), pos)
-        } else if parser.peek(pos, Lexeme::Until) {
-            let (until_part, pos) = Expression::parse_until(parser, pos)?;
-            (Some(until_part), pos)
-        } else {
-            (None, pos)
-        };
+        let (for_part, pos) = Expression::parse_for(parser, pos)?;
         let pos = parser.skip_nl(pos);
         let pos = consume_symbol(parser, pos, Lexeme::Loop)?;
         let pos = parser.skip_nl(pos);
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (loop_body, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
-        if parser.peek(pos, Lexeme::Return) {
-            let pos = consume_symbol(parser, pos, Lexeme::Return)?;
-            let pos = parser.skip_nl(pos);
-            let (indent, pos) = parse_opt_indent(parser, pos);
-            let (expr, pos) = Expression::parse(parser, pos)?;
-            let pos = parse_opt_dedent(parser, pos, indent)?;
-            Ok((
-                Expression::LoopExpr(
-                    for_part,
-                    opt_while_or_until_part,
-                    Box::new(loop_body),
-                    Some(Box::new(expr)),
-                ),
-                pos,
-            ))
-        } else {
-            Ok((
-                Expression::LoopExpr(for_part, opt_while_or_until_part, Box::new(loop_body), None),
-                pos,
-            ))
-        }
+        Ok((
+            Expression::LoopExpr(for_part, Box::new(loop_body)),
+            pos,
+        ))
     }
 
     fn parse_for(parser: &'a Parser<'a>, pos: usize) -> Result<(Vec<Equation<'a>>, usize)> {
@@ -1090,8 +1119,6 @@ impl<'a> Expression<'a> {
             if matches!(
                 parser.get_token(pos),
                 Some(Lexeme::Loop)
-                    | Some(Lexeme::While)
-                    | Some(Lexeme::Until)
                     | Some(Lexeme::Dedent)
             ) {
                 break;
@@ -1104,17 +1131,6 @@ impl<'a> Expression<'a> {
         Ok((eqs, pos))
     }
 
-    fn parse_while(parser: &'a Parser<'a>, pos: usize) -> Result<(LoopCond<'a>, usize)> {
-        let pos = consume_symbol(parser, pos, Lexeme::While)?;
-        let (expr, pos) = Expression::parse_logical_expr(parser, pos)?;
-        Ok((LoopCond::WhileExpr(Box::new(expr)), pos))
-    }
-
-    fn parse_until(parser: &'a Parser<'a>, pos: usize) -> Result<(LoopCond<'a>, usize)> {
-        let pos = consume_symbol(parser, pos, Lexeme::Until)?;
-        let (expr, pos) = Expression::parse_logical_expr(parser, pos)?;
-        Ok((LoopCond::UntilExpr(Box::new(expr)), pos))
-    }
 
     fn parse_repeat(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::Repeat)?;

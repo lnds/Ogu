@@ -25,7 +25,7 @@ impl RepeatExpr {
 
 impl Symbol for RepeatExpr {
     fn get_name(&self) -> &str {
-        "repeat_expr"
+        "repeat"
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
@@ -43,34 +43,36 @@ impl Symbol for RepeatExpr {
                 None => bail!("repeat can only be called inside a loop"),
                 Some(loop_expr) => {
                     let mut loop_expr = loop_expr.clone();
-                    if let Some(decls) = &mut loop_expr.decls {
-                        if decls.len() != self.reps.len() {
-                            bail!("return expression doesn't match for declarations")
-                        }
-                        let mut sym_table = SymbolTable::new("repeat", Some(scope.clone_box()));
-                        for (i, r) in self.reps.iter_mut().enumerate() {
-                            match r.get_type() {
-                                None => match decls[i].get_type() {
-                                    None => {
-                                        r.resolve_type(scope)?;
-                                        decls[i].set_type(r.get_type());
-                                    }
-                                    Some(t) => {
-                                        r.set_type(Some(t));
-                                    }
+                    if loop_expr.decls.len() != self.reps.len() {
+                        bail!("return expression doesn't match for declarations")
+                    }
+                    let mut sym_table = SymbolTable::new("repeat", Some(scope.clone_box()));
+                    for (i, r) in self.reps.iter_mut().enumerate() {
+                        match r.get_type() {
+                            None => match loop_expr.decls[i].get_type() {
+                                None => {
+                                    r.resolve_type(scope)?;
+                                    loop_expr.decls[i].set_type(r.get_type());
                                 }
-                                Some(_) => match decls[i].get_type() {
-                                    None => {
-                                        decls[i].set_type(r.get_type());
-                                    }
-                                    Some(t) =>
-                                        decls[i].matches_types(Some(t.clone_box()))
+                                Some(t) => {
+                                    r.set_type(Some(t));
                                 }
                             }
-                            decls[i].define_into(&mut *sym_table);
-                                decls[i].define_into(scope);
+                            Some(_) => match loop_expr.decls[i].get_type() {
+                                None => {
+                                    loop_expr.decls[i].set_type(r.get_type());
+                                }
+                                Some(t) =>
+                                    loop_expr.decls[i].matches_types(Some(t.clone_box()))
+                            }
                         }
-                        if recurse {
+                        loop_expr.decls[i].define_into(&mut *sym_table);
+                        loop_expr.decls[i].define_into(scope);
+                    }
+                    if recurse {
+                        if loop_expr.expr.get_name() == "repeat" {
+                            self.ty = loop_expr.decls[0].get_type();
+                        } else {
                             loop_expr.expr.resolve_type(&mut *sym_table)?;
                             self.set_type(loop_expr.expr.get_type());
                         }

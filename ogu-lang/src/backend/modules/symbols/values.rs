@@ -37,7 +37,6 @@ impl Symbol for ValueSym {
     }
 
     fn set_type(&mut self, t: Option<Box<dyn Type>>) {
-        println!("VALUE SYM({:?}) SET TYPE TO : {:?}", self, t);
         match self.name.get_type() {
             None => self.name.set_type(t.clone()),
             Some(tr) if tr.is_trait() => self.name.set_type(t.clone()),
@@ -49,7 +48,6 @@ impl Symbol for ValueSym {
             Some(tr) if tr.is_trait() => self.expr.set_type(t.clone()),
             _ => {}
         }
-        println!("VALUE QUEDÓ: {:?}", self);
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {

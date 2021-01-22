@@ -125,12 +125,8 @@ pub(crate) enum Lexeme<'a> {
     Try,
     #[token("type", priority = 2000)]
     Type,
-    #[token("until", priority = 2000)]
-    Until,
     #[token("where", priority = 2000)]
     Where,
-    #[token("while", priority = 2000)]
-    While,
     #[token("with", priority = 2000)]
     With,
     #[token("yield", priority = 2000)]
@@ -413,7 +409,7 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex = Lexeme::lexer(
-            "let loop macro module of otherwise perform primitive repeat recur reify resume return then trait true try until",
+            "let loop macro module of otherwise perform primitive repeat recur reify resume return then trait true try",
         );
         assert_eq!(lex.next(), Some(Lexeme::Let));
         assert_eq!(lex.next(), Some(Lexeme::Loop));
@@ -432,7 +428,6 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::Trait));
         assert_eq!(lex.next(), Some(Lexeme::True));
         assert_eq!(lex.next(), Some(Lexeme::Try));
-        assert_eq!(lex.next(), Some(Lexeme::Until));
         assert_eq!(lex.next(), None);
 
         let mut lex = Lexeme::lexer("type where with yield");

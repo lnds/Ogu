@@ -49,6 +49,7 @@ fn test_rev_loop() {
 }
 
 
+
 #[test]
 fn test_let_in_loop() {
     let module = make_module(
@@ -67,5 +68,3 @@ fn test_let_in_loop() {
     assert_eq!(decls[0].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int())));
 
 }
-
-

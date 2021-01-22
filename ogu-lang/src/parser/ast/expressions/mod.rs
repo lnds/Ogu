@@ -208,8 +208,6 @@ pub(crate) fn is_func_call_end_symbol(symbol: Option<Lexeme>) -> bool {
                 | Lexeme::RightCurlyCurly
                 | Lexeme::Where
                 | Lexeme::With
-                | Lexeme::While
-                | Lexeme::Until
                 | Lexeme::PipeLeft
                 | Lexeme::Perform
                 | Lexeme::PipeRight

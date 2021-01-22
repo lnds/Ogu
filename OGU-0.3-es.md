@@ -548,13 +548,13 @@ Existe una construcción **similar** a la implementada en Clojure para implement
         if zero? n then
           reversed
        else
-         recur let reversed = reversed * 10 + n % 10, let  n = n // 10
+         repeat let reversed = reversed * 10 + n % 10, let  n = n // 10
 
 (*) El operador // es la división entera
 Esto en realidad implementa una función recursiva, así que no hay side effects y las variables siguen
 siendo inmutables.
 
-Las variables se pueden omitir en el recur:
+Las variables se pueden omitir en el repeat:
 
     rev num =
       for reversed = 0, n = num 
@@ -562,7 +562,7 @@ Las variables se pueden omitir en el recur:
         if zero? n then
           reversed
         else
-          recur reversed * 10 + n % 10,  n // 10
+          repeat reversed * 10 + n % 10,  n // 10
 
 Esto es lo mismo que:
 
@@ -575,12 +575,12 @@ Esto es lo mismo que:
               reverse (reversed * 10 + n % 10) (n // 10)
         
 
-Loop inicializa las variables, cuando invocas recur haces una llamada recursiva al loop con nuevos valores para las variables.
+La sentencia `for` inicializa las variables, cuando invocas `repeat` haces una llamada recursiva al loop con nuevos valores para las variables.
 
-Hay varias diferencias con el loop de Clojure:
+Hay algunas diferencias con el loop de Clojure:
 
 1. se inicializan las variables con for
-2. puedes nombrar a las variables nuevamente en el `recur`, pero puedes capturar su valor temporalmente:
+2. puedes nombrar a las variables nuevamente en el `repeat`, pero puedes capturar su valor temporalmente:
     
     calculo n = 
       for i = 1, salida = 0 loop
@@ -606,73 +606,17 @@ Otro ejemplo, la función minmax, que retorna una dupla con los valores máximos
             if empty xs then 
               Some (cmin, cmax)
            else
-              recur
-                cmin = min cmin x
-                cmax = max cmax x
-                x = head xs
-                xs = tail xs
+              repeat
+                let cmin = min cmin x
+                let cmax = max cmax x
+                let x = head xs
+                let xs = tail xs
 
 (*) Notar que acá usamos un tipo `Option` que sería similar al tipo `Option` de Scala. 
 
 (**) No se debe asumir que el tipo Option es parte de la biblioteca estándar e Ogú, esto se muestra sólo para efectos demostrativos.
 Al momento de escribir esto no está definida la biblioteca estándar de Ogú.
-        
-Otra forma de escribirla es así:
 
-        minmax : List Int -> Option (Int, Int)
-        
-        minmax [] = None
-        
-        minmax list =
-            for
-                cmin = head l
-                cmax = head l
-                x = head l
-                xs = tail l
-            while not (empty xs)
-            loop
-            recur
-                cmin = min cmin x
-                cmax = max cmax x
-                x = head xs
-                xs = tail xs
-            return
-                Some (cmin, cmax)
-        
-o así:
-
-         minmax list =
-            for
-                cmin = head l
-                cmax = head l
-                x = head l
-                xs = tail l
-            until empty xs
-            loop
-                cmin = min cmin x
-                cmax = max cmax x
-                x = head xs
-                xs = tail xs
-            return
-                Some (cmin, cmax)
-                
-                
-Si se omite return el valor que retorna la expresión loop es ()
-
-             bad-minmax! list =
-                for
-                    cmin = head l
-                    cmax = head l
-                    x = head l
-                    xs = tail l
-                until empty xs
-                loop
-                    cmin = min cmin x
-                    cmax = max cmax x
-                    x = head xs
-                    xs = tail xs
-                
-          
 Estas construcciones dan la sensación de estar usando un lenguaje imperativo.
     
         

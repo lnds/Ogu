@@ -20,6 +20,8 @@ fn test_add() {
         b = inc a
         c = sum (sum' a 0.0) b
         d = sum (sum' a 0) b
+
+        e = (+) 2 2
         "#},
         default_sym_table(),
     );
@@ -35,6 +37,7 @@ fn test_add() {
             Some(BasicType::int()),
             Some(BasicType::int()),
             Some(BasicType::float()),
+            Some(BasicType::int()),
             Some(BasicType::int()),
         ],
     );
@@ -52,6 +55,8 @@ fn test_sub() {
         b = dec a
         c = sub (sub' a 0.0) b
         d = sub (sub' a 0) b
+
+        e = (-) 2 2
         "#},
         default_sym_table(),
     );
@@ -67,6 +72,7 @@ fn test_sub() {
             Some(BasicType::int()),
             Some(BasicType::int()),
             Some(BasicType::float()),
+            Some(BasicType::int()),
             Some(BasicType::int()),
         ],
     );
@@ -83,6 +89,8 @@ fn test_mul() {
         b = same a
         c = mul (mul' a 1.0) b
         d = mul (mul' a 1) b
+
+        e = (*) 2 2
         "#},
         default_sym_table(),
     );
@@ -100,6 +108,7 @@ fn test_mul() {
             Some(BasicType::int()),
             Some(BasicType::float()),
             Some(BasicType::int()),
+            Some(BasicType::int()),
         ],
     );
 }
@@ -115,6 +124,8 @@ fn test_div() {
         b = same a
         c = div (div' a 1.0) b
         d = div (div' a 1) b
+
+        e = (/) 2 2
         "#},
         default_sym_table(),
     );
@@ -129,6 +140,7 @@ fn test_div() {
         FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
         vec![
             Some(BasicType::int()),
+            Some(BasicType::float()),
             Some(BasicType::float()),
             Some(BasicType::float()),
             Some(BasicType::float()),
@@ -147,6 +159,8 @@ fn test_mod() {
         b = same a
         c = mod (mod' a 1.0) b
         d = mod (mod' a 1) b
+
+        e = (%) 2 2
         "#},
         default_sym_table(),
     );
@@ -163,6 +177,7 @@ fn test_mod() {
             Some(BasicType::int()),
             Some(BasicType::int()),
             Some(BasicType::float()),
+            Some(BasicType::int()),
             Some(BasicType::int()),
         ],
     );
@@ -179,6 +194,8 @@ fn test_pow() {
         b = same a
         c = pow (pow' a 1.0) b
         d = pow (pow' a 1) b
+
+        e = (^) 2 2
         "#},
         default_sym_table(),
     );
@@ -196,6 +213,7 @@ fn test_pow() {
             Some(BasicType::int()),
             Some(BasicType::float()),
             Some(BasicType::int()),
+            Some(BasicType::int()),
         ],
     );
 }
@@ -211,6 +229,8 @@ fn test_intdiv() {
         b = same a
         c = div (div' a 1.0) b
         d = div (div' a 1) b
+
+        e = (//) 1.0 2.0
         "#},
         default_sym_table(),
     );
@@ -224,6 +244,7 @@ fn test_intdiv() {
         ),
         FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
         vec![
+            Some(BasicType::int()),
             Some(BasicType::int()),
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -243,6 +264,8 @@ fn test_eq() {
         b = unit a
         c = eq (eq' a 1.0) b
         d = eq (eq' a 1) b
+
+        e = (==) true true
         "#},
         default_sym_table(),
     );
@@ -257,6 +280,7 @@ fn test_eq() {
         FuncType::new_opt(Some(vec![TRAIT_EQ.clone_box()]), BasicType::bool()),
         vec![
             Some(BasicType::int()),
+            Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
@@ -275,6 +299,8 @@ fn test_ne() {
         b = unit a
         c = ne (ne' a 1.0) b
         d = ne (ne' a 1) b
+
+        e = (!=) 1 2
         "#},
         default_sym_table(),
     );
@@ -289,6 +315,7 @@ fn test_ne() {
         FuncType::new_opt(Some(vec![TRAIT_EQ.clone_box()]), BasicType::bool()),
         vec![
             Some(BasicType::int()),
+            Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
@@ -307,6 +334,8 @@ fn test_gt() {
         b = pos a
         c = gt (gt' a 0.0) b
         d = gt (gt' a 0) b
+
+        e = (>) 1 2
         "#},
         default_sym_table(),
     );
@@ -321,6 +350,7 @@ fn test_gt() {
         FuncType::new_opt(Some(vec![TRAIT_ORD.clone_box()]), BasicType::bool()),
         vec![
             Some(BasicType::int()),
+            Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
@@ -339,6 +369,8 @@ fn test_ge() {
         b = pos a
         c = ge (ge' a 0.0) b
         d = ge (ge' a 0) b
+
+        e = (>=) 1 2
         "#},
         default_sym_table(),
     );
@@ -353,6 +385,7 @@ fn test_ge() {
         FuncType::new_opt(Some(vec![TRAIT_ORD.clone_box()]), BasicType::bool()),
         vec![
             Some(BasicType::int()),
+            Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
@@ -371,6 +404,8 @@ fn test_lt() {
         b = neg a
         c = lt (lt' a 0.0) b
         d = lt (lt' a 0) b
+
+        e = (<) 1 2
         "#},
         default_sym_table(),
     );
@@ -385,6 +420,7 @@ fn test_lt() {
         FuncType::new_opt(Some(vec![TRAIT_ORD.clone_box()]), BasicType::bool()),
         vec![
             Some(BasicType::int()),
+            Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
@@ -403,6 +439,8 @@ fn test_le() {
         b = neg a
         c = le (le' a 0.0) b
         d = le (le' a 0) b
+
+        e = (<=) 1 2
         "#},
         default_sym_table(),
     );
@@ -417,6 +455,7 @@ fn test_le() {
         FuncType::new_opt(Some(vec![TRAIT_ORD.clone_box()]), BasicType::bool()),
         vec![
             Some(BasicType::int()),
+            Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
@@ -435,6 +474,8 @@ fn test_or() {
         b = neg a
         c = or (or' a (0 == 1)) b
         d = or (or' a (0 == 0)) b
+
+        e = (||) true false
         "#},
         default_sym_table(),
     );
@@ -448,6 +489,7 @@ fn test_or() {
         ),
         FuncType::new_opt(Some(vec![BasicType::bool()]), BasicType::bool()),
         vec![
+            Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
@@ -467,6 +509,8 @@ fn test_and() {
         b = neg a
         c = and (and' a (0 == 1)) b
         d = and (and' a (0 == 0)) b
+
+        e = (&&) true true
         "#},
         default_sym_table(),
     );
@@ -480,6 +524,7 @@ fn test_and() {
         ),
         FuncType::new_opt(Some(vec![BasicType::bool()]), BasicType::bool()),
         vec![
+            Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
@@ -499,6 +544,8 @@ fn test_not() {
         b = neg a
         c = not (not' b)
         d = not (not' a)
+
+        e = (!) false
         "#},
         default_sym_table(),
     );
@@ -509,6 +556,7 @@ fn test_not() {
         FuncType::new_opt(Some(vec![BasicType::bool()]), BasicType::bool()),
         FuncType::new_opt(Some(vec![BasicType::bool()]), BasicType::bool()),
         vec![
+            Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
             Some(BasicType::bool()),
@@ -534,4 +582,5 @@ fn validate_decls(
     assert_eq!(decls[4].get_type(), t[1]);
     assert_eq!(decls[5].get_type(), t[2]);
     assert_eq!(decls[6].get_type(), t[3]);
+    assert_eq!(decls[7].get_type(), t[4]);
 }

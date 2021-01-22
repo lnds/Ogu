@@ -4,7 +4,6 @@ use anyhow::Result;
 
 pub mod banner;
 pub mod compiler;
-pub mod errors;
 pub(crate) mod modules;
 pub mod params;
 pub(crate) mod scopes;

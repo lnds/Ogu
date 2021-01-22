@@ -2,9 +2,6 @@ use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
-use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
-use crate::backend::modules::types::tuple_type::TupleType;
-use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
 
 #[test]

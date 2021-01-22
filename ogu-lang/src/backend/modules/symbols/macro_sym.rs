@@ -1,8 +1,7 @@
-use crate::backend::errors::OguError;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Error, Result};
+use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct MacroSym {
@@ -33,8 +32,7 @@ impl Symbol for MacroSym {
         match &self.ty {
             Some(ty) if !ty.is_trait() => Ok(Some(ty.clone())),
             _ => match scope.resolve(self.name) {
-                None => Err(Error::new(OguError::SymbolTableError)
-                    .context(format!("{} not found", self.name))),
+                None => bail!("{} not found", self.name),
                 Some(sym) => {
                     self.ty = sym.get_type();
                     Ok(self.get_type())

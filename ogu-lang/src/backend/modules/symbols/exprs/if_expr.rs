@@ -1,9 +1,8 @@
-use crate::backend::errors::OguError;
 use crate::backend::modules::types::basic_type::INVALID_TYPE;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{Error, Result};
+use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct IfExpr {
@@ -63,8 +62,7 @@ impl Symbol for IfExpr {
             None => match self.else_expr.get_type() {
                 None => {}
                 Some(et) if &*et == INVALID_TYPE => {
-                    return Err(Error::new(OguError::SemanticError)
-                        .context("Invalid If, Cond or Guard expression"));
+                    bail!("Invalid If, Cond or Guard expression");
                 }
                 Some(et) => {
                     self.then_expr.set_type(Some(et));
@@ -75,7 +73,7 @@ impl Symbol for IfExpr {
                     self.else_expr.set_type(Some(tt));
                 } // println!("THEN => {:?} ELSE None", tt),
                 Some(et) if &*et == INVALID_TYPE => {
-                    return Err(Error::new(OguError::SemanticError).context("Invalid If or Cond"));
+                    bail!("Invalid If or Cond");
                 }
                 Some(_et) => {
                     /*

@@ -1,11 +1,10 @@
-use crate::backend::errors::OguError;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
-use anyhow::{Error, Result};
+use anyhow::{bail, Result};
 
 #[derive(Debug, Clone)]
 pub(crate) struct TupleExpr {
@@ -71,8 +70,7 @@ impl Symbol for TupleExpr {
         if self.assignable {
             for s in self.tuple.iter() {
                 if sym_table.define(s.clone()).is_some() {
-                    return Err(Error::new(OguError::SymbolTableError)
-                        .context(format!("symbol {:?} duplicated in tuple", s.get_name())));
+                    bail!("symbol {:?} duplicated in tuple", s.get_name());
                 }
             }
         }

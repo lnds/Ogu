@@ -2,10 +2,9 @@ use std::fs::File;
 use std::io::{self, BufRead, Cursor};
 use std::path::PathBuf;
 
-use anyhow::{Error, Result};
+use anyhow::{bail, Result};
 use logos::Logos;
 
-use crate::backend::errors::OguError;
 use crate::lexer::token_stream::TokenStream;
 use crate::lexer::tokens::Lexeme::NewLine;
 use crate::lexer::tokens::{
@@ -35,7 +34,7 @@ pub(crate) struct Lexer {
 impl<'a> Lexer {
     pub(crate) fn new(path: &'a PathBuf) -> Result<Lexer> {
         if !path.exists() {
-            return Err(Error::new(OguError::NotFound).context(format!("{:?}", path)));
+            bail!("file not found: {:?}", path);
         }
         Ok(Lexer {
             source: LexerSource::File(path.clone()),

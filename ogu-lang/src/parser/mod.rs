@@ -1,6 +1,5 @@
-use anyhow::{Error, Result};
+use anyhow::{bail, Result};
 
-use crate::backend::errors::OguError;
 use crate::lexer::token_stream::TokenStream;
 use crate::lexer::tokens::{Lexeme, LineNumber, LineWidth};
 
@@ -157,13 +156,13 @@ pub(crate) fn raise_parser_error<T>(
         "@ EOF".to_string()
     };
     if show_token {
-        Err(Error::new(OguError::ParserError).context(format!(
+        bail!(
             "Error {} {}, token found = {}",
             msg,
             position,
             parser.get_token(pos).unwrap_or(Lexeme::Error)
-        )))
+        )
     } else {
-        Err(Error::new(OguError::ParserError).context(format!("Error: {} {}", msg, position)))
+        bail!("Parser Error: {} {}", msg, position)
     }
 }

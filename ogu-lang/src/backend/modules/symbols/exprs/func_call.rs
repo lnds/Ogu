@@ -61,7 +61,7 @@ impl Symbol for FuncCallExpr {
                     } else {
                         todo!("ESTE OTRO CASO func = {:?}", func);
                     }
-                } 
+                }
             }
             Some(ft) => {
                 if let Some(ft) = ft.downcast_ref::<FuncType>() {

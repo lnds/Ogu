@@ -29,6 +29,7 @@ use crate::backend::modules::symbols::exprs::lazy_call::LazyExpr;
 use crate::backend::modules::symbols::funcs::FunctionSym;
 use crate::backend::modules::symbols::exprs::loop_expr::LoopExpr;
 use crate::backend::modules::symbols::exprs::repeat_expr::RepeatExpr;
+use crate::backend::modules::symbols::exprs::func_compose::ComposeFunction;
 
 mod arithmetics;
 mod case_expr;
@@ -55,6 +56,7 @@ mod unary_op_expr;
 mod lazy_call;
 mod loop_expr;
 mod repeat_expr;
+mod func_compose;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -169,6 +171,13 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
                 UnaryOpExpr::new_concat(expr.deref().as_ref().map(|e| e.into()))
             }
 
+            Expression::ComposeFwdExpr(f, g) => {
+                ComposeFunction::new_fwd(f.into(), g.into())
+            }
+
+            Expression::ComposeBckExpr(f, g) => {
+                ComposeFunction::new_bck(f.into(), g.into())
+            }
 
             Expression::AddExpr(l, r) => ArithmeticExpr::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticExpr::new_sub(l.into(), r.into()),

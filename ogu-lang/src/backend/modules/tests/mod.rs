@@ -13,6 +13,7 @@ mod test_recursives;
 mod test_simple;
 mod test_val_decls;
 mod test_loops;
+mod test_func_composition;
 
 use crate::backend::modules::module::Module;
 use crate::backend::scopes::Scope;

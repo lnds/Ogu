@@ -8,6 +8,7 @@ use crate::backend::scopes::symbol::{Symbol, SymbolClone};
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
+use crate::backend::modules::symbols::exprs::func_compose::ComposeFunction;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallExpr {
@@ -154,7 +155,12 @@ impl Symbol for FuncCallExpr {
                                         if self.func.get_type() != l.get_type() {
                                             self.func = Box::new(l);
                                         }
-                                    } else {
+                                    } else if let Some(compose) = val.expr.downcast_ref::<ComposeFunction>() {
+                                        let mut c = compose.clone();
+                                        if self.func.get_type() != c.get_type() {
+                                            self.func = Box::new(c);
+                                        }
+                                    }else {
                                         bail!("FATAL: VAL {:?} is from invalid value!!", val);
                                     }
                                 } else {

@@ -198,7 +198,6 @@ pub(crate) fn is_func_call_end_symbol(symbol: Option<Lexeme>) -> bool {
                 | Lexeme::Else
                 | Lexeme::Elif
                 | Lexeme::Of
-                | Lexeme::Return
                 | Lexeme::Recur
                 | Lexeme::Yield
                 | Lexeme::RightParen

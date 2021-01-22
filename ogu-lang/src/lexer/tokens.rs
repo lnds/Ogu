@@ -111,8 +111,6 @@ pub(crate) enum Lexeme<'a> {
     Repeat,
     #[token("reify", priority = 2000)]
     Reify,
-    #[token("return", priority = 2000)]
-    Return,
     #[token("resume", priority = 2000)]
     Resume,
     #[token("then", priority = 2000)]
@@ -409,7 +407,7 @@ mod test_tokens {
         assert_eq!(lex.next(), None);
 
         let mut lex = Lexeme::lexer(
-            "let loop macro module of otherwise perform primitive repeat recur reify resume return then trait true try",
+            "let loop macro module of otherwise perform primitive repeat recur reify resume then trait true try",
         );
         assert_eq!(lex.next(), Some(Lexeme::Let));
         assert_eq!(lex.next(), Some(Lexeme::Loop));
@@ -423,7 +421,6 @@ mod test_tokens {
         assert_eq!(lex.next(), Some(Lexeme::Recur));
         assert_eq!(lex.next(), Some(Lexeme::Reify));
         assert_eq!(lex.next(), Some(Lexeme::Resume));
-        assert_eq!(lex.next(), Some(Lexeme::Return));
         assert_eq!(lex.next(), Some(Lexeme::Then));
         assert_eq!(lex.next(), Some(Lexeme::Trait));
         assert_eq!(lex.next(), Some(Lexeme::True));

@@ -20,7 +20,7 @@ All notable changes to this project will be documented in this file. This change
     case e of
        pattern | cond -> expr
 - functions always have at leas one arg  
-
+- a precise definition of loop
 
 ### Removed
 

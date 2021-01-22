@@ -5,9 +5,11 @@ use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdExpr;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::basic_type::BOOL_TYPE;
-use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
+use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
+use crate::backend::modules::types::list_type::ListType;
+use crate::backend::modules::symbols::exprs::list_expr::ListExpr;
 
 pub(crate) struct UnaryOpExpr;
 
@@ -78,6 +80,21 @@ impl UnaryOpExpr {
         let x = IdSym::new_with_type("x", Some(BOOL_TYPE.clone_box()));
         let expr = LogicalExpr::new_not(x.clone());
         LambdaExpr::new(vec![x], expr)
+    }
+
+    pub(crate) fn new_cons(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
+        println!("NEW CONS {:?}", expr);
+        match expr {
+            None => {
+                let x = IdSym::new_with_type("x", Some(TRAIT_UNKNOWN.clone_box()));
+                let xs = IdSym::new_with_type("xs", Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
+                LambdaExpr::new(vec![x.clone(), xs.clone()], ListExpr::new_cons(x, xs))
+            }
+            Some(expr) => {
+                let xs = IdSym::new_with_type("xs", expr.get_type().map(|t| ListType::new_list(t.clone_box())));
+                LambdaExpr::new(vec![xs.clone()], ListExpr::new_cons(expr, xs))
+            }
+        }
     }
 
     fn make_lambda(expr: Option<Box<dyn Symbol>>, tr: &dyn Type, new: NewFn) -> Box<dyn Symbol> {

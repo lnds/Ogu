@@ -3,10 +3,11 @@ use crate::backend::modules::module::Module;
 use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
-use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD};
+use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
 use crate::backend::scopes::types::{Type, TypeClone};
 use anyhow::Result;
 use indoc::indoc;
+use crate::backend::modules::types::list_type::ListType;
 
 #[test]
 fn test_add() {
@@ -39,6 +40,40 @@ fn test_add() {
             Some(BasicType::float()),
             Some(BasicType::int()),
             Some(BasicType::int()),
+        ],
+    );
+}
+
+
+#[test]
+fn test_cons() {
+    let module = make_module(
+        indoc! {r#"
+        cons x xs = (:: x xs)
+        cons' = (::)
+        cons_1 = (:: 1)
+
+        a = [10]
+        b = cons_1 a
+        c = cons 1 (cons' 0  b)
+        d = cons 1 (cons' 0 a)
+
+        e = (::) 1 [2]
+        "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    validate_decls(
+        module,
+        FuncType::new_opt(Some(vec![TRAIT_UNKNOWN.clone_box(), ListType::new_list(TRAIT_UNKNOWN.clone_box())]), ListType::new_list(TRAIT_UNKNOWN.clone_box())),
+        FuncType::new_opt(Some(vec![ListType::new_list(BasicType::int())]), ListType::new_list(BasicType::int())),
+        vec![
+            Some(ListType::new_list(BasicType::int())),
+            Some(ListType::new_list(BasicType::int())),
+            Some(ListType::new_list(BasicType::int())),
+            Some(ListType::new_list(BasicType::int())),
+            Some(ListType::new_list(BasicType::int())),
         ],
     );
 }
@@ -564,6 +599,7 @@ fn test_not() {
         ],
     );
 }
+
 
 fn validate_decls(
     module: Result<Module>,

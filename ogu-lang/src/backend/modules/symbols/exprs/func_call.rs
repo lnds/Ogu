@@ -83,8 +83,8 @@ impl Symbol for FuncCallExpr {
                                 ),
                                 Some(func) => match func.downcast_ref::<FunctionSym>() {
                                     None => bail!(
-                                        "can't infer a function to curry {:?} ",
-                                        func.get_name()
+                                        "can't infer a function to curry {:?} => {:?}",
+                                        func, func.get_type()
                                     ),
                                     Some(_) => {
                                         let n = ft_args.len() - self.args.len();

@@ -539,16 +539,11 @@ impl<'a> Expression<'a> {
                     match opt_expr {
                         Some(_) => Ok((expr, pos)),
                         None => {
-                            println!("({:?}) e1, e2", op);
-                            println!("next @{} => {:?}", pos, parser.get_token(pos));
                             if is_func_call_end_symbol(parser.get_token(pos)) {
                                 return Ok((expr, pos));
                             }
                             let (left_expr, pos) = Expression::parse(parser, pos)?;
-                            println!("le = {:?}", left_expr);
                             let (right_expr, pos) = Expression::parse(parser, pos)?;
-                            println!("re = {:?}", left_expr);
-                            println!("next @{} => {:?}", pos, parser.get_token(pos));
                             let pos = parser.skip_nl(pos);
                             match op {
                                 Lexeme::Cons => Ok((Expression::ConsExpr(Box::new(left_expr), Box::new(right_expr)), pos)),

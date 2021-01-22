@@ -47,6 +47,7 @@ impl Symbol for ComposeFunction {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match &mut self.kind {
+            ComposeKind::Bck(g, f) |
             ComposeKind::Fwd(f, g) => {
                 f.resolve_type(scope)?;
                 g.resolve_type(scope)?;
@@ -115,10 +116,6 @@ impl Symbol for ComposeFunction {
                         }
                     }
                 }
-            }
-            ComposeKind::Bck(f, g) => {
-                g.resolve_type(scope)?;
-                f.resolve_type(scope)?;
             }
         }
         Ok(self.get_type())

@@ -1,9 +1,8 @@
-use anyhow::{Error, Result};
+use anyhow::{bail, Result};
 
-use crate::backend::errors::OguError;
 use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::Expression::TryHandleExpr;
+use crate::parser::ast::expressions::expression::Expression::{TryHandleExpr, FuncCallExpr};
 use crate::parser::ast::expressions::{
     consume_args, consume_exprs_sep_by, consume_id, consume_ids_sep_by, is_basic_op,
     is_func_call_end_symbol, is_literal, left_assoc_expr_to_expr, parse_left_assoc_expr,
@@ -271,8 +270,7 @@ impl<'a> Expression<'a> {
                     Ok((Some(c), pos))
                 }
             } else {
-                Err(Error::new(OguError::SemanticError)
-                    .context(format!("expression: {:?} must be a pattern in a case", c)))
+                bail!("expression: {:?} must be a pattern in a case", c)
             }
         }
     }
@@ -493,9 +491,9 @@ impl<'a> Expression<'a> {
         match parser.get_token(pos) {
             Some(Lexeme::RightParen) => Ok((Expression::Unit, pos + 1)),
             Some(Lexeme::Not) if parser.peek(pos + 1, Lexeme::RightParen) => {
-                let pos = consume_symbol(parser, pos+1, Lexeme::RightParen)?;
+                let pos = consume_symbol(parser, pos + 1, Lexeme::RightParen)?;
                 if is_func_call_end_symbol(parser.get_token(pos)) {
-                   Ok((Expression::UnaryNot, pos))
+                    Ok((Expression::UnaryNot, pos))
                 } else {
                     let (expr, pos) = Expression::parse(parser, pos)?;
                     Ok((Expression::NotExpr(Box::new(expr)), pos))
@@ -631,15 +629,29 @@ impl<'a> Expression<'a> {
             Some(_) => {
                 let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
                 if parser.peek(pos, Lexeme::RightParen) {
-                    match expr {
+                    let (e, pos) = match expr {
                         Expression::Name(_)
                         | Expression::FuncCallExpr(_, _)
                         | Expression::RecurExpr(_)
                         | Expression::LambdaExpr(_, _)
                         | Expression::QualifiedIdentifier(_, _) => {
-                            Ok((Expression::ParenExpr(Box::new(expr)), pos + 1))
+                            (Expression::ParenExpr(Box::new(expr)), pos + 1)
                         }
-                        _ => Ok((expr, pos + 1)),
+                        _ => (expr, pos + 1),
+                    };
+                    match e {
+                        Expression::ComposeFwdExpr(_, _)
+                        | Expression::ComposeBckExpr(_, _) => {
+                            let mut args = vec![];
+                            let mut pos = pos+1;
+                            while !is_func_call_end_symbol(parser.get_token(pos)) {
+                                let (a, new_pos) = Expression::parse(parser, pos)?;
+                                args.push(a);
+                                pos = new_pos;
+                            }
+                            Ok((FuncCallExpr(Box::new(e), args), pos))
+                        }
+                        _ => Ok((e, pos))
                     }
                 } else if parser.peek(pos, Lexeme::Comma) {
                     let mut exprs = vec![expr];
@@ -1291,7 +1303,7 @@ impl<'a> Expression<'a> {
         pairs: &[(Option<Expression<'a>>, Expression<'a>)],
     ) -> Result<Expression<'a>> {
         if pairs.is_empty() {
-            return Err(Error::new(OguError::ParserError).context("empty conditional"));
+            bail!("empty conditional");
         }
         if pairs.len() == 1 {
             let (cond, expr) = &pairs[0];
@@ -1308,8 +1320,7 @@ impl<'a> Expression<'a> {
             let (cond, expr) = &pairs[0];
             let rest = &pairs[1..];
             match cond {
-                None => Err(Error::new(OguError::ParserError)
-                    .context("invalid otherwise before other conditions")),
+                None => bail!("invalid otherwise before other conditions"),
                 Some(c) => Ok(Expression::IfExpr(
                     Box::new(c.clone()),
                     Box::new(expr.clone()),

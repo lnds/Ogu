@@ -15,6 +15,7 @@ fn test_func_composition_1() {
              double n = n * 2
              sixtuple = triple >> double
              six = sixtuple 1
+             six' = (triple >> double) 1
              "#},
         default_sym_table(),
     );

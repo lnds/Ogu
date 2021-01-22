@@ -61,7 +61,7 @@ impl Symbol for FuncCallExpr {
                     } else {
                         todo!("ESTE OTRO CASO func = {:?}", func);
                     }
-                }
+                } 
             }
             Some(ft) => {
                 if let Some(ft) = ft.downcast_ref::<FuncType>() {
@@ -78,10 +78,16 @@ impl Symbol for FuncCallExpr {
                         Some(ft_args) if ft_args.len() > self.args.len() => {
                             // curry
                             match scope.resolve(self.func.get_name()) {
-                                None => bail!(
-                                    "can't find a function to curry {} ",
-                                    self.func.get_name()
-                                ),
+                                None => {
+                                    if let Some(compose) = self.func.downcast_ref::<ComposeFunction>() {
+                                        let c = compose.clone();
+                                        if self.func.get_type() != c.get_type() {
+                                            self.func = Box::new(c);
+                                        }
+                                    } else {
+                                        bail!( "can't find a function to curry {} func = {:?}", self.func.get_name(), self.func )
+                                    }
+                                }
                                 Some(func) => match func.downcast_ref::<FunctionSym>() {
                                     None => bail!(
                                         "can't infer a function to curry {:?} => {:?}",
@@ -117,55 +123,69 @@ impl Symbol for FuncCallExpr {
                                 }
                                 a.define_into(scope);
                             }
-                            if let Some(func) = scope.resolve(self.func.get_name()) {
-                                if let Some(func) = func.downcast_ref::<FunctionSym>() {
-                                    let mut f = func.clone();
-                                    f.replace_args(self.args.to_vec(), scope, !recursive)?;
-                                    if self.func.get_type() != f.get_type() {
-                                        self.func = Box::new(f);
-                                    }
-                                } else if let Some(val) = func.downcast_ref::<ValueSym>() {
-                                    if let Some(id) = val.expr.downcast_ref::<IdSym>() {
-                                        match scope.resolve(id.get_name()) {
-                                            None => bail!(
+                            let func = match scope.resolve(self.func.get_name()) {
+                                None => self.func.clone(),
+                                Some(func) => func.clone()
+                            };
+                            if let Some(func) = func.downcast_ref::<FunctionSym>() {
+                                let mut f = func.clone();
+                                f.replace_args(self.args.to_vec(), scope, !recursive)?;
+                                if self.func.get_type() != f.get_type() {
+                                    self.func = Box::new(f);
+                                }
+                            } else if let Some(val) = func.downcast_ref::<ValueSym>() {
+                                if let Some(id) = val.expr.downcast_ref::<IdSym>() {
+                                    match scope.resolve(id.get_name()) {
+                                        None => bail!(
                                                 "FATAL could not find function: {}",
                                                 id.get_name()
                                             ),
-                                            Some(fun) => {
-                                                if let Some(func) =
-                                                    fun.downcast_ref::<FunctionSym>()
-                                                {
-                                                    let mut f = func.clone();
-                                                    f.replace_args(
-                                                        self.args.to_vec(),
-                                                        scope,
-                                                        !recursive,
-                                                    )?;
-                                                    if self.func.get_type() != f.get_type() {
-                                                        self.func = Box::new(f);
-                                                    }
+                                        Some(fun) => {
+                                            if let Some(func) =
+                                            fun.downcast_ref::<FunctionSym>()
+                                            {
+                                                let mut f = func.clone();
+                                                f.replace_args(
+                                                    self.args.to_vec(),
+                                                    scope,
+                                                    !recursive,
+                                                )?;
+                                                if self.func.get_type() != f.get_type() {
+                                                    self.func = Box::new(f);
                                                 }
                                             }
                                         }
-                                    } else if let Some(lambda) =
-                                        val.expr.downcast_ref::<LambdaExpr>()
-                                    {
-                                        let mut l = lambda.clone();
-                                        l.replace_args(self.args.to_vec(), scope)?;
-                                        if self.func.get_type() != l.get_type() {
-                                            self.func = Box::new(l);
-                                        }
-                                    } else if let Some(compose) = val.expr.downcast_ref::<ComposeFunction>() {
-                                        let mut c = compose.clone();
-                                        if self.func.get_type() != c.get_type() {
-                                            self.func = Box::new(c);
-                                        }
-                                    }else {
-                                        bail!("FATAL: VAL {:?} is from invalid value!!", val);
+                                    }
+                                } else if let Some(lambda) = val.expr.downcast_ref::<LambdaExpr>() {
+                                    let mut l = lambda.clone();
+                                    l.replace_args(self.args.to_vec(), scope)?;
+                                    println!("l.get_type = {:?}", l.get_type());
+                                    if self.func.get_type() != l.get_type() {
+                                        println!("replace func by lambda = {:?}", self.func);
+                                        self.func = Box::new(l);
+                                        println!("replace func by lambda = {:?}", self.func);
+                                    }
+                                } else if let Some(compose) = val.expr.downcast_ref::<ComposeFunction>() {
+                                    let c = compose.clone();
+                                    if self.func.get_type() != c.get_type() {
+                                        self.func = Box::new(c);
                                     }
                                 } else {
-                                    bail!("WTF func = {:#?}", func);
+                                    bail!("FATAL: VAL {:?} is from invalid value!!", val);
                                 }
+                            } else if let Some(lambda) = func.downcast_ref::<LambdaExpr>() {
+                                let mut l = lambda.clone();
+                                l.replace_args(self.args.to_vec(), scope)?;
+                                if self.func.get_type() != l.get_type() {
+                                    self.func = Box::new(l);
+                                }
+                            } else if let Some(compose) = func.downcast_ref::<ComposeFunction>() {
+                                let c = compose.clone();
+                                if self.func.get_type() != c.get_type() {
+                                    self.func = Box::new(c);
+                                }
+                            } else {
+                                bail!("FATAL: func is invalid here: {:?}", func);
                             }
                         }
                     }

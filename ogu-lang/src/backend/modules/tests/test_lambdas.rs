@@ -12,7 +12,8 @@ fn test_lambda_1() {
         indoc! {r#"
             mul = \x y -> x * y
             ten = mul 2 5
-            three = mul 1 3.0 "#},
+            three = mul 1 3.0
+            three' = (\x y -> x * y) 2 4"#},
         default_sym_table(),
     );
     println!("module = {:?}", module);
@@ -29,4 +30,5 @@ fn test_lambda_1() {
     );
     assert_eq!(decls[1].get_type(), Some(BasicType::int()));
     assert_eq!(decls[2].get_type(), Some(BasicType::float()));
+    assert_eq!(decls[3].get_type(), Some(BasicType::int())); // should be int!
 }

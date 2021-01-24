@@ -23,9 +23,7 @@ impl SymbolTable {
         })
     }
 
-    pub(crate) fn set_function_name(&mut self, name: &str) {
-        self.function_name = Some(name.to_string())
-    }
+
 }
 
 impl Scope for SymbolTable {
@@ -82,6 +80,10 @@ impl Scope for SymbolTable {
             None => String::new(),
             Some(s) => s.to_string(),
         }
+    }
+
+    fn set_function_name(&mut self, name: &str) {
+        self.function_name = Some(name.to_string())
     }
 
     fn resolve_seq(&self, seq: Option<Vec<Box<dyn Symbol>>>) -> Option<Vec<Box<dyn Symbol>>> {

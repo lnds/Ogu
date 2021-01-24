@@ -24,8 +24,14 @@ impl Type for FuncType {
         Some(self.result.clone())
     }
 
-    fn promotes(&self, _other: &dyn Type) -> bool {
-        unimplemented!()
+    fn promotes(&self, other: &dyn Type) -> bool {
+        let r = match other.downcast_ref::<FuncType>() {
+            None => false,
+            Some(other) => {
+                self.result.promotes(&*other.result)
+            }
+        };
+        r
     }
 
     fn is_trait(&self) -> bool {
@@ -41,6 +47,8 @@ impl Type for FuncType {
             }
         }
     }
+
+
 }
 
 impl FuncType {

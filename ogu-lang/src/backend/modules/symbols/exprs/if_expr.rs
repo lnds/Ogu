@@ -1,4 +1,4 @@
-use crate::backend::modules::types::basic_type::INVALID_TYPE;
+use crate::backend::modules::types::basic_type::{INVALID_TYPE, BasicType, BOOL_TYPE};
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
@@ -53,7 +53,16 @@ impl Symbol for IfExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         self.cond.resolve_type(scope)?;
-        scope.define(self.cond.clone());
+        match self.cond.get_type() {
+            None => self.cond.set_type(Some(BasicType::bool())),
+            Some(t) if t.is_trait() =>   self.cond.set_type(Some(BasicType::bool())),
+            Some(t) => {
+                if &*t != BOOL_TYPE {
+                    bail!("condition on if must be booolean, not {:?}", t)
+                }
+            }
+        }
+        self.cond.define_into(scope);
         self.then_expr.resolve_type(scope)?;
         scope.define(self.then_expr.clone());
         self.else_expr.resolve_type(scope)?;

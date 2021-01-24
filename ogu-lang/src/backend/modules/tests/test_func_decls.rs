@@ -6,6 +6,7 @@ use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_ORD, TRAIT_UNK
 use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
+use crate::backend::modules::types::list_type::ListType;
 
 #[test]
 fn test_func_pattern_1() {
@@ -25,7 +26,7 @@ fn test_func_pattern_1() {
     println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int(),)
+        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
     );
 }
 
@@ -82,6 +83,7 @@ fn test_func_pattern_strange_case() {
         )
     );
 }
+
 #[test]
 fn test_guards_1() {
     let module = make_module(
@@ -158,7 +160,7 @@ fn test_func_expr_arg() {
     println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int(),)
+        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
     );
 }
 
@@ -265,7 +267,7 @@ fn test_args_2() {
                 TRAIT_ORD.clone_box(),
                 TRAIT_ORD.clone_box()
             ])]),
-            TRAIT_ORD.clone_box()
+            TRAIT_ORD.clone_box(),
         )
     );
     assert_eq!(decls[1].get_type(), Some(BasicType::int()));
@@ -292,7 +294,7 @@ fn test_args_3() {
                 TRAIT_UNKNOWN.clone_box(),
                 TRAIT_UNKNOWN.clone_box()
             ])]),
-            TupleType::new_box(vec![TRAIT_UNKNOWN.clone_box(), TRAIT_UNKNOWN.clone_box()])
+            TupleType::new_box(vec![TRAIT_UNKNOWN.clone_box(), TRAIT_UNKNOWN.clone_box()]),
         )
     );
     assert_eq!(
@@ -322,7 +324,7 @@ fn test_args_4() {
                 TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
                 TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()])
             ]),
-            TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()])
+            TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
         )
     );
     assert_eq!(
@@ -343,4 +345,46 @@ fn test_erroneus_args() {
     );
     println!("module = {:?}", module);
     assert!(module.is_err());
+}
+
+#[test]
+fn test_func_as_args_1() {
+    let module = make_module(
+        indoc! {r#"
+           filter f [] = []
+           filter f (x :: xs) = if f x then x :: filter f xs else filter f xs
+           "#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    //println!("DECLS: {:#?}", decls);
+    assert_eq!(decls[0].get_type(),
+               FuncType::new_opt(Some(vec![
+                   FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
+                   ListType::new_list(TRAIT_UNKNOWN.clone_box())
+               ]), ListType::new_list(TRAIT_UNKNOWN.clone_box())));
+}
+
+#[test]
+fn test_func_as_args_2() {
+    let module = make_module(
+        indoc! {r#"
+           take-while f [] = []
+           take-while f (x :: xs) = if f x then x :: (take-while f xs) else []
+           "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("DECLS: {:#?}", decls);
 }

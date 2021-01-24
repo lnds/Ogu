@@ -45,7 +45,7 @@ impl Type for TraitType {
     }
 
     fn match_types(&mut self, other: &dyn Type) {
-        if self.name == TRAIT_UNKNOWN.name && other.is_trait() {
+        if self.name == TRAIT_UNKNOWN.name {
             if let Some(ot) = other.downcast_ref::<TraitType>() {
                 self.name = ot.name
             }

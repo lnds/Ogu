@@ -19,7 +19,9 @@ fn test_curry_1() {
             tenf = double' 5.0 "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();

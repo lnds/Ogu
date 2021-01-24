@@ -43,3 +43,38 @@ fn test_euler_1() {
     );
     assert_eq!(decls[2].get_type(), Some(BasicType::int()));
 }
+
+#[test]
+fn test_euler_2() {
+    let module = make_module(
+        indoc! {r#"
+           fib-seq = fib 0 1
+                where fib a b = lazy a :: fib b (a + b)
+
+           even? x = x % 2 == 0
+
+           take-while f [] = []
+           take-while f (x :: xs) = if f x then x :: (take-while f xs) else []
+
+           filter f [] = []
+           filter f (x :: xs) = if f x then x :: filter f xs else filter f xs
+
+           sum [] = 0
+           sum (x :: xs) = x + sum xs
+
+           result = fib-seq |> take-while \x -> x < 4000000
+           --result = fib-seq |> take-while \x -> x < 4000000 |> filter even? |> sum"#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    //println!("TEST DECLS = {:#?}", decls);
+    assert_eq!(
+        decls[0].get_type(),
+        Some(ListType::new_list(BasicType::int()))
+    );
+}

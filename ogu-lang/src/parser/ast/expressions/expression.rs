@@ -173,13 +173,13 @@ pub(crate) enum LambdaArg<'a> {
 
 impl<'a> Expression<'a> {
     pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let (expr, mut pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+        let (expr, mut pos) = Expression::parse_control_expr(parser, pos)?;
         if parser.peek(pos, Lexeme::SemiColon) {
             let mut exprs = vec![expr];
             while parser.peek(pos, Lexeme::SemiColon) {
                 pos = consume_symbol(parser, pos, Lexeme::SemiColon)?;
                 pos = parser.skip_nl(pos);
-                let (expr, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                let (expr, new_pos) = Expression::parse_control_expr(parser, pos)?;
                 pos = parser.skip_nl(new_pos);
                 exprs.push(expr);
             }
@@ -189,17 +189,7 @@ impl<'a> Expression<'a> {
         }
     }
 
-    parse_left_assoc!(
-        parse_pipe_func_call_expr,
-        Lexeme::PipeRight,
-        Expression::parse_backpipe_func_call_expr
-    );
 
-    parse_right_assoc!(
-        parse_backpipe_func_call_expr,
-        Lexeme::PipeLeft,
-        Expression::parse_control_expr
-    );
 
     pub(crate) fn parse_control_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
@@ -475,9 +465,21 @@ impl<'a> Expression<'a> {
             Some(sym) if is_literal(sym) => Expression::parse_literal_expr(parser, pos),
             Some(Lexeme::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
             Some(Lexeme::Recur) => Expression::parse_recur(parser, pos),
-            _ => Expression::parse_func_call_expr(parser, pos),
+            _ => Expression::parse_pipe_func_call_expr(parser, pos),
         }
     }
+
+    parse_left_assoc!(
+        parse_pipe_func_call_expr,
+        Lexeme::PipeRight,
+        Expression::parse_backpipe_func_call_expr
+    );
+
+    parse_right_assoc!(
+        parse_backpipe_func_call_expr,
+        Lexeme::PipeLeft,
+        Expression::parse_func_call_expr
+    );
 
     fn parse_macro_expand_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::LeftCurlyCurly)?;
@@ -627,7 +629,7 @@ impl<'a> Expression<'a> {
                 }
             }
             Some(_) => {
-                let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                let (expr, pos) = Expression::parse(parser, pos)?;
                 if parser.peek(pos, Lexeme::RightParen) {
                     let (e, pos) = match expr {
                         Expression::Name(_)
@@ -659,7 +661,7 @@ impl<'a> Expression<'a> {
                     while parser.peek(pos, Lexeme::Comma) {
                         pos = consume_symbol(parser, pos, Lexeme::Comma)?;
                         pos = parser.skip_nl(pos);
-                        let (expr, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                        let (expr, new_pos) = Expression::parse(parser, pos)?;
                         pos = new_pos;
                         exprs.push(expr);
                     }
@@ -996,14 +998,14 @@ impl<'a> Expression<'a> {
     }
 
     fn parse_dollar_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let (expr, pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+        let (expr, pos) = Expression::parse(parser, pos)?;
         if !parser.peek(pos, Lexeme::Dollar) {
             Ok((expr, pos))
         } else {
             let mut pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
             let mut args = vec![];
             while !is_func_call_end_symbol(parser.get_token(pos)) {
-                let (arg, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                let (arg, new_pos) = Expression::parse(parser, pos)?;
                 args.push(arg);
                 pos = new_pos;
             }
@@ -1033,7 +1035,7 @@ impl<'a> Expression<'a> {
                     let mut pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
                     let mut args = vec![];
                     while !is_func_call_end_symbol(parser.get_token(pos)) {
-                        let (arg, new_pos) = Expression::parse_pipe_func_call_expr(parser, pos)?;
+                        let (arg, new_pos) = Expression::parse(parser, pos)?;
                         args.push(arg);
                         pos = new_pos;
                     }

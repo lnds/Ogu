@@ -330,3 +330,17 @@ fn test_args_4() {
         Some(TupleType::new_box(vec![BasicType::int(), BasicType::int()]))
     );
 }
+
+
+#[test]
+fn test_erroneus_args() {
+    let module = make_module(
+        indoc! {r#"
+             double n = n * 2
+             twelve = (2, 3) |> double
+             "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_err());
+}

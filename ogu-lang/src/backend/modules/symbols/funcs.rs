@@ -68,6 +68,9 @@ impl FunctionSym {
         resolve: bool,
     ) -> Result<()> {
         if let Some(own_args) = &self.args {
+
+            Self::check_args_can_be_replaced(&own_args[..], &args)?;
+
             let mut new_args: Vec<Box<dyn Symbol>> = vec![];
             for (p, a) in own_args.iter().enumerate() {
                 new_args.push(IdSym::new_with_type(
@@ -78,6 +81,24 @@ impl FunctionSym {
             self.args = Some(new_args);
             if resolve {
                 self.resolve_type(scope)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn check_args_can_be_replaced(own_args: &[Box<dyn Symbol>], args: &[Box<dyn Symbol>]) -> Result<()> {
+        if own_args.len() != args.len() {
+            bail!("wrong arguments passed")
+        }
+        for (a, b) in own_args.iter().zip(args.iter()) {
+            let ta = a.get_type();
+            let tb = b.get_type();
+            if ta != tb && ta.is_some() && tb.is_some() {
+                let ta = ta.unwrap();
+                let tb = tb.unwrap();
+                if !ta.promotes(&*tb) && !tb.promotes(&*ta) {
+                    bail!("incompatible args passed")
+                }
             }
         }
         Ok(())

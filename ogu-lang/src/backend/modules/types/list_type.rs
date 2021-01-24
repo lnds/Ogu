@@ -39,7 +39,6 @@ impl Type for ListType {
     }
 
     fn match_types(&mut self, other: &dyn Type) {
-        println!("MATCH TYPE FOR LIST TYPE SELF = {:?} OTHER = {:?}", self, other);
         if let Some(other) = other.downcast_ref::<ListType>() {
             if self.is_trait() && other.ty.promotes(&*self.ty) {
                 self.ty = other.ty.clone()

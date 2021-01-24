@@ -1,6 +1,7 @@
 use crate::backend::scopes::types::{Type, TypeClone};
 use std::ops::Deref;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
+use crate::backend::modules::types::range_type::RangeType;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ListType {
@@ -32,7 +33,10 @@ impl Type for ListType {
 
     fn promotes(&self, other: &dyn Type) -> bool {
         match other.downcast_ref::<ListType>() {
-            None => false,
+            None => match other.downcast_ref::<RangeType>() {
+                None => false,
+                Some(lt) => lt.ty.promotes(&*self.ty)
+            },
             Some(lt) => {
                 lt.ty.promotes(&*self.ty.deref())
             }

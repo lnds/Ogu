@@ -1,8 +1,9 @@
 use crate::backend::scopes::types::{Type, TypeClone};
+use crate::backend::modules::types::list_type::ListType;
 
 #[derive(Debug, Clone)]
 pub(crate) struct RangeType {
-    ty: Box<dyn Type>,
+    pub(crate) ty: Box<dyn Type>,
 }
 
 impl RangeType {
@@ -25,8 +26,12 @@ impl Type for RangeType {
     }
 
     fn promotes(&self, r: &dyn Type) -> bool {
+        println!("PROMOTES RANGE TO R = {:?}", r);
         match r.downcast_ref::<RangeType>() {
-            None => false,
+            None => match r.downcast_ref::<ListType>() {
+                None => false,
+                Some(lt) => self.ty.promotes(&*lt.ty)
+            },
             Some(r) => self.ty.promotes(&*r.ty)
         }
     }

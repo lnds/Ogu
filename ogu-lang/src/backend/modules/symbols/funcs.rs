@@ -165,7 +165,7 @@ impl Symbol for FunctionSym {
                 if let Some(ft2) = ty.clone() {
                     if !ft1.result.promotes(&*ft2.result) {
                         bail!(
-                        "incompatible type for return type in function {}, ft1 = {:?} ft2 = {:?}",
+                        "incompatible type for return type in function {}\n\n ft1 = {:?}\n\n ft2 = {:?}\n\n",
                         self.name,
                         ft1,
                         ft2

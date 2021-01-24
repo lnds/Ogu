@@ -55,6 +55,7 @@ impl Symbol for FuncCallExpr {
                     if let Some(func) = func.downcast_ref::<FunctionSym>() {
                         let mut f = func.clone();
                         f.replace_args(self.args.to_vec(), scope, !recursive)?;
+                        println!("F.TYPE => {:?}\n\n", f.get_type());
                         if self.func.get_type() != f.get_type() {
                             self.func = Box::new(f);
                         }
@@ -159,11 +160,8 @@ impl Symbol for FuncCallExpr {
                                 } else if let Some(lambda) = val.expr.downcast_ref::<LambdaExpr>() {
                                     let mut l = lambda.clone();
                                     l.replace_args(self.args.to_vec(), scope)?;
-                                    println!("l.get_type = {:?}", l.get_type());
                                     if self.func.get_type() != l.get_type() {
-                                        println!("replace func by lambda = {:?}", self.func);
                                         self.func = Box::new(l);
-                                        println!("replace func by lambda = {:?}", self.func);
                                     }
                                 } else if let Some(compose) = val.expr.downcast_ref::<ComposeFunction>() {
                                     let c = compose.clone();
@@ -195,12 +193,12 @@ impl Symbol for FuncCallExpr {
                 } else {
                     bail!("{} it's not a function", self.func.get_name());
                 }
-                self.ty = match self.func.get_type() {
-                    None => None,
-                    Some(t) => t.resolve_expr_type(),
-                };
             }
         }
+        self.ty = match self.func.get_type() {
+            None => None,
+            Some(t) => t.resolve_expr_type(),
+        };
         Ok(self.get_type())
     }
 

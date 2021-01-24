@@ -40,6 +40,7 @@ impl Symbol for LetExpr {
         for e in self.eqs.iter_mut() {
             e.resolve_type(&mut *sym_table)?;
         }
+
         self.expr.resolve_type(&mut *sym_table)?;
 
         for e in self.eqs.iter_mut() {

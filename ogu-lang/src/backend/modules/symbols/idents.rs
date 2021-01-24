@@ -3,6 +3,7 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
+use crate::backend::modules::types::list_type::ListType;
 
 #[derive(Clone, Debug)]
 pub(crate) struct IdSym {
@@ -48,21 +49,34 @@ impl Symbol for IdSym {
 
     fn matches_types(&mut self, arg_ty: Option<Box<dyn Type>>) {
         if let Some(ty) = &arg_ty {
-            if let Some(tt) = ty.downcast_ref::<TupleType>() {
-                if let Some(sty) = &self.ty {
-                    if let Some(stt) = sty.downcast_ref::<TupleType>() {
-                        let mut stt = stt.clone();
-                        stt.match_types(tt);
-                        self.ty = Some(stt.clone_box());
+            match ty.downcast_ref::<TupleType>() {
+                None => self.ty = arg_ty.clone(),
+                Some(tt) =>
+                    if let Some(sty) = &self.ty {
+                        match sty.downcast_ref::<TupleType>() {
+                            None => self.ty = arg_ty.clone(),
+                            Some(stt) => {
+                                let mut stt = stt.clone();
+                                stt.match_types(tt);
+                                self.ty = Some(stt.clone_box());
+                            }
+                        }
+                    } else if let Some(tt) = ty.downcast_ref::<ListType>() {
+                        if let Some(sty) = &self.ty {
+                            match sty.downcast_ref::<ListType>() {
+                                None => self.ty = arg_ty.clone(),
+                                Some(stt) => {
+
+                                    let mut stt = stt.clone();
+                                    stt.match_types(tt);
+                                    self.ty = Some(stt.clone_box());
+                                }
+                            }
+                        }
                     } else {
                         self.ty = arg_ty.clone();
                     }
-                }
-            } else {
-                self.ty = arg_ty.clone();
             }
-        } else {
-            self.ty = arg_ty.clone();
         }
     }
 

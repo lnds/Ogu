@@ -123,7 +123,10 @@ impl Type for BasicType {
                     false
                 }
             }
-            _ => false,
+            BasicType::Char => {
+                 other ==TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
+            }
+            _ => other == TRAIT_UNKNOWN,
         }
     }
 

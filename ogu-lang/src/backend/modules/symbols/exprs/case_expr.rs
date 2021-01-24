@@ -71,8 +71,18 @@ impl Symbol for CaseExpr {
                 }
                 Some(t) => {
                     if let Some(et) = e.get_type() {
-                        t.match_types(&*et);
-                        expr_type = Some(t.clone());
+                        println!(" CASE EXPR TYPE ET = {:?}  T = {:?}", et, t);
+                        if t.is_trait() && !et.is_trait()  {
+                            println!("POR ALL CAMBIAR EL EXPR_TYPE");
+
+                            expr_type = Some(et.clone_box());
+                        }
+                        else {
+                            println!("POR ACA CAMBIAR EL EXPR_TYPE");
+                            t.match_types(&*et);
+                            println!("t = {:?}", t);
+                            expr_type = Some(t.clone());
+                        }
                     }
                 }
             };
@@ -93,9 +103,11 @@ impl Symbol for CaseExpr {
                 }
             }
         }
+        println!("CASE EXPR_TYPE = {:?}", expr_type);
+        println!("CASE COND_TYPE = {:?}", cond_type);
         self.ty = expr_type;
         let storable = self.selector.storable();
-        self.selector.set_storable(true);
+        self.selector.set_storable(true); // because of tuples
         if self.selector.get_type().is_none() {
             self.selector.set_type(cond_type.clone());
         }
@@ -103,6 +115,9 @@ impl Symbol for CaseExpr {
         self.selector.resolve_type(scope)?;
         self.selector.set_storable(storable);
         scope.define(self.selector.clone());
+
+        println!("CASE FINAL TYPE  = {:?}", self.get_type());
+        println!("\n\n");
         Ok(self.get_type())
     }
 }

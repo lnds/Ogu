@@ -33,11 +33,11 @@ fn test_curry_1() {
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box())
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int())
     );
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box())
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int())
     );
     assert_eq!(decls[3].get_type(), Some(BasicType::int()));
     assert_eq!(
@@ -55,7 +55,7 @@ fn test_curry_1() {
         decls[5].get_type(),
         FuncType::new_opt(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
-            TRAIT_NUM.clone_box()
+            BasicType::int()
         )
     );
     assert_eq!(decls[6].get_type(), Some(BasicType::float()));

@@ -31,7 +31,9 @@ impl Type for TraitType {
     }
 
     fn promotes(&self, other: &dyn Type) -> bool {
+        println!("WTF =? TRAIT {:?} PROMOTES? other ={:?}", self, other);
         if let Some(ot) = other.downcast_ref::<BasicType>() {
+            println!("the other is Basic type");
             ot.promotes(self)
         } else {
             self.get_signature() == other.get_signature()
@@ -42,6 +44,15 @@ impl Type for TraitType {
 
     fn is_trait(&self) -> bool {
         true
+    }
+
+    fn match_types(&mut self, other: &dyn Type) {
+        println!("WSY MATCHES!!\n TRAIT SELF = {:?}\n OTHER = {:?}\n", self, other);
+        if self.name == TRAIT_UNKNOWN.name && other.is_trait() {
+            if let Some(ot) = other.downcast_ref::<TraitType>() {
+                self.name = ot.name
+            }
+        }
     }
 }
 

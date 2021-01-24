@@ -24,7 +24,10 @@ impl Type for RangeType {
         Some(self.clone_box())
     }
 
-    fn promotes(&self, _: &dyn Type) -> bool {
-        unimplemented!()
+    fn promotes(&self, r: &dyn Type) -> bool {
+        match r.downcast_ref::<RangeType>() {
+            None => false,
+            Some(r) => self.ty.promotes(&*r.ty)
+        }
     }
 }

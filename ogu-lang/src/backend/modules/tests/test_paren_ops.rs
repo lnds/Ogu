@@ -26,14 +26,16 @@ fn test_add() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
     validate_decls(
         module,
         FuncType::new_opt(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
         ),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -135,7 +137,7 @@ fn test_sub() {
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
         ),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -170,7 +172,7 @@ fn test_mul() {
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
         ),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -240,7 +242,7 @@ fn test_mod() {
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
         ),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),
@@ -275,7 +277,7 @@ fn test_pow() {
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
         ),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int()),
         vec![
             Some(BasicType::int()),
             Some(BasicType::int()),

@@ -403,24 +403,27 @@ fn test_list_comprehension_3() {
 fn test_list_func1() {
     let module = make_module(
         indoc! {r#"
-            sum [] = 0
+            sum [] = 0N
             sum (head :: tail) = head + sum tail
             s = sum [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
+    if module.is_err() {
+        println!("module: {:?}", module);
+    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
+    //println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         Some(FuncType::new_func_type(
             Some(vec![ListType::new_list(TRAIT_NUM.clone_box())]),
-            BasicType::int()
+            TRAIT_NUM.clone_box()
         ))
     );
+
     assert_eq!(decls[1].get_type(), Some(BasicType::int()));
 }
 

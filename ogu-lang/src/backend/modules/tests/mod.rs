@@ -14,6 +14,7 @@ mod test_simple;
 mod test_val_decls;
 mod test_loops;
 mod test_func_composition;
+mod test_eulers;
 
 use crate::backend::modules::module::Module;
 use crate::backend::scopes::Scope;

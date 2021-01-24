@@ -79,18 +79,13 @@ impl Symbol for ListGuard {
                 lst.resolve_type(scope)?;
                 if let Some(lt) = lst.get_type() {
                     if let Some(lt) = lt.downcast_ref::<ListType>() {
-                        match lt {
-                            ListType::EmptyList => {
-                                bail!("can't generate anything from an empty list!")
-                            }
-                            ListType::List(tty) => match id.get_type() {
-                                None => id.set_type(Some(tty.clone_box())),
-                                Some(ty) => {
-                                    if ty != tty.clone() {
-                                        id.matches_types(Some(tty.clone_box()));
-                                    }
+                        match id.get_type() {
+                            None => id.set_type(Some(lt.ty.clone_box())),
+                            Some(ty) => {
+                                if ty != lt.ty.clone() {
+                                    id.matches_types(Some(lt.ty.clone_box()));
                                 }
-                            },
+                            }
                         }
                     } else {
                         bail!("generator must come from a list");
@@ -104,21 +99,14 @@ impl Symbol for ListGuard {
                     match lt.downcast_ref::<ListType>() {
                         None => bail!("generator must come from a list"),
                         Some(lt) =>
-                            match lt {
-                                ListType::EmptyList => {
-                                    bail!("can't generate anything from an empty list!")
-                                }
-                                ListType::List(tty) => {
-                                    match tty.downcast_ref::<TupleType>() {
-                                        None => bail!("right side of expression must be a list of tuples"),
-                                        Some(tuple_type) => {
-                                            if tuple_type.tuple.len() != tuple.len() {
-                                                bail!("left side must be a tuple of len = {}", tuple.len())
-                                            } else {
-                                                for (p, e) in tuple.iter_mut().enumerate() {
-                                                    e.set_type(Some(tuple_type.tuple[p].clone()))
-                                                }
-                                            }
+                            match lt.ty.downcast_ref::<TupleType>() {
+                                None => bail!("right side of expression must be a list of tuples"),
+                                Some(tuple_type) => {
+                                    if tuple_type.tuple.len() != tuple.len() {
+                                        bail!("left side must be a tuple of len = {}", tuple.len())
+                                    } else {
+                                        for (p, e) in tuple.iter_mut().enumerate() {
+                                            e.set_type(Some(tuple_type.tuple[p].clone()))
                                         }
                                     }
                                 }

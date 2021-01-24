@@ -27,7 +27,7 @@ fn test_simple_list() {
     let module = module.unwrap();
     let decls = module.get_decls();
     println!("TEST DECLS = {:#?}", decls);
-    assert_eq!(decls[0].get_type(), Some(ListType::new_empty()));
+    assert_eq!(decls[0].get_type(), Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
     assert_eq!(
         decls[1].get_type(),
         Some(ListType::new_list(BasicType::int()))
@@ -116,7 +116,7 @@ fn test_list_ops() {
     let module = module.unwrap();
     let decls = module.get_decls();
     println!("TEST DECLS = {:#?}", decls);
-    assert_eq!(decls[0].get_type(), Some(ListType::new_empty()));
+    assert_eq!(decls[0].get_type(), Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
     assert_eq!(
         decls[1].get_type(),
         Some(ListType::new_list(BasicType::int()))

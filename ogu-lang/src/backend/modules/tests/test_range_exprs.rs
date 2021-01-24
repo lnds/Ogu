@@ -1,10 +1,10 @@
 use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
-use crate::backend::modules::types::range_type::RangeType;
 use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
+use crate::backend::modules::types::list_type::ListType;
 
 #[test]
 fn test_simple_range() {
@@ -31,37 +31,37 @@ fn test_simple_range() {
     println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
-        Some(RangeType::new_range(BasicType::int()))
+        Some(ListType::new_list(BasicType::int()))
     );
     assert_eq!(
         decls[1].get_type(),
-        Some(RangeType::new_range(BasicType::char()))
+        Some(ListType::new_list(BasicType::char()))
     );
     assert_eq!(
         decls[2].get_type(),
-        Some(RangeType::new_range(BasicType::int()))
+        Some(ListType::new_list(BasicType::int()))
     );
     assert_eq!(
         decls[3].get_type(),
-        Some(RangeType::new_range(TRAIT_NUM.clone_box()))
+        Some(ListType::new_list(TRAIT_NUM.clone_box()))
     );
     assert_eq!(
         decls[4].get_type(),
-        Some(RangeType::new_range(TRAIT_NUM.clone_box()))
+        Some(ListType::new_list(TRAIT_NUM.clone_box()))
     );
     assert_eq!(decls[5].get_type(), Some(BasicType::int()));
     assert_eq!(decls[6].get_type(), Some(BasicType::int()));
     assert_eq!(
         decls[7].get_type(),
-        Some(RangeType::new_range(BasicType::int()))
+        Some(ListType::new_list(BasicType::int()))
     );
     assert_eq!(
         decls[8].get_type(),
-        Some(RangeType::new_range(BasicType::int()))
+        Some(ListType::new_list(BasicType::int()))
     );
     assert_eq!(
         decls[9].get_type(),
-        Some(RangeType::new_range(BasicType::float()))
+        Some(ListType::new_list(BasicType::float()))
     );
 }
 

@@ -1,10 +1,10 @@
 use crate::backend::modules::types::basic_type::{CHAR_TYPE, FLOAT_TYPE, INT_TYPE};
-use crate::backend::modules::types::range_type::RangeType;
 use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
+use crate::backend::modules::types::list_type::ListType;
 
 #[derive(Debug, Clone)]
 pub(crate) struct RangeExpr {
@@ -57,7 +57,7 @@ impl Symbol for RangeExpr {
     fn get_type(&self) -> Option<Box<dyn Type>> {
         match self.inferior.get_type() {
             None => None,
-            Some(ty) => Some(RangeType::new_range(ty)),
+            Some(ty) => Some(ListType::new_list(ty)),
         }
     }
 

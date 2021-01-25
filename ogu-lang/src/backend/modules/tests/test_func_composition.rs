@@ -81,7 +81,61 @@ fn test_func_composition_2() {
 
 
 #[test]
-fn test_pipes() {
+fn test_pipes_1() {
+    let module = make_module(
+        indoc! {r#"
+             mul (a, b) = a * b
+             twelve = (2, 3) |> mul
+             "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("TEST DECLS = {:#?}", decls);
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(Some(vec![TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()])]), TRAIT_NUM.clone_box())
+    );
+    assert_eq!(
+        decls[1].get_type(),
+        Some(BasicType::int())
+    );
+}
+
+#[test]
+fn test_pipes_2() {
+    let module = make_module(
+        indoc! {r#"
+             mul (a, b) = a * b
+             double n = n * 2.0
+             twelve = (2, 3) |> mul |> double
+             "#},
+        default_sym_table(),
+    );
+    println!("module = {:?}", module);
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("TEST DECLS = {:#?}", decls);
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(Some(vec![TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()])]), TRAIT_NUM.clone_box())
+    );
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(Some(vec![BasicType::float()]), BasicType::float())
+    );
+    assert_eq!(
+        decls[2].get_type(),
+        Some(BasicType::float())
+    );
+}
+
+
+#[test]
+fn test_pipes_3() {
     let module = make_module(
         indoc! {r#"
              mul (a, b) = a * b

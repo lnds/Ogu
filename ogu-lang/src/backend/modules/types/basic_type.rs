@@ -105,7 +105,7 @@ impl Type for BasicType {
                 {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
-                    matches!(ot, BasicType::Int | BasicType::UInt)
+                    matches!(ot, BasicType::Int | BasicType::UInt | BasicType::Float)
                 } else {
                     false
                 }
@@ -173,12 +173,14 @@ impl Type for BasicType {
                         BasicType::Int => TypeComparation::Same,
                         BasicType::Char => TypeComparation::Superior,
                         BasicType::UInt => TypeComparation::Superior,
+                        BasicType::Float => TypeComparation::Inferior,
                         _ => TypeComparation::Incomparables
                     }
                     BasicType::UInt => match other {
                         BasicType::UInt => TypeComparation::Same,
                         BasicType::Int => TypeComparation::Inferior,
                         BasicType::Char => TypeComparation::Superior,
+                        BasicType::Float => TypeComparation::Inferior,
                         _ => TypeComparation::Incomparables
                     }
                     BasicType::Date => match other {
@@ -187,6 +189,9 @@ impl Type for BasicType {
                     }
                     BasicType::Float => match other {
                         BasicType::Float => TypeComparation::Same,
+                        BasicType::UInt => TypeComparation::Inferior,
+                        BasicType::Int => TypeComparation::Inferior,
+                        BasicType::Char => TypeComparation::Inferior,
                         _ => TypeComparation::Incomparables
                     }
                     BasicType::Regexp => match other {

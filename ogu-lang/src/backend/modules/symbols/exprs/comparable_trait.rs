@@ -36,19 +36,14 @@ pub(crate) fn resolve_comparable(
                 }
             }
             Some(rt) if lt.is_trait() && &*lt != tr && !rt.is_trait() => {
-                println!("A lt = {:?}, rt = {:?}", lt, rt);
                 l.set_type(Some(rt.clone()));
                 l.define_into(scope);
             }
             Some(rt) if rt.is_trait() && &*rt != tr && !lt.is_trait() => {
-                println!("B lt = {:?}, rt = {:?}", lt, rt);
-
                 r.set_type(Some(lt.clone()));
                 r.define_into(scope);
             }
             Some(rt) => {
-                println!("C lt = {:?}, rt = {:?}", lt, rt);
-
                 if !lt.is_trait() && rt.is_trait() {
                     r.set_type(Some(lt.clone()));
                     r.define_into(scope);

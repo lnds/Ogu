@@ -82,7 +82,6 @@ impl Symbol for IfExpr {
                 }
                 Some(et) => {
                     if &*tt != &*et {
-                        println!("ET {:?} != TT {:?}", et, tt);
                         if &*et == TRAIT_UNKNOWN && &*tt != TRAIT_UNKNOWN {
                             self.else_expr.set_type(Some(tt.clone()));
                             self.ty = Some(tt);
@@ -90,8 +89,7 @@ impl Symbol for IfExpr {
                         else if &*tt == TRAIT_UNKNOWN && &*et != TRAIT_UNKNOWN {
                             self.then_expr.set_type(Some(et.clone()));
                             self.ty = Some(et);
-                        } else
-                            if tt.is_trait() && !et.is_trait() {
+                        } else if tt.is_trait() && !et.is_trait() {
                                 self.then_expr.set_type(Some(et.clone()));
                                 self.ty = Some(et);
                             }

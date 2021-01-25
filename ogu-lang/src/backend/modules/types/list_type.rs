@@ -2,7 +2,7 @@ use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 
 #[derive(Debug, Clone)]
 pub(crate) struct ListType {
-    pub (crate) ty: Box<dyn Type>,
+    pub(crate) ty: Box<dyn Type>,
 }
 
 impl ListType {
@@ -46,12 +46,9 @@ impl Type for ListType {
     }
 
     fn compare(&self, other: &dyn Type) -> TypeComparation {
-        println!("TYPE COMPARE SFOR LIST SELF = {:?} other = {:?}", self, other);
-        let t = match other.downcast_ref::<ListType>() {
+        match other.downcast_ref::<ListType>() {
             None => TypeComparation::Incomparables,
             Some(other) => self.ty.compare(&*other.ty)
-        };
-        println!("RESULT OF LIST TYPE COMPARE => {:?}\n", t.clone());
-        t
+        }
     }
 }

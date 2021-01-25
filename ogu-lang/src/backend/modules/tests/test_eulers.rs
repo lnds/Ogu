@@ -117,7 +117,7 @@ fn test_euler_3() {
 
         prime-factors f n
             | n == 1 = lazy []
-            | factor-of? f n = lazy f :: prime-factors f (n / f)
+            | factor-of? f n = lazy f :: prime-factors f (n // f)
             | otherwise = recur (f + 1) n
 
         result = prime-factors 2 600851475143 |> last"#},
@@ -147,7 +147,7 @@ fn test_euler_3() {
     assert_eq!(
         decls[3].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
-                         ListType::new_list(BasicType::int()))
+                         ListType::new_list(TRAIT_NUM.clone_box()))
     );
 
     assert_eq!(
@@ -156,3 +156,4 @@ fn test_euler_3() {
     );
 
 }
+

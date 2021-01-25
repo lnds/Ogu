@@ -555,3 +555,34 @@ fn test_prime_factors_3() {
     assert_eq!(decls[2].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
                                                       ListType::new_list(BasicType::int())));
 }
+
+
+#[test]
+fn test_prime_factors_4() {
+    let module = make_module(
+        indoc! {r#"
+        zero? x = x == 0N
+
+        factor-of? f n = zero? (n % f)
+
+        prime-factors a b
+            | b == 1 = lazy []
+            | factor-of? a b = lazy a :: prime-factors a (b // a)
+            | otherwise = recur (a + 1) b
+
+        "#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool()));
+
+    assert_eq!(decls[1].get_type(), FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), BasicType::bool()));
+
+    assert_eq!(decls[2].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
+                                                      ListType::new_list(TRAIT_NUM.clone_box())));
+}

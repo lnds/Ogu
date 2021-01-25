@@ -5,7 +5,7 @@ use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::variadic_type::VariadicType;
 use crate::backend::scopes::symbol::{Symbol, SymbolClone};
-use crate::backend::scopes::types::{Type, TypeClone};
+use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
 use crate::backend::modules::symbols::exprs::func_compose::ComposeFunction;
@@ -152,9 +152,16 @@ impl Symbol for FuncCallExpr {
                         Some(ft_args) => {
                             for (p, a) in self.args.iter_mut().enumerate() {
                                 a.resolve_type(scope)?;
-                                if a.get_type().is_none() {
-                                    a.set_type(Some(ft_args[p].clone()));
+                                match a.get_type() {
+                                    None => a.set_type(Some(ft_args[p].clone())),
+                                    Some(t) => {
+                                        let ftt = ft_args[p].clone();
+                                        if ftt.compare(&*t) == TypeComparation::Superior {
+                                            a.set_type(Some(ftt));
+                                        }
+                                    }
                                 }
+
                                 a.define_into(scope);
                             }
                             let func = match scope.resolve(self.func.get_name()) {

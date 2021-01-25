@@ -2,7 +2,7 @@
 
 use std::fmt::Debug;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub(crate) enum TypeComparation {
     Incomparables,
     Inferior,

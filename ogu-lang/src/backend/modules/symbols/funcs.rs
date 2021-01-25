@@ -84,8 +84,6 @@ impl FunctionSym {
                     ))
                 }
             }
-            println!("ARGS = {:?}", self.args);
-            println!("NEW_ARGS = {:?}\n", new_args);
             self.args = Some(new_args);
             if resolve {
                 self.resolve_type(scope)?;
@@ -95,27 +93,23 @@ impl FunctionSym {
     }
 
     fn subtype(a: Option<Box<dyn Type>>, b: Option<Box<dyn Type>>) -> Result<bool> {
-        println!("SUBTYPE\n A = {:?}\n B = {:?}\n", a, b);
-        let r = match a {
+        match a {
             None => match b {
                 None => Ok(true),
-                Some(bt) => Ok(true)
+                Some(_) => Ok(true)
             },
             Some(at) => match b {
                 None => Ok(true),
                 Some(bt) => {
                     let c = at.compare(&*bt);
-                    println!("COMPARE IS = {:?}", c);
                     match c {
                         TypeComparation::Superior => Ok(false),
-                        TypeComparation::Incomparables => bail!("incompatible type for arg substitution"),
+                        TypeComparation::Incomparables => bail!("incompatible type for arg substitution, expecting {}, found {}", at.get_name(), bt.get_name()),
                         _ => Ok(true)
                     }
                 }
             }
-        };
-        println!(" => {:?}", r);
-        r
+        }
     }
 
     fn check_args_can_be_replaced(own_args: &[Box<dyn Symbol>], args: &[Box<dyn Symbol>]) -> Result<()> {
@@ -123,13 +117,11 @@ impl FunctionSym {
             bail!("wrong arguments passed")
         }
         for (a, b) in own_args.iter().zip(args.iter()) {
-            let ta = a.get_type();
-            let tb = b.get_type();
-            if ta != tb && ta.is_some() && tb.is_some() {
-                let ta = ta.unwrap();
-                let tb = tb.unwrap();
-                if !ta.is_compatible_with(&*tb) && !tb.is_compatible_with(&*ta) {
-                    bail!("incompatible args passed\n TA = {:?}\n TB = {:?}", ta, tb)
+            if let (Some(ta), Some(tb)) = (a.get_type(), b.get_type()) {
+                if &*ta != &*tb {
+                    if !ta.is_compatible_with(&*tb) && !tb.is_compatible_with(&*ta) {
+                        bail!("incompatible args passed\n TA = {:?}\n TB = {:?}", ta, tb)
+                    }
                 }
             }
         }
@@ -193,7 +185,6 @@ impl Symbol for FunctionSym {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        println!("FUNC : {}\n\n", self.get_name());
         let mut sym_table = SymbolTable::new(&self.name, Some(scope.clone_box()));
         sym_table.set_function_name(&self.name);
 

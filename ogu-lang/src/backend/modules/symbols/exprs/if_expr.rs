@@ -54,10 +54,23 @@ impl Symbol for IfExpr {
             }
         }
         self.cond.define_into(scope);
+
         self.then_expr.resolve_type(scope)?;
-        scope.define(self.then_expr.clone());
+        self.then_expr.define_into(scope);
         self.else_expr.resolve_type(scope)?;
-        scope.define(self.else_expr.clone());
+        self.else_expr.define_into(scope);
+
+        // try again, useful in recursion
+        if self.then_expr.get_type().is_none() {
+            // try again
+            self.then_expr.resolve_type(scope)?;
+            self.then_expr.define_into(scope);
+        }
+        if self.else_expr.get_type().is_none() {
+            // try again
+            self.else_expr.resolve_type(scope)?;
+            self.else_expr.define_into(scope);
+        }
         match self.then_expr.get_type() {
             None => match self.else_expr.get_type() {
                 None => {
@@ -84,23 +97,28 @@ impl Symbol for IfExpr {
                     if &*tt != &*et {
                         if &*et == TRAIT_UNKNOWN && &*tt != TRAIT_UNKNOWN {
                             self.else_expr.set_type(Some(tt.clone()));
+                            self.else_expr.define_into(scope);
                             self.ty = Some(tt);
                         }
                         else if &*tt == TRAIT_UNKNOWN && &*et != TRAIT_UNKNOWN {
                             self.then_expr.set_type(Some(et.clone()));
+                            self.else_expr.define_into(scope);
                             self.ty = Some(et);
                         } else if tt.is_trait() && !et.is_trait() {
                                 self.then_expr.set_type(Some(et.clone()));
+                            self.then_expr.define_into(scope);
                                 self.ty = Some(et);
                             }
                         else if et.is_trait() && !tt.is_trait() {
                             self.else_expr.set_type(Some(tt.clone()));
+                            self.else_expr.define_into(scope);
                             self.ty = Some(tt);
                         } else {
                             match et.compare(&*tt) {
                                 TypeComparation::Incomparables => bail!("can't resolve type for if expression"),
                                 TypeComparation::Inferior => {
                                     self.else_expr.set_type(Some(tt.clone()));
+                                    self.else_expr.define_into(scope);
                                     self.ty = Some(tt);
                                 }
                                 TypeComparation::Same => {
@@ -108,6 +126,7 @@ impl Symbol for IfExpr {
                                 }
                                 TypeComparation::Superior => {
                                     self.then_expr.set_type(Some(et.clone()));
+                                    self.then_expr.define_into(scope);
                                     self.ty = Some(et);
                                 }
                             }

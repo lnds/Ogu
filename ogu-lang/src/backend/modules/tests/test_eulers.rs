@@ -224,3 +224,68 @@ fn test_euler_4() {
     );
 
 }
+
+#[test]
+fn test_euler_5() {
+    let module = make_module(
+        indoc! {r#"
+        zero? n = n == 0N
+
+        gcd x y =
+            if zero? y then x
+            else gcd y (x % y)
+
+        lcm a b
+           | zero? a = 0
+           | zero? b = 0
+           | otherwise = b * (a // (gcd a b))
+
+        reduce f seed [] = error! "reduce undefined for empty list"
+        reduce f seed [x] = f seed x
+        reduce f seed (x :: xs) = reduce f (f seed x) xs
+
+        divisors n = reduce lcm 1 [2 .. n]
+
+        result = divisors 20"#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    //println!("TEST DECLS = {:#?}", decls);
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
+    );
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box())
+    );
+    assert_eq!(
+        decls[2].get_type(),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), BasicType::int())
+    );
+
+
+    assert_eq!(
+        decls[3].get_type(),
+        FuncType::new_opt(Some(vec![FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box(), TRAIT_UNKNOWN.clone_box()]), TRAIT_UNKNOWN.clone_box()),
+                                         TRAIT_UNKNOWN.clone_box(), ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
+                          TRAIT_UNKNOWN.clone_box())
+    );
+
+
+    assert_eq!(
+        decls[4].get_type(),
+        FuncType::new_opt(Some(vec![BasicType::int()]),
+                          BasicType::int())
+    );
+    assert_eq!(
+        decls[5].get_type(),
+        Some(BasicType::int())
+    );
+
+}

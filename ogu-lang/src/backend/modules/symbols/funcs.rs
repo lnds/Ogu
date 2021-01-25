@@ -178,6 +178,7 @@ impl Symbol for FunctionSym {
         if self.ty.is_none() {
             if let Some(ty) = ty {
                 if let Some(ty) = ty.downcast_ref::<FuncType>() {
+                    println!("SET TYPE FUNC {}\n FROM: {:?}\n TO: {:?}\n", self.name, self.ty, ty);
                     self.ty = Some(Box::new(ty.clone()))
                 }
             }

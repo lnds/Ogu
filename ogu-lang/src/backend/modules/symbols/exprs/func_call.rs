@@ -55,17 +55,9 @@ impl Symbol for FuncCallExpr {
     }
 
     fn matches_types(&mut self, ty: Option<Box<dyn Type>>) {
-        println!("matches type para FUNC TY = {:?}\n and me = {:?}", ty, self.get_type());
         self.ty = ty;
     }
 
-
-    fn define_into(&self, scope: &mut dyn Scope) {
-        self.func.define_into(scope);
-        for a in self.args.iter() {
-            scope.define(a.clone());
-        }
-    }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
@@ -274,6 +266,13 @@ impl Symbol for FuncCallExpr {
             Some(self.func.clone_box())
         } else {
             None
+        }
+    }
+
+    fn define_into(&self, scope: &mut dyn Scope) {
+        self.func.define_into(scope);
+        for a in self.args.iter() {
+            scope.define(a.clone());
         }
     }
 }

@@ -147,7 +147,6 @@ impl Symbol for ArithmeticExpr {
                 r.set_type(ty.clone());
             }
         }
-        println!("<- SET TYPE\n SELF = {:?}=>{:?}", self, ty);
     }
 
 

@@ -63,17 +63,39 @@ impl Symbol for RangeExpr {
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         self.inferior.resolve_type(scope)?;
-
         if let Some(second) = &mut self.second {
             second.resolve_type(scope)?;
-            if self.inferior.get_type() != second.get_type() {
-                bail!("range must have elementes of same type");
+            match second.get_type() {
+                None => {
+                    second.set_type(self.inferior.get_type());
+                    second.define_into(scope);
+
+                },
+                Some(sty) => {
+                    if let Some(ity) = self.inferior.get_type() {
+                        if !ity.is_compatible_with(&*sty) {
+                            bail!("range must have elementes of same type {:?} != {:?}", self.inferior.get_type(), second.get_type());
+
+                        }
+                    }
+                }
             }
         }
         if let Some(sup) = &mut self.superior {
             sup.resolve_type(scope)?;
-            if self.inferior.get_type() != sup.get_type() {
-                bail!("range must have elementes of same type");
+            match sup.get_type() {
+                None =>  {
+                    sup.set_type(self.inferior.get_type());
+                    sup.define_into(scope);
+                }
+                Some(sty) => {
+                    if let Some(ity) = self.inferior.get_type() {
+                        if !ity.is_compatible_with(&*sty) {
+                            bail!("range must have elementes of same type {:?} != {:?}", self.inferior.get_type(), sup.get_type());
+
+                        }
+                    }
+                }
             }
         }
 

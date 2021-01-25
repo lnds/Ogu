@@ -1,5 +1,5 @@
 use crate::backend::modules::types::basic_type::BasicType;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeComparation};
 
 #[derive(Clone, Debug)]
 pub(crate) struct TraitType {
@@ -30,9 +30,9 @@ impl Type for TraitType {
         None
     }
 
-    fn promotes(&self, other: &dyn Type) -> bool {
+    fn is_compatible_with(&self, other: &dyn Type) -> bool {
         if let Some(ot) = other.downcast_ref::<BasicType>() {
-            ot.promotes(self)
+            ot.is_compatible_with(self)
         } else {
             self.get_signature() == other.get_signature()
                 || other == TRAIT_UNKNOWN
@@ -49,6 +49,22 @@ impl Type for TraitType {
             if let Some(ot) = other.downcast_ref::<TraitType>() {
                 self.name = ot.name
             }
+        }
+    }
+
+    fn compare(&self, other: &dyn Type) -> TypeComparation {
+        if self == TRAIT_UNKNOWN {
+            TypeComparation::Inferior
+        } else if other == TRAIT_UNKNOWN {
+            TypeComparation::Superior
+        } else if other.is_trait() {
+            if self.get_name() == other.get_name() {
+                TypeComparation::Same
+            } else {
+                TypeComparation::Incomparables
+            }
+        } else {
+            TypeComparation::Incomparables
         }
     }
 }

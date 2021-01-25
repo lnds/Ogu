@@ -10,6 +10,8 @@ use crate::parser::ast::module::ModuleAst;
 use crate::parser::Parser;
 use anyhow::Result;
 use std::path::PathBuf;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
+use crate::backend::scopes::types::TypeClone;
 
 pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> Result<Module> {
     let mut lexer = Lexer::new(&path)?;
@@ -40,6 +42,10 @@ pub(crate) fn default_sym_table() -> Box<dyn Scope> {
     symbol_table.define(MacroSym::new(
         "print!",
         VariadicType::new_opt(BasicType::unit()),
+    ));
+    symbol_table.define(MacroSym::new(
+        "error!",
+        VariadicType::new_opt(TRAIT_UNKNOWN.clone_box()),
     ));
     symbol_table
 }

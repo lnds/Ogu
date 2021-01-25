@@ -1,4 +1,4 @@
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeComparation};
 
 #[derive(Clone, Debug)]
 pub(crate) struct VariadicType {
@@ -6,6 +6,7 @@ pub(crate) struct VariadicType {
 }
 
 impl Type for VariadicType {
+
     fn get_name(&self) -> String {
         format!("[...] -> {:?}", self.result)
     }
@@ -18,8 +19,12 @@ impl Type for VariadicType {
         Some(self.result.clone())
     }
 
-    fn promotes(&self, _other: &dyn Type) -> bool {
+    fn is_compatible_with(&self, _other: &dyn Type) -> bool {
         false
+    }
+
+    fn compare(&self, other: &dyn Type) -> TypeComparation {
+        unimplemented!()
     }
 }
 

@@ -1,7 +1,7 @@
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::{Type, TypeClone};
+use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 use crate::parser::ast::module::decls::FuncTypeAst;
 use anyhow::{bail, Result};
 
@@ -24,11 +24,11 @@ impl Type for FuncType {
         Some(self.result.clone())
     }
 
-    fn promotes(&self, other: &dyn Type) -> bool {
+    fn is_compatible_with(&self, other: &dyn Type) -> bool {
         let r = match other.downcast_ref::<FuncType>() {
             None => false,
             Some(other) => {
-                self.result.promotes(&*other.result)
+                self.result.is_compatible_with(&*other.result)
             }
         };
         r
@@ -48,7 +48,12 @@ impl Type for FuncType {
         }
     }
 
-
+    fn compare(&self, other: &dyn Type) -> TypeComparation {
+        match other.downcast_ref::<FuncType>() {
+            None => TypeComparation::Incomparables,
+            Some(other) => self.result.compare(&*other.result)
+        }
+    }
 }
 
 impl FuncType {

@@ -69,7 +69,6 @@ impl FunctionSym {
     ) -> Result<()> {
         if let Some(own_args) = &self.args {
 
-            println!("CHECK ARGS SELF = {:?}", self);
             Self::check_args_can_be_replaced(&own_args[..], &args)?;
 
             let mut new_args: Vec<Box<dyn Symbol>> = vec![];
@@ -91,17 +90,13 @@ impl FunctionSym {
         if own_args.len() != args.len() {
             bail!("wrong arguments passed")
         }
-        println!("OWN ARGS = {:#?}", own_args);
-        println!("ARGS = {:#?}", args);
-        println!("OWN ARGS LEN = {}\n",  own_args.len());
         for (a, b) in own_args.iter().zip(args.iter()) {
             let ta = a.get_type();
             let tb = b.get_type();
             if ta != tb && ta.is_some() && tb.is_some() {
                 let ta = ta.unwrap();
                 let tb = tb.unwrap();
-                println!("CHECK ARG\n TA = {:?}\n TB = {:?}\n", ta, tb);
-                if !ta.promotes(&*tb) && !tb.promotes(&*ta) {
+                if !ta.is_compatible_with(&*tb) && !tb.is_compatible_with(&*ta) {
                     bail!("incompatible args passed\n TA = {:?}\n TB = {:?}", ta, tb)
                 }
             }
@@ -124,7 +119,7 @@ impl FunctionSym {
                             Some(at) => match sym.get_type() {
                                 None => Ok(None),
                                 Some(st) => {
-                                    if !st.promotes(&*at) {
+                                    if !st.is_compatible_with(&*at) {
                                         bail!("incompatible  type for argument {}, st = {:?} at = {:?} in function {}",
                                             a.get_name(), st, at, self.name)
                                     } else {
@@ -166,7 +161,6 @@ impl Symbol for FunctionSym {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        println!("RESOLVE TYPE FOR FUNC {:?}", self);
         let mut sym_table = SymbolTable::new(&self.name, Some(scope.clone_box()));
         sym_table.set_function_name(&self.name);
 
@@ -190,7 +184,7 @@ impl Symbol for FunctionSym {
             let ty = FuncType::make(&self.args, &*self.expr);
             if let Some(ft1) = self.ty.clone() {
                 if let Some(ft2) = ty.clone() {
-                    if !ft1.result.promotes(&*ft2.result) {
+                    if !ft1.result.is_compatible_with(&*ft2.result) {
                         bail!(
                         "incompatible type for return type in function {}\n\n ft1 = {:?}\n\n ft2 = {:?}\n\n",
                         self.name,

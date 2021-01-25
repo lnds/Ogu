@@ -25,7 +25,7 @@ pub(crate) fn resolve_comparable(
         },
         Some(lt) => match r.resolve_type(scope)? {
             None => {
-                if lt.promotes(tr) && lt.is_trait() {
+                if lt.is_compatible_with(tr) && lt.is_trait() {
                     l.set_type(Some(tr.clone_box()));
                     scope.define(l.clone());
                     r.set_type(Some(tr.clone_box()));

@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeComparation};
 
 #[derive(Clone, Debug)]
 pub(crate) struct TupleType {
@@ -36,7 +36,7 @@ impl Type for TupleType {
         unimplemented!()
     }
 
-    fn promotes(&self, other: &dyn Type) -> bool {
+    fn is_compatible_with(&self, other: &dyn Type) -> bool {
         match other.downcast_ref::<TupleType>() {
             None => false,
             Some(other_tuple) => {
@@ -46,7 +46,7 @@ impl Type for TupleType {
                 } else {
                     let mut result = true;
                     for (s, o) in self.tuple.iter().zip(other_tuple_vec.iter()) {
-                        result = result && s.promotes(o.deref());
+                        result = result && s.is_compatible_with(o.deref());
                     }
                     result
                 }
@@ -68,6 +68,28 @@ impl Type for TupleType {
                     }
                 } else {
                     s.match_types(o.deref().deref());
+                }
+            }
+        }
+    }
+
+    fn compare(&self, other: &dyn Type) -> TypeComparation {
+        match other.downcast_ref::<TupleType>() {
+            None => TypeComparation::Incomparables,
+            Some(other) => {
+                if other.tuple.len() != self.tuple.len() {
+                    TypeComparation::Incomparables
+                } else {
+                    let mut result = TypeComparation::Incomparables;
+                    for (a, b) in self.tuple.iter().zip(other.tuple.iter()) {
+                        match  a.compare(&*b.deref()) {
+                            TypeComparation::Incomparables =>
+                                return TypeComparation::Incomparables,
+                            TypeComparation::Same => result = TypeComparation::Same,
+                            _ => result = TypeComparation::Incomparables
+                        }
+                    }
+                    result
                 }
             }
         }

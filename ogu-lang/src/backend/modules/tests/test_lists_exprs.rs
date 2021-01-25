@@ -475,3 +475,27 @@ fn test_list_fib() {
     let decls = module.get_decls();
     assert_eq!(decls[0].get_type(), Some(ListType::new_list(BasicType::int())));
 }
+
+
+#[test]
+fn test_prime_factors() {
+    let module = make_module(
+        indoc! {r#"
+        prime-factors f n
+            | n == 1 = lazy []
+            | n % f == 0 = lazy f :: prime-factors f (n / f)
+            | otherwise = recur (f + 1) n
+
+        "#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
+                                                      ListType::new_list(BasicType::int())));
+}
+

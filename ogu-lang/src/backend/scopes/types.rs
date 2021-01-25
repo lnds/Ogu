@@ -2,11 +2,19 @@
 
 use std::fmt::Debug;
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum TypeComparation {
+    Incomparables,
+    Inferior,
+    Same,
+    Superior,
+}
+
 pub(crate) trait Type: TypeClone + Debug + mopa::Any {
     fn get_name(&self) -> String;
     fn get_signature(&self) -> String;
     fn resolve_expr_type(&self) -> Option<Box<dyn Type>>;
-    fn promotes(&self, other: &dyn Type) -> bool;
+    fn is_compatible_with(&self, other: &dyn Type) -> bool;
     fn is_trait(&self) -> bool {
         false
     }
@@ -14,6 +22,7 @@ pub(crate) trait Type: TypeClone + Debug + mopa::Any {
         false
     }
     fn match_types(&mut self, _: &dyn Type) {}
+    fn compare(&self, other: &dyn Type) -> TypeComparation;
 }
 
 mopafy!(Type);

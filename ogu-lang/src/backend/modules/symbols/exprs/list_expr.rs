@@ -141,11 +141,11 @@ impl Symbol for ListExpr {
                             }
                             Some(lt) => match lt.downcast_ref::<ListType>() {
                                 None => bail!("attempt to make a cons without a list lt = {:?}", lt),
-                                Some(lt) if !lt.ty.promotes(&*at.clone()) => {
+                                Some(lt) if !lt.ty.is_compatible_with(&*at.clone()) => {
                                     bail!("incompatible types in cons expression lt = {:?}, at = {:?}", lt, at)
                                 }
                                 Some(lt) if lt.ty.get_signature() != at.get_signature() => {
-                                    if at.is_trait() && !at.promotes(&*lt.ty){
+                                    if at.is_trait() && !at.is_compatible_with(&*lt.ty){
                                         atom.set_type(Some(lt.ty.clone()));
                                         scope.define(atom.clone());
                                     } else if lt.ty.is_trait() {

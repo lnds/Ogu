@@ -52,7 +52,7 @@ impl LambdaExpr {
                 Some(at) => match sym.get_type() {
                     None => Ok(None),
                     Some(st) => {
-                        if !st.promotes(&*at) {
+                        if !st.is_compatible_with(&*at) {
                             bail!(
                                 "incompatible  type for argument {}, st = {:?} at = {:?}",
                                 a.get_name(),

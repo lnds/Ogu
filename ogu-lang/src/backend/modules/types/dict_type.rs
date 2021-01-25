@@ -1,4 +1,4 @@
-use crate::backend::scopes::types::{Type, TypeClone};
+use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 
 #[derive(Debug, Clone)]
 pub(crate) enum DictType {
@@ -32,7 +32,11 @@ impl Type for DictType {
         Some(self.clone_box())
     }
 
-    fn promotes(&self, _: &dyn Type) -> bool {
+    fn is_compatible_with(&self, _: &dyn Type) -> bool {
+        unimplemented!()
+    }
+
+    fn compare(&self, other: &dyn Type) -> TypeComparation {
         unimplemented!()
     }
 }

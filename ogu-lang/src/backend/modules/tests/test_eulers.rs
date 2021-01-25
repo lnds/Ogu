@@ -39,7 +39,7 @@ fn test_euler_1() {
         decls[1].get_type(),
         FuncType::new_opt(
             Some(vec![ListType::new_list(TRAIT_NUM.clone_box())]),
-           TRAIT_NUM.clone_box())
+            TRAIT_NUM.clone_box())
     );
     assert_eq!(decls[2].get_type(), Some(BasicType::int()));
 }
@@ -62,8 +62,7 @@ fn test_euler_2() {
            sum [] = 0
            sum (x :: xs) = x + sum xs
 
-           result = fib-seq |> take-while \x -> x < 4000000
-           --result = fib-seq |> take-while \x -> x < 4000000 |> filter even? |> sum"#},
+           result = fib-seq |> take-while \x -> x < 4000000 |> filter even? |> sum"#},
         default_sym_table(),
     );
     if module.is_err() {
@@ -77,4 +76,84 @@ fn test_euler_2() {
         decls[0].get_type(),
         Some(ListType::new_list(BasicType::int()))
     );
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::bool())
+    );
+    assert_eq!(
+        decls[2].get_type(),
+        FuncType::new_opt(Some(vec![FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
+                                    ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
+                          ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+    );
+
+    assert_eq!(
+        decls[3].get_type(),
+        FuncType::new_opt(Some(vec![FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
+                                    ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
+                          ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+    );
+
+    assert_eq!(
+        decls[4].get_type(),
+        FuncType::new_opt(Some(vec![ListType::new_list(TRAIT_NUM.clone_box())]),
+                          BasicType::int())
+    );
+
+    assert_eq!(decls[5].get_type(), Some(BasicType::int()));
+}
+
+#[test]
+fn test_euler_3() {
+    let module = make_module(
+        indoc! {r#"
+        zero? n = n == 0N
+
+        last [] = error! "last of empty list"
+        last [x] = x
+        last (x :: xs) = last xs
+
+        factor-of? f n = zero? (n % f)
+
+        prime-factors f n
+            | n == 1 = lazy []
+            | factor-of? f n = lazy f :: prime-factors f (n / f)
+            | otherwise = recur (f + 1) n
+
+        result = prime-factors 2 600851475143 |> last
+"#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    //println!("TEST DECLS = {:#?}", decls);
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
+    );
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]), TRAIT_UNKNOWN.clone_box())
+    );
+    assert_eq!(
+        decls[2].get_type(),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), BasicType::bool())
+    );
+
+
+    assert_eq!(
+        decls[3].get_type(),
+        FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
+                          ListType::new_list(BasicType::int()))
+    );
+
+    assert_eq!(
+        decls[4].get_type(),
+        Some(BasicType::int())
+    );
+
 }

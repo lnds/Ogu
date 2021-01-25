@@ -1,4 +1,4 @@
-use crate::backend::scopes::types::{Type, TypeClone};
+use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 use std::ops::Deref;
 
 #[derive(Debug, Clone)]
@@ -25,11 +25,11 @@ impl Type for ListType {
         Some(self.clone_box())
     }
 
-    fn promotes(&self, other: &dyn Type) -> bool {
+    fn is_compatible_with(&self, other: &dyn Type) -> bool {
         match other.downcast_ref::<ListType>() {
             None => false,
             Some(lt) => {
-                lt.ty.promotes(&*self.ty.deref())
+                lt.ty.is_compatible_with(&*self.ty)
             }
         }
     }
@@ -40,9 +40,19 @@ impl Type for ListType {
 
     fn match_types(&mut self, other: &dyn Type) {
         if let Some(other) = other.downcast_ref::<ListType>() {
-            if self.is_trait() && other.ty.promotes(&*self.ty) {
+            if self.is_trait() && other.ty.is_compatible_with(&*self.ty) {
                 self.ty = other.ty.clone()
             }
         }
+    }
+
+    fn compare(&self, other: &dyn Type) -> TypeComparation {
+        println!("TYPE COMPARE SFOR LIST SELF = {:?} other = {:?}", self, other);
+        let t = match other.downcast_ref::<ListType>() {
+            None => TypeComparation::Incomparables,
+            Some(other) => self.ty.compare(&*other.ty)
+        };
+        println!("RESULT OF LIST TYPE COMPARE => {:?}\n", t.clone());
+        t
     }
 }

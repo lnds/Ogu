@@ -98,7 +98,7 @@ impl Symbol for CaseExpr {
                 }
             }
         }
-        println!("COND TYPE = {:?}", cond_type);
+        println!("CASE EXPR TYPE = {:?}", expr_type);
         self.ty = expr_type;
         let storable = self.selector.storable();
         self.selector.set_storable(true); // because of tuples

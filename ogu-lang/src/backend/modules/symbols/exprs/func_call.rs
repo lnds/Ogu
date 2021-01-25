@@ -40,8 +40,6 @@ impl Symbol for FuncCallExpr {
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        println!("FUNC CALL (name={}) set type antes = {:?} ahora = {:?}", self.func.get_name(), self.ty, ty);
-        println!("func get type = {:?}", self.func.get_type());
         self.ty = ty.clone();
         if let Some(ty) = &self.ty {
             if let Some(ft) = self.func.get_type() {
@@ -72,7 +70,6 @@ impl Symbol for FuncCallExpr {
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
         let recursive = scope.function_scope_name() == self.func.get_name();
-        println!("FUNC CALL, recursive = {}, name = {:?}", recursive, self.func.get_name());
         match ft {
             None => {
                 for a in self.args.iter_mut() {
@@ -110,7 +107,6 @@ impl Symbol for FuncCallExpr {
                         ),
                         Some(ft_args) if ft_args.len() > self.args.len() => {
                             // curry
-                            println!("CURRY PARA {:?}", self.func.get_name());
                             match scope.resolve(self.func.get_name()) {
                                 None => {
                                     if let Some(compose) = self.func.downcast_ref::<ComposeFunction>() {

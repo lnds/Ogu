@@ -34,7 +34,7 @@ impl Symbol for PartialEqExpr {
                 Some(lt) => match r.get_type() {
                     None => None,
                     Some(rt) => {
-                        if &*lt == &*rt || lt.promotes(&*rt) || rt.promotes(&*lt) {
+                        if &*lt == &*rt || lt.is_compatible_with(&*rt) || rt.is_compatible_with(&*lt) {
                             Some(BasicType::bool())
                         } else {
                             None

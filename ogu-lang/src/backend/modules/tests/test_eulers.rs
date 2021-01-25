@@ -120,8 +120,7 @@ fn test_euler_3() {
             | factor-of? f n = lazy f :: prime-factors f (n / f)
             | otherwise = recur (f + 1) n
 
-        result = prime-factors 2 600851475143 |> last
-"#},
+        result = prime-factors 2 600851475143 |> last"#},
         default_sym_table(),
     );
     if module.is_err() {
@@ -148,7 +147,7 @@ fn test_euler_3() {
     assert_eq!(
         decls[3].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
-                          ListType::new_list(BasicType::int()))
+                         ListType::new_list(BasicType::int()))
     );
 
     assert_eq!(

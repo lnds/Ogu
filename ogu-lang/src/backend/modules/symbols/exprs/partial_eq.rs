@@ -45,12 +45,33 @@ impl Symbol for PartialEqExpr {
         }
     }
 
+    fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
+        match self {
+            PartialEqExpr::Eq(l, r)
+            | PartialEqExpr::Ne(l, r)  => {
+                l.set_type(ty.clone());
+                r.set_type(ty.clone());
+            }
+        }
+    }
+
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         match self {
             PartialEqExpr::Eq(l, r) | PartialEqExpr::Ne(l, r) => {
                 resolve_comparable(l, r, scope, TRAIT_EQ)?;
                 Ok(self.get_type())
             }
+        }
+    }
+
+    fn define_into(&self, scope: &mut dyn Scope) {
+        match self {
+            PartialEqExpr::Eq(l, r)
+            | PartialEqExpr::Ne(l, r) => {
+                l.define_into(scope);
+                r.define_into(scope);
+            }
+
         }
     }
 }

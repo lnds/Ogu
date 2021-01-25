@@ -478,7 +478,7 @@ fn test_list_fib() {
 
 
 #[test]
-fn test_prime_factors() {
+fn test_prime_factors_1() {
     let module = make_module(
         indoc! {r#"
         prime-factors f n
@@ -499,3 +499,57 @@ fn test_prime_factors() {
                                                       ListType::new_list(BasicType::int())));
 }
 
+
+#[test]
+fn test_prime_factors_2() {
+    let module = make_module(
+        indoc! {r#"
+        factor-of? f n = (n % f) == 0
+
+        prime-factors f n
+            | n == 1 = lazy []
+            | factor-of? f n = lazy f :: prime-factors f (n / f)
+            | otherwise = recur (f + 1) n
+
+        "#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]), BasicType::bool()));
+    assert_eq!(decls[1].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
+                                                      ListType::new_list(BasicType::int())));
+}
+
+
+#[test]
+fn test_prime_factors_3() {
+    let module = make_module(
+        indoc! {r#"
+        zero? n = n == 0
+
+        factor-of? f n = zero? (n % f)
+
+        prime-factors f n
+            | n == 1 = lazy []
+            | factor-of? f n = lazy f :: prime-factors f (n / f)
+            | otherwise = recur (f + 1) n
+
+        "#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::bool()));
+    assert_eq!(decls[1].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]), BasicType::bool()));
+    assert_eq!(decls[2].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
+                                                      ListType::new_list(BasicType::int())));
+}

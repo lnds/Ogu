@@ -161,6 +161,7 @@ impl Symbol for FunctionSym {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
+        println!("FUNC : {}\n\n", self.get_name());
         let mut sym_table = SymbolTable::new(&self.name, Some(scope.clone_box()));
         sym_table.set_function_name(&self.name);
 

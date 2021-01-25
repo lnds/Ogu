@@ -1,5 +1,4 @@
 use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
-use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ListType {

@@ -36,7 +36,7 @@ impl Type for DictType {
         unimplemented!()
     }
 
-    fn compare(&self, other: &dyn Type) -> TypeComparation {
+    fn compare(&self, _other: &dyn Type) -> TypeComparation {
         unimplemented!()
     }
 }

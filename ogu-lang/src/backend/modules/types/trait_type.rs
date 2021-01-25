@@ -60,8 +60,32 @@ impl Type for TraitType {
         } else if other.is_trait() {
             if self.get_name() == other.get_name() {
                 TypeComparation::Same
-            } else {
+            } else if self == TRAIT_NUM && (other == TRAIT_ORD || other == TRAIT_EQ) {
+                TypeComparation::Superior
+            }  else if  (self == TRAIT_ORD || self == TRAIT_EQ) && other == TRAIT_NUM {
+                TypeComparation::Inferior
+            } else if  self == TRAIT_ORD && other == TRAIT_EQ  {
+                TypeComparation::Same
+            } else if  self == TRAIT_EQ && other == TRAIT_ORD  {
+                TypeComparation::Same
+            }
+            else {
                 TypeComparation::Incomparables
+            }
+        } else if self == TRAIT_NUM {
+            match other.downcast_ref::<BasicType>() {
+                Some(other) if matches!(other, BasicType::Int|BasicType::Char|BasicType::UInt|BasicType::Float)  => TypeComparation::Inferior,
+                _ => TypeComparation::Incomparables,
+                }
+        } else if self == TRAIT_ORD {
+            match other.downcast_ref::<BasicType>() {
+                Some(other) if matches!(other, BasicType::Int|BasicType::Char|BasicType::UInt|BasicType::Float|BasicType::Date)  => TypeComparation::Inferior,
+                _ => TypeComparation::Incomparables,
+            }
+        }else if self == TRAIT_EQ {
+            match other.downcast_ref::<BasicType>() {
+                Some(other) if matches!(other, BasicType::Int|BasicType::Char|BasicType::UInt|BasicType::Float|BasicType::Date|BasicType::Bool)  => TypeComparation::Inferior,
+                _ => TypeComparation::Incomparables,
             }
         } else {
             TypeComparation::Incomparables

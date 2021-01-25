@@ -86,7 +86,7 @@ impl Type for TupleType {
                             TypeComparation::Incomparables =>
                                 return TypeComparation::Incomparables,
                             TypeComparation::Same => result = TypeComparation::Same,
-                            _ => result = TypeComparation::Incomparables
+                            r => result = r
                         }
                     }
                     result

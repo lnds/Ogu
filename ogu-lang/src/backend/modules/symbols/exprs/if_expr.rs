@@ -34,7 +34,6 @@ impl Symbol for IfExpr {
     }
 
     fn get_type(&self) -> Option<Box<dyn Type>> {
-        println!("IF GET TYPE = {:?}\n", self.ty);
         self.ty.clone()
     }
 
@@ -82,7 +81,6 @@ impl Symbol for IfExpr {
                     bail!("Invalid If or Cond");
                 }
                 Some(et) => {
-                    println!("tt = {:?}, _et = {:?}", tt, et);
                     if &*tt != &*et {
                         println!("ET {:?} != TT {:?}", et, tt);
                         if &*et == TRAIT_UNKNOWN && &*tt != TRAIT_UNKNOWN {
@@ -118,7 +116,6 @@ impl Symbol for IfExpr {
                         }
 
                     } else {
-                        println!("meh");
                         self.ty = Some(tt);
                     }
                 }

@@ -2,7 +2,7 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeComparation};
 use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
@@ -45,19 +45,19 @@ impl FunctionSym {
     pub(crate) fn make_box(
         name: &str,
         args: &Args,
-        expr: &Expression
+        expr: &Expression,
     ) -> Box<dyn Symbol> {
         let expr: Box<dyn Symbol> = expr.into();
         let args: Option<Vec<Box<dyn Symbol>>> = match args {
             Args::Void => None,
             Args::Many(args) => Some(vec_args_into(args)),
         };
-        let ty =FuncType::make(&args, &*expr);
+        let ty = FuncType::make(&args, &*expr);
         Box::new(FunctionSym {
             name: name.to_string(),
             args,
             expr,
-            ty
+            ty,
         })
     }
 
@@ -68,22 +68,54 @@ impl FunctionSym {
         resolve: bool,
     ) -> Result<()> {
         if let Some(own_args) = &self.args {
-
             Self::check_args_can_be_replaced(&own_args[..], &args)?;
 
             let mut new_args: Vec<Box<dyn Symbol>> = vec![];
-            for (p, a) in own_args.iter().enumerate() {
-                new_args.push(IdSym::new_with_type(
-                    a.get_name(),
-                    args[p].get_type().clone(),
-                ))
+            for (a, b) in own_args.iter().zip(args.iter()) {
+                if Self::subtype(a.get_type(), b.get_type())? {
+                    new_args.push(IdSym::new_with_type(
+                        a.get_name(),
+                        b.get_type().clone(),
+                    ))
+                } else {
+                    new_args.push(IdSym::new_with_type(
+                        a.get_name(),
+                        a.get_type().clone(),
+                    ))
+                }
             }
+            println!("ARGS = {:?}", self.args);
+            println!("NEW_ARGS = {:?}\n", new_args);
             self.args = Some(new_args);
             if resolve {
                 self.resolve_type(scope)?;
             }
         }
         Ok(())
+    }
+
+    fn subtype(a: Option<Box<dyn Type>>, b: Option<Box<dyn Type>>) -> Result<bool> {
+        println!("SUBTYPE\n A = {:?}\n B = {:?}\n", a, b);
+        let r = match a {
+            None => match b {
+                None => Ok(true),
+                Some(bt) => Ok(true)
+            },
+            Some(at) => match b {
+                None => Ok(true),
+                Some(bt) => {
+                    let c = at.compare(&*bt);
+                    println!("COMPARE IS = {:?}", c);
+                    match c {
+                        TypeComparation::Superior => Ok(false),
+                        TypeComparation::Incomparables => bail!("incompatible type for arg substitution"),
+                        _ => Ok(true)
+                    }
+                }
+            }
+        };
+        println!(" => {:?}", r);
+        r
     }
 
     fn check_args_can_be_replaced(own_args: &[Box<dyn Symbol>], args: &[Box<dyn Symbol>]) -> Result<()> {

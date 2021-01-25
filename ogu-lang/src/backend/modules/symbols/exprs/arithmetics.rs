@@ -135,7 +135,6 @@ impl Symbol for ArithmeticExpr {
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        println!("SET TYPE FOR {:?}\n => {:?}", self, ty);
         match self {
             ArithmeticExpr::Add(l, r)
             | ArithmeticExpr::Sub(l, r)
@@ -148,12 +147,10 @@ impl Symbol for ArithmeticExpr {
                 r.set_type(ty.clone());
             }
         }
-        println!("SET TYPE FOR {:?}\n => {:?}", self, ty);
     }
 
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        println!("RESOLVE TYPE OP = {:?}", self);
         match self {
             ArithmeticExpr::Add(l, r)
             | ArithmeticExpr::Sub(l, r)
@@ -177,8 +174,8 @@ impl Symbol for ArithmeticExpr {
             | ArithmeticExpr::Div(l, r)
             | ArithmeticExpr::Mod(l, r)
             | ArithmeticExpr::Pow(l, r) => {
-                scope.define(l.clone());
-                scope.define(r.clone());
+                l.define_into(scope);
+                r.define_into(scope);
             }
         }
     }

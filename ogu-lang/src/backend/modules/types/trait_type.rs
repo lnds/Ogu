@@ -79,7 +79,7 @@ impl Type for TraitType {
                 }
         } else if self == TRAIT_ORD {
             match other.downcast_ref::<BasicType>() {
-                Some(other) if matches!(other, BasicType::Int|BasicType::Char|BasicType::UInt|BasicType::Float|BasicType::Date)  => TypeComparation::Inferior,
+                Some(other) if matches!(other, BasicType::Bool|BasicType::Int|BasicType::Char|BasicType::UInt|BasicType::Float|BasicType::Date)  => TypeComparation::Inferior,
                 _ => TypeComparation::Incomparables,
             }
         }else if self == TRAIT_EQ {

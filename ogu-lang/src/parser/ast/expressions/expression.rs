@@ -1018,7 +1018,6 @@ impl<'a> Expression<'a> {
     fn parse_prim_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             Some(Lexeme::LeftParen) => Expression::parse_paren_expr(parser, pos),
-            Some(Lexeme::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Lexeme::Id(_)) => {
                 let (id, mut pos) = consume_id(parser, pos)?;
                 let mut fields = vec![];

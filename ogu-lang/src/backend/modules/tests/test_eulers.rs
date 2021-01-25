@@ -3,7 +3,7 @@ use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::list_type::ListType;
-use crate::backend::modules::types::trait_type::{TRAIT_UNKNOWN, TRAIT_NUM};
+use crate::backend::modules::types::trait_type::{TRAIT_UNKNOWN, TRAIT_NUM, TRAIT_ORD};
 use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
 
@@ -62,7 +62,7 @@ fn test_euler_2() {
            sum [] = 0
            sum (x :: xs) = x + sum xs
 
-           result = fib-seq |> take-while \x -> x < 4000000 |> filter even? |> sum"#},
+           result = fib-seq |> take-while (\x -> x < 4000000) |> filter even? |> sum"#},
         default_sym_table(),
     );
     if module.is_err() {
@@ -157,3 +157,70 @@ fn test_euler_3() {
 
 }
 
+
+#[test]
+fn test_euler_4() {
+    let module = make_module(
+        indoc! {r#"
+        zero? n = n == 0N
+
+        rev num =
+            for reversed = 0, n = num
+            loop
+                if zero? n then reversed
+                else repeat (reversed * 10 + n % 10), (n // 10)
+
+        palindrome? n = n == rev n
+
+        filter f [] = []
+        filter f (h :: t) = if f h then h :: filter f t else filter f t
+
+        max [] = error! "no max for empty list"
+        max [x] = x
+        max [a, b] = if a > b then a else b
+        max (a :: b :: tail) = if a > b then max (a :: tail) else max (b :: tail)
+
+
+
+        result = [x * y | x <- [100..999], y <- [100..999]] |> filter palindrome?  |> max"#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    //println!("TEST DECLS = {:#?}", decls);
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
+    );
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+    );
+    assert_eq!(
+        decls[2].get_type(),
+        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::bool())
+    );
+
+
+    assert_eq!(
+        decls[3].get_type(),
+        FuncType::new_opt(Some(vec![FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
+                                    ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
+                          ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+    );
+
+    assert_eq!(
+        decls[4].get_type(),
+        FuncType::new_opt(Some(vec![ListType::new_list(TRAIT_ORD.clone_box())]),
+                          TRAIT_ORD.clone_box())
+    );
+    assert_eq!(
+        decls[5].get_type(),
+        Some(BasicType::int())
+    );
+
+}

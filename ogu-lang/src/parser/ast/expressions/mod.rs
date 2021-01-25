@@ -249,6 +249,7 @@ pub(crate) fn left_assoc_expr_to_expr(la_expr: LeftAssocExpr) -> Expression {
     let LeftAssocExpr(sym, left, right) = la_expr;
     match sym {
         Lexeme::PipeRight => Expression::FuncCallExpr(right, vec![left.deref().clone()]),
+        Lexeme::PipeLeft => Expression::FuncCallExpr(left, vec![right.deref().clone()]),
         Lexeme::Or => Expression::OrExpr(left, right),
         Lexeme::And => Expression::AndExpr(left, right),
         Lexeme::LessThan => Expression::LtExpr(left, right),

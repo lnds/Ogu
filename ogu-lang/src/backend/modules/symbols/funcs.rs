@@ -8,6 +8,7 @@ use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::module::decls::FuncTypeAst;
 use anyhow::{bail, Result};
+use crate::backend::compiler::default_sym_table;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FunctionSym {
@@ -68,11 +69,11 @@ impl FunctionSym {
         resolve: bool,
     ) -> Result<()> {
         if let Some(own_args) = &self.args {
-            Self::check_args_can_be_replaced(&own_args[..], &args)?;
+            self.check_args_can_be_replaced(&own_args[..], &args)?;
 
             let mut new_args: Vec<Box<dyn Symbol>> = vec![];
             for (a, b) in own_args.iter().zip(args.iter()) {
-                if Self::subtype(a.get_type(), b.get_type())? {
+                if self.subtype(a.get_type(), b.get_type())? {
                     new_args.push(IdSym::new_with_type(
                         a.get_name(),
                         b.get_type().clone(),
@@ -92,7 +93,7 @@ impl FunctionSym {
         Ok(())
     }
 
-    fn subtype(a: Option<Box<dyn Type>>, b: Option<Box<dyn Type>>) -> Result<bool> {
+    fn subtype(&self, a: Option<Box<dyn Type>>, b: Option<Box<dyn Type>>) -> Result<bool> {
         match a {
             None => match b {
                 None => Ok(true),
@@ -104,7 +105,7 @@ impl FunctionSym {
                     let c = at.compare(&*bt);
                     match c {
                         TypeComparation::Superior => Ok(false),
-                        TypeComparation::Incomparables => bail!("incompatible type for arg substitution, expecting {}, found {}", at.get_name(), bt.get_name()),
+                        TypeComparation::Incomparables => bail!("incompatible type for arg substitution in function {}, expecting {}, found {}", self.name, at.get_name(), bt.get_name()),
                         _ => Ok(true)
                     }
                 }
@@ -112,7 +113,7 @@ impl FunctionSym {
         }
     }
 
-    fn check_args_can_be_replaced(own_args: &[Box<dyn Symbol>], args: &[Box<dyn Symbol>]) -> Result<()> {
+    fn check_args_can_be_replaced(&self, own_args: &[Box<dyn Symbol>], args: &[Box<dyn Symbol>]) -> Result<()> {
         if own_args.len() != args.len() {
             bail!("wrong arguments passed")
         }
@@ -120,7 +121,7 @@ impl FunctionSym {
             if let (Some(ta), Some(tb)) = (a.get_type(), b.get_type()) {
                 if &*ta != &*tb {
                     if !ta.is_compatible_with(&*tb) && !tb.is_compatible_with(&*ta) {
-                        bail!("incompatible args passed\n TA = {:?}\n TB = {:?}", ta, tb)
+                        bail!("incompatible args passed for function {}\n TA = {:?}\n TB = {:?}", self.name, ta, tb)
                     }
                 }
             }

@@ -1,7 +1,7 @@
 use crate::backend::modules::types::basic_type::{CHAR_TYPE, FLOAT_TYPE, INT_TYPE};
 use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeComparation};
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
 use crate::backend::modules::types::list_type::ListType;
@@ -69,13 +69,15 @@ impl Symbol for RangeExpr {
                 None => {
                     second.set_type(self.inferior.get_type());
                     second.define_into(scope);
-
-                },
+                }
                 Some(sty) => {
                     if let Some(ity) = self.inferior.get_type() {
                         if !ity.is_compatible_with(&*sty) {
                             bail!("range must have elementes of same type {:?} != {:?}", self.inferior.get_type(), second.get_type());
-
+                        } else if ity.is_trait() && !sty.is_trait() {
+                            self.inferior.set_type(Some(sty.clone_box()));
+                        } else if sty.is_trait() && !ity.is_trait() {
+                            second.set_type(Some(sty.clone_box()));
                         }
                     }
                 }
@@ -84,15 +86,18 @@ impl Symbol for RangeExpr {
         if let Some(sup) = &mut self.superior {
             sup.resolve_type(scope)?;
             match sup.get_type() {
-                None =>  {
+                None => {
                     sup.set_type(self.inferior.get_type());
                     sup.define_into(scope);
                 }
                 Some(sty) => {
                     if let Some(ity) = self.inferior.get_type() {
                         if !ity.is_compatible_with(&*sty) {
-                            bail!("range must have elementes of same type {:?} != {:?}", self.inferior.get_type(), sup.get_type());
-
+                            bail!("range must have elements of same type {:?} != {:?}", self.inferior.get_type(), sup.get_type());
+                        } else if ity.is_trait() && !sty.is_trait() {
+                            self.inferior.set_type(Some(sty.clone_box()));
+                        } else if sty.is_trait() && !ity.is_trait() {
+                            sup.set_type(Some(sty.clone_box()));
                         }
                     }
                 }

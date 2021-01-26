@@ -90,7 +90,7 @@ fn test_invalid_lists() {
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
-            a = [1, 2, 3N]
+            a = [1, 2, 3.0]
             "#},
         default_sym_table(),
     );

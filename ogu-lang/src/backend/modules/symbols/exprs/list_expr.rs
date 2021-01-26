@@ -99,13 +99,13 @@ impl Symbol for ListExpr {
                 for e in exprs.iter_mut() {
                     e.resolve_type(scope)?;
                 }
-                let t = exprs[0].get_type();
-                match t {
+                let ty = exprs[0].get_type();
+                match ty {
                     None => { } ,
                     Some(ty) => {
                         let not_same = exprs.iter().any(|t| match t.get_type() {
                             None => true,
-                            Some(t) => &*t != &*ty,
+                            Some(t) => !ty.is_compatible_with(&*t)
                         });
                         if not_same {
                             bail!("list must have all elements of same type")

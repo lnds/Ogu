@@ -226,7 +226,6 @@ impl Symbol for FuncCallExpr {
                     }
                 } else if let Some(ft) = ft.downcast_ref::<VariadicType>() {
                     // TODO
-                    println!("!! variadic {:#?}", ft);
                 } else if let Some(tf) = self.func.get_type() {
                     if &*tf == TRAIT_UNKNOWN {
                         let mut ty_args = vec![];

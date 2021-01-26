@@ -269,10 +269,11 @@ impl Symbol for FuncCallExpr {
         }
     }
 
-    fn define_into(&self, scope: &mut dyn Scope) {
+    fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>>{
         self.func.define_into(scope);
         for a in self.args.iter() {
             scope.define(a.clone());
         }
+        None
     }
 }

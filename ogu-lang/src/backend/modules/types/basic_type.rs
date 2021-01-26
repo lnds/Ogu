@@ -172,13 +172,13 @@ impl Type for BasicType {
                     BasicType::Int => match other {
                         BasicType::Int => TypeComparation::Same,
                         BasicType::Char => TypeComparation::Superior,
-                        BasicType::UInt => TypeComparation::Superior,
+                        BasicType::UInt => TypeComparation::Inferior,
                         BasicType::Float => TypeComparation::Inferior,
                         _ => TypeComparation::Incomparables
                     }
                     BasicType::UInt => match other {
                         BasicType::UInt => TypeComparation::Same,
-                        BasicType::Int => TypeComparation::Inferior,
+                        BasicType::Int => TypeComparation::Superior,
                         BasicType::Char => TypeComparation::Superior,
                         BasicType::Float => TypeComparation::Inferior,
                         _ => TypeComparation::Incomparables
@@ -189,9 +189,9 @@ impl Type for BasicType {
                     }
                     BasicType::Float => match other {
                         BasicType::Float => TypeComparation::Same,
-                        BasicType::UInt => TypeComparation::Inferior,
-                        BasicType::Int => TypeComparation::Inferior,
-                        BasicType::Char => TypeComparation::Inferior,
+                        BasicType::UInt => TypeComparation::Superior,
+                        BasicType::Int => TypeComparation::Superior,
+                        BasicType::Char => TypeComparation::Superior,
                         _ => TypeComparation::Incomparables
                     }
                     BasicType::Regexp => match other {

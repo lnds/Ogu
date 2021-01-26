@@ -141,7 +141,7 @@ impl Symbol for ListGuard {
         Ok(self.get_type())
     }
 
-    fn define_into(&self, scope: &mut dyn Scope) {
+    fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
         match self {
             ListGuard::Generator(id, _) => {
                 id.define_into(scope);
@@ -162,7 +162,8 @@ impl Symbol for ListGuard {
             ListGuard::Expr(expr) => {
                 expr.define_into(scope);
             }
-        }
+        };
+        None
     }
 
     fn is_seq(&self) -> bool {

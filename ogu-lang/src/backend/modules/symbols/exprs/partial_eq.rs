@@ -64,14 +64,14 @@ impl Symbol for PartialEqExpr {
         }
     }
 
-    fn define_into(&self, scope: &mut dyn Scope) {
+    fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
         match self {
             PartialEqExpr::Eq(l, r)
             | PartialEqExpr::Ne(l, r) => {
                 l.define_into(scope);
                 r.define_into(scope);
             }
-
         }
+        None
     }
 }

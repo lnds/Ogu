@@ -1,7 +1,7 @@
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeComparation};
 use crate::backend::scopes::Scope;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 
 pub(crate) fn resolve_comparable(
@@ -9,7 +9,7 @@ pub(crate) fn resolve_comparable(
     r: &mut Box<dyn Symbol>,
     scope: &mut dyn Scope,
     tr: &dyn Type,
-) -> Result<()> {
+) -> Result<Option<Box<dyn Type>>> {
     match l.resolve_type(scope)? {
         None => match r.resolve_type(scope)? {
             None => {
@@ -64,6 +64,19 @@ pub(crate) fn resolve_comparable(
                 }
             }
         },
-    };
-    Ok(())
+    }
+    match l.get_type() {
+        None => Ok(r.get_type()),
+        Some(lt) => match r.get_type() {
+            None => Ok(l.get_type()),
+            Some(rt) => {
+                let c = lt.compare(&*rt);
+                match c {
+                    TypeComparation::Incomparables => bail!("incompatibles types {:?} vs {:?}", lt, rt),
+                    TypeComparation::Inferior => Ok(r.get_type()),
+                    _ => Ok(l.get_type())
+                }
+            }
+        }
+    }
 }

@@ -214,12 +214,12 @@ impl Symbol for ListExpr {
         Ok(self.get_type())
     }
 
-    fn define_into(&self, scope: &mut dyn Scope) {
+    fn define_into(&self, scope: &mut dyn Scope)  -> Option<Box<dyn Symbol>>{
         match &self.kind {
-            ListExprKind::EmptyList => {}
+            ListExprKind::EmptyList => {  }
             ListExprKind::List(v) => {
                 for e in v.iter() {
-                    e.define_into(scope)
+                    e.define_into(scope);
                 }
             }
             ListExprKind::Cons(a, l) => {
@@ -228,9 +228,10 @@ impl Symbol for ListExpr {
             }
             ListExprKind::Concat(l, r) => {
                 l.define_into(scope);
-                r.define_into(scope)
+                r.define_into(scope);
             }
-        }
+        };
+        None
     }
 
     fn is_seq(&self) -> bool {

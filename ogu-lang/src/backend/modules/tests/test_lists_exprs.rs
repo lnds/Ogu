@@ -373,7 +373,9 @@ fn test_list_comprehension_3() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -395,7 +397,7 @@ fn test_list_comprehension_3() {
     );
     assert_eq!(
         decls[4].get_type(),
-        Some(ListType::new_list(TupleType::new_box(vec![BasicType::float(), TRAIT_NUM.clone_box(), BasicType::int()])))
+        Some(ListType::new_list(TupleType::new_box(vec![BasicType::float(), BasicType::int(), BasicType::int()])))
     );
 }
 

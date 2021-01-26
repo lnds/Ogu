@@ -56,8 +56,8 @@ impl Symbol for ValueSym {
             self.expr = curry;
         }
         self.name.resolve_type(scope)?;
-        self.set_type(self.expr.get_type());
-        //self.name.set_type(self.expr.get_type());
+        self.name.set_type(self.expr.get_type());
+
         Ok(self.get_type())
     }
 
@@ -65,9 +65,9 @@ impl Symbol for ValueSym {
         true
     }
 
-    fn define_into(&self, scope: &mut dyn Scope) {
-        scope.define(self.name.clone());
+    fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
         scope.define(self.expr.clone());
+        scope.define(self.name.clone())
     }
 
 }

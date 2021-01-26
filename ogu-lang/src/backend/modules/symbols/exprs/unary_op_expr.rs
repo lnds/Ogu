@@ -114,7 +114,7 @@ impl UnaryOpExpr {
         match expr {
             None => {
                 let x = IdSym::new_with_type("x", Some(tr.clone_box()));
-                let y = IdSym::new_with_type("x", Some(tr.clone_box()));
+                let y = IdSym::new_with_type("y", Some(tr.clone_box()));
                 LambdaExpr::new(vec![x.clone(), y.clone()], new(x, y))
             }
             Some(expr) => {

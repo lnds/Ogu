@@ -36,7 +36,6 @@ fn test_let() {
 fn test_let_2() {
     let module = make_module(
         indoc! {r#"
-            -- taken from http://learnyouahaskell.com/syntax-in-functions#pattern-matching
             a = let a = 10 in let a = a * 1.0 in let a = a // 2 in a
             b = let a = 10 in let a = a * 1.0 in let a = a / 2 in a
             "#},
@@ -45,7 +44,6 @@ fn test_let_2() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(decls[0].get_type(), Some(BasicType::int()));
     assert_eq!(decls[1].get_type(), Some(BasicType::float()));
 }

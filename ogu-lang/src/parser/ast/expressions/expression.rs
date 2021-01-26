@@ -453,7 +453,7 @@ impl<'a> Expression<'a> {
     );
 
     pub(crate) fn parse_primary_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        match parser.get_token(pos) {
+        let r = match parser.get_token(pos) {
             Some(Lexeme::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Lexeme::LeftCurly) => Expression::parse_record_expr(parser, pos),
             Some(Lexeme::LeftCurlyCurly) => Expression::parse_macro_expand_expr(parser, pos),
@@ -466,7 +466,11 @@ impl<'a> Expression<'a> {
             Some(Lexeme::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
             Some(Lexeme::Recur) => Expression::parse_recur(parser, pos),
             _ => Expression::parse_prim_expr(parser, pos),
+        };
+        if let Ok((e, pos)) = &r {
+            println!("PARSED PRIMARY = {:?}\nnext @{} =>{:?}", e, pos, parser.get_token(*pos));
         }
+        r
     }
 
     parse_left_assoc!(
@@ -543,8 +547,16 @@ impl<'a> Expression<'a> {
                             if is_func_call_end_symbol(parser.get_token(pos)) {
                                 return Ok((expr, pos));
                             }
+                            let back_pos = pos;
                             let (left_expr, pos) = Expression::parse(parser, pos)?;
+                            if is_func_call_end_symbol(parser.get_token(pos)) {
+                                // BACK TRACK
+                                return Ok((expr, back_pos));
+                            }
                             let (right_expr, pos) = Expression::parse(parser, pos)?;
+                            if !is_func_call_end_symbol(parser.get_token(pos)) {
+                                return Ok((expr, back_pos));
+                            }
                             let pos = parser.skip_nl(pos);
                             match op {
                                 Lexeme::Cons => Ok((Expression::ConsExpr(Box::new(left_expr), Box::new(right_expr)), pos)),
@@ -726,7 +738,6 @@ impl<'a> Expression<'a> {
                         } else {
                             let pos = consume_symbol(parser, pos, Lexeme::RightBracket)?;
                             if exprs.len() == 1 {
-                                println!("RANGE {:?} {:?}\n", exprs, expr);
                                 Ok((
                                     Expression::RangeExpr(
                                         Box::new(exprs[0].clone()),
@@ -962,13 +973,16 @@ impl<'a> Expression<'a> {
         {
             Ok((expr, pos))
         } else {
+            println!("INIT FUNC CALL PARSING expr = {:?}\n", expr);
             let mut args = vec![];
             let mut pos = pos;
             while !is_func_call_end_symbol(parser.get_token(pos)) {
                 let (arg, new_pos) = Expression::parse_primary_expr(parser, pos)?;
+                println!("arg = {:?}", arg);
                 args.push(arg);
                 pos = new_pos;
             }
+            println!("FUNC CALL => [{:?}] -> {:?}\n", args, expr);
             Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
         }
     }

@@ -619,7 +619,6 @@ fn test_not() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     validate_decls(
         module,
@@ -635,6 +634,31 @@ fn test_not() {
     );
 }
 
+
+#[test]
+fn test_map() {
+    let module = make_module(
+        indoc! {r#"
+        map f [] = []
+        map f (x :: xs) = (f x) :: (map f xs)
+        squares = map (*) [0 .. 100]
+        "#},
+        default_sym_table());
+
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(Some(vec![FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), TRAIT_UNKNOWN.clone_box()),
+                                    ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
+                          ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+    );
+    assert_eq!(decls[1].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(decls[2].get_type(), Some(ListType::new_list(BasicType::int())));
+}
 
 fn validate_decls(
     module: Result<Module>,

@@ -453,7 +453,7 @@ impl<'a> Expression<'a> {
     );
 
     pub(crate) fn parse_primary_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let r = match parser.get_token(pos) {
+        match parser.get_token(pos) {
             Some(Lexeme::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Lexeme::LeftCurly) => Expression::parse_record_expr(parser, pos),
             Some(Lexeme::LeftCurlyCurly) => Expression::parse_macro_expand_expr(parser, pos),
@@ -466,11 +466,7 @@ impl<'a> Expression<'a> {
             Some(Lexeme::TypeId(_)) => Expression::parse_ctor_expr(parser, pos),
             Some(Lexeme::Recur) => Expression::parse_recur(parser, pos),
             _ => Expression::parse_prim_expr(parser, pos),
-        };
-        if let Ok((e, pos)) = &r {
-            println!("PARSED PRIMARY = {:?}\nnext @{} =>{:?}", e, pos, parser.get_token(*pos));
         }
-        r
     }
 
     parse_left_assoc!(
@@ -973,7 +969,6 @@ impl<'a> Expression<'a> {
         {
             Ok((expr, pos))
         } else {
-            println!("INIT FUNC CALL PARSING expr = {:?}\n", expr);
             let mut args = vec![];
             let mut pos = pos;
             while !is_func_call_end_symbol(parser.get_token(pos)) {
@@ -982,7 +977,6 @@ impl<'a> Expression<'a> {
                 args.push(arg);
                 pos = new_pos;
             }
-            println!("FUNC CALL => [{:?}] -> {:?}\n", args, expr);
             Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
         }
     }

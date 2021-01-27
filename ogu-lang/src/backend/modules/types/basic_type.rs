@@ -105,7 +105,7 @@ impl Type for BasicType {
                 {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
-                    matches!(ot, BasicType::Int | BasicType::UInt | BasicType::Float)
+                    matches!(ot, BasicType::Int | BasicType::UInt )
                 } else {
                     false
                 }
@@ -118,16 +118,16 @@ impl Type for BasicType {
                 {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
-                    matches!(ot, BasicType::Int | BasicType::UInt | BasicType::Float)
+                    matches!(ot, BasicType::Float)
                 } else {
                     false
                 }
             }
             BasicType::Char => {
-                 other ==TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
+                other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
             }
             BasicType::Bool => {
-                other ==TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
+                other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
             }
             _ => other == TRAIT_UNKNOWN,
         }
@@ -141,22 +141,18 @@ impl Type for BasicType {
         match other.downcast_ref::<BasicType>() {
             None => {
                 if let Some(other) = other.downcast_ref::<TraitType>() {
-                    if other == TRAIT_UNKNOWN {
+                    if other == TRAIT_UNKNOWN
+                        || (other == TRAIT_NUM && matches!(self, BasicType::Int|BasicType::UInt|BasicType::Float|BasicType::Char))
+                        || (other == TRAIT_EQ && matches!(self, BasicType::Date|BasicType::Bool|BasicType::Regexp|BasicType::Int|BasicType::UInt|BasicType::Float|BasicType::Char))
+                        || (other == TRAIT_ORD && matches!(self, BasicType::Date|BasicType::Int|BasicType::UInt|BasicType::Float|BasicType::Char)) {
                         TypeComparation::Superior
-                    }  else if other == TRAIT_NUM  && matches!(self, BasicType::Int|BasicType::UInt|BasicType::Float|BasicType::Char) {
-                        TypeComparation::Superior
-                    } else if other == TRAIT_EQ  && matches!(self, BasicType::Date|BasicType::Bool|BasicType::Regexp|BasicType::Int|BasicType::UInt|BasicType::Float|BasicType::Char) {
-                        TypeComparation::Superior
-                    } else if other == TRAIT_ORD  && matches!(self, BasicType::Date|BasicType::Int|BasicType::UInt|BasicType::Float|BasicType::Char) {
-                        TypeComparation::Superior
-                    }
-                    else {
+                    } else {
                         TypeComparation::Incomparables
                     }
                 } else {
                     TypeComparation::Incomparables
                 }
-            },
+            }
             Some(other) => {
                 match self {
                     BasicType::Bool => match other {

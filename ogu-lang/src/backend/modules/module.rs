@@ -1,12 +1,11 @@
-use crate::backend::modules::symbols::funcs::FunctionSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::Scope;
 use crate::parser::ast::module::decls::DeclarationAst;
-use crate::parser::ast::module::decls::DeclarationAst::{Function, FunctionWithGuards, Value};
 use crate::parser::ast::module::ModuleAst;
 use anyhow::{bail, Result};
+use crate::backend::modules::symbols::func::func_def::Function;
 
 #[derive(Debug)]
 pub struct Module {
@@ -35,9 +34,9 @@ impl Module {
 
     fn define_decl(decl: &DeclarationAst) -> Result<Box<dyn Symbol>> {
         match decl {
-            FunctionWithGuards(_, _, _, _) => bail!("internal error, function with guard leaked"),
-            Function(name, args, expr, ft) => FunctionSym::make(name, args, expr, ft),
-            Value(name, expr) => Ok(ValueSym::new(name, expr)),
+            DeclarationAst::FunctionWithGuards(_, _, _, _) => bail!("internal error, function with guard leaked"),
+            DeclarationAst::Function(name, args, expr, ft) => Function::make(name, args, expr, ft),
+            DeclarationAst::Value(name, expr) => Ok(ValueSym::new(name, expr)),
             _d => {
                 println!("not implemented for {:?}", _d);
                 todo!()

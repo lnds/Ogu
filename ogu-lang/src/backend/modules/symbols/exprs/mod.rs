@@ -4,42 +4,40 @@ use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticExpr;
 use crate::backend::modules::symbols::exprs::case_expr::CaseExpr;
 use crate::backend::modules::symbols::exprs::dict_expr::DictExpr;
 use crate::backend::modules::symbols::exprs::do_expr::DoExpr;
-use crate::backend::modules::symbols::exprs::func_call::FuncCallExpr;
 use crate::backend::modules::symbols::exprs::guarded_expr::GuardedExpr;
 use crate::backend::modules::symbols::exprs::if_expr::IfExpr;
-use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
+use crate::backend::modules::symbols::exprs::lazy_call::LazyExpr;
 use crate::backend::modules::symbols::exprs::let_expr::LetExpr;
 use crate::backend::modules::symbols::exprs::list_comp::ListComprehension;
 use crate::backend::modules::symbols::exprs::list_expr::ListExpr;
 use crate::backend::modules::symbols::exprs::literals::Literal;
 use crate::backend::modules::symbols::exprs::logical_expr::LogicalExpr;
+use crate::backend::modules::symbols::exprs::loop_expr::LoopExpr;
 use crate::backend::modules::symbols::exprs::paren_expr::ParenExpr;
 use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdExpr;
 use crate::backend::modules::symbols::exprs::range_expr::RangeExpr;
-use crate::backend::modules::symbols::exprs::recur_call::RecurCallExpr;
+use crate::backend::modules::symbols::exprs::repeat_expr::RepeatExpr;
 use crate::backend::modules::symbols::exprs::tuple_expr::TupleExpr;
 use crate::backend::modules::symbols::exprs::unary_op_expr::UnaryOpExpr;
+use crate::backend::modules::symbols::func::func_call::FuncCallExpr;
+use crate::backend::modules::symbols::func::func_compose::ComposeFunction;
+use crate::backend::modules::symbols::func::lambda_expr::LambdaExpr;
+use crate::backend::modules::symbols::func::recur_call::RecurCallExpr;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::{Expression, LambdaArg, ListComprehensionGuard, OptExprTuple, RecurValue};
-use crate::backend::modules::symbols::exprs::lazy_call::LazyExpr;
-use crate::backend::modules::symbols::funcs::FunctionSym;
-use crate::backend::modules::symbols::exprs::loop_expr::LoopExpr;
-use crate::backend::modules::symbols::exprs::repeat_expr::RepeatExpr;
-use crate::backend::modules::symbols::exprs::func_compose::ComposeFunction;
+use crate::backend::modules::symbols::func::func_def::Function;
 
 mod arithmetics;
 mod case_expr;
 mod comparable_trait;
 mod dict_expr;
 mod do_expr;
-pub(crate) mod func_call;
 mod guarded_expr;
 mod if_expr;
-mod lambda_expr;
 mod let_expr;
 mod list_comp;
 mod list_expr;
@@ -50,13 +48,11 @@ mod paren_expr;
 mod partial_eq;
 mod partial_ord;
 mod range_expr;
-mod recur_call;
 mod tuple_expr;
 mod unary_op_expr;
 mod lazy_call;
 mod loop_expr;
 mod repeat_expr;
-mod func_compose;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -255,7 +251,7 @@ impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
     fn from(eq: &Equation<'a>) -> Self {
         match eq {
             Equation::Value(id, expr) => ValueSym::new(id, expr),
-            Equation::Function(name, args, expr) => FunctionSym::make_box(name, args, expr),
+            Equation::Function(name, args, expr) => Function::make_box(name, args, expr),
             _e => {
                 println!("not implemented for {:?}", _e);
                 todo!()

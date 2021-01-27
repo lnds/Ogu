@@ -1,5 +1,4 @@
-use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
-use crate::backend::modules::symbols::funcs::FunctionSym;
+use crate::backend::modules::symbols::func::lambda_expr::LambdaExpr;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::modules::types::func_type::FuncType;
@@ -8,8 +7,9 @@ use crate::backend::scopes::symbol::{Symbol, SymbolClone};
 use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::backend::modules::symbols::exprs::func_compose::ComposeFunction;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
+use crate::backend::modules::symbols::func::func_compose::ComposeFunction;
+use crate::backend::modules::symbols::func::func_def::Function;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallExpr {
@@ -69,7 +69,7 @@ impl Symbol for FuncCallExpr {
                     a.define_into(scope);
                 }
                 if let Some(func) = scope.resolve(self.func.get_name()) {
-                    if let Some(func) = func.downcast_ref::<FunctionSym>() {
+                    if let Some(func) = func.downcast_ref::<Function>() {
                         let mut f = func.clone();
                         f.replace_args(self.args.to_vec(), scope, !recursive)?;
                         if self.func.get_type() != f.get_type() {
@@ -101,44 +101,39 @@ impl Symbol for FuncCallExpr {
                             // curry
                             match scope.resolve(self.func.get_name()) {
                                 None => {
-                                    if let Some(compose) = self.func.downcast_ref::<ComposeFunction>() {
-                                        let c = compose.clone();
-                                        if self.func.get_type() != c.get_type() {
-                                            self.func = Box::new(c);
+                                    match self.func.downcast_ref::<ComposeFunction>() {
+                                        None => bail!( "can't find a function to curry {} func = {:?}", self.func.get_name(), self.func ),
+                                        Some(compose) => {
+                                            let c = compose.clone();
+                                            if self.func.get_type() != c.get_type() {
+                                                self.func = Box::new(c);
+                                            }
+                                            self.curried = true;
                                         }
-                                    } else {
-                                        bail!( "can't find a function to curry {} func = {:?}", self.func.get_name(), self.func )
                                     }
                                 }
-                                Some(func) => match func.downcast_ref::<FunctionSym>() {
-                                    None => bail!(
-                                        "can't infer a function to curry {:?} => {:?}",
-                                        func, func.get_type()
-                                    ),
-                                    Some(_) => {
-                                        let n = ft_args.len() - self.args.len();
-                                        let skip = ft_args.len() - n;
-                                        let mut n_args = vec![];
-                                        for (i, ft) in ft_args.iter().enumerate() {
-                                            if i >= skip {
-                                                let mut sym: Box<dyn Symbol> =
-                                                    IdSym::new(&format!("x_{}", i));
-                                                sym.set_type(Some(ft.clone()));
-                                                n_args.push(sym)
-                                            }
+                                Some(func) => {
+                                    let n = ft_args.len() - self.args.len();
+                                    let skip = ft_args.len() - n;
+                                    let mut n_args = vec![];
+                                    for (i, ft) in ft_args.iter().enumerate() {
+                                        if i >= skip {
+                                            let mut sym: Box<dyn Symbol> =
+                                                IdSym::new(&format!("x_{}", i));
+                                            sym.set_type(Some(ft.clone()));
+                                            n_args.push(sym)
                                         }
-                                        let mut call_args = self.args.to_vec();
-                                        call_args.append(&mut n_args.to_vec());
-                                        let mut expr =
-                                            FuncCallExpr::new(self.func.clone_box(), call_args);
-                                        expr.curried = true;
-                                        let mut lambda =
-                                            LambdaExpr::new(n_args.to_vec(), expr.clone_box());
-                                        lambda.resolve_type(scope)?;
-                                        self.curried = true;
-                                        self.func = lambda
                                     }
-                                },
+                                    let mut call_args = self.args.to_vec();
+                                    call_args.append(&mut n_args.to_vec());
+                                    let expr =
+                                        FuncCallExpr::new(func.clone_box(), call_args);
+                                    let mut lambda =
+                                        LambdaExpr::new(n_args.to_vec(), expr.clone_box());
+                                    lambda.resolve_type(scope)?;
+                                    self.curried = true;
+                                    self.func = lambda
+                                }
                             }
                         }
                         Some(ft_args) => {
@@ -160,7 +155,7 @@ impl Symbol for FuncCallExpr {
                                 None => self.func.clone(),
                                 Some(func) => func.clone()
                             };
-                            if let Some(func) = func.downcast_ref::<FunctionSym>() {
+                            if let Some(func) = func.downcast_ref::<Function>() {
                                 let mut f = func.clone();
                                 f.replace_args(self.args.to_vec(), scope, !recursive)?;
                                 if self.func.get_type() != f.get_type() {
@@ -174,8 +169,7 @@ impl Symbol for FuncCallExpr {
                                                 id.get_name()
                                             ),
                                         Some(fun) => {
-                                            if let Some(func) =
-                                            fun.downcast_ref::<FunctionSym>()
+                                            if let Some(func) = fun.downcast_ref::<Function>()
                                             {
                                                 let mut f = func.clone();
                                                 f.replace_args(
@@ -268,7 +262,7 @@ impl Symbol for FuncCallExpr {
         }
     }
 
-    fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>>{
+    fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
         self.func.define_into(scope);
         for a in self.args.iter() {
             scope.define(a.clone());

@@ -16,7 +16,7 @@ fn test_curry_1() {
             ten = double' 5
             add x y z = x + y + z
             add2 x y = add 0
-            tenf = double' 5.0 "#},
+            tenf = double' 5"#},
         default_sym_table(),
     );
     if module.is_err() {
@@ -60,5 +60,5 @@ fn test_curry_1() {
             BasicType::int()
         )
     );
-    assert_eq!(decls[6].get_type(), Some(BasicType::float()));
+    assert_eq!(decls[6].get_type(), Some(BasicType::int()));
 }

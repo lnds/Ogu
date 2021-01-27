@@ -641,7 +641,7 @@ fn test_map() {
         indoc! {r#"
         map f [] = []
         map f (x :: xs) = (f x) :: (map f xs)
-        squares = map (*) [0 .. 100]
+        squares = [0..10] |> map \x -> x * x
         "#},
         default_sym_table());
 
@@ -657,7 +657,6 @@ fn test_map() {
                           ListType::new_list(TRAIT_UNKNOWN.clone_box()))
     );
     assert_eq!(decls[1].get_type(), Some(ListType::new_list(BasicType::int())));
-    assert_eq!(decls[2].get_type(), Some(ListType::new_list(BasicType::int())));
 }
 
 fn validate_decls(

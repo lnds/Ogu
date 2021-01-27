@@ -8,17 +8,16 @@ use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::module::decls::FuncTypeAst;
 use anyhow::{bail, Result};
-use crate::backend::compiler::default_sym_table;
 
 #[derive(Clone, Debug)]
-pub(crate) struct FunctionSym {
+pub(crate) struct Function {
     name: String,
     args: Option<Vec<Box<dyn Symbol>>>,
     expr: Box<dyn Symbol>,
     ty: Option<Box<FuncType>>,
 }
 
-impl FunctionSym {
+impl Function {
     pub(crate) fn make(
         name: &str,
         args: &Args,
@@ -35,7 +34,7 @@ impl FunctionSym {
             None => FuncType::make(&args, &*expr),
             Some(ft) => FuncType::check_and_make(name, ft, &mut args)?,
         };
-        Ok(Box::new(FunctionSym {
+        Ok(Box::new(Function {
             name: name.to_string(),
             args,
             expr,
@@ -54,7 +53,7 @@ impl FunctionSym {
             Args::Many(args) => Some(vec_args_into(args)),
         };
         let ty = FuncType::make(&args, &*expr);
-        Box::new(FunctionSym {
+        Box::new(Function {
             name: name.to_string(),
             args,
             expr,
@@ -79,10 +78,7 @@ impl FunctionSym {
                         b.get_type().clone(),
                     ))
                 } else {
-                    new_args.push(IdSym::new_with_type(
-                        a.get_name(),
-                        a.get_type().clone(),
-                    ))
+                    new_args.push(a.clone())
                 }
             }
             self.args = Some(new_args);
@@ -160,7 +156,7 @@ impl FunctionSym {
     }
 }
 
-impl Symbol for FunctionSym {
+impl Symbol for Function {
     fn get_name(&self) -> &str {
         &self.name
     }
@@ -179,7 +175,6 @@ impl Symbol for FunctionSym {
         if self.ty.is_none() {
             if let Some(ty) = ty {
                 if let Some(ty) = ty.downcast_ref::<FuncType>() {
-                    println!("SET TYPE FUNC {}\n FROM: {:?}\n TO: {:?}\n", self.name, self.ty, ty);
                     self.ty = Some(Box::new(ty.clone()))
                 }
             }

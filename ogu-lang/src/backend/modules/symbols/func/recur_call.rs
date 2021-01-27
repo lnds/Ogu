@@ -1,4 +1,4 @@
-use crate::backend::modules::symbols::exprs::func_call::FuncCallExpr;
+use crate::backend::modules::symbols::func::func_call::FuncCallExpr;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;

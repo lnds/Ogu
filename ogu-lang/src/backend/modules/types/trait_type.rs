@@ -66,10 +66,7 @@ impl Type for TraitType {
                 TypeComparation::Inferior
             } else if  self == TRAIT_ORD && other == TRAIT_EQ  {
                 TypeComparation::Same
-            } else if  self == TRAIT_EQ && other == TRAIT_ORD  {
-                TypeComparation::Same
-            }
-            else {
+            } else {
                 TypeComparation::Incomparables
             }
         } else if self == TRAIT_NUM {

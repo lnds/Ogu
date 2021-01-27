@@ -1,5 +1,5 @@
 use crate::backend::modules::symbols::exprs::arithmetics::ArithmeticExpr;
-use crate::backend::modules::symbols::exprs::lambda_expr::LambdaExpr;
+use crate::backend::modules::symbols::func::lambda_expr::LambdaExpr;
 use crate::backend::modules::symbols::exprs::logical_expr::LogicalExpr;
 use crate::backend::modules::symbols::exprs::partial_eq::PartialEqExpr;
 use crate::backend::modules::symbols::exprs::partial_ord::PartialOrdExpr;

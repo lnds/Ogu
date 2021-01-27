@@ -295,39 +295,36 @@ fn test_euler_5() {
 fn test_euler_6() {
     let module = make_module(
         indoc! {r#"
-        zero? n = n == 0N
+        zero? n = n == 0N -- 0
 
-        gcd x y =
+        gcd x y = -- 1
             if zero? y then x
             else gcd y (x % y)
 
-        lcm a b
+        lcm a b -- 2
            | zero? a = 0
            | zero? b = 0
            | otherwise = b * (a // (gcd a b))
 
-        reduce f [] = error! "reduce undefined for empty list"
-        reduce f [x] =  error! "reduce undefined for empty list"
+        reduce _ [] = error! "reduce undefined for empty list" -- 3
+        reduce _ [x] =  x
         reduce f [x, y] =  f x y
         reduce f (x :: y :: xs) = reduce f  ((f x y) :: xs)
 
-        map f [] = []
+        map f [] = [] -- 4
         map f (x :: xs) = (f x) :: (map f xs)
 
-        sum-n n = (n * (n + 1)) // 2
+        sum-n n = (n * (n + 1)) // 2 -- 5
 
-        square-sum n = let s = sum-n n in s * s
+        square-sum n = let s = sum-n n in s * s -- 6
 
-        add a b = a + b
+        add a b = a + b -- 7
 
-        sum-n-square n =  reduce add <| map (\x -> x * x) [1..n]
+        sum-n-square n = reduce add <| map (\x -> x * x) [1..n]
 
+        dif-squares n = (square-sum n) - (sum-n-square n)
 
-        --dif-squares n = (square-sum n) - (sum-n-square n)
-
-        --divisors n = reduce lcm 1 [2 .. n]
-
-        -- result = dif-squares 100 "#},
+        result = dif-squares 100 "#},
         default_sym_table(),
     );
     if module.is_err() {
@@ -369,12 +366,12 @@ fn test_euler_6() {
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int()));
 
     assert_eq!(decls[6].get_type(),
-               FuncType::new_opt(Some(vec![BasicType::int()]), TRAIT_NUM.clone_box())); // TODO CHECK THIS
+               FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int()));
 
     assert_eq!(decls[7].get_type(),
                 FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()));
 
     assert_eq!(decls[8].get_type(),
-               FuncType::new_opt(Some(vec![BasicType::int()]), TRAIT_NUM.clone_box())); // TODO CHECK THIS
+               FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int()));
 
 }

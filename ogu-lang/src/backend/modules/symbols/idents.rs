@@ -1,9 +1,10 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::tuple_type::TupleType;
+use crate::backend::scopes::Scope;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
-use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct IdSym {
@@ -59,17 +60,6 @@ impl Symbol for IdSym {
                                 let mut stt = stt.clone();
                                 stt.match_types(tt);
                                 self.ty = Some(stt.clone_box());
-                            }
-                        }
-                    } else if let Some(tt) = ty.downcast_ref::<ListType>() {
-                        if let Some(sty) = &self.ty {
-                            match sty.downcast_ref::<ListType>() {
-                                None => self.ty = arg_ty.clone(),
-                                Some(stt) => {
-                                    let mut stt = stt.clone();
-                                    stt.match_types(tt);
-                                    self.ty = Some(stt.clone_box());
-                                }
                             }
                         }
                     } else {

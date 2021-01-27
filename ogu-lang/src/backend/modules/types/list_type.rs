@@ -38,8 +38,10 @@ impl Type for ListType {
     fn match_types(&mut self, other: &dyn Type) {
         if let Some(other) = other.downcast_ref::<ListType>() {
             if self.is_trait() && other.ty.is_compatible_with(&*self.ty) {
-                self.ty = other.ty.clone()
-            }
+                self.ty = other.ty.clone();
+             }
+        } else {
+            println!("MATCH TYPES IN LIST WTF!!\n other = {:?}\n self = {:?}\n", other, self);
         }
     }
 

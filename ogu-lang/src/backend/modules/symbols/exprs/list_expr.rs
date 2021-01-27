@@ -5,6 +5,7 @@ use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
+use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ListExpr {
@@ -122,9 +123,9 @@ impl Symbol for ListExpr {
                     None => match list.get_type() {
                         None => {
                             atom.set_type(Some(TRAIT_UNKNOWN.clone_box()));
-                            scope.define(atom.clone());
+                            atom.define_into(scope);
                             list.set_type(Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
-                            scope.define(list.clone());
+                            list.define_into(scope);
                             self.ty = Some(ListType::new_list(TRAIT_UNKNOWN.clone_box()));
                         }
                         Some(lt) => match lt.downcast_ref::<ListType>() {
@@ -149,10 +150,11 @@ impl Symbol for ListExpr {
                                 Some(lt) if lt.ty.get_signature() != at.get_signature() => {
                                     if at.is_trait() && !at.is_compatible_with(&*lt.ty) {
                                         atom.set_type(Some(lt.ty.clone()));
-                                        scope.define(atom.clone());
+                                        atom.define_into(scope);
                                     } else if lt.ty.is_trait() {
                                         list.set_type(Some(ListType::new_list(at.clone_box())));
-                                        scope.define(list.clone());
+                                        list.define_into(scope);
+
                                     } else {
                                         bail!("cons expression of different list types at = {:?}. lt={:?}", at, lt);
                                     }
@@ -174,20 +176,20 @@ impl Symbol for ListExpr {
                         None => {
                             list1.set_type(Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
                             list2.set_type(Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
-                            scope.define(list1.clone());
-                            scope.define(list2.clone());
+                            list1.define_into(scope);
+                            list2.define_into(scope);
                             self.ty = Some(ListType::new_list(TRAIT_UNKNOWN.clone_box()));
                         }
                         Some(_) => {
                             list1.set_type(list2.get_type());
-                            scope.define(list1.clone());
+                            list1.define_into(scope);
                             self.ty = list2.get_type();
                         }
                     },
                     Some(lt1) => match list2.get_type() {
                         None => {
                             list2.set_type(list1.get_type());
-                            scope.define(list2.clone());
+                            list2.define_into(scope);
                             self.ty = list1.get_type();
                         }
                         Some(lt2) => match lt1.downcast_ref::<ListType>() {
@@ -197,10 +199,10 @@ impl Symbol for ListExpr {
                                 Some(lt2) if lt1.ty != lt2.ty.clone() => {
                                     if lt1.ty.is_trait() {
                                         list1.set_type(list2.get_type());
-                                        scope.define(list1.clone());
+                                        list1.define_into(scope);
                                     } else if lt2.ty.is_trait() {
                                         list2.set_type(list1.get_type());
-                                        scope.define(list2.clone());
+                                        list2.define_into(scope);
                                     } else {
                                         bail!("concat expression of different list types lt1 = {:?} lt2={:?}", lt1, lt2);
                                     }

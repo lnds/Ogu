@@ -79,11 +79,9 @@ impl Symbol for LambdaExpr {
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        if self.ty.is_none() {
-            if let Some(ty) = ty {
-                if let Some(ty) = ty.downcast_ref::<FuncType>() {
-                    self.ty = Some(Box::new(ty.clone()))
-                }
+        if let Some(ty) = ty {
+            if let Some(ty) = ty.downcast_ref::<FuncType>() {
+                self.ty = Some(Box::new(ty.clone()))
             }
         }
     }

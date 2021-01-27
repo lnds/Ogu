@@ -119,11 +119,11 @@ impl Symbol for Function {
     }
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        if self.ty.is_none() {
-            if let Some(ty) = ty {
-                if let Some(ty) = ty.downcast_ref::<FuncType>() {
-                    self.ty = Some(Box::new(ty.clone()))
-                }
+        if let Some(ty) = ty {
+            if let Some(ty) = ty.downcast_ref::<FuncType>() {
+                self.ty = Some(Box::new(ty.clone()))
+            } else {
+                println!("DEBO CAMBIAR TIPO DE FUNCION A?? {:?}\n", ty);
             }
         }
     }
@@ -134,11 +134,13 @@ impl Symbol for Function {
 
         if let Some(args) = &self.args {
             for a in args.iter() {
-                sym_table.define(a.clone());
+                a.define_into(&mut *sym_table);
             }
         }
 
         self.expr.resolve_type(&mut *sym_table)?;
+
+        println!("CHECK CURRY FOR {:?}\n", self.expr);
         let curry = self.expr.is_curry();
         if let Some(curry) = self.expr.get_curry() {
             self.expr = curry;

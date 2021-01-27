@@ -46,7 +46,7 @@ impl Symbol for FuncCallExpr {
             if let Some(ft) = self.func.get_type() {
                 if let Some(ft) = ft.downcast_ref::<FuncType>() {
                     let mut ft = ft.clone();
-                    if &*ft.result == TRAIT_UNKNOWN {
+                    if ft.result.compare(&*ty.clone()) == TypeComparation::Inferior {
                         ft.result = ty.clone();
                         self.func.set_type(Some(ft.clone_box()));
                     }
@@ -56,7 +56,7 @@ impl Symbol for FuncCallExpr {
     }
 
     fn matches_types(&mut self, ty: Option<Box<dyn Type>>) {
-        self.ty = ty;
+        self.set_type(ty);
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
@@ -243,7 +243,7 @@ impl Symbol for FuncCallExpr {
                         }
                         self.func
                             .set_type(FuncType::new_opt(Some(ty_args), TRAIT_UNKNOWN.clone_box()));
-                        scope.define(self.func.clone());
+                        self.func.define_into(scope);
                     }
                 } else {
                     bail!(
@@ -276,7 +276,7 @@ impl Symbol for FuncCallExpr {
     fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
         self.func.define_into(scope);
         for a in self.args.iter() {
-            scope.define(a.clone());
+            a.define_into(scope);
         }
         None
     }

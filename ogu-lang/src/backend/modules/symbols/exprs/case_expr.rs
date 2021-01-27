@@ -107,8 +107,7 @@ impl Symbol for CaseExpr {
         self.selector.matches_types(cond_type);
         self.selector.resolve_type(scope)?;
         self.selector.set_storable(storable);
-        scope.define(self.selector.clone());
-
+        self.selector.define_into(scope);
         Ok(self.get_type())
     }
 }

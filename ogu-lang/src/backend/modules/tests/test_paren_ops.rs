@@ -655,9 +655,18 @@ fn test_not() {
 fn test_map() {
     let module = make_module(
         indoc! {r#"
+        -- map : (a -> a) -> [a] -> [a]
         map f [] = []
         map f (x :: xs) = (f x) :: (map f xs)
-        squares = [0..10] |> map \x -> x * x
+
+        -- pow : Num -> Num
+        pow x = x * x
+
+        -- squares -> (Num -> Num) -> [Num] -> [Num
+        squares   =  map pow [0..10]
+        squares'  =  map (\x -> x * x) [0..10]
+        squares'' =  [0..10] |> map \x -> x * x
+
         "#},
         default_sym_table(),
     );
@@ -682,8 +691,17 @@ fn test_map() {
     );
     assert_eq!(
         decls[1].get_type(),
-        Some(ListType::new_list(BasicType::int()))
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box()]),
+            TRAIT_NUM.clone_box()
+        )
     );
+    assert_eq!(
+        decls[2].get_type(),
+        Some(ListType::new_list(TRAIT_NUM.clone_box()))
+    );
+    assert_eq!(decls[2].get_type(), decls[3].get_type());
+    assert_eq!(decls[3].get_type(), decls[4].get_type());
 }
 
 fn validate_decls(

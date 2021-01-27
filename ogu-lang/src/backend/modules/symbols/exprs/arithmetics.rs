@@ -1,5 +1,5 @@
 use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
-use crate::backend::modules::types::basic_type::{BasicType, FLOAT_TYPE, INT_TYPE};
+use crate::backend::modules::types::basic_type::{FLOAT_TYPE, INT_TYPE};
 use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
@@ -26,31 +26,52 @@ enum Op {
 
 impl ArithmeticExpr {
     pub(crate) fn new_add(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticExpr { op: Op::Add(l, r), ty: None })
+        Box::new(ArithmeticExpr {
+            op: Op::Add(l, r),
+            ty: None,
+        })
     }
 
     pub(crate) fn new_sub(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticExpr { op: Op::Sub(l, r), ty: None })
+        Box::new(ArithmeticExpr {
+            op: Op::Sub(l, r),
+            ty: None,
+        })
     }
 
     pub(crate) fn new_mul(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticExpr { op: Op::Mul(l, r), ty: None })
+        Box::new(ArithmeticExpr {
+            op: Op::Mul(l, r),
+            ty: None,
+        })
     }
 
     pub(crate) fn new_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticExpr { op: Op::Div(l, r), ty: None })
+        Box::new(ArithmeticExpr {
+            op: Op::Div(l, r),
+            ty: None,
+        })
     }
 
     pub(crate) fn new_int_div(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticExpr { op: Op::IntDiv(l, r), ty: None })
+        Box::new(ArithmeticExpr {
+            op: Op::IntDiv(l, r),
+            ty: None,
+        })
     }
 
     pub(crate) fn new_mod(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticExpr { op: Op::Mod(l, r), ty: None })
+        Box::new(ArithmeticExpr {
+            op: Op::Mod(l, r),
+            ty: None,
+        })
     }
 
     pub(crate) fn new_pow(l: Box<dyn Symbol>, r: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ArithmeticExpr { op: Op::Pow(l, r), ty: None })
+        Box::new(ArithmeticExpr {
+            op: Op::Pow(l, r),
+            ty: None,
+        })
     }
 }
 
@@ -81,29 +102,27 @@ impl Symbol for ArithmeticExpr {
         }
     }
 
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-
         let r = match &mut self.op {
             Op::Div(l, r) => {
                 self.ty = resolve_comparable(l, r, scope, TRAIT_NUM)?;
-                if l.get_type() == Some(INT_TYPE.clone_box()) || r.get_type() == Some(INT_TYPE.clone_box()) {
+                if l.get_type() == Some(INT_TYPE.clone_box())
+                    || r.get_type() == Some(INT_TYPE.clone_box())
+                {
                     self.ty = Some(FLOAT_TYPE.clone_box());
                 }
                 Ok(self.get_type())
             }
             Op::IntDiv(l, r) => {
                 self.ty = resolve_comparable(l, r, scope, TRAIT_NUM)?;
-                if l.get_type() == Some(FLOAT_TYPE.clone_box()) || r.get_type() == Some(FLOAT_TYPE.clone_box()) {
+                if l.get_type() == Some(FLOAT_TYPE.clone_box())
+                    || r.get_type() == Some(FLOAT_TYPE.clone_box())
+                {
                     self.ty = Some(INT_TYPE.clone_box());
                 }
                 Ok(self.get_type())
             }
-            Op::Add(l, r)
-            | Op::Sub(l, r)
-            | Op::Mul(l, r)
-            | Op::Mod(l, r)
-            | Op::Pow(l, r) => {
+            Op::Add(l, r) | Op::Sub(l, r) | Op::Mul(l, r) | Op::Mod(l, r) | Op::Pow(l, r) => {
                 self.ty = resolve_comparable(l, r, scope, TRAIT_NUM)?;
                 Ok(self.get_type())
             }

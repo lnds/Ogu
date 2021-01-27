@@ -18,7 +18,7 @@ pub(crate) enum ListGuard {
     // let id = expr
     LetTuple(Vec<Box<dyn Symbol>>, Box<dyn Symbol>),
     // let id = expr
-    Expr(Box<dyn Symbol>),                       // , expr
+    Expr(Box<dyn Symbol>), // , expr
 }
 
 impl ListGuard {
@@ -98,19 +98,18 @@ impl Symbol for ListGuard {
                 if let Some(lt) = lst.get_type() {
                     match lt.downcast_ref::<ListType>() {
                         None => bail!("generator must come from a list"),
-                        Some(lt) =>
-                            match lt.ty.downcast_ref::<TupleType>() {
-                                None => bail!("right side of expression must be a list of tuples"),
-                                Some(tuple_type) => {
-                                    if tuple_type.tuple.len() != tuple.len() {
-                                        bail!("left side must be a tuple of len = {}", tuple.len())
-                                    } else {
-                                        for (p, e) in tuple.iter_mut().enumerate() {
-                                            e.set_type(Some(tuple_type.tuple[p].clone()))
-                                        }
+                        Some(lt) => match lt.ty.downcast_ref::<TupleType>() {
+                            None => bail!("right side of expression must be a list of tuples"),
+                            Some(tuple_type) => {
+                                if tuple_type.tuple.len() != tuple.len() {
+                                    bail!("left side must be a tuple of len = {}", tuple.len())
+                                } else {
+                                    for (p, e) in tuple.iter_mut().enumerate() {
+                                        e.set_type(Some(tuple_type.tuple[p].clone()))
                                     }
                                 }
                             }
+                        },
                     }
                 }
                 for e in tuple.iter() {

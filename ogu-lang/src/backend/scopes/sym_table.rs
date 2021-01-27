@@ -22,8 +22,6 @@ impl SymbolTable {
             function_name: None,
         })
     }
-
-
 }
 
 impl Scope for SymbolTable {

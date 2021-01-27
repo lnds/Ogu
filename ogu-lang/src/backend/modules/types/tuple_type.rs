@@ -82,11 +82,12 @@ impl Type for TupleType {
                 } else {
                     let mut result = TypeComparation::Incomparables;
                     for (a, b) in self.tuple.iter().zip(other.tuple.iter()) {
-                        match  a.compare(&*b.deref()) {
-                            TypeComparation::Incomparables =>
-                                return TypeComparation::Incomparables,
+                        match a.compare(&*b.deref()) {
+                            TypeComparation::Incomparables => {
+                                return TypeComparation::Incomparables
+                            }
                             TypeComparation::Same => result = TypeComparation::Same,
-                            r => result = r
+                            r => result = r,
                         }
                     }
                     result

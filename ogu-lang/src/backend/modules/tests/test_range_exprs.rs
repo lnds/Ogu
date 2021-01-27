@@ -1,10 +1,10 @@
 use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
-use crate::backend::modules::types::list_type::ListType;
 
 #[test]
 fn test_simple_range() {
@@ -69,22 +69,13 @@ fn test_simple_range() {
         decls[9].get_type(),
         Some(ListType::new_list(BasicType::float()))
     );
-    assert_eq!(
-        decls[10].get_type(),
-        Some(BasicType::int())
-    );
-    assert_eq!(
-        decls[11].get_type(),
-        Some(TRAIT_NUM.clone_box())
-    );
+    assert_eq!(decls[10].get_type(), Some(BasicType::int()));
+    assert_eq!(decls[11].get_type(), Some(TRAIT_NUM.clone_box()));
     assert_eq!(
         decls[12].get_type(),
         Some(ListType::new_list(BasicType::int()))
     );
-    assert_eq!(
-        decls[13].get_type(),
-        Some(TRAIT_NUM.clone_box())
-    );
+    assert_eq!(decls[13].get_type(), Some(TRAIT_NUM.clone_box()));
     assert_eq!(
         decls[14].get_type(),
         Some(ListType::new_list(TRAIT_NUM.clone_box()))
@@ -161,7 +152,6 @@ fn test_invalid_ranges() {
     );
     println!("module: {:?}", module);
     assert!(module.is_err());
-
 
     let module = make_module(
         indoc! {r#"

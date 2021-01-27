@@ -4,7 +4,6 @@ use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use indoc::indoc;
 
-
 #[test]
 fn test_simple_loop() {
     let module = make_module(
@@ -20,7 +19,6 @@ fn test_simple_loop() {
     let module = module.unwrap();
     let decls = module.get_decls();
     assert_eq!(decls[0].get_type(), Some(BasicType::int()));
-
 }
 
 #[test]
@@ -42,13 +40,28 @@ fn test_rev_loop() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    assert_eq!(decls[0].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::bool())));
-    assert_eq!(decls[1].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int())));
-    assert_eq!(decls[2].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::bool())));
-
+    assert_eq!(
+        decls[0].get_type(),
+        Some(FuncType::new_func_type(
+            Some(vec![BasicType::int()]),
+            BasicType::bool()
+        ))
+    );
+    assert_eq!(
+        decls[1].get_type(),
+        Some(FuncType::new_func_type(
+            Some(vec![BasicType::int()]),
+            BasicType::int()
+        ))
+    );
+    assert_eq!(
+        decls[2].get_type(),
+        Some(FuncType::new_func_type(
+            Some(vec![BasicType::int()]),
+            BasicType::bool()
+        ))
+    );
 }
-
-
 
 #[test]
 fn test_let_in_loop() {
@@ -65,6 +78,11 @@ fn test_let_in_loop() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    assert_eq!(decls[0].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int())));
-
+    assert_eq!(
+        decls[0].get_type(),
+        Some(FuncType::new_func_type(
+            Some(vec![BasicType::int()]),
+            BasicType::int()
+        ))
+    );
 }

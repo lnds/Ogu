@@ -1,10 +1,10 @@
-use anyhow::{Context, bail, Result};
+use anyhow::{bail, Context, Result};
 use figlet_rs::FIGfont;
 
 const VERSION: &str = "Ogu compiler version 0.3.0 (Ñeclito)";
 
 pub fn akarru() -> Result<()> {
-    match  FIGfont::standand() {
+    match FIGfont::standand() {
         Err(e) => {
             bail!("error: {}", e)
         }
@@ -17,5 +17,4 @@ pub fn akarru() -> Result<()> {
             Ok(())
         }
     }
-
 }

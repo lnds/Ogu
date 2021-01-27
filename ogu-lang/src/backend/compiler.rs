@@ -1,8 +1,10 @@
 use crate::backend::modules::module::Module;
 use crate::backend::modules::symbols::macro_sym::MacroSym;
 use crate::backend::modules::types::basic_type::BasicType;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::modules::types::variadic_type::VariadicType;
 use crate::backend::scopes::sym_table::SymbolTable;
+use crate::backend::scopes::types::TypeClone;
 use crate::backend::scopes::Scope;
 use crate::lexer::tokens::Lexeme;
 use crate::lexer::Lexer;
@@ -10,8 +12,6 @@ use crate::parser::ast::module::ModuleAst;
 use crate::parser::Parser;
 use anyhow::Result;
 use std::path::PathBuf;
-use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
-use crate::backend::scopes::types::TypeClone;
 
 pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> Result<Module> {
     let mut lexer = Lexer::new(&path)?;

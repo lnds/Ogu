@@ -27,9 +27,7 @@ impl Type for FuncType {
     fn is_compatible_with(&self, other: &dyn Type) -> bool {
         let r = match other.downcast_ref::<FuncType>() {
             None => false,
-            Some(other) => {
-                self.result.is_compatible_with(&*other.result)
-            }
+            Some(other) => self.result.is_compatible_with(&*other.result),
         };
         r
     }
@@ -51,7 +49,7 @@ impl Type for FuncType {
     fn compare(&self, other: &dyn Type) -> TypeComparation {
         match other.downcast_ref::<FuncType>() {
             None => TypeComparation::Incomparables,
-            Some(other) => self.result.compare(&*other.result)
+            Some(other) => self.result.compare(&*other.result),
         }
     }
 }

@@ -1,9 +1,9 @@
-use crate::backend::modules::types::basic_type::{INVALID_TYPE, BasicType, BOOL_TYPE};
+use crate::backend::modules::types::basic_type::{BasicType, BOOL_TYPE, INVALID_TYPE};
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 
 #[derive(Clone, Debug)]
 pub(crate) struct IfExpr {
@@ -46,7 +46,7 @@ impl Symbol for IfExpr {
         self.cond.resolve_type(scope)?;
         match self.cond.get_type() {
             None => self.cond.set_type(Some(BasicType::bool())),
-            Some(t) if t.is_trait() =>   self.cond.set_type(Some(BasicType::bool())),
+            Some(t) if t.is_trait() => self.cond.set_type(Some(BasicType::bool())),
             Some(t) => {
                 if &*t != BOOL_TYPE {
                     bail!("condition on if must be booolean, not {:?}", t)
@@ -88,7 +88,6 @@ impl Symbol for IfExpr {
                 None => {
                     self.else_expr.set_type(Some(tt.clone()));
                     self.ty = Some(tt);
-
                 } // println!("THEN => {:?} ELSE None", tt),
                 Some(et) if &*et == INVALID_TYPE => {
                     bail!("Invalid If or Cond");
@@ -99,23 +98,23 @@ impl Symbol for IfExpr {
                             self.else_expr.set_type(Some(tt.clone()));
                             self.else_expr.define_into(scope);
                             self.ty = Some(tt);
-                        }
-                        else if &*tt == TRAIT_UNKNOWN && &*et != TRAIT_UNKNOWN {
+                        } else if &*tt == TRAIT_UNKNOWN && &*et != TRAIT_UNKNOWN {
                             self.then_expr.set_type(Some(et.clone()));
                             self.else_expr.define_into(scope);
                             self.ty = Some(et);
                         } else if tt.is_trait() && !et.is_trait() {
-                                self.then_expr.set_type(Some(et.clone()));
+                            self.then_expr.set_type(Some(et.clone()));
                             self.then_expr.define_into(scope);
-                                self.ty = Some(et);
-                            }
-                        else if et.is_trait() && !tt.is_trait() {
+                            self.ty = Some(et);
+                        } else if et.is_trait() && !tt.is_trait() {
                             self.else_expr.set_type(Some(tt.clone()));
                             self.else_expr.define_into(scope);
                             self.ty = Some(tt);
                         } else {
                             match et.compare(&*tt) {
-                                TypeComparation::Incomparables => bail!("can't resolve type for if expression"),
+                                TypeComparation::Incomparables => {
+                                    bail!("can't resolve type for if expression")
+                                }
                                 TypeComparation::Inferior => {
                                     self.else_expr.set_type(Some(tt.clone()));
                                     self.else_expr.define_into(scope);
@@ -131,7 +130,6 @@ impl Symbol for IfExpr {
                                 }
                             }
                         }
-
                     } else {
                         self.ty = Some(tt);
                     }

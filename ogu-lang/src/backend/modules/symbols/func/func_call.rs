@@ -1,15 +1,15 @@
+use crate::backend::modules::symbols::func::func_compose::ComposeFunction;
+use crate::backend::modules::symbols::func::func_def::Function;
 use crate::backend::modules::symbols::func::lambda_expr::LambdaExpr;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::modules::types::func_type::FuncType;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::modules::types::variadic_type::VariadicType;
 use crate::backend::scopes::symbol::{Symbol, SymbolClone};
 use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
-use crate::backend::modules::symbols::func::func_compose::ComposeFunction;
-use crate::backend::modules::symbols::func::func_def::Function;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallExpr {
@@ -58,7 +58,6 @@ impl Symbol for FuncCallExpr {
         self.ty = ty;
     }
 
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
         let recursive = scope.function_scope_name() == self.func.get_name();
@@ -100,18 +99,20 @@ impl Symbol for FuncCallExpr {
                         Some(ft_args) if ft_args.len() > self.args.len() => {
                             // curry
                             match scope.resolve(self.func.get_name()) {
-                                None => {
-                                    match self.func.downcast_ref::<ComposeFunction>() {
-                                        None => bail!( "can't find a function to curry {} func = {:?}", self.func.get_name(), self.func ),
-                                        Some(compose) => {
-                                            let c = compose.clone();
-                                            if self.func.get_type() != c.get_type() {
-                                                self.func = Box::new(c);
-                                            }
-                                            self.curried = true;
+                                None => match self.func.downcast_ref::<ComposeFunction>() {
+                                    None => bail!(
+                                        "can't find a function to curry {} func = {:?}",
+                                        self.func.get_name(),
+                                        self.func
+                                    ),
+                                    Some(compose) => {
+                                        let c = compose.clone();
+                                        if self.func.get_type() != c.get_type() {
+                                            self.func = Box::new(c);
                                         }
+                                        self.curried = true;
                                     }
-                                }
+                                },
                                 Some(func) => {
                                     let n = ft_args.len() - self.args.len();
                                     let skip = ft_args.len() - n;
@@ -126,8 +127,7 @@ impl Symbol for FuncCallExpr {
                                     }
                                     let mut call_args = self.args.to_vec();
                                     call_args.append(&mut n_args.to_vec());
-                                    let expr =
-                                        FuncCallExpr::new(func.clone_box(), call_args);
+                                    let expr = FuncCallExpr::new(func.clone_box(), call_args);
                                     let mut lambda =
                                         LambdaExpr::new(n_args.to_vec(), expr.clone_box());
                                     lambda.resolve_type(scope)?;
@@ -153,7 +153,7 @@ impl Symbol for FuncCallExpr {
                             }
                             let func = match scope.resolve(self.func.get_name()) {
                                 None => self.func.clone(),
-                                Some(func) => func.clone()
+                                Some(func) => func.clone(),
                             };
                             if let Some(func) = func.downcast_ref::<Function>() {
                                 let mut f = func.clone();
@@ -165,12 +165,11 @@ impl Symbol for FuncCallExpr {
                                 if let Some(id) = val.expr.downcast_ref::<IdSym>() {
                                     match scope.resolve(id.get_name()) {
                                         None => bail!(
-                                                "FATAL could not find function: {}",
-                                                id.get_name()
-                                            ),
+                                            "FATAL could not find function: {}",
+                                            id.get_name()
+                                        ),
                                         Some(fun) => {
-                                            if let Some(func) = fun.downcast_ref::<Function>()
-                                            {
+                                            if let Some(func) = fun.downcast_ref::<Function>() {
                                                 let mut f = func.clone();
                                                 f.replace_args(
                                                     self.args.to_vec(),
@@ -189,7 +188,9 @@ impl Symbol for FuncCallExpr {
                                     if self.func.get_type() != l.get_type() {
                                         self.func = Box::new(l);
                                     }
-                                } else if let Some(compose) = val.expr.downcast_ref::<ComposeFunction>() {
+                                } else if let Some(compose) =
+                                    val.expr.downcast_ref::<ComposeFunction>()
+                                {
                                     let c = compose.clone();
                                     if self.func.get_type() != c.get_type() {
                                         self.func = Box::new(c);
@@ -214,7 +215,11 @@ impl Symbol for FuncCallExpr {
                                     self.func = Box::new(id)
                                 }
                             } else {
-                                bail!("FATAL: func is invalid here: {:?} => {:?}", func, func.get_type());
+                                bail!(
+                                    "FATAL: func is invalid here: {:?} => {:?}",
+                                    func,
+                                    func.get_type()
+                                );
                             }
                         }
                     }
@@ -235,11 +240,16 @@ impl Symbol for FuncCallExpr {
                                 }
                             }
                         }
-                        self.func.set_type(FuncType::new_opt(Some(ty_args), TRAIT_UNKNOWN.clone_box()));
+                        self.func
+                            .set_type(FuncType::new_opt(Some(ty_args), TRAIT_UNKNOWN.clone_box()));
                         scope.define(self.func.clone());
                     }
                 } else {
-                    bail!("{} => {:?} it's not a function", self.func.get_name(), self.func.get_type());
+                    bail!(
+                        "{} => {:?} it's not a function",
+                        self.func.get_name(),
+                        self.func.get_type()
+                    );
                 }
             }
         }

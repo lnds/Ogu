@@ -93,7 +93,7 @@ impl Symbol for TupleExpr {
         self.assignable = s;
     }
 
-    fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>>{
+    fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
         for s in self.tuple.iter() {
             s.define_into(scope);
         }

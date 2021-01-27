@@ -21,9 +21,7 @@ impl ValueSym {
     }
 
     pub(crate) fn make(name: Box<dyn Symbol>, expr: Box<dyn Symbol>) -> Box<dyn Symbol> {
-        Box::new(ValueSym {
-            name, expr
-        })
+        Box::new(ValueSym { name, expr })
     }
 }
 
@@ -40,11 +38,11 @@ impl Symbol for ValueSym {
         match self.name.get_type() {
             None => self.name.set_type(t.clone()),
             Some(tr) if tr.is_trait() => self.name.set_type(t.clone()),
-            _ => { }
+            _ => {}
         }
 
         match self.expr.get_type() {
-            None =>self.expr.set_type(t.clone()),
+            None => self.expr.set_type(t.clone()),
             Some(tr) if tr.is_trait() => self.expr.set_type(t.clone()),
             _ => {}
         }
@@ -69,5 +67,4 @@ impl Symbol for ValueSym {
         scope.define(self.expr.clone());
         scope.define(self.name.clone())
     }
-
 }

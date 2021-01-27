@@ -22,14 +22,16 @@ use crate::backend::modules::symbols::exprs::tuple_expr::TupleExpr;
 use crate::backend::modules::symbols::exprs::unary_op_expr::UnaryOpExpr;
 use crate::backend::modules::symbols::func::func_call::FuncCallExpr;
 use crate::backend::modules::symbols::func::func_compose::ComposeFunction;
+use crate::backend::modules::symbols::func::func_def::Function;
 use crate::backend::modules::symbols::func::lambda_expr::LambdaExpr;
 use crate::backend::modules::symbols::func::recur_call::RecurCallExpr;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::symbols::values::ValueSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::parser::ast::expressions::equations::Equation;
-use crate::parser::ast::expressions::expression::{Expression, LambdaArg, ListComprehensionGuard, OptExprTuple, RecurValue};
-use crate::backend::modules::symbols::func::func_def::Function;
+use crate::parser::ast::expressions::expression::{
+    Expression, LambdaArg, ListComprehensionGuard, OptExprTuple, RecurValue,
+};
 
 mod arithmetics;
 mod case_expr;
@@ -38,21 +40,21 @@ mod dict_expr;
 mod do_expr;
 mod guarded_expr;
 mod if_expr;
+mod lazy_call;
 mod let_expr;
 mod list_comp;
 mod list_expr;
 mod list_guards;
 mod literals;
 mod logical_expr;
+mod loop_expr;
 mod paren_expr;
 mod partial_eq;
 mod partial_ord;
 mod range_expr;
+mod repeat_expr;
 mod tuple_expr;
 mod unary_op_expr;
-mod lazy_call;
-mod loop_expr;
-mod repeat_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -167,13 +169,9 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
                 UnaryOpExpr::new_concat(expr.deref().as_ref().map(|e| e.into()))
             }
 
-            Expression::ComposeFwdExpr(f, g) => {
-                ComposeFunction::new_fwd(f.into(), g.into())
-            }
+            Expression::ComposeFwdExpr(f, g) => ComposeFunction::new_fwd(f.into(), g.into()),
 
-            Expression::ComposeBckExpr(f, g) => {
-                ComposeFunction::new_bck(f.into(), g.into())
-            }
+            Expression::ComposeBckExpr(f, g) => ComposeFunction::new_bck(f.into(), g.into()),
 
             Expression::AddExpr(l, r) => ArithmeticExpr::new_add(l.into(), r.into()),
             Expression::SubExpr(l, r) => ArithmeticExpr::new_sub(l.into(), r.into()),
@@ -201,11 +199,9 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::IfExpr(c, t, e) => IfExpr::new(c.into(), t.into(), e.into()),
 
-            Expression::LoopExpr(fe, expr) =>
-                LoopExpr::new(vec_eqs_into(&fe),  expr.into()),
+            Expression::LoopExpr(fe, expr) => LoopExpr::new(vec_eqs_into(&fe), expr.into()),
 
-            Expression::RepeatExpr(reps) =>
-                RepeatExpr::new(vec_recval_into(&reps)),
+            Expression::RepeatExpr(reps) => RepeatExpr::new(vec_recval_into(&reps)),
 
             Expression::LetExpr(eqs, expr) => LetExpr::new(vec_eqs_into(eqs), expr.into()),
 
@@ -215,9 +211,7 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
                 LambdaExpr::new(vec_lambda_args_into(args), expr.into())
             }
 
-            Expression::LazyExpr(e) => {
-                LazyExpr::new(e.into())
-            }
+            Expression::LazyExpr(e) => LazyExpr::new(e.into()),
             Expression::RecurExpr(args) => RecurCallExpr::new(vec_exprs_into(args)),
 
             Expression::FuncCallExpr(f, args) => FuncCallExpr::new(f.into(), vec_exprs_into(args)),
@@ -284,7 +278,6 @@ fn vec_recval_into(eqs: &[RecurValue]) -> Vec<Box<dyn Symbol>> {
     eqs.iter().map(|eq| eq.into()).collect()
 }
 
-
 impl<'a> From<&LambdaArg<'a>> for Box<dyn Symbol> {
     fn from(arg: &LambdaArg<'a>) -> Self {
         match arg {
@@ -298,12 +291,11 @@ fn vec_list_comp_guars_int(guards: &[ListComprehensionGuard]) -> Vec<Box<dyn Sym
     guards.iter().map(|g| g.into()).collect()
 }
 
-
 impl<'a> From<&RecurValue<'a>> for Box<dyn Symbol> {
     fn from(guard: &RecurValue<'a>) -> Self {
         match guard {
             RecurValue::Value(e) => e.into(),
-            RecurValue::Var(id, e) => ValueSym::make(IdSym::new_id(id), e.into())
+            RecurValue::Var(id, e) => ValueSym::make(IdSym::new_id(id), e.into()),
         }
     }
 }

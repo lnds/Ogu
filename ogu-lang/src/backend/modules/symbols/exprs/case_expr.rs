@@ -71,10 +71,9 @@ impl Symbol for CaseExpr {
                 }
                 Some(t) => {
                     if let Some(et) = e.get_type() {
-                        if t.is_trait() && !et.is_trait()  {
+                        if t.is_trait() && !et.is_trait() {
                             expr_type = Some(et.clone_box());
-                        }
-                        else {
+                        } else {
                             t.match_types(&*et);
                             expr_type = Some(t.clone());
                         }

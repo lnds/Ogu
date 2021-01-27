@@ -41,7 +41,6 @@ impl ListExpr {
         })
     }
 
-
     pub(crate) fn new_concat(list1: Box<dyn Symbol>, list2: Box<dyn Symbol>) -> Box<Self> {
         Box::new(ListExpr {
             kind: ListExprKind::Concat(list1, list2),
@@ -67,8 +66,7 @@ impl Symbol for ListExpr {
         if let Some(bty) = aty {
             if let Some(lt) = bty.downcast_ref::<ListType>() {
                 match &mut self.kind {
-                    ListExprKind::EmptyList => {
-                    }
+                    ListExprKind::EmptyList => {}
                     ListExprKind::List(vec) => {
                         for v in vec.iter_mut() {
                             v.matches_types(Some(lt.ty.clone()))
@@ -83,7 +81,7 @@ impl Symbol for ListExpr {
                         b.matches_types(Some(lt.clone_box()));
                     }
                 }
-               self.ty = Some(lt.clone_box());
+                self.ty = Some(lt.clone_box());
             }
         }
     }
@@ -92,20 +90,21 @@ impl Symbol for ListExpr {
         match &mut self.kind {
             ListExprKind::EmptyList => {
                 self.ty = Some(ListType::new_list(TRAIT_UNKNOWN.clone_box()))
-            },
-            ListExprKind::List(e) if e.is_empty() =>
-                self.ty = Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())), // weird
+            }
+            ListExprKind::List(e) if e.is_empty() => {
+                self.ty = Some(ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+            } // weird
             ListExprKind::List(exprs) => {
                 for e in exprs.iter_mut() {
                     e.resolve_type(scope)?;
                 }
                 let ty = exprs[0].get_type();
                 match ty {
-                    None => { } ,
+                    None => {}
                     Some(ty) => {
                         let not_same = exprs.iter().any(|t| match t.get_type() {
                             None => true,
-                            Some(t) => !ty.is_compatible_with(&*t)
+                            Some(t) => !ty.is_compatible_with(&*t),
                         });
                         if not_same {
                             bail!("list must have all elements of same type")
@@ -140,12 +139,14 @@ impl Symbol for ListExpr {
                                 self.ty = list.get_type()
                             }
                             Some(lt) => match lt.downcast_ref::<ListType>() {
-                                None => bail!("attempt to make a cons without a list lt = {:?}", lt),
+                                None => {
+                                    bail!("attempt to make a cons without a list lt = {:?}", lt)
+                                }
                                 Some(lt) if !lt.ty.is_compatible_with(&*at.clone()) => {
                                     bail!("incompatible types in cons expression lt = {:?}, at = {:?}", lt, at)
                                 }
                                 Some(lt) if lt.ty.get_signature() != at.get_signature() => {
-                                    if at.is_trait() && !at.is_compatible_with(&*lt.ty){
+                                    if at.is_trait() && !at.is_compatible_with(&*lt.ty) {
                                         atom.set_type(Some(lt.ty.clone()));
                                         scope.define(atom.clone());
                                     } else if lt.ty.is_trait() {
@@ -159,7 +160,7 @@ impl Symbol for ListExpr {
                                 Some(_) => {
                                     self.ty = list.get_type();
                                 }
-                            }
+                            },
                         }
                     }
                 }
@@ -214,9 +215,9 @@ impl Symbol for ListExpr {
         Ok(self.get_type())
     }
 
-    fn define_into(&self, scope: &mut dyn Scope)  -> Option<Box<dyn Symbol>>{
+    fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
         match &self.kind {
-            ListExprKind::EmptyList => {  }
+            ListExprKind::EmptyList => {}
             ListExprKind::List(v) => {
                 for e in v.iter() {
                     e.define_into(scope);

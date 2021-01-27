@@ -5,7 +5,7 @@ use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct LazyExpr {
-    expr: Box<dyn Symbol>
+    expr: Box<dyn Symbol>,
 }
 
 impl LazyExpr {

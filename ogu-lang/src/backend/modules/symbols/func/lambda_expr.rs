@@ -1,8 +1,9 @@
+use crate::backend::modules::symbols::func::swap_args;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::{Type, TypeComparation};
+use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
 
@@ -24,42 +25,10 @@ impl LambdaExpr {
         args: Vec<Box<dyn Symbol>>,
         scope: &mut dyn Scope,
     ) -> Result<()> {
-        self.check_args_can_be_replaced(&self.args, &args)?;
-        let mut new_args: Vec<Box<dyn Symbol>> = vec![];
-        for (a, b) in self.args.iter().zip(args.iter()) {
-            if self.subtype(a.get_type(), b.get_type())? {
-                new_args.push(IdSym::new_with_type(
-                    a.get_name(),
-                    b.get_type().clone(),
-                ))
-            } else {
-                new_args.push(a.clone())
-            }
-
-        }
-        self.args = new_args;
+        let msg = "lambda expression";
+        self.args = swap_args(msg,&self.args, &args)?;
         self.resolve_type(scope)?;
         Ok(())
-    }
-
-    fn subtype(&self, a: Option<Box<dyn Type>>, b: Option<Box<dyn Type>>) -> Result<bool> {
-        match a {
-            None => match b {
-                None => Ok(true),
-                Some(_) => Ok(true)
-            },
-            Some(at) => match b {
-                None => Ok(true),
-                Some(bt) => {
-                    let c = at.compare(&*bt);
-                    match c {
-                        TypeComparation::Superior => Ok(false),
-                        TypeComparation::Incomparables => bail!("incompatible type for arg substitution in lambda expression, expecting {}, found {}", at.get_name(), bt.get_name()),
-                        _ => Ok(true)
-                    }
-                }
-            }
-        }
     }
 
     fn define_arg(&mut self, sym: Box<dyn Symbol>) -> Result<Option<Box<dyn Symbol>>> {
@@ -91,23 +60,6 @@ impl LambdaExpr {
                 },
             },
         }
-    }
-
-    fn check_args_can_be_replaced(&self, own_args: &[Box<dyn Symbol>], args: &[Box<dyn Symbol>]) -> Result<()> {
-        if own_args.len() != args.len() {
-            println!("OWN ARGS = {:?}\nARGS = {:?}\n", own_args, args);
-            bail!("wrong arguments passed in lambda expression")
-        }
-        for (a, b) in own_args.iter().zip(args.iter()) {
-            if let (Some(ta), Some(tb)) = (a.get_type(), b.get_type()) {
-                if &*ta != &*tb {
-                    if !ta.is_compatible_with(&*tb) && !tb.is_compatible_with(&*ta) {
-                        bail!("incompatible args passed for lambda expression\n TA = {:?}\n TB = {:?}", ta, tb)
-                    }
-                }
-            }
-        }
-        Ok(())
     }
 }
 

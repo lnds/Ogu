@@ -47,7 +47,10 @@ impl Symbol for PartialOrdExpr {
                 Some(lt) => match r.get_type() {
                     None => None,
                     Some(rt) => {
-                        if &*lt == &*rt.clone() || lt.is_compatible_with(&*rt) || rt.is_compatible_with(&*lt) {
+                        if &*lt == &*rt.clone()
+                            || lt.is_compatible_with(&*rt)
+                            || rt.is_compatible_with(&*lt)
+                        {
                             Some(BasicType::bool())
                         } else {
                             println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);

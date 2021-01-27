@@ -1,5 +1,7 @@
 use crate::backend::modules::types::list_type::ListType;
-use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN, TraitType};
+use crate::backend::modules::types::trait_type::{
+    TraitType, TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN,
+};
 use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 
 #[derive(Clone, Debug)]
@@ -105,7 +107,7 @@ impl Type for BasicType {
                 {
                     true
                 } else if let Some(ot) = other.downcast_ref::<BasicType>() {
-                    matches!(ot, BasicType::Int | BasicType::UInt )
+                    matches!(ot, BasicType::Int | BasicType::UInt)
                 } else {
                     false
                 }
@@ -123,12 +125,8 @@ impl Type for BasicType {
                     false
                 }
             }
-            BasicType::Char => {
-                other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
-            }
-            BasicType::Bool => {
-                other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ
-            }
+            BasicType::Char => other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ,
+            BasicType::Bool => other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ,
             _ => other == TRAIT_UNKNOWN,
         }
     }
@@ -142,9 +140,35 @@ impl Type for BasicType {
             None => {
                 if let Some(other) = other.downcast_ref::<TraitType>() {
                     if other == TRAIT_UNKNOWN
-                        || (other == TRAIT_NUM && matches!(self, BasicType::Int|BasicType::UInt|BasicType::Float|BasicType::Char))
-                        || (other == TRAIT_EQ && matches!(self, BasicType::Date|BasicType::Bool|BasicType::Regexp|BasicType::Int|BasicType::UInt|BasicType::Float|BasicType::Char))
-                        || (other == TRAIT_ORD && matches!(self, BasicType::Date|BasicType::Int|BasicType::UInt|BasicType::Float|BasicType::Char)) {
+                        || (other == TRAIT_NUM
+                            && matches!(
+                                self,
+                                BasicType::Int
+                                    | BasicType::UInt
+                                    | BasicType::Float
+                                    | BasicType::Char
+                            ))
+                        || (other == TRAIT_EQ
+                            && matches!(
+                                self,
+                                BasicType::Date
+                                    | BasicType::Bool
+                                    | BasicType::Regexp
+                                    | BasicType::Int
+                                    | BasicType::UInt
+                                    | BasicType::Float
+                                    | BasicType::Char
+                            ))
+                        || (other == TRAIT_ORD
+                            && matches!(
+                                self,
+                                BasicType::Date
+                                    | BasicType::Int
+                                    | BasicType::UInt
+                                    | BasicType::Float
+                                    | BasicType::Char
+                            ))
+                    {
                         TypeComparation::Superior
                     } else {
                         TypeComparation::Incomparables
@@ -153,54 +177,52 @@ impl Type for BasicType {
                     TypeComparation::Incomparables
                 }
             }
-            Some(other) => {
-                match self {
-                    BasicType::Bool => match other {
-                        BasicType::Bool => TypeComparation::Same,
-                        _ => TypeComparation::Incomparables
-                    }
-                    BasicType::Char => match other {
-                        BasicType::Char => TypeComparation::Same,
-                        BasicType::Int => TypeComparation::Inferior,
-                        BasicType::UInt => TypeComparation::Inferior,
-                        _ => TypeComparation::Incomparables,
-                    }
-                    BasicType::Int => match other {
-                        BasicType::Int => TypeComparation::Same,
-                        BasicType::Char => TypeComparation::Superior,
-                        BasicType::UInt => TypeComparation::Inferior,
-                        BasicType::Float => TypeComparation::Inferior,
-                        _ => TypeComparation::Incomparables
-                    }
-                    BasicType::UInt => match other {
-                        BasicType::UInt => TypeComparation::Same,
-                        BasicType::Int => TypeComparation::Superior,
-                        BasicType::Char => TypeComparation::Superior,
-                        BasicType::Float => TypeComparation::Inferior,
-                        _ => TypeComparation::Incomparables
-                    }
-                    BasicType::Date => match other {
-                        BasicType::Date => TypeComparation::Same,
-                        _ => TypeComparation::Incomparables
-                    }
-                    BasicType::Float => match other {
-                        BasicType::Float => TypeComparation::Same,
-                        BasicType::UInt => TypeComparation::Superior,
-                        BasicType::Int => TypeComparation::Superior,
-                        BasicType::Char => TypeComparation::Superior,
-                        _ => TypeComparation::Incomparables
-                    }
-                    BasicType::Regexp => match other {
-                        BasicType::Regexp => TypeComparation::Same,
-                        _ => TypeComparation::Incomparables
-                    }
-                    BasicType::Unit => match other {
-                        BasicType::Unit => TypeComparation::Same,
-                        _ => TypeComparation::Incomparables
-                    }
-                    _ => TypeComparation::Incomparables
-                }
-            }
+            Some(other) => match self {
+                BasicType::Bool => match other {
+                    BasicType::Bool => TypeComparation::Same,
+                    _ => TypeComparation::Incomparables,
+                },
+                BasicType::Char => match other {
+                    BasicType::Char => TypeComparation::Same,
+                    BasicType::Int => TypeComparation::Inferior,
+                    BasicType::UInt => TypeComparation::Inferior,
+                    _ => TypeComparation::Incomparables,
+                },
+                BasicType::Int => match other {
+                    BasicType::Int => TypeComparation::Same,
+                    BasicType::Char => TypeComparation::Superior,
+                    BasicType::UInt => TypeComparation::Inferior,
+                    BasicType::Float => TypeComparation::Inferior,
+                    _ => TypeComparation::Incomparables,
+                },
+                BasicType::UInt => match other {
+                    BasicType::UInt => TypeComparation::Same,
+                    BasicType::Int => TypeComparation::Superior,
+                    BasicType::Char => TypeComparation::Superior,
+                    BasicType::Float => TypeComparation::Inferior,
+                    _ => TypeComparation::Incomparables,
+                },
+                BasicType::Date => match other {
+                    BasicType::Date => TypeComparation::Same,
+                    _ => TypeComparation::Incomparables,
+                },
+                BasicType::Float => match other {
+                    BasicType::Float => TypeComparation::Same,
+                    BasicType::UInt => TypeComparation::Superior,
+                    BasicType::Int => TypeComparation::Superior,
+                    BasicType::Char => TypeComparation::Superior,
+                    _ => TypeComparation::Incomparables,
+                },
+                BasicType::Regexp => match other {
+                    BasicType::Regexp => TypeComparation::Same,
+                    _ => TypeComparation::Incomparables,
+                },
+                BasicType::Unit => match other {
+                    BasicType::Unit => TypeComparation::Same,
+                    _ => TypeComparation::Incomparables,
+                },
+                _ => TypeComparation::Incomparables,
+            },
         }
     }
 }

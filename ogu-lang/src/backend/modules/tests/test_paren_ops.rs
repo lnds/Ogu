@@ -3,11 +3,11 @@ use crate::backend::modules::module::Module;
 use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
+use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::trait_type::{TRAIT_EQ, TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
 use crate::backend::scopes::types::{Type, TypeClone};
 use anyhow::Result;
 use indoc::indoc;
-use crate::backend::modules::types::list_type::ListType;
 
 #[test]
 fn test_add() {
@@ -46,7 +46,6 @@ fn test_add() {
     );
 }
 
-
 #[test]
 fn test_cons() {
     let module = make_module(
@@ -68,8 +67,17 @@ fn test_cons() {
     assert!(module.is_ok());
     validate_decls(
         module,
-        FuncType::new_opt(Some(vec![TRAIT_UNKNOWN.clone_box(), ListType::new_list(TRAIT_UNKNOWN.clone_box())]), ListType::new_list(TRAIT_UNKNOWN.clone_box())),
-        FuncType::new_opt(Some(vec![ListType::new_list(BasicType::int())]), ListType::new_list(BasicType::int())),
+        FuncType::new_opt(
+            Some(vec![
+                TRAIT_UNKNOWN.clone_box(),
+                ListType::new_list(TRAIT_UNKNOWN.clone_box()),
+            ]),
+            ListType::new_list(TRAIT_UNKNOWN.clone_box()),
+        ),
+        FuncType::new_opt(
+            Some(vec![ListType::new_list(BasicType::int())]),
+            ListType::new_list(BasicType::int()),
+        ),
         vec![
             Some(ListType::new_list(BasicType::int())),
             Some(ListType::new_list(BasicType::int())),
@@ -101,8 +109,17 @@ fn test_concat() {
     assert!(module.is_ok());
     validate_decls(
         module,
-        FuncType::new_opt(Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box()), ListType::new_list(TRAIT_UNKNOWN.clone_box())]), ListType::new_list(TRAIT_UNKNOWN.clone_box())),
-        FuncType::new_opt(Some(vec![ListType::new_list(BasicType::int())]), ListType::new_list(BasicType::int())),
+        FuncType::new_opt(
+            Some(vec![
+                ListType::new_list(TRAIT_UNKNOWN.clone_box()),
+                ListType::new_list(TRAIT_UNKNOWN.clone_box()),
+            ]),
+            ListType::new_list(TRAIT_UNKNOWN.clone_box()),
+        ),
+        FuncType::new_opt(
+            Some(vec![ListType::new_list(BasicType::int())]),
+            ListType::new_list(BasicType::int()),
+        ),
         vec![
             Some(ListType::new_list(BasicType::int())),
             Some(ListType::new_list(BasicType::int())),
@@ -634,7 +651,6 @@ fn test_not() {
     );
 }
 
-
 #[test]
 fn test_map() {
     let module = make_module(
@@ -643,7 +659,8 @@ fn test_map() {
         map f (x :: xs) = (f x) :: (map f xs)
         squares = [0..10] |> map \x -> x * x
         "#},
-        default_sym_table());
+        default_sym_table(),
+    );
 
     if module.is_err() {
         println!("module = {:?}", module);
@@ -652,11 +669,21 @@ fn test_map() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), TRAIT_UNKNOWN.clone_box()),
-                                    ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
-                          ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+        FuncType::new_opt(
+            Some(vec![
+                FuncType::new_func_type(
+                    Some(vec![TRAIT_UNKNOWN.clone_box()]),
+                    TRAIT_UNKNOWN.clone_box()
+                ),
+                ListType::new_list(TRAIT_UNKNOWN.clone_box())
+            ]),
+            ListType::new_list(TRAIT_UNKNOWN.clone_box())
+        )
     );
-    assert_eq!(decls[1].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(
+        decls[1].get_type(),
+        Some(ListType::new_list(BasicType::int()))
+    );
 }
 
 fn validate_decls(

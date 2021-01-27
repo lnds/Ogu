@@ -6,7 +6,6 @@ pub(crate) struct VariadicType {
 }
 
 impl Type for VariadicType {
-
     fn get_name(&self) -> String {
         format!("[...] -> {:?}", self.result)
     }

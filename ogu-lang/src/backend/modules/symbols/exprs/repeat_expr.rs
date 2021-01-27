@@ -1,10 +1,10 @@
+use crate::backend::modules::symbols::exprs::loop_expr::LoopExpr;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
+use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
-use crate::backend::modules::symbols::exprs::loop_expr::LoopExpr;
-use crate::backend::scopes::sym_table::SymbolTable;
 
 #[derive(Clone, Debug)]
 pub(crate) struct RepeatExpr {
@@ -13,9 +13,7 @@ pub(crate) struct RepeatExpr {
 }
 
 impl RepeatExpr {
-    pub(crate) fn new(
-        reps: Vec<Box<dyn Symbol>>
-    ) -> Box<Self> {
+    pub(crate) fn new(reps: Vec<Box<dyn Symbol>>) -> Box<Self> {
         Box::new(RepeatExpr {
             reps,
             ty: Some(TRAIT_UNKNOWN.clone_box()),
@@ -57,14 +55,13 @@ impl Symbol for RepeatExpr {
                                 Some(t) => {
                                     r.set_type(Some(t));
                                 }
-                            }
+                            },
                             Some(_) => match loop_expr.decls[i].get_type() {
                                 None => {
                                     loop_expr.decls[i].set_type(r.get_type());
                                 }
-                                Some(t) =>
-                                    loop_expr.decls[i].matches_types(Some(t.clone_box()))
-                            }
+                                Some(t) => loop_expr.decls[i].matches_types(Some(t.clone_box())),
+                            },
                         }
                         loop_expr.decls[i].define_into(&mut *sym_table);
                         loop_expr.decls[i].define_into(scope);

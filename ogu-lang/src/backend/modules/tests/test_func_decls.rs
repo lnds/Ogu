@@ -2,11 +2,11 @@ use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
+use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
 use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
-use crate::backend::modules::types::list_type::ListType;
 
 #[test]
 fn test_func_pattern_1() {
@@ -333,7 +333,6 @@ fn test_args_4() {
     );
 }
 
-
 #[test]
 fn test_erroneus_args() {
     let module = make_module(
@@ -363,11 +362,16 @@ fn test_func_as_args_1() {
     let module = module.unwrap();
     let decls = module.get_decls();
     //println!("DECLS: {:#?}", decls);
-    assert_eq!(decls[0].get_type(),
-               FuncType::new_opt(Some(vec![
-                   FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
-                   ListType::new_list(TRAIT_UNKNOWN.clone_box())
-               ]), ListType::new_list(TRAIT_UNKNOWN.clone_box())));
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(
+            Some(vec![
+                FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
+                ListType::new_list(TRAIT_UNKNOWN.clone_box())
+            ]),
+            ListType::new_list(TRAIT_UNKNOWN.clone_box())
+        )
+    );
 }
 
 #[test]

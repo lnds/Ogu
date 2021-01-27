@@ -2,11 +2,11 @@ use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
-use indoc::indoc;
-use crate::backend::modules::types::tuple_type::TupleType;
-use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_UNKNOWN};
-use crate::backend::scopes::types::TypeClone;
 use crate::backend::modules::types::list_type::ListType;
+use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_UNKNOWN};
+use crate::backend::modules::types::tuple_type::TupleType;
+use crate::backend::scopes::types::TypeClone;
+use indoc::indoc;
 
 #[test]
 fn test_func_composition_1() {
@@ -37,12 +37,8 @@ fn test_func_composition_1() {
         decls[2].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
     );
-    assert_eq!(
-        decls[3].get_type(),
-        Some(BasicType::int())
-    );
+    assert_eq!(decls[3].get_type(), Some(BasicType::int()));
 }
-
 
 #[test]
 fn test_func_composition_2() {
@@ -73,12 +69,8 @@ fn test_func_composition_2() {
         decls[2].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
     );
-    assert_eq!(
-        decls[3].get_type(),
-        Some(BasicType::int())
-    );
+    assert_eq!(decls[3].get_type(), Some(BasicType::int()));
 }
-
 
 #[test]
 fn test_pipes_1() {
@@ -96,12 +88,15 @@ fn test_pipes_1() {
     println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()])]), TRAIT_NUM.clone_box())
+        FuncType::new_opt(
+            Some(vec![TupleType::new_box(vec![
+                TRAIT_NUM.clone_box(),
+                TRAIT_NUM.clone_box()
+            ])]),
+            TRAIT_NUM.clone_box()
+        )
     );
-    assert_eq!(
-        decls[1].get_type(),
-        Some(BasicType::int())
-    );
+    assert_eq!(decls[1].get_type(), Some(BasicType::int()));
 }
 
 #[test]
@@ -121,18 +116,20 @@ fn test_pipes_2() {
     println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()])]), TRAIT_NUM.clone_box())
+        FuncType::new_opt(
+            Some(vec![TupleType::new_box(vec![
+                TRAIT_NUM.clone_box(),
+                TRAIT_NUM.clone_box()
+            ])]),
+            TRAIT_NUM.clone_box()
+        )
     );
     assert_eq!(
         decls[1].get_type(),
         FuncType::new_opt(Some(vec![BasicType::float()]), BasicType::float())
     );
-    assert_eq!(
-        decls[2].get_type(),
-        Some(BasicType::float())
-    );
+    assert_eq!(decls[2].get_type(), Some(BasicType::float()));
 }
-
 
 #[test]
 fn test_pipes_3() {
@@ -157,7 +154,13 @@ fn test_pipes_3() {
     println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()])]), TRAIT_NUM.clone_box())
+        FuncType::new_opt(
+            Some(vec![TupleType::new_box(vec![
+                TRAIT_NUM.clone_box(),
+                TRAIT_NUM.clone_box()
+            ])]),
+            TRAIT_NUM.clone_box()
+        )
     );
     assert_eq!(
         decls[1].get_type(),
@@ -167,7 +170,13 @@ fn test_pipes_3() {
 
     assert_eq!(
         decls[3].get_type(),
-        FuncType::new_opt(Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box()), ListType::new_list(TRAIT_UNKNOWN.clone_box())]), ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+        FuncType::new_opt(
+            Some(vec![
+                ListType::new_list(TRAIT_UNKNOWN.clone_box()),
+                ListType::new_list(TRAIT_UNKNOWN.clone_box())
+            ]),
+            ListType::new_list(TRAIT_UNKNOWN.clone_box())
+        )
     );
 
     assert_eq!(

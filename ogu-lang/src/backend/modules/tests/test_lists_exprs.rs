@@ -4,9 +4,9 @@ use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::trait_type::{TRAIT_NUM, TRAIT_ORD, TRAIT_UNKNOWN};
+use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::types::TypeClone;
 use indoc::indoc;
-use crate::backend::modules::types::tuple_type::TupleType;
 
 #[test]
 fn test_simple_list() {
@@ -27,7 +27,10 @@ fn test_simple_list() {
     let module = module.unwrap();
     let decls = module.get_decls();
     println!("TEST DECLS = {:#?}", decls);
-    assert_eq!(decls[0].get_type(), Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
+    assert_eq!(
+        decls[0].get_type(),
+        Some(ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+    );
     assert_eq!(
         decls[1].get_type(),
         Some(ListType::new_list(BasicType::int()))
@@ -116,7 +119,10 @@ fn test_list_ops() {
     let module = module.unwrap();
     let decls = module.get_decls();
     println!("TEST DECLS = {:#?}", decls);
-    assert_eq!(decls[0].get_type(), Some(ListType::new_list(TRAIT_UNKNOWN.clone_box())));
+    assert_eq!(
+        decls[0].get_type(),
+        Some(ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+    );
     assert_eq!(
         decls[1].get_type(),
         Some(ListType::new_list(BasicType::int()))
@@ -360,7 +366,6 @@ fn test_list_comprehension_2() {
     );
 }
 
-
 #[test]
 fn test_list_comprehension_3() {
     let module = make_module(
@@ -385,7 +390,10 @@ fn test_list_comprehension_3() {
     );
     assert_eq!(
         decls[1].get_type(),
-        Some(ListType::new_list(TupleType::new_box(vec![BasicType::int(), BasicType::int()])))
+        Some(ListType::new_list(TupleType::new_box(vec![
+            BasicType::int(),
+            BasicType::int()
+        ])))
     );
     assert_eq!(
         decls[2].get_type(),
@@ -393,11 +401,19 @@ fn test_list_comprehension_3() {
     );
     assert_eq!(
         decls[3].get_type(),
-        Some(ListType::new_list(TupleType::new_box(vec![BasicType::int(), BasicType::int(), BasicType::float()])))
+        Some(ListType::new_list(TupleType::new_box(vec![
+            BasicType::int(),
+            BasicType::int(),
+            BasicType::float()
+        ])))
     );
     assert_eq!(
         decls[4].get_type(),
-        Some(ListType::new_list(TupleType::new_box(vec![BasicType::float(), BasicType::int(), BasicType::int()])))
+        Some(ListType::new_list(TupleType::new_box(vec![
+            BasicType::float(),
+            BasicType::int(),
+            BasicType::int()
+        ])))
     );
 }
 
@@ -460,7 +476,6 @@ fn test_list_func2() {
     );
 }
 
-
 #[test]
 fn test_list_fib() {
     let module = make_module(
@@ -475,9 +490,11 @@ fn test_list_fib() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    assert_eq!(decls[0].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(
+        decls[0].get_type(),
+        Some(ListType::new_list(BasicType::int()))
+    );
 }
-
 
 #[test]
 fn test_prime_factors_1() {
@@ -497,10 +514,14 @@ fn test_prime_factors_1() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
-                                                      ListType::new_list(BasicType::int())));
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(
+            Some(vec![BasicType::int(), BasicType::int()]),
+            ListType::new_list(BasicType::int())
+        )
+    );
 }
-
 
 #[test]
 fn test_prime_factors_2() {
@@ -522,11 +543,21 @@ fn test_prime_factors_2() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]), BasicType::bool()));
-    assert_eq!(decls[1].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
-                                                      ListType::new_list(BasicType::int())));
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(
+            Some(vec![BasicType::int(), BasicType::int()]),
+            BasicType::bool()
+        )
+    );
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(
+            Some(vec![BasicType::int(), BasicType::int()]),
+            ListType::new_list(BasicType::int())
+        )
+    );
 }
-
 
 #[test]
 fn test_prime_factors_3() {
@@ -550,14 +581,27 @@ fn test_prime_factors_3() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::bool()));
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::bool())
+    );
 
-    assert_eq!(decls[1].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]), BasicType::bool()));
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(
+            Some(vec![BasicType::int(), BasicType::int()]),
+            BasicType::bool()
+        )
+    );
 
-    assert_eq!(decls[2].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
-                                                      ListType::new_list(BasicType::int())));
+    assert_eq!(
+        decls[2].get_type(),
+        FuncType::new_opt(
+            Some(vec![BasicType::int(), BasicType::int()]),
+            ListType::new_list(BasicType::int())
+        )
+    );
 }
-
 
 #[test]
 fn test_prime_factors_4() {
@@ -581,10 +625,24 @@ fn test_prime_factors_4() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool()));
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
+    );
 
-    assert_eq!(decls[1].get_type(), FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), BasicType::bool()));
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
+            BasicType::bool()
+        )
+    );
 
-    assert_eq!(decls[2].get_type(), FuncType::new_opt(Some(vec![BasicType::int(), BasicType::int()]),
-                                                      ListType::new_list(TRAIT_NUM.clone_box())));
+    assert_eq!(
+        decls[2].get_type(),
+        FuncType::new_opt(
+            Some(vec![BasicType::int(), BasicType::int()]),
+            ListType::new_list(TRAIT_NUM.clone_box())
+        )
+    );
 }

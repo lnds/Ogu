@@ -27,9 +27,7 @@ impl Type for ListType {
     fn is_compatible_with(&self, other: &dyn Type) -> bool {
         match other.downcast_ref::<ListType>() {
             None => false,
-            Some(lt) => {
-                lt.ty.is_compatible_with(&*self.ty)
-            }
+            Some(lt) => lt.ty.is_compatible_with(&*self.ty),
         }
     }
 
@@ -48,7 +46,7 @@ impl Type for ListType {
     fn compare(&self, other: &dyn Type) -> TypeComparation {
         match other.downcast_ref::<ListType>() {
             None => TypeComparation::Incomparables,
-            Some(other) => self.ty.compare(&*other.ty)
+            Some(other) => self.ty.compare(&*other.ty),
         }
     }
 }

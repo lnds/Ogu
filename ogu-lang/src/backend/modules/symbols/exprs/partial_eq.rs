@@ -34,7 +34,10 @@ impl Symbol for PartialEqExpr {
                 Some(lt) => match r.get_type() {
                     None => None,
                     Some(rt) => {
-                        if &*lt == &*rt || lt.is_compatible_with(&*rt) || rt.is_compatible_with(&*lt) {
+                        if &*lt == &*rt
+                            || lt.is_compatible_with(&*rt)
+                            || rt.is_compatible_with(&*lt)
+                        {
                             Some(BasicType::bool())
                         } else {
                             None
@@ -47,8 +50,7 @@ impl Symbol for PartialEqExpr {
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
         match self {
-            PartialEqExpr::Eq(l, r)
-            | PartialEqExpr::Ne(l, r)  => {
+            PartialEqExpr::Eq(l, r) | PartialEqExpr::Ne(l, r) => {
                 l.set_type(ty.clone());
                 r.set_type(ty.clone());
             }
@@ -66,8 +68,7 @@ impl Symbol for PartialEqExpr {
 
     fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
         match self {
-            PartialEqExpr::Eq(l, r)
-            | PartialEqExpr::Ne(l, r) => {
+            PartialEqExpr::Eq(l, r) | PartialEqExpr::Ne(l, r) => {
                 l.define_into(scope);
                 r.define_into(scope);
             }

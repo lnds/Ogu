@@ -1,8 +1,9 @@
+use crate::backend::modules::symbols::func::swap_args;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::{Type, TypeComparation};
+use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
@@ -42,11 +43,7 @@ impl Function {
         }))
     }
 
-    pub(crate) fn make_box(
-        name: &str,
-        args: &Args,
-        expr: &Expression,
-    ) -> Box<dyn Symbol> {
+    pub(crate) fn make_box(name: &str, args: &Args, expr: &Expression) -> Box<dyn Symbol> {
         let expr: Box<dyn Symbol> = expr.into();
         let args: Option<Vec<Box<dyn Symbol>>> = match args {
             Args::Void => None,
@@ -68,58 +65,11 @@ impl Function {
         resolve: bool,
     ) -> Result<()> {
         if let Some(own_args) = &self.args {
-            self.check_args_can_be_replaced(&own_args[..], &args)?;
+            let msg = &format!("function {}", self.name);
 
-            let mut new_args: Vec<Box<dyn Symbol>> = vec![];
-            for (a, b) in own_args.iter().zip(args.iter()) {
-                if self.subtype(a.get_type(), b.get_type())? {
-                    new_args.push(IdSym::new_with_type(
-                        a.get_name(),
-                        b.get_type().clone(),
-                    ))
-                } else {
-                    new_args.push(a.clone())
-                }
-            }
-            self.args = Some(new_args);
+            self.args = Some(swap_args(msg, &own_args, &args)?);
             if resolve {
                 self.resolve_type(scope)?;
-            }
-        }
-        Ok(())
-    }
-
-    fn subtype(&self, a: Option<Box<dyn Type>>, b: Option<Box<dyn Type>>) -> Result<bool> {
-        match a {
-            None => match b {
-                None => Ok(true),
-                Some(_) => Ok(true)
-            },
-            Some(at) => match b {
-                None => Ok(true),
-                Some(bt) => {
-                    let c = at.compare(&*bt);
-                    match c {
-                        TypeComparation::Superior => Ok(false),
-                        TypeComparation::Incomparables => bail!("incompatible type for arg substitution in function {}, expecting {}, found {}", self.name, at.get_name(), bt.get_name()),
-                        _ => Ok(true)
-                    }
-                }
-            }
-        }
-    }
-
-    fn check_args_can_be_replaced(&self, own_args: &[Box<dyn Symbol>], args: &[Box<dyn Symbol>]) -> Result<()> {
-        if own_args.len() != args.len() {
-            bail!("wrong arguments passed")
-        }
-        for (a, b) in own_args.iter().zip(args.iter()) {
-            if let (Some(ta), Some(tb)) = (a.get_type(), b.get_type()) {
-                if &*ta != &*tb {
-                    if !ta.is_compatible_with(&*tb) && !tb.is_compatible_with(&*ta) {
-                        bail!("incompatible args passed for function {}\n TA = {:?}\n TB = {:?}", self.name, ta, tb)
-                    }
-                }
             }
         }
         Ok(())
@@ -128,30 +78,26 @@ impl Function {
     fn define_arg(&mut self, sym: Box<dyn Symbol>) -> Result<Option<Box<dyn Symbol>>> {
         match &mut self.args {
             None => Ok(None),
-            Some(args) => {
-                match args.iter_mut().find(|a| a.get_name() == sym.get_name()) {
-                    None => Ok(None),
-                    Some(a) => {
-                        match a.get_type() {
-                            None => {
-                                *a = sym.clone_box();
+            Some(args) => match args.iter_mut().find(|a| a.get_name() == sym.get_name()) {
+                None => Ok(None),
+                Some(a) => match a.get_type() {
+                    None => {
+                        *a = sym.clone_box();
+                        Ok(Some(a.clone_box()))
+                    }
+                    Some(at) => match sym.get_type() {
+                        None => Ok(None),
+                        Some(st) => {
+                            if !st.is_compatible_with(&*at) {
+                                bail!("incompatible  type for argument {}, st = {:?} at = {:?} in function {}",
+                                            a.get_name(), st, at, self.name)
+                            } else {
                                 Ok(Some(a.clone_box()))
                             }
-                            Some(at) => match sym.get_type() {
-                                None => Ok(None),
-                                Some(st) => {
-                                    if !st.is_compatible_with(&*at) {
-                                        bail!("incompatible  type for argument {}, st = {:?} at = {:?} in function {}",
-                                            a.get_name(), st, at, self.name)
-                                    } else {
-                                        Ok(Some(a.clone_box()))
-                                    }
-                                }
-                            },
                         }
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
     }
 }

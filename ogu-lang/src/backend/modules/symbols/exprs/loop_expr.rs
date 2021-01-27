@@ -1,8 +1,8 @@
+use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::{Symbol, SymbolClone};
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
 use anyhow::{bail, Result};
-use crate::backend::scopes::sym_table::SymbolTable;
 
 #[derive(Clone, Debug)]
 pub(crate) struct LoopExpr {
@@ -11,14 +11,8 @@ pub(crate) struct LoopExpr {
 }
 
 impl LoopExpr {
-    pub(crate) fn new(
-        decls: Vec<Box<dyn Symbol>>,
-        expr: Box<dyn Symbol>,
-    ) -> Box<Self> {
-        Box::new(LoopExpr {
-            decls,
-            expr,
-        })
+    pub(crate) fn new(decls: Vec<Box<dyn Symbol>>, expr: Box<dyn Symbol>) -> Box<Self> {
+        Box::new(LoopExpr { decls, expr })
     }
 }
 
@@ -40,7 +34,10 @@ impl Symbol for LoopExpr {
         sym_table.define(self.clone_box());
         for d in self.decls.iter() {
             if sym_table.define(d.clone()).is_some() {
-                bail!("duplicated symbol '{} on loop for declaration", d.get_name());
+                bail!(
+                    "duplicated symbol '{} on loop for declaration",
+                    d.get_name()
+                );
             }
         }
         for d in self.decls.iter_mut() {
@@ -57,4 +54,3 @@ impl Symbol for LoopExpr {
         true
     }
 }
-

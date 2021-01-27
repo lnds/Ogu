@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
 use crate::backend::modules::types::basic_type::{FLOAT_TYPE, INT_TYPE};
 use crate::backend::modules::types::trait_type::TRAIT_NUM;
@@ -5,7 +7,6 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::types::TypeClone;
 use crate::backend::scopes::Scope;
-use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ArithmeticExpr {

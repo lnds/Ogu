@@ -1,8 +1,9 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeComparation};
 use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 pub(crate) fn resolve_comparable(
     l: &mut Box<dyn Symbol>,

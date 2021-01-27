@@ -1,10 +1,11 @@
+use anyhow::Result;
+
 use crate::backend::modules::symbols::exprs::OptSymbolTuple;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct CaseExpr {
@@ -42,8 +43,8 @@ impl Symbol for CaseExpr {
                 self.selector.set_type(sym.get_type());
             }
         } else if self.selector.is_seq() {
-            let syms = scope.resolve_seq(self.selector.get_seq());
-            self.selector.set_seq(syms);
+            let symbols = scope.resolve_seq(self.selector.get_seq());
+            self.selector.set_seq(symbols);
             cond_type = self.selector.get_type();
         }
         for (c, e) in self.cases.iter_mut() {

@@ -1,9 +1,10 @@
+use anyhow::Result;
+
 use crate::backend::modules::types::list_type::ListType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ListComprehension {

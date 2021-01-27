@@ -1,9 +1,10 @@
+use anyhow::Result;
+
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::trait_type::TRAIT_NUM;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
-use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) enum Literal {

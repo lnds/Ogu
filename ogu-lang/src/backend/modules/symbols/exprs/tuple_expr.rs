@@ -1,10 +1,11 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 #[derive(Debug, Clone)]
 pub(crate) struct TupleExpr {

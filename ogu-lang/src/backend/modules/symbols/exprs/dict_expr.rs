@@ -1,8 +1,9 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::types::dict_type::DictType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 #[derive(Debug, Clone)]
 pub(crate) enum DictExpr {

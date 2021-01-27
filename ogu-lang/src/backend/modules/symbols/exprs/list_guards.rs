@@ -1,3 +1,5 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
@@ -6,7 +8,6 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::expression::ListComprehensionGuard;
-use anyhow::{bail, Result};
 
 #[derive(Debug, Clone)]
 pub(crate) enum ListGuard {

@@ -1,3 +1,5 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::symbols::func::func_compose::ComposeFunction;
 use crate::backend::modules::symbols::func::func_def::Function;
 use crate::backend::modules::symbols::func::lambda_expr::LambdaExpr;
@@ -9,7 +11,6 @@ use crate::backend::modules::types::variadic_type::VariadicType;
 use crate::backend::scopes::symbol::{Symbol, SymbolClone};
 use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallExpr {
@@ -223,7 +224,7 @@ impl Symbol for FuncCallExpr {
                             }
                         }
                     }
-                } else if let Some(ft) = ft.downcast_ref::<VariadicType>() {
+                } else if ft.downcast_ref::<VariadicType>().is_some() {
                     // TODO
                 } else if let Some(tf) = self.func.get_type() {
                     if &*tf == TRAIT_UNKNOWN {

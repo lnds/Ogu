@@ -1,9 +1,10 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::types::basic_type::{BasicType, BOOL_TYPE, INVALID_TYPE};
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone, TypeComparation};
 use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct IfExpr {
@@ -49,7 +50,7 @@ impl Symbol for IfExpr {
             Some(t) if t.is_trait() => self.cond.set_type(Some(BasicType::bool())),
             Some(t) => {
                 if &*t != BOOL_TYPE {
-                    bail!("condition on if must be booolean, not {:?}", t)
+                    bail!("condition on if must be boolean, not {:?}", t)
                 }
             }
         }

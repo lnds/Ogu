@@ -1,7 +1,8 @@
+use anyhow::Result;
+
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub(crate) struct DoExpr {

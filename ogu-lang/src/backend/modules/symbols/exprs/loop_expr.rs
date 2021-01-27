@@ -1,8 +1,9 @@
+use anyhow::{bail, Result};
+
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::{Symbol, SymbolClone};
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct LoopExpr {

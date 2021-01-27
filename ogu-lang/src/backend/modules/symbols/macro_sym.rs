@@ -1,7 +1,8 @@
+use anyhow::{bail, Result};
+
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct MacroSym {

@@ -1,9 +1,10 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 #[derive(Debug, Clone)]
 pub(crate) struct ListExpr {
@@ -54,12 +55,12 @@ impl Symbol for ListExpr {
         "list_expr"
     }
 
-    fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
-        self.ty = ty;
-    }
-
     fn get_type(&self) -> Option<Box<dyn Type>> {
         self.ty.clone()
+    }
+
+    fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
+        self.ty = ty;
     }
 
     fn matches_types(&mut self, aty: Option<Box<dyn Type>>) {

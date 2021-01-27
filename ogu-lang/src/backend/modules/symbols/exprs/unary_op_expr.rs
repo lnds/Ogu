@@ -32,7 +32,7 @@ impl UnaryOpExpr {
         Self::make_lambda(expr, TRAIT_NUM, ArithmeticExpr::new_div)
     }
 
-    pub(crate) fn new_intdiv(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
+    pub(crate) fn new_int_div(expr: Option<Box<dyn Symbol>>) -> Box<dyn Symbol> {
         Self::make_lambda(expr, TRAIT_NUM, ArithmeticExpr::new_int_div)
     }
 

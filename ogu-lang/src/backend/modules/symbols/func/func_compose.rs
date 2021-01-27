@@ -1,10 +1,11 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
-use anyhow::{bail, Result};
 
 #[derive(Debug, Clone)]
 pub(crate) struct ComposeFunction {

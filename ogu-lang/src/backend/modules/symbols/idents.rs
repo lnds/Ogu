@@ -2,9 +2,9 @@ use anyhow::{bail, Result};
 
 use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::tuple_type::TupleType;
-use crate::backend::scopes::Scope;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
+use crate::backend::scopes::Scope;
 
 #[derive(Clone, Debug)]
 pub(crate) struct IdSym {

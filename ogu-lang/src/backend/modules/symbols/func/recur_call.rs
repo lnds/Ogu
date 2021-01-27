@@ -1,9 +1,10 @@
+use anyhow::Result;
+
 use crate::backend::modules::symbols::func::func_call::FuncCallExpr;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) struct RecurCallExpr {

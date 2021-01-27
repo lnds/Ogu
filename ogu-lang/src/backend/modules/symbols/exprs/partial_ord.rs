@@ -1,10 +1,11 @@
+use anyhow::Result;
+
 use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::trait_type::TRAIT_ORD;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) enum PartialOrdExpr {

@@ -97,7 +97,7 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             }
 
             Expression::ListByComprehension(e, g) => {
-                ListComprehension::new_list_comp(e.into(), vec_list_comp_guars_int(g))
+                ListComprehension::new_list_comp(e.into(), vec_list_comp_guards_into(g))
             }
 
             Expression::DictExpr(exprs) => {
@@ -118,7 +118,7 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
                 UnaryOpExpr::new_div(expr.deref().as_ref().map(|e| e.into()))
             }
             Expression::UnaryDivDiv(expr) => {
-                UnaryOpExpr::new_intdiv(expr.deref().as_ref().map(|e| e.into()))
+                UnaryOpExpr::new_int_div(expr.deref().as_ref().map(|e| e.into()))
             }
             Expression::UnaryMod(expr) => {
                 UnaryOpExpr::new_mod(expr.deref().as_ref().map(|e| e.into()))
@@ -201,7 +201,7 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::LoopExpr(fe, expr) => LoopExpr::new(vec_eqs_into(&fe), expr.into()),
 
-            Expression::RepeatExpr(reps) => RepeatExpr::new(vec_recval_into(&reps)),
+            Expression::RepeatExpr(reps) => RepeatExpr::new(vec_recur_val_into(&reps)),
 
             Expression::LetExpr(eqs, expr) => LetExpr::new(vec_eqs_into(eqs), expr.into()),
 
@@ -274,7 +274,7 @@ fn vec_eqs_into(eqs: &[Equation]) -> Vec<Box<dyn Symbol>> {
     eqs.iter().map(|eq| eq.into()).collect()
 }
 
-fn vec_recval_into(eqs: &[RecurValue]) -> Vec<Box<dyn Symbol>> {
+fn vec_recur_val_into(eqs: &[RecurValue]) -> Vec<Box<dyn Symbol>> {
     eqs.iter().map(|eq| eq.into()).collect()
 }
 
@@ -287,7 +287,7 @@ impl<'a> From<&LambdaArg<'a>> for Box<dyn Symbol> {
     }
 }
 
-fn vec_list_comp_guars_int(guards: &[ListComprehensionGuard]) -> Vec<Box<dyn Symbol>> {
+fn vec_list_comp_guards_into(guards: &[ListComprehensionGuard]) -> Vec<Box<dyn Symbol>> {
     guards.iter().map(|g| g.into()).collect()
 }
 

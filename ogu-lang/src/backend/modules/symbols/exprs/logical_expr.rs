@@ -1,9 +1,10 @@
+use anyhow::Result;
+
 use crate::backend::modules::symbols::exprs::comparable_trait::resolve_comparable;
 use crate::backend::modules::types::basic_type::{BasicType, BOOL_TYPE};
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::Type;
 use crate::backend::scopes::Scope;
-use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub(crate) enum LogicalExpr {

@@ -1,3 +1,5 @@
+use anyhow::{bail, Result};
+
 use crate::backend::modules::symbols::func::swap_args;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::func_type::FuncType;
@@ -8,7 +10,6 @@ use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::module::decls::FuncTypeAst;
-use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Function {

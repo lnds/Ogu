@@ -55,9 +55,6 @@ impl Symbol for FuncCallExpr {
         }
     }
 
-    fn matches_types(&mut self, ty: Option<Box<dyn Type>>) {
-        self.set_type(ty);
-    }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
@@ -83,6 +80,9 @@ impl Symbol for FuncCallExpr {
                     } else {
                         todo!("ESTE OTRO CASO func = {:?}", func);
                     }
+
+                } else {
+                    todo!("WTF!!");
                 }
             }
             Some(ft) => {
@@ -128,29 +128,28 @@ impl Symbol for FuncCallExpr {
                                     }
                                     let mut call_args = self.args.to_vec();
                                     call_args.append(&mut n_args.to_vec());
-                                    let mut expr = FuncCallExpr::new(func.clone_box(), call_args.clone());
+                                    let  expr = FuncCallExpr::new(func.clone_box(), call_args.clone());
                                     let mut lambda =
                                         LambdaExpr::new(n_args.to_vec(), expr.clone_box());
                                     lambda.resolve_type(scope)?;
-                                    lambda.define_into(scope);
                                     self.curried = true;
-                                    self.func = lambda
+                                    self.func = lambda;
+                                    self.args = n_args.to_vec();
                                 }
                             }
                         }
                         Some(ft_args) => {
-                            for (p, a) in self.args.iter_mut().enumerate() {
+                            for (a, ot) in self.args.iter_mut().zip(ft_args.iter()) {
                                 a.resolve_type(scope)?;
                                 match a.get_type() {
-                                    None => a.set_type(Some(ft_args[p].clone())),
+                                    None => a.set_type(Some(ot.clone())),
                                     Some(t) => {
-                                        let ftt = ft_args[p].clone();
+                                        let ftt = ot.clone();
                                         if ftt.compare(&*t) == TypeComparation::Superior {
                                             a.set_type(Some(ftt));
                                         }
                                     }
                                 }
-
                                 a.define_into(scope);
                             }
                             let func = match scope.resolve(self.func.get_name()) {
@@ -185,13 +184,13 @@ impl Symbol for FuncCallExpr {
                                         }
                                     }
                                 } else if let Some(lambda) = val.expr.downcast_ref::<LambdaExpr>() {
+                                    println!("LAMBDA 1");
                                     let mut l = lambda.clone();
                                     l.replace_args(self.args.to_vec(), scope)?;
                                     if self.func.get_type() != l.get_type() {
                                         self.func = Box::new(l);
                                     }
-                                } else if let Some(compose) =
-                                    val.expr.downcast_ref::<ComposeFunction>()
+                                } else if let Some(compose) = val.expr.downcast_ref::<ComposeFunction>()
                                 {
                                     let c = compose.clone();
                                     if self.func.get_type() != c.get_type() {
@@ -228,7 +227,6 @@ impl Symbol for FuncCallExpr {
                 } else if ft.downcast_ref::<VariadicType>().is_some() {
                     // TODO
                 } else if let Some(tf) = self.func.get_type() {
-                    if &*tf == TRAIT_UNKNOWN {
                         let mut ty_args = vec![];
                         for a in self.args.iter_mut() {
                             match a.resolve_type(scope)? {
@@ -243,9 +241,8 @@ impl Symbol for FuncCallExpr {
                             }
                         }
                         self.func
-                            .set_type(FuncType::new_opt(Some(ty_args), TRAIT_UNKNOWN.clone_box()));
+                            .set_type(FuncType::new_opt(Some(ty_args), tf.clone_box()));
                         self.func.define_into(scope);
-                    }
                 } else {
                     bail!(
                         "{} => {:?} it's not a function",
@@ -260,10 +257,6 @@ impl Symbol for FuncCallExpr {
             Some(t) => t.resolve_expr_type(),
         };
         Ok(self.get_type())
-    }
-
-    fn is_curry(&self) -> bool {
-        self.curried
     }
 
     fn get_curry(&self) -> Option<Box<dyn Symbol>> {

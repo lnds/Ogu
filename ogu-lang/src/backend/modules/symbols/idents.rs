@@ -1,6 +1,5 @@
 use anyhow::{bail, Result};
 
-use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::tuple_type::TupleType;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};

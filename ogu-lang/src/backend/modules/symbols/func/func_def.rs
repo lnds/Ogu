@@ -138,19 +138,20 @@ impl Symbol for Function {
             }
         }
 
-        self.expr.resolve_type(&mut *sym_table)?;
 
-        println!("CHECK CURRY FOR {:?}\n", self.expr);
-        let curry = self.expr.is_curry();
+        let r = self.expr.resolve_type(&mut *sym_table);
+        if r.is_err() {
+            return r;
+        }
+
         if let Some(curry) = self.expr.get_curry() {
             self.expr = curry;
             self.set_type(self.expr.get_type())
         }
-
-        for s in sym_table.get_symbols() {
-            self.define_arg(s.clone_box())?;
-        }
-        if !curry {
+        else  {
+            for s in sym_table.get_symbols() {
+                self.define_arg(s.clone_box())?;
+            }
             let ty = FuncType::make(&self.args, &*self.expr);
             if let Some(ft1) = self.ty.clone() {
                 if let Some(ft2) = ty.clone() {

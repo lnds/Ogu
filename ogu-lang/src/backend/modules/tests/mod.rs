@@ -28,6 +28,6 @@ pub(crate) fn make_module(source: &str, sym_table: Box<dyn Scope>) -> Result<Mod
     let (tokens, strs) = lexer.scan()?;
     let parser = Parser::new(tokens, strs)?;
     let module_ast = ModuleAst::parse(&parser, None, 0)?;
-    println!("AST:\n\t{:#?}", module_ast);
+    //println!("AST:\n\t{:#?}", module_ast);
     Module::new(module_ast, sym_table)
 }

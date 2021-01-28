@@ -9,7 +9,7 @@ use crate::backend::scopes::Scope;
 
 #[derive(Debug, Clone)]
 pub(crate) struct LambdaExpr {
-    args: Vec<Box<dyn Symbol>>,
+    pub(crate) args: Vec<Box<dyn Symbol>>,
     expr: Box<dyn Symbol>,
     ty: Option<Box<FuncType>>,
 }
@@ -82,9 +82,13 @@ impl Symbol for LambdaExpr {
         if let Some(ty) = ty {
             if let Some(ty) = ty.downcast_ref::<FuncType>() {
                 self.ty = Some(Box::new(ty.clone()))
+            }else {
+                println!("DEBO CAMBIAR TIPO DE LAMBDA A?? {:?}\n", ty);
             }
         }
     }
+
+
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let mut sym_table = SymbolTable::new("lambda_expr", Some(scope.clone_box()));
@@ -93,16 +97,13 @@ impl Symbol for LambdaExpr {
             a.define_into(&mut *sym_table);
         }
         self.expr.resolve_type(&mut *sym_table)?;
-        let curry = self.expr.is_curry();
         if let Some(curry) = self.expr.get_curry() {
             self.expr = curry;
             self.set_type(self.expr.get_type())
-        }
-
-        for s in sym_table.get_symbols() {
-            self.define_arg(s.clone_box())?;
-        }
-        if !curry {
+        } else {
+            for s in sym_table.get_symbols() {
+                self.define_arg(s.clone_box())?;
+            }
             let ty = FuncType::make(&Some(self.args.clone()), &*self.expr);
             if let Some(ft1) = self.ty.clone() {
                 if let Some(ft2) = ty.clone() {

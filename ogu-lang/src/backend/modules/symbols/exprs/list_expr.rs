@@ -5,7 +5,6 @@ use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
-use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ListExpr {

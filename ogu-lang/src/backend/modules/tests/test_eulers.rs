@@ -343,11 +343,11 @@ fn test_euler_6() {
 
         add a b = a + b -- 7
 
-        sum-n-square n = reduce add <| map (\x -> x * x) [1..n]
+        sum-n-square n = reduce add  <| map (\x -> x * x) [1..n] -- 8
 
-        dif-squares n = (square-sum n) - (sum-n-square n)
+        dif-squares n = (square-sum n) - (sum-n-square n) -- 9
 
-        result = dif-squares 100 "#},
+        result = dif-squares 100 -- 10"#},
         default_sym_table(),
     );
     if module.is_err() {
@@ -424,6 +424,16 @@ fn test_euler_6() {
 
     assert_eq!(
         decls[8].get_type(),
+        FuncType::new_opt(Some(vec![BasicType::int()]), TRAIT_NUM.clone_box())
+    );
+
+    assert_eq!(
+        decls[9].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+    );
+
+    assert_eq!(
+        decls[10].get_type(),
+        Some(BasicType::int())
     );
 }

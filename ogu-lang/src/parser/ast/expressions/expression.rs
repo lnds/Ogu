@@ -1042,7 +1042,6 @@ impl<'a> Expression<'a> {
             let mut pos = pos;
             while !is_func_call_end_symbol(parser.get_token(pos)) {
                 let (arg, new_pos) = Expression::parse_primary_expr(parser, pos)?;
-                println!("arg = {:?}", arg);
                 args.push(arg);
                 pos = new_pos;
             }

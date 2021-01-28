@@ -128,10 +128,11 @@ impl Symbol for FuncCallExpr {
                                     }
                                     let mut call_args = self.args.to_vec();
                                     call_args.append(&mut n_args.to_vec());
-                                    let expr = FuncCallExpr::new(func.clone_box(), call_args);
+                                    let mut expr = FuncCallExpr::new(func.clone_box(), call_args.clone());
                                     let mut lambda =
                                         LambdaExpr::new(n_args.to_vec(), expr.clone_box());
                                     lambda.resolve_type(scope)?;
+                                    lambda.define_into(scope);
                                     self.curried = true;
                                     self.func = lambda
                                 }

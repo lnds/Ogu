@@ -14,7 +14,6 @@ fn test_simple_loop() {
           "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -36,7 +35,6 @@ fn test_rev_loop() {
           "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -74,7 +72,6 @@ fn test_let_in_loop() {
           "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();

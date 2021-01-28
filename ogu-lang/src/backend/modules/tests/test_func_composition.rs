@@ -20,11 +20,9 @@ fn test_func_composition_1() {
              "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
@@ -52,11 +50,9 @@ fn test_func_composition_2() {
              "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
@@ -81,11 +77,9 @@ fn test_pipes_1() {
              "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -109,11 +103,9 @@ fn test_pipes_2() {
              "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -147,11 +139,9 @@ fn test_pipes_3() {
              "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(

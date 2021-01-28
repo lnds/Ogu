@@ -30,11 +30,9 @@ fn test_if_and_do() {
             println! "{} {}" (min $ 10 20) (min2 10 20)"#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -84,7 +82,6 @@ fn test_cond() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -106,11 +103,9 @@ fn test_case_1() {
                     _ -> siracusa (n * 3 + 1)"#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int(),)
@@ -129,11 +124,9 @@ fn test_case_2() {
         default_sym_table(),
     );
 
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(

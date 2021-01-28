@@ -23,11 +23,9 @@ fn test_euler_1() {
             result = union [3, 6 .. 999] [5, 10 .. 999] |> sum"#},
         default_sym_table(),
     );
-    //println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    //println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -69,13 +67,9 @@ fn test_euler_2() {
            result = fib-seq |> take-while (\x -> x < 4000000) |> filter even? |> sum"#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    //println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         Some(ListType::new_list(BasicType::int()))
@@ -137,13 +131,9 @@ fn test_euler_3() {
         result = prime-factors 2 600851475143 |> last"#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    //println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
@@ -201,13 +191,9 @@ fn test_euler_4() {
         result = [x * y | x <- [100..999], y <- [100..999]] |> filter palindrome?  |> max"#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    //println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
@@ -266,13 +252,9 @@ fn test_euler_5() {
         result = divisors 20"#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    //println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
@@ -350,13 +332,9 @@ fn test_euler_6() {
         result = dif-squares 100 -- 10"#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    //println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())

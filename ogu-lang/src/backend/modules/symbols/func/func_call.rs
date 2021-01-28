@@ -184,7 +184,6 @@ impl Symbol for FuncCallExpr {
                                         }
                                     }
                                 } else if let Some(lambda) = val.expr.downcast_ref::<LambdaExpr>() {
-                                    println!("LAMBDA 1");
                                     let mut l = lambda.clone();
                                     l.replace_args(self.args.to_vec(), scope)?;
                                     if self.func.get_type() != l.get_type() {

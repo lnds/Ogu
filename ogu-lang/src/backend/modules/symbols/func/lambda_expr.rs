@@ -82,8 +82,6 @@ impl Symbol for LambdaExpr {
         if let Some(ty) = ty {
             if let Some(ty) = ty.downcast_ref::<FuncType>() {
                 self.ty = Some(Box::new(ty.clone()))
-            }else {
-                println!("DEBO CAMBIAR TIPO DE LAMBDA A?? {:?}\n", ty);
             }
         }
     }

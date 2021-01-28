@@ -14,11 +14,9 @@ fn test_proto_1() {
                 factorial n = n * (recur n - 1)"#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
@@ -35,11 +33,9 @@ fn test_proto_2() {
             acckermann m n = recur (m - 1) (ackermann m (n - 1))"#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(

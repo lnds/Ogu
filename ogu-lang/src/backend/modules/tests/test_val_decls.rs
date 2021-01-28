@@ -18,7 +18,6 @@ fn test_vals_1() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(decls[0].get_type(), decls[1].get_type());
     assert_eq!(decls[0].get_type(), Some(BasicType::int()));
     assert_eq!(
@@ -45,7 +44,6 @@ fn test_vals_2() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(decls[0].get_type(), Some(BasicType::int()));
     assert_eq!(decls[1].get_type(), Some(BasicType::char()));
     assert_eq!(decls[2].get_type(), Some(BasicType::float()));
@@ -80,7 +78,6 @@ fn test_no_dups() {
                 a = a * 1"},
         default_sym_table(),
     );
-    println!("{:?}", module);
     assert!(module.is_err());
 
     let module = make_module(
@@ -88,7 +85,6 @@ fn test_no_dups() {
         b = let a = 1, a = 2 in a + 1"},
         default_sym_table(),
     );
-    println!("{:?}", module);
     assert!(module.is_err());
 
     let module = make_module(
@@ -96,7 +92,6 @@ fn test_no_dups() {
         b = let (a, a) = (1, 1) in a * a"},
         default_sym_table(),
     );
-    println!("{:?}", module);
     assert!(module.is_err());
 
     let module = make_module(
@@ -105,6 +100,5 @@ fn test_no_dups() {
                 b = let (a, b) = (a, a) in a * b"},
         default_sym_table(),
     );
-    println!("{:?}", module);
     assert!(module.is_ok());
 }

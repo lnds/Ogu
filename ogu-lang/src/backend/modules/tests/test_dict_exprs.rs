@@ -21,11 +21,9 @@ fn test_simple_dict() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(decls[0].get_type(), Some(DictType::new_empty()));
     assert_eq!(
         decls[1].get_type(),
@@ -68,7 +66,6 @@ fn test_invalid_dicts() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -76,7 +73,6 @@ fn test_invalid_dicts() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -84,7 +80,6 @@ fn test_invalid_dicts() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -92,7 +87,6 @@ fn test_invalid_dicts() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -100,6 +94,5 @@ fn test_invalid_dicts() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
 }

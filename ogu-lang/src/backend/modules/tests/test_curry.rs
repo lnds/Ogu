@@ -19,13 +19,9 @@ fn test_curry_1() {
             tenf = double' 5"#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(

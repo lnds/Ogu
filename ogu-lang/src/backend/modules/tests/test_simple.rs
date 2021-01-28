@@ -7,7 +7,6 @@ use indoc::indoc;
 #[test]
 fn test_hello() {
     let module = make_module("main () = println! \"hello world\"", default_sym_table());
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -37,7 +36,6 @@ fn test_arithmetic() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(decls[0].get_type(), Some(BasicType::int()));
     assert_eq!(decls[1].get_type(), Some(BasicType::int()));
     assert_eq!(decls[2].get_type(), Some(BasicType::int()));

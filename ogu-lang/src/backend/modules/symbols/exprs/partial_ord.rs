@@ -54,7 +54,6 @@ impl Symbol for PartialOrdExpr {
                         {
                             Some(BasicType::bool())
                         } else {
-                            println!("WTF l = {:?} => {:?} r = {:?} => {:?} ", l, lt, r, rt);
                             None
                         }
                     }

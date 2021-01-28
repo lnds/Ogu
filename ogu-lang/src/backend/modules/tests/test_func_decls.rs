@@ -19,11 +19,9 @@ fn test_func_pattern_1() {
              siracusa n = siracusa ((triple n) + 1) "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
@@ -39,11 +37,9 @@ fn test_func_pattern_2() {
             acckermann m n  = recur (m - 1) (ackermann m (n - 1))"#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -70,11 +66,9 @@ fn test_func_pattern_strange_case() {
             str_imc w h =  "You're a whale, congratulations!""#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -102,11 +96,9 @@ fn test_guards_1() {
             "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -135,7 +127,6 @@ fn test_guards2() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -153,11 +144,9 @@ fn test_func_expr_arg() {
              "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
@@ -174,11 +163,9 @@ fn test_funcs_1() {
         b = m 10.0 5"#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -201,11 +188,9 @@ fn test_funcs_2() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -231,11 +216,9 @@ fn test_args_1() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -255,11 +238,9 @@ fn test_args_2() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -282,11 +263,9 @@ fn test_args_3() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -312,11 +291,9 @@ fn test_args_4() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -342,7 +319,6 @@ fn test_erroneus_args() {
              "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_err());
 }
 
@@ -355,13 +331,9 @@ fn test_func_as_args_1() {
            "#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    //println!("DECLS: {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -383,12 +355,7 @@ fn test_func_as_args_2() {
            "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
 }

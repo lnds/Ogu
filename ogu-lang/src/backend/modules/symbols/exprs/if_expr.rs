@@ -89,7 +89,7 @@ impl Symbol for IfExpr {
                 None => {
                     self.else_expr.set_type(Some(tt.clone()));
                     self.ty = Some(tt);
-                } // println!("THEN => {:?} ELSE None", tt),
+                }
                 Some(et) if &*et == INVALID_TYPE => {
                     bail!("Invalid If or Cond");
                 }

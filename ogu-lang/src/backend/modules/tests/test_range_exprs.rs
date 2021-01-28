@@ -30,11 +30,9 @@ fn test_simple_range() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         Some(ListType::new_list(BasicType::int()))
@@ -98,7 +96,6 @@ fn test_invalid_ranges() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -108,7 +105,6 @@ fn test_invalid_ranges() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -116,7 +112,6 @@ fn test_invalid_ranges() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -124,7 +119,6 @@ fn test_invalid_ranges() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -132,7 +126,6 @@ fn test_invalid_ranges() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
 
     let module = make_module(
@@ -141,7 +134,6 @@ fn test_invalid_ranges() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
 
     let module = make_module(
@@ -150,7 +142,6 @@ fn test_invalid_ranges() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
 
     let module = make_module(
@@ -159,6 +150,5 @@ fn test_invalid_ranges() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
 }

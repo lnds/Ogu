@@ -18,11 +18,9 @@ fn test_let() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(
@@ -64,11 +62,9 @@ fn test_where() {
             "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         FuncType::new_opt(

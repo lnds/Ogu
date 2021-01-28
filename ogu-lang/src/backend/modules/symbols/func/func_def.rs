@@ -122,8 +122,6 @@ impl Symbol for Function {
         if let Some(ty) = ty {
             if let Some(ty) = ty.downcast_ref::<FuncType>() {
                 self.ty = Some(Box::new(ty.clone()))
-            } else {
-                println!("DEBO CAMBIAR TIPO DE FUNCION A?? {:?}\n", ty);
             }
         }
     }

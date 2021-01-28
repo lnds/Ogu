@@ -21,7 +21,6 @@ fn test_logical() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("DECLS: {:#?}", decls);
     assert_eq!(decls[0].get_type(), Some(BasicType::int()));
     assert_eq!(decls[1].get_type(), Some(BasicType::int()));
     assert_eq!(decls[2].get_type(), Some(BasicType::int()));

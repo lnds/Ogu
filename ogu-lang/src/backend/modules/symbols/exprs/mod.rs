@@ -216,8 +216,7 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::FuncCallExpr(f, args) => FuncCallExpr::new(f.into(), vec_exprs_into(args)),
             _e => {
-                println!("not implemented for: {:?}", _e);
-                todo!()
+                todo!("not implemented for: {:?}", _e);
             }
         }
     }
@@ -247,8 +246,7 @@ impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
             Equation::Value(id, expr) => ValueSym::new(id, expr),
             Equation::Function(name, args, expr) => Function::make_box(name, args, expr),
             _e => {
-                println!("not implemented for {:?}", _e);
-                todo!()
+                todo!("not implemented for {:?}", _e);
             }
         }
     }

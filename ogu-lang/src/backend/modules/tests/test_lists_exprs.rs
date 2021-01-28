@@ -22,11 +22,9 @@ fn test_simple_list() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         Some(ListType::new_list(TRAIT_UNKNOWN.clone_box()))
@@ -65,7 +63,6 @@ fn test_invalid_lists() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -73,7 +70,6 @@ fn test_invalid_lists() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -81,7 +77,6 @@ fn test_invalid_lists() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -89,7 +84,6 @@ fn test_invalid_lists() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -97,7 +91,6 @@ fn test_invalid_lists() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
 }
 
@@ -114,11 +107,9 @@ fn test_list_ops() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         Some(ListType::new_list(TRAIT_UNKNOWN.clone_box()))
@@ -155,7 +146,6 @@ fn test_invalid_list_ops() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -163,7 +153,6 @@ fn test_invalid_list_ops() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -171,7 +160,6 @@ fn test_invalid_list_ops() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -179,7 +167,6 @@ fn test_invalid_list_ops() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
     let module = make_module(
         indoc! {r#"
@@ -188,7 +175,6 @@ fn test_invalid_list_ops() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
 
     let module = make_module(
@@ -199,7 +185,6 @@ fn test_invalid_list_ops() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_err());
 }
 
@@ -213,11 +198,9 @@ fn test_str_are_lists() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
 }
 
 #[test]
@@ -231,11 +214,9 @@ fn test_lists_are_eq() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(decls[0].get_type(), Some(BasicType::bool()));
     assert_eq!(
         decls[1].get_type(),
@@ -259,11 +240,9 @@ fn test_lists_are_ord() {
             "#},
         default_sym_table(),
     );
-    println!("module: {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    println!("TEST DECLS = {:#?}", decls);
     assert_eq!(decls[0].get_type(), Some(BasicType::bool()));
     assert_eq!(
         decls[1].get_type(),
@@ -286,7 +265,6 @@ fn test_list_comprehension_1() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -320,7 +298,6 @@ fn test_list_comprehension_2() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -378,9 +355,6 @@ fn test_list_comprehension_3() {
         "#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -427,13 +401,9 @@ fn test_list_func1() {
             "#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module: {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    //println!("TEST DECLS = {:#?}", decls);
     assert_eq!(
         decls[0].get_type(),
         Some(FuncType::new_func_type(
@@ -459,7 +429,6 @@ fn test_list_func2() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -486,7 +455,6 @@ fn test_list_fib() {
         "#},
         default_sym_table(),
     );
-    println!("module = {:?}", module);
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -508,9 +476,6 @@ fn test_prime_factors_1() {
         "#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -537,9 +502,6 @@ fn test_prime_factors_2() {
         "#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -575,9 +537,6 @@ fn test_prime_factors_3() {
         "#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -619,9 +578,6 @@ fn test_prime_factors_4() {
         "#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("module = {:?}", module);
-    }
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -645,4 +601,54 @@ fn test_prime_factors_4() {
             ListType::new_list(TRAIT_NUM.clone_box())
         )
     );
+}
+
+#[test]
+fn test_map() {
+    let module = make_module(
+        indoc! {r#"
+        -- map : (a -> a) -> [a] -> [a]
+        map f [] = []
+        map f (x :: xs) = (f x) :: (map f xs)
+
+        -- pow : Num -> Num
+        pow x = x * x
+
+        -- squares -> (Num -> Num) -> [Num] -> [Num
+        squares   =  map pow [0..10]
+        squares'  =  map (\x -> x * x) [0..10]
+        squares'' =  [0..10] |> map \x -> x * x
+
+        "#},
+        default_sym_table(),
+    );
+
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(
+        decls[0].get_type(),
+        FuncType::new_opt(
+            Some(vec![
+                FuncType::new_func_type(
+                    Some(vec![TRAIT_UNKNOWN.clone_box()]),
+                    TRAIT_UNKNOWN.clone_box()
+                ),
+                ListType::new_list(TRAIT_UNKNOWN.clone_box())
+            ]),
+            ListType::new_list(TRAIT_UNKNOWN.clone_box())
+        )
+    );
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(
+            Some(vec![TRAIT_NUM.clone_box()]),
+            TRAIT_NUM.clone_box()
+        )
+    );
+    assert_eq!(
+        decls[2].get_type(),
+        Some(ListType::new_list(TRAIT_NUM.clone_box()))
+    );
+    assert_eq!(decls[2].get_type(), decls[3].get_type());
+    assert_eq!(decls[3].get_type(), decls[4].get_type());
 }

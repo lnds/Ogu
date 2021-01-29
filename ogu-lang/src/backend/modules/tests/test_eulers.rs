@@ -396,7 +396,7 @@ fn test_euler_6() {
         decls[7].get_type(),
         FuncType::new_opt(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
-            TRAIT_NUM.clone_box()
+            TRAIT_NUM.clone_box(),
         )
     );
 
@@ -410,8 +410,39 @@ fn test_euler_6() {
         FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
     );
 
+    assert_eq!(decls[10].get_type(), Some(BasicType::int()));
+}
+
+#[test]
+fn test_euler_7() {
+    let module = make_module(
+        indoc! {r#"
+        primes = 2 :: filter (prime-factors >> length >> (== 1)) [3,5...]
+
+        filter f [] = []
+        filter f (x :: xs) = if f x then x :: filter f xs else filter f xs
+
+        length [] = 0
+        length x :: xs = 1 + length xs
+
+        prime-factors n = factor n primes
+        where
+            factor n (p::ps)
+            | p*p > n = [n]
+            | n % p == 0 = p :: factor (n // p) (p::ps)
+            | otherwise = factor n ps
+
+        result = primes @ 10000"#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("{:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
     assert_eq!(
-        decls[10].get_type(),
-        Some(BasicType::int())
+        decls[0].get_type(),
+        Some(ListType::new_list(BasicType::int()))
     );
 }

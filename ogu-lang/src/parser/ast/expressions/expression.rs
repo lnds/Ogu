@@ -182,15 +182,17 @@ pub(crate) enum LambdaArg<'a> {
     Tuple(Vec<&'a str>),
 }
 
+
+
 impl<'a> Expression<'a> {
     pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let (expr, mut pos) = Expression::parse_control_expr(parser, pos)?;
+        let (expr, mut pos) = Expression::parse_dollar_func_call_expr(parser, pos)?;
         if parser.peek(pos, Lexeme::SemiColon) {
             let mut exprs = vec![expr];
             while parser.peek(pos, Lexeme::SemiColon) {
                 pos = consume_symbol(parser, pos, Lexeme::SemiColon)?;
                 pos = parser.skip_nl(pos);
-                let (expr, new_pos) = Expression::parse_control_expr(parser, pos)?;
+                let (expr, new_pos) = Expression::parse_dollar_func_call_expr(parser, pos)?;
                 pos = parser.skip_nl(new_pos);
                 exprs.push(expr);
             }
@@ -199,6 +201,23 @@ impl<'a> Expression<'a> {
             Ok((expr, pos))
         }
     }
+
+    fn parse_dollar_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
+        let (expr, pos) = Expression::parse_control_expr(parser, pos)?;
+        if !parser.peek(pos, Lexeme::Dollar) {
+            Ok((expr, pos))
+        } else {
+            let mut pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
+            let mut args = vec![];
+            while !is_func_call_end_symbol(parser.get_token(pos)) {
+                let (arg, new_pos) = Expression::parse_control_expr(parser, pos)?;
+                args.push(arg);
+                pos = new_pos;
+            }
+            Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
+        }
+    }
+    //  Expression::parse_dollar_func_call_expr(parser, pos),
 
     pub(crate) fn parse_control_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
@@ -419,37 +438,19 @@ impl<'a> Expression<'a> {
 
     parse_left_assoc!(parse_sub_expr, Lexeme::Minus, Expression::parse_concat_expr);
 
-    parse_left_assoc!(
-        parse_concat_expr,
-        Lexeme::PlusPlus,
-        Expression::parse_mult_expr
-    );
+    parse_left_assoc!(parse_concat_expr, Lexeme::PlusPlus, Expression::parse_mult_expr);
 
     parse_left_assoc!(parse_mult_expr, Lexeme::Mult, Expression::parse_div_expr);
 
     parse_left_assoc!(parse_div_expr, Lexeme::Div, Expression::parse_int_div_expr);
 
-    parse_left_assoc!(
-        parse_int_div_expr,
-        Lexeme::DivDiv,
-        Expression::parse_mod_expr
-    );
+    parse_left_assoc!(parse_int_div_expr, Lexeme::DivDiv, Expression::parse_mod_expr);
 
     parse_left_assoc!(parse_mod_expr, Lexeme::Mod, Expression::parse_pow_expr);
 
-    parse_right_assoc!(
-        parse_pow_expr,
-        Lexeme::Pow,
-        Expression::parse_postfix_expr
-    );
+    parse_right_assoc!(parse_pow_expr, Lexeme::Pow, Expression::parse_postfix_expr);
 
-
-
-    parse_left_assoc!(
-        parse_postfix_expr,
-        Lexeme::At,
-        Expression::parse_compose_fwd_expr
-    );
+    parse_left_assoc!(parse_postfix_expr, Lexeme::At, Expression::parse_compose_fwd_expr);
 
     pub(crate) fn parse_primary_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
@@ -1101,21 +1102,7 @@ impl<'a> Expression<'a> {
         }
     }
 
-    fn parse_dollar_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
-        let (expr, pos) = Expression::parse(parser, pos)?;
-        if !parser.peek(pos, Lexeme::Dollar) {
-            Ok((expr, pos))
-        } else {
-            let mut pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
-            let mut args = vec![];
-            while !is_func_call_end_symbol(parser.get_token(pos)) {
-                let (arg, new_pos) = Expression::parse(parser, pos)?;
-                args.push(arg);
-                pos = new_pos;
-            }
-            Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
-        }
-    }
+
 
     fn parse_prim_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
@@ -1134,18 +1121,8 @@ impl<'a> Expression<'a> {
                 } else {
                     (Expression::QualifiedIdentifier(id, fields), pos)
                 };
-                if parser.peek(pos, Lexeme::Dollar) {
-                    let mut pos = consume_symbol(parser, pos, Lexeme::Dollar)?;
-                    let mut args = vec![];
-                    while !is_func_call_end_symbol(parser.get_token(pos)) {
-                        let (arg, new_pos) = Expression::parse(parser, pos)?;
-                        args.push(arg);
-                        pos = new_pos;
-                    }
-                    Ok((Expression::FuncCallExpr(Box::new(expr), args), pos))
-                } else {
+
                     Ok((expr, pos))
-                }
             }
             sym if is_func_call_end_symbol(sym) => {
                 raise_parser_error("invalid token", parser, pos, true)

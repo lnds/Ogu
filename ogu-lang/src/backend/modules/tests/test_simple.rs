@@ -3,6 +3,9 @@ use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use indoc::indoc;
+use crate::backend::modules::types::list_type::ListType;
+use crate::backend::modules::types::trait_type::{TRAIT_ORD, TRAIT_UNKNOWN};
+use crate::backend::scopes::types::TypeClone;
 
 #[test]
 fn test_hello() {
@@ -49,4 +52,51 @@ fn test_arithmetic() {
         decls[9].get_type(),
         FuncType::new_opt(None, BasicType::unit())
     );
+}
+
+#[test]
+fn test_dollar() {
+    let module = make_module(
+        indoc! {r#"
+            sort [] = []
+            sort x :: xs = smaller ++ (x :: bigger)
+                where
+                    smaller = sort [a | a <- xs, a <= x]
+                    bigger  = sort [a | a <- xs, a > x]
+
+            a = sort "julie" ++ "moronuki"
+            b = sort $ "julie" ++ "moronuki"
+            c = sort ("julie" ++ "moronuki")
+
+            head [] = error! "head of empty list"
+            head x :: xs = x
+
+            d = head << sort $ "julie"
+            "#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(
+        decls[0].get_type(),
+        Some(FuncType::new_func_type(
+            Some(vec![ListType::new_list(TRAIT_ORD.clone_box())]),
+            ListType::new_list(TRAIT_ORD.clone_box())
+        ))
+    );
+    assert_eq!(decls[1].get_type(), Some(BasicType::static_str()));
+    assert_eq!(decls[2].get_type(), Some(BasicType::static_str()));
+    assert_eq!(decls[3].get_type(), Some(BasicType::static_str()));
+    assert_eq!(
+        decls[4].get_type(),
+        Some(FuncType::new_func_type(
+            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
+            TRAIT_UNKNOWN.clone_box()
+        ))
+    );
+    assert_eq!(decls[5].get_type(), Some(BasicType::char()));
 }

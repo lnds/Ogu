@@ -7,32 +7,91 @@ use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use std::ops::Deref;
+use crate::backend::modules::symbols::func::swap_args;
+use crate::backend::modules::symbols::func::func_def::Function;
+use crate::backend::modules::symbols::idents::IdSym;
+use crate::backend::scopes::sym_table::SymbolTable;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ComposeFunction {
-    kind: ComposeKind,
+    f: Box<dyn Symbol>,
+    g: Box<dyn Symbol>,
     ty: Option<Box<dyn Type>>,
 }
 
-#[derive(Debug, Clone)]
-enum ComposeKind {
-    Fwd(Box<dyn Symbol>, Box<dyn Symbol>), // (a -> b) -> (b -> c) -> a -> c
-    Bck(Box<dyn Symbol>, Box<dyn Symbol>), // (a -> b) -> (b -> c) -> a -> c
-}
 
 impl ComposeFunction {
     pub(crate) fn new_fwd(f: Box<dyn Symbol>, g: Box<dyn Symbol>) -> Box<Self> {
-        Box::new(ComposeFunction {
-            kind: ComposeKind::Fwd(f, g),
-            ty: None,
-        })
+        Box::new(ComposeFunction { f, g, ty: None })
     }
 
-    pub(crate) fn new_bck(f: Box<dyn Symbol>, g: Box<dyn Symbol>) -> Box<Self> {
-        Box::new(ComposeFunction {
-            kind: ComposeKind::Bck(f, g),
-            ty: None,
-        })
+    pub(crate) fn new_bck(g: Box<dyn Symbol>, f: Box<dyn Symbol>) -> Box<Self> {
+        Box::new(ComposeFunction { f, g, ty: None })
+    }
+
+    pub(crate) fn replace_args(
+        &mut self,
+        args: Vec<Box<dyn Symbol>>,
+        scope: &mut dyn Scope,
+    ) -> Result<()> {
+        println!("COMPOSITION CHANGE ARGS = {:?}", args);
+        println!("COMPOSITION, G = {:?}", self.g);
+        println!("COMPOSITION, F = {:?}", self.f);
+
+        if let Some(f) = self.f.downcast_ref::<Function>() {
+            let mut f = f.clone();
+            f.replace_args(args.clone(), scope, false);
+            self.f = Box::new(f);
+        } else if let Some(id) = self.f.downcast_ref::<IdSym>() {
+            let f = scope.resolve(id.get_name());
+            if let Some(f) = f {
+                if let Some(f) = f.downcast_ref::<Function>() {
+                    let mut f = f.clone();
+                    f.replace_args(args.clone(), scope, false);
+                    self.f = Box::new(f);
+                }
+            }
+        }
+
+        let mut sym_table = SymbolTable::new("compose_function", Some(scope.clone_box()));
+        sym_table.set_function_name(&scope.function_scope_name());
+        self.f.define_into(&mut *sym_table);
+        self.resolve_type(&mut *sym_table)?;
+
+        let g_args = match self.f.downcast_ref::<Function>() {
+            Some(f) => vec![f.expr.clone_box()],
+            None => match self.f.downcast_ref::<IdSym>() {
+                None => vec![],
+                Some(id) => match scope.resolve(id.get_name()) {
+                    None => vec![],
+                    Some(f) => {
+                        match f.downcast_ref::<Function>() {
+                            None => vec![],
+                            Some(f) => vec![f.expr.clone_box()]
+                        }
+                    }
+                }
+            }
+        } ;
+
+
+        if let Some(g) = self.g.downcast_ref::<Function>() {
+            let mut g = g.clone();
+            g.replace_args(g_args.clone(), scope, false);
+            self.g = Box::new(g);
+        } else if let Some(id) = self.g.downcast_ref::<IdSym>() {
+            let g = scope.resolve(id.get_name());
+            if let Some(g) = g {
+                if let Some(g) = g.downcast_ref::<Function>() {
+                    let mut g = g.clone();
+                    g.replace_args(g_args.clone(), scope, false);
+                    self.g = Box::new(g);
+                }
+            }
+        }
+        self.g.define_into(&mut *sym_table);
+        self.resolve_type(&mut *sym_table)?;
+        Ok(())
     }
 }
 
@@ -46,100 +105,93 @@ impl Symbol for ComposeFunction {
     }
 
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
-        match &mut self.kind {
-            ComposeKind::Bck(g, f) | ComposeKind::Fwd(f, g) => {
-                f.resolve_type(scope)?;
-                match f.get_curry() {
-                    None => {}
-                    Some(fc) => *f = fc,
-                }
-                g.resolve_type(scope)?;
-                match g.get_curry() {
-                    None => {}
-                    Some(gc) => *g = gc,
-                }
+        self.f.resolve_type(scope)?;
+        match self.f.get_curry() {
+            None => {}
+            Some(fc) => self.f = fc,
+        }
+        self.g.resolve_type(scope)?;
+        match self.g.get_curry() {
+            None => {}
+            Some(gc) => self.g = gc,
+        }
 
-                match f.get_type() {
+        match self.f.get_type() {
+            None => {
+                if let Some(gt) = self.g.get_type() {
+                    match gt.downcast_ref::<FuncType>() {
+                        None => bail!("can't compose a non function"),
+                        Some(gt) => {
+                            // f : a -> b ( f args -> b )
+                            // g : b -> c ( g args -> c )       g : c -> d -> e == g c d = e => f : ? -> c -> d
+                            // f >> g : a -> c
+                            let bt = match &gt.args {
+                                None => BasicType::unit(),
+                                Some(v) if v.is_empty() => BasicType::unit(),
+                                Some(v) if v.len() == 1 => v[0].clone(),
+                                Some(v) => v[v.len() - 1].clone(),
+                            };
+                            let at = match &gt.args {
+                                None => None,
+                                Some(v) if v.is_empty() => None,
+                                Some(v) if v.len() == 1 => {
+                                    Some(vec![TRAIT_UNKNOWN.clone_box()])
+                                }
+                                Some(v) => {
+                                    let mut args = vec![TRAIT_UNKNOWN.clone_box()];
+                                    args.append(&mut v.to_vec());
+                                    Some(args)
+                                }
+                            };
+                            let ct = gt.result.clone();
+                            self.f.set_type(FuncType::new_opt(at.clone(), bt));
+                            self.ty = FuncType::new_opt(at, ct);
+                        }
+                    }
+                }
+            }
+            Some(ft) => {
+                match ft.downcast_ref::<FuncType>() {
                     None => {
-                        if let Some(gt) = g.get_type() {
+                        bail!(
+                                    "can't compose a non function ft = {:?}\n curried {}\n",
+                                    ft,
+                                    self.f.get_curry().is_some()
+                                )
+                    }
+                    Some(ft) => match self.g.get_type() {
+                        None => {
+                            // f: a -> b
+                            // g: b -> c
+                            // f >> g : a -> c
+                            let a = ft.args.clone();
+                            let c = TRAIT_UNKNOWN.clone_box();
+                            self.g.set_type(FuncType::new_opt(a.clone(), ft.result.clone()));
+                            self.ty = FuncType::new_opt(a, c);
+                        }
+                        Some(gt) => {
                             match gt.downcast_ref::<FuncType>() {
                                 None => bail!("can't compose a non function"),
                                 Some(gt) => {
-                                    // f : a -> b ( f args -> b )
-                                    // g : b -> c ( g args -> c )       g : c -> d -> e == g c d = e => f : ? -> c -> d
-                                    // f >> g : a -> c
-                                    let bt = match &gt.args {
-                                        None => BasicType::unit(),
-                                        Some(v) if v.is_empty() => BasicType::unit(),
-                                        Some(v) if v.len() == 1 => v[0].clone(),
-                                        Some(v) => v[v.len() - 1].clone(),
-                                    };
-                                    let at = match &gt.args {
-                                        None => None,
-                                        Some(v) if v.is_empty() => None,
-                                        Some(v) if v.len() == 1 => {
-                                            Some(vec![TRAIT_UNKNOWN.clone_box()])
-                                        }
-                                        Some(v) => {
-                                            let mut args = vec![TRAIT_UNKNOWN.clone_box()];
-                                            args.append(&mut v.to_vec());
-                                            Some(args)
-                                        }
-                                    };
-                                    let ct = gt.result.clone();
-                                    f.set_type(FuncType::new_opt(at.clone(), bt));
-                                    self.ty = FuncType::new_opt(at, ct);
-                                }
-                            }
-                        }
-                    }
-                    Some(ft) => {
-                        match ft.downcast_ref::<FuncType>() {
-                            None => {
-                                bail!(
-                                    "can't compose a non function ft = {:?}\n curried {}\n",
-                                    ft,
-                                    f.get_curry().is_some()
-                                )
-                            }
-                            Some(ft) => match g.get_type() {
-                                None => {
                                     // f: a -> b
                                     // g: b -> c
-                                    // f >> g : a -> c
-                                    let a = ft.args.clone();
-                                    let c = TRAIT_UNKNOWN.clone_box();
-                                    g.set_type(FuncType::new_opt(a.clone(), ft.result.clone()));
-                                    self.ty = FuncType::new_opt(a, c);
-                                }
-                                Some(gt) => {
-                                    match gt.downcast_ref::<FuncType>() {
-                                        None => bail!("can't compose a non function"),
-                                        Some(gt) => {
-                                            // f: a -> b
-                                            // g: b -> c
-                                            // f >> g : a -> c == g(f a)
-                                            let b = vec![ft.result.clone()];
-                                            match &gt.args {
-                                                None => bail!("can't compose a function that doesn't receive arguments"),
-                                                Some(args) => {
-                                                    if args.iter().zip(b.iter()).any(|(at, bt)| !at.is_compatible_with(bt.deref().deref())) {
-                                                        println!("f = {:?}", f);
-                                                        println!("g = {:?}", g);
-                                                        println!("ft = {:?}", ft);
-                                                        println!("gt = {:?}", ft);
-                                                        bail!("can't compose functions, arguments are incompatible gt.args = {:?} b != {:?}", gt.args, b);
-                                                    }
-                                                    let c = gt.result.clone();
-                                                    self.ty = FuncType::new_opt(Some(b), c);
-                                                }
+                                    // f >> g : a -> c == g(f a)
+                                    let b = vec![ft.result.clone()];
+                                    match &gt.args {
+                                        None => bail!("can't compose a function that doesn't receive arguments"),
+                                        Some(args) => {
+                                            if args.iter().zip(b.iter()).any(|(at, bt)| !at.is_compatible_with(bt.deref().deref())) {
+                                                bail!("can't compose functions, arguments are incompatible gt.args = {:?} b != {:?}", gt.args, b);
                                             }
+                                            let c = gt.result.clone();
+                                            println!("COMPOSED c => {:?}\n f = {:?}\n g = {:?}", c, self.f, self.g);
+                                            self.ty = FuncType::new_opt(Some(b), c);
                                         }
                                     }
                                 }
-                            },
+                            }
                         }
-                    }
+                    },
                 }
             }
         }

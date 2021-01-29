@@ -71,37 +71,9 @@ impl Symbol for FuncCallExpr {
                 };
                 if let Some(func) = func.downcast_ref::<Function>() {
                     let mut f = func.clone();
-                    match f.args {
-                        None if self.args.len() > 0 => bail!(
-                            "calling function {} with more arguments that needed",
-                            func.get_name()
-                        ),
-                        Some(f_args) if self.args.len() < f_args.len() && self.args.len() > 0 => {
-                            let n = f_args.len() - self.args.len();
-                            let skip = f_args.len() - n;
-                            let mut n_args = vec![];
-                            for (i, fa) in f_args.iter().enumerate() {
-                                if i >= skip {
-                                    let mut sym: Box<dyn Symbol> = IdSym::new(&format!("x_{}", i));
-                                    sym.set_type(fa.get_type());
-                                    n_args.push(sym)
-                                }
-                            }
-                            let mut call_args = self.args.to_vec();
-                            call_args.append(&mut n_args.to_vec());
-                            let expr = FuncCallExpr::new(func.clone_box(), call_args.clone());
-                            let mut lambda = LambdaExpr::new(n_args.to_vec(), expr.clone_box());
-                            lambda.resolve_type(scope)?;
-                            self.curried = true;
-                            self.func = lambda;
-                            self.args = n_args.to_vec();
-                        }
-                        _ => {
-                            f.replace_args(self.args.to_vec(), scope, !recursive)?;
-                            if self.func.get_type() != f.get_type() {
-                                self.func = Box::new(f);
-                            }
-                        }
+                    f.replace_args(self.args.to_vec(), scope, !recursive)?;
+                    if self.func.get_type() != f.get_type() {
+                        self.func = Box::new(f);
                     }
                 } else if let Some(id) = func.downcast_ref::<IdSym>() {
                     let id = id.clone();
@@ -150,8 +122,7 @@ impl Symbol for FuncCallExpr {
                         ),
                         Some(ft_args) if ft_args.len() > self.args.len() => {
                             // curry
-                            let nn = scope.resolve(self.func.get_name());
-                            match nn {
+                            match scope.resolve(self.func.get_name()) {
                                 None => match self.func.downcast_ref::<ComposeFunction>() {
                                     None => bail!(
                                         "can't find a function to curry {} func = {:?}",
@@ -159,7 +130,9 @@ impl Symbol for FuncCallExpr {
                                         self.func
                                     ),
                                     Some(compose) => {
-                                        let c = compose.clone();
+                                        let mut c = compose.clone();
+                                        c.replace_args(self.args.to_vec(), scope)?;
+
                                         if self.func.get_type() != c.get_type() {
                                             self.func = Box::new(c);
                                         }
@@ -242,10 +215,10 @@ impl Symbol for FuncCallExpr {
                                     if self.func.get_type() != l.get_type() {
                                         self.func = Box::new(l);
                                     }
-                                } else if let Some(compose) =
-                                    val.expr.downcast_ref::<ComposeFunction>()
+                                } else if let Some(comp) = val.expr.downcast_ref::<ComposeFunction>()
                                 {
-                                    let c = compose.clone();
+                                    let mut c = comp.clone();
+                                    c.replace_args(self.args.to_vec(), scope)?;
                                     if self.func.get_type() != c.get_type() {
                                         self.func = Box::new(c);
                                     }
@@ -259,11 +232,10 @@ impl Symbol for FuncCallExpr {
                                     self.func = Box::new(l);
                                 }
                             } else if let Some(compose) = func.downcast_ref::<ComposeFunction>() {
-                                let c = compose.clone();
+                                let mut c = compose.clone();
+                                c.replace_args(self.args.to_vec(), scope)?;
                                 if self.func.get_type() != c.get_type() {
                                     self.func = Box::new(c);
-                                } else {
-                                    todo!("POR ACA 3");
                                 }
                             } else if let Some(id) = func.downcast_ref::<IdSym>() {
                                 let id = id.clone();

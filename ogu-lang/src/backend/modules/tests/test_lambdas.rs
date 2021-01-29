@@ -31,7 +31,6 @@ fn test_lambda_1() {
     assert_eq!(decls[3].get_type(), Some(BasicType::int())); // should be int!
 }
 
-
 #[test]
 fn test_y_combinator() {
     let module = make_module(
@@ -61,8 +60,12 @@ fn test_y_combinator() {
     assert_eq!(
         decls[1].get_type(),
         FuncType::new_opt(
-            Some(vec![FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()), BasicType::int()]), BasicType::int())
+            Some(vec![
+                FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()),
+                BasicType::int()
+            ]),
+            BasicType::int()
+        )
     );
     assert_eq!(decls[2].get_type(), Some(BasicType::int()));
 }
-

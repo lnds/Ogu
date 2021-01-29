@@ -640,10 +640,7 @@ fn test_map() {
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
-            Some(vec![TRAIT_NUM.clone_box()]),
-            TRAIT_NUM.clone_box()
-        )
+        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box())
     );
     assert_eq!(
         decls[2].get_type(),

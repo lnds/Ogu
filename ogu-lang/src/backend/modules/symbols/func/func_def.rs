@@ -15,7 +15,7 @@ use crate::parser::ast::module::decls::FuncTypeAst;
 pub(crate) struct Function {
     name: String,
     pub(crate) args: Option<Vec<Box<dyn Symbol>>>,
-    expr: Box<dyn Symbol>,
+    pub(crate) expr: Box<dyn Symbol>,
     ty: Option<Box<FuncType>>,
 }
 

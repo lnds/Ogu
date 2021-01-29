@@ -554,7 +554,26 @@ impl<'a> Expression<'a> {
                             let (left_expr, pos) = Expression::parse(parser, pos)?;
                             if is_func_call_end_symbol(parser.get_token(pos)) {
                                 // BACK TRACK
-                                return Ok((expr, back_pos));
+                                return match op {
+                                    Lexeme::Cons => Ok((Expression::UnaryCons(opt_expr.clone()), pos)),
+                                    Lexeme::Plus => Ok((Expression::UnaryAdd(opt_expr.clone()), pos)),
+                                    Lexeme::PlusPlus => Ok((Expression::UnaryConcat(opt_expr.clone()), pos)),
+                                    Lexeme::Minus => Ok((Expression::UnarySub(opt_expr.clone()), pos)),
+                                    Lexeme::Mult => Ok((Expression::UnaryMul(opt_expr.clone()), pos)),
+                                    Lexeme::Pow => Ok((Expression::UnaryPow(opt_expr.clone()), pos)),
+                                    Lexeme::Div => Ok((Expression::UnaryDiv(opt_expr.clone()), pos)),
+                                    Lexeme::DivDiv => Ok((Expression::UnaryDivDiv(opt_expr.clone()), pos)),
+                                    Lexeme::Mod => Ok((Expression::UnaryMod(opt_expr.clone()), pos)),
+                                    Lexeme::And => Ok((Expression::UnaryAnd(opt_expr.clone()),pos)),
+                                    Lexeme::Or => Ok((Expression::UnaryOr(opt_expr.clone()), pos)),
+                                    Lexeme::Equal => Ok((Expression::UnaryEq(opt_expr.clone()), pos)),
+                                    Lexeme::NotEqual => Ok((Expression::UnaryNotEq(opt_expr.clone()), pos)),
+                                    Lexeme::Greater => Ok((Expression::UnaryGt(opt_expr.clone()), pos)),
+                                    Lexeme::GreaterOrEqual => Ok((Expression::UnaryGe(opt_expr.clone()), pos)),
+                                    Lexeme::LessThan => Ok((Expression::UnaryLt(opt_expr.clone()), pos)),
+                                    Lexeme::LessThanOrEqual => Ok((Expression::UnaryLe(opt_expr.clone()), pos)),
+                                    _ => Ok((expr, back_pos))
+                                };
                             }
                             let (right_expr, pos) = Expression::parse(parser, pos)?;
                             if !is_func_call_end_symbol(parser.get_token(pos)) {

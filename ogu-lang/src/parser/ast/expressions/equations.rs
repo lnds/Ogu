@@ -12,9 +12,9 @@ use crate::parser::{
 
 #[derive(Debug, Clone)]
 pub(crate) enum Equation<'a> {
-    Value(Expression<'a>, Expression<'a>),
-    Function(&'a str, Args<'a>, Expression<'a>),
-    FunctionWithGuards(&'a str, Args<'a>, GuardVec<'a>),
+    EqVal(Expression<'a>, Expression<'a>),
+    EqFunc(&'a str, Args<'a>, Expression<'a>),
+    EqFuncWithGuards(&'a str, Args<'a>, GuardVec<'a>),
 }
 
 impl<'a> Equation<'a> {
@@ -69,7 +69,7 @@ impl<'a> Equation<'a> {
             };
             let (expr, pos) = Expression::parse(parser, pos)?;
             Ok((
-                Equation::Value(
+                Equation::EqVal(
                     Expression::TupleExpr(ids.iter().map(|id| Expression::Name(id)).collect()),
                     expr,
                 ),
@@ -100,7 +100,7 @@ impl<'a> Equation<'a> {
         // we already parsed a =
         let pos = parser.skip_nl(pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
-        Ok((Equation::Value(Expression::Name(name), expr), pos))
+        Ok((Equation::EqVal(Expression::Name(name), expr), pos))
     }
 
     fn parse_func(
@@ -124,7 +124,7 @@ impl<'a> Equation<'a> {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr_val, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_dedent(parser, pos, indent)?;
-        let eq = Equation::Value(expr_left, expr_val);
+        let eq = Equation::EqVal(expr_left, expr_val);
         Ok((eq, pos))
     }
 
@@ -137,7 +137,7 @@ impl<'a> Equation<'a> {
         let (indent, pos) = parse_opt_indent(parser, pos);
         let (expr, pos) = Expression::parse(parser, pos)?;
         let pos = parse_opt_where_or_dedent(parser, pos, indent)?;
-        let eq = Equation::Function(name, args, expr);
+        let eq = Equation::EqFunc(name, args, expr);
         Ok((eq, pos))
     }
 
@@ -148,7 +148,7 @@ impl<'a> Equation<'a> {
         pos: usize,
     ) -> Result<(Equation<'a>, usize)> {
         let (guards, pos) = parse_guards(parser, pos)?;
-        let eq = Equation::FunctionWithGuards(name, args, guards);
+        let eq = Equation::EqFuncWithGuards(name, args, guards);
         Ok((eq, pos))
     }
 
@@ -159,7 +159,7 @@ impl<'a> Equation<'a> {
     ) -> Result<(Equation<'a>, usize)> {
         let (guards, pos) = parse_guards(parser, pos)?;
         let expr = Guard::guards_to_cond(&guards)?;
-        let eq = Equation::Value(left_expr, expr);
+        let eq = Equation::EqVal(left_expr, expr);
         Ok((eq, pos))
     }
 }

@@ -243,8 +243,8 @@ impl<'a> From<Expression<'a>> for Box<dyn Symbol> {
 impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
     fn from(eq: &Equation<'a>) -> Self {
         match eq {
-            Equation::Value(id, expr) => ValueSym::new(id, expr),
-            Equation::Function(name, args, expr) => Function::make_box(name, args, expr),
+            Equation::EqVal(id, expr) => ValueSym::new(id, expr),
+            Equation::EqFunc(name, args, expr) => Function::make_box(name, args, expr),
             _e => {
                 todo!("not implemented for {:?}", _e);
             }

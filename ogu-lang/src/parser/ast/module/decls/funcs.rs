@@ -19,7 +19,7 @@ impl<'a> DeclarationAst<'a> {
             (None, pos)
         };
         match eq {
-            Equation::Value(name, expr) => {
+            Equation::EqVal(name, expr) => {
                 if let Some(where_decl) = opt_where {
                     let expr = Expression::LetExpr(where_decl, Box::new(expr));
                     Ok(Some((DeclarationAst::Value(name, expr), pos)))
@@ -27,7 +27,7 @@ impl<'a> DeclarationAst<'a> {
                     Ok(Some((DeclarationAst::Value(name, expr), pos)))
                 }
             }
-            Equation::Function(name, args, expr) => {
+            Equation::EqFunc(name, args, expr) => {
                 if let Some(where_decl) = opt_where {
                     let expr = Expression::LetExpr(where_decl, Box::new(expr));
                     Ok(Some((
@@ -41,7 +41,7 @@ impl<'a> DeclarationAst<'a> {
                     )))
                 }
             }
-            Equation::FunctionWithGuards(name, args, guards) => Ok(Some((
+            Equation::EqFuncWithGuards(name, args, guards) => Ok(Some((
                 DeclarationAst::FunctionWithGuards(name, args, guards, opt_where),
                 pos,
             ))),

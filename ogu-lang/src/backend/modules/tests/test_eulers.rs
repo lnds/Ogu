@@ -417,7 +417,7 @@ fn test_euler_6() {
 fn test_euler_7() {
     let module = make_module(
         indoc! {r#"
-        primes = 2 :: filter (prime-factors >> length >> (== 1)) [3,5...]
+        primes = 2 :: filter (prime-factors >> length >> (== 1)) [3,5..]
 
         filter f [] = []
         filter f (x :: xs) = if f x then x :: filter f xs else filter f xs
@@ -428,7 +428,7 @@ fn test_euler_7() {
         prime-factors n = factor n primes
         where
             factor n (p::ps)
-            | p*p > n = [n]
+            | p * p > n = [n]
             | n % p == 0 = p :: factor (n // p) (p::ps)
             | otherwise = factor n ps
 

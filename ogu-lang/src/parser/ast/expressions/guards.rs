@@ -50,8 +50,6 @@ pub(crate) fn parse_guards<'a>(
     if inner_indent {
         pos = parse_opt_dedent(parser, pos, inner_indent)?;
     }
-    // println!("GUARDS = {:#?}", guards);
-    // println!("IN INDENT = {} => {:?}", in_indent, parser.get_symbol(pos));
     let pos = parse_opt_where_or_dedent(parser, pos, in_indent)?;
     Ok((guards, pos))
 }

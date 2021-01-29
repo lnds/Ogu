@@ -440,25 +440,15 @@ impl<'a> Expression<'a> {
     parse_right_assoc!(
         parse_pow_expr,
         Lexeme::Pow,
-        Expression::parse_compose_fwd_expr
-    );
-
-    parse_right_assoc!(
-        parse_compose_fwd_expr,
-        Lexeme::ComposeForward,
-        Expression::parse_compose_bck_expr
-    );
-
-    parse_left_assoc!(
-        parse_compose_bck_expr,
-        Lexeme::ComposeBackward,
         Expression::parse_postfix_expr
     );
+
+
 
     parse_left_assoc!(
         parse_postfix_expr,
         Lexeme::At,
-        Expression::parse_pipe_func_call_expr
+        Expression::parse_compose_fwd_expr
     );
 
     pub(crate) fn parse_primary_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
@@ -477,6 +467,19 @@ impl<'a> Expression<'a> {
             _ => Expression::parse_prim_expr(parser, pos),
         }
     }
+
+    parse_right_assoc!(
+        parse_compose_fwd_expr,
+        Lexeme::ComposeForward,
+        Expression::parse_compose_bck_expr
+    );
+
+    parse_left_assoc!(
+        parse_compose_bck_expr,
+        Lexeme::ComposeBackward,
+        Expression::parse_pipe_func_call_expr
+    );
+
 
     parse_left_assoc!(
         parse_pipe_func_call_expr,
@@ -735,10 +738,11 @@ impl<'a> Expression<'a> {
                         }
                         _ => (expr, pos + 1),
                     };
+
                     match e {
                         Expression::ComposeFwdExpr(_, _) | Expression::ComposeBckExpr(_, _) => {
                             let mut args = vec![];
-                            let mut pos = pos + 1;
+                            let mut pos = pos;
                             while !is_func_call_end_symbol(parser.get_token(pos)) {
                                 let (a, new_pos) = Expression::parse(parser, pos)?;
                                 args.push(a);
@@ -748,7 +752,8 @@ impl<'a> Expression<'a> {
                         }
                         _ => Ok((e, pos)),
                     }
-                } else if parser.peek(pos, Lexeme::Comma) {
+                }
+                else if parser.peek(pos, Lexeme::Comma) {
                     let mut exprs = vec![expr];
                     let mut pos = pos;
                     while parser.peek(pos, Lexeme::Comma) {
@@ -1049,6 +1054,8 @@ impl<'a> Expression<'a> {
             Ok((Expression::PerformExpr(Box::new(expr), None, None), pos))
         }
     }
+
+
 
     fn parse_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;

@@ -632,7 +632,6 @@ fn test_not() {
     );
 }
 
-
 fn validate_decls(
     module: Result<Module>,
     ft1: Option<Box<dyn Type>>,

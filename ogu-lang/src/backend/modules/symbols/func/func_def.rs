@@ -14,7 +14,7 @@ use crate::parser::ast::module::decls::FuncTypeAst;
 #[derive(Clone, Debug)]
 pub(crate) struct Function {
     name: String,
-    args: Option<Vec<Box<dyn Symbol>>>,
+    pub(crate) args: Option<Vec<Box<dyn Symbol>>>,
     expr: Box<dyn Symbol>,
     ty: Option<Box<FuncType>>,
 }
@@ -136,7 +136,6 @@ impl Symbol for Function {
             }
         }
 
-
         let r = self.expr.resolve_type(&mut *sym_table);
         if r.is_err() {
             return r;
@@ -145,8 +144,7 @@ impl Symbol for Function {
         if let Some(curry) = self.expr.get_curry() {
             self.expr = curry;
             self.set_type(self.expr.get_type())
-        }
-        else  {
+        } else {
             for s in sym_table.get_symbols() {
                 self.define_arg(s.clone_box())?;
             }

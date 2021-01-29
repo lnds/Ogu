@@ -15,7 +15,7 @@ use crate::backend::scopes::Scope;
 #[derive(Clone, Debug)]
 pub(crate) struct FuncCallExpr {
     func: Box<dyn Symbol>,
-    args: Vec<Box<dyn Symbol>>,
+    pub(crate) args: Vec<Box<dyn Symbol>>,
     ty: Option<Box<dyn Type>>,
     curried: bool,
 }
@@ -55,7 +55,6 @@ impl Symbol for FuncCallExpr {
         }
     }
 
-
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let ft = self.func.resolve_type(scope)?;
         let recursive = scope.function_scope_name() == self.func.get_name();
@@ -65,46 +64,77 @@ impl Symbol for FuncCallExpr {
                     a.resolve_type(scope)?;
                     a.define_into(scope);
                 }
-                let func = if let Some(func) = scope.resolve(self.func.get_name()) { func } else { self.func.clone() };
-                    if let Some(func) = func.downcast_ref::<Function>() {
-                        let mut f = func.clone();
-                        f.replace_args(self.args.to_vec(), scope, !recursive)?;
-                        if self.func.get_type() != f.get_type() {
-                            self.func = Box::new(f);
-                        }
-                    } else if let Some(id) = func.downcast_ref::<IdSym>() {
-                        let id = id.clone();
-                        if self.func.get_type() != id.get_type() {
-                            self.func = Box::new(id)
-                        }
-                    } else if let Some(lambda) = func.downcast_ref::<LambdaExpr>() {
-                        let mut lambda = lambda.clone();
-                        lambda.replace_args(self.args.to_vec(), scope)?;
-                        if self.func.get_type() != lambda.get_type()  {
-                            self.func = Box::new(lambda);
-                        } else {
-                            let mut ty_args = vec![];
-                            for a in self.args.iter_mut() {
-                                match a.resolve_type(scope)? {
-                                    None => {
-                                        ty_args.push(TRAIT_UNKNOWN.clone_box());
-                                        a.define_into(scope);
-                                    }
-                                    Some(ty) => {
-                                        ty_args.push(ty.clone_box());
-                                        a.define_into(scope);
-                                    }
+                let func = if let Some(func) = scope.resolve(self.func.get_name()) {
+                    func
+                } else {
+                    self.func.clone()
+                };
+                if let Some(func) = func.downcast_ref::<Function>() {
+                    let mut f = func.clone();
+                    match f.args {
+                        None if self.args.len() > 0 => bail!(
+                            "calling function {} with more arguments that needed",
+                            func.get_name()
+                        ),
+                        Some(f_args) if self.args.len() < f_args.len() && self.args.len() > 0 => {
+                            let n = f_args.len() - self.args.len();
+                            let skip = f_args.len() - n;
+                            let mut n_args = vec![];
+                            for (i, fa) in f_args.iter().enumerate() {
+                                if i >= skip {
+                                    let mut sym: Box<dyn Symbol> = IdSym::new(&format!("x_{}", i));
+                                    sym.set_type(fa.get_type());
+                                    n_args.push(sym)
                                 }
                             }
-                            let tf = TRAIT_UNKNOWN.clone();
-                            self.func
-                                .set_type(FuncType::new_opt(Some(ty_args), tf.clone_box()));
-                            self.func.define_into(scope);
+                            let mut call_args = self.args.to_vec();
+                            call_args.append(&mut n_args.to_vec());
+                            let expr = FuncCallExpr::new(func.clone_box(), call_args.clone());
+                            let mut lambda = LambdaExpr::new(n_args.to_vec(), expr.clone_box());
+                            lambda.resolve_type(scope)?;
+                            self.curried = true;
+                            self.func = lambda;
+                            self.args = n_args.to_vec();
                         }
-                    } else {
-                        todo!("WTF!! func = {:?}", func);
+                        _ => {
+                            f.replace_args(self.args.to_vec(), scope, !recursive)?;
+                            if self.func.get_type() != f.get_type() {
+                                self.func = Box::new(f);
+                            }
+                        }
                     }
-
+                } else if let Some(id) = func.downcast_ref::<IdSym>() {
+                    let id = id.clone();
+                    if self.func.get_type() != id.get_type() {
+                        self.func = Box::new(id)
+                    }
+                } else if let Some(lambda) = func.downcast_ref::<LambdaExpr>() {
+                    let mut lambda = lambda.clone();
+                    lambda.replace_args(self.args.to_vec(), scope)?;
+                    if self.func.get_type() != lambda.get_type() {
+                        self.func = Box::new(lambda);
+                    } else {
+                        let mut ty_args = vec![];
+                        for a in self.args.iter_mut() {
+                            match a.resolve_type(scope)? {
+                                None => {
+                                    ty_args.push(TRAIT_UNKNOWN.clone_box());
+                                    a.define_into(scope);
+                                }
+                                Some(ty) => {
+                                    ty_args.push(ty.clone_box());
+                                    a.define_into(scope);
+                                }
+                            }
+                        }
+                        let tf = TRAIT_UNKNOWN.clone();
+                        self.func
+                            .set_type(FuncType::new_opt(Some(ty_args), tf.clone_box()));
+                        self.func.define_into(scope);
+                    }
+                } else {
+                    todo!("WTF!! func = {:?}", func);
+                }
             }
             Some(ft) => {
                 if let Some(ft) = ft.downcast_ref::<FuncType>() {
@@ -120,7 +150,8 @@ impl Symbol for FuncCallExpr {
                         ),
                         Some(ft_args) if ft_args.len() > self.args.len() => {
                             // curry
-                            match scope.resolve(self.func.get_name()) {
+                            let nn = scope.resolve(self.func.get_name());
+                            match nn {
                                 None => match self.func.downcast_ref::<ComposeFunction>() {
                                     None => bail!(
                                         "can't find a function to curry {} func = {:?}",
@@ -149,7 +180,8 @@ impl Symbol for FuncCallExpr {
                                     }
                                     let mut call_args = self.args.to_vec();
                                     call_args.append(&mut n_args.to_vec());
-                                    let  expr = FuncCallExpr::new(func.clone_box(), call_args.clone());
+                                    let expr =
+                                        FuncCallExpr::new(func.clone_box(), call_args.clone());
                                     let mut lambda =
                                         LambdaExpr::new(n_args.to_vec(), expr.clone_box());
                                     lambda.resolve_type(scope)?;
@@ -210,7 +242,8 @@ impl Symbol for FuncCallExpr {
                                     if self.func.get_type() != l.get_type() {
                                         self.func = Box::new(l);
                                     }
-                                } else if let Some(compose) = val.expr.downcast_ref::<ComposeFunction>()
+                                } else if let Some(compose) =
+                                    val.expr.downcast_ref::<ComposeFunction>()
                                 {
                                     let c = compose.clone();
                                     if self.func.get_type() != c.get_type() {
@@ -229,6 +262,8 @@ impl Symbol for FuncCallExpr {
                                 let c = compose.clone();
                                 if self.func.get_type() != c.get_type() {
                                     self.func = Box::new(c);
+                                } else {
+                                    todo!("POR ACA 3");
                                 }
                             } else if let Some(id) = func.downcast_ref::<IdSym>() {
                                 let id = id.clone();
@@ -247,22 +282,22 @@ impl Symbol for FuncCallExpr {
                 } else if ft.downcast_ref::<VariadicType>().is_some() {
                     // TODO
                 } else if let Some(tf) = self.func.get_type() {
-                        let mut ty_args = vec![];
-                        for a in self.args.iter_mut() {
-                            match a.resolve_type(scope)? {
-                                None => {
-                                    ty_args.push(TRAIT_UNKNOWN.clone_box());
-                                    a.define_into(scope);
-                                }
-                                Some(ty) => {
-                                    ty_args.push(ty.clone_box());
-                                    a.define_into(scope);
-                                }
+                    let mut ty_args = vec![];
+                    for a in self.args.iter_mut() {
+                        match a.resolve_type(scope)? {
+                            None => {
+                                ty_args.push(TRAIT_UNKNOWN.clone_box());
+                                a.define_into(scope);
+                            }
+                            Some(ty) => {
+                                ty_args.push(ty.clone_box());
+                                a.define_into(scope);
                             }
                         }
-                        self.func
-                            .set_type(FuncType::new_opt(Some(ty_args), tf.clone_box()));
-                        self.func.define_into(scope);
+                    }
+                    self.func
+                        .set_type(FuncType::new_opt(Some(ty_args), tf.clone_box()));
+                    self.func.define_into(scope);
                 } else {
                     bail!(
                         "{} => {:?} it's not a function",

@@ -6,6 +6,7 @@ use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
+use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ComposeFunction {
@@ -48,7 +49,16 @@ impl Symbol for ComposeFunction {
         match &mut self.kind {
             ComposeKind::Bck(g, f) | ComposeKind::Fwd(f, g) => {
                 f.resolve_type(scope)?;
+                match f.get_curry() {
+                    None => {}
+                    Some(fc) => *f = fc,
+                }
                 g.resolve_type(scope)?;
+                match g.get_curry() {
+                    None => {}
+                    Some(gc) => *g = gc,
+                }
+
                 match f.get_type() {
                     None => {
                         if let Some(gt) = g.get_type() {
@@ -85,7 +95,13 @@ impl Symbol for ComposeFunction {
                     }
                     Some(ft) => {
                         match ft.downcast_ref::<FuncType>() {
-                            None => bail!("can't compose a non function"),
+                            None => {
+                                bail!(
+                                    "can't compose a non function ft = {:?}\n curried {}\n",
+                                    ft,
+                                    f.get_curry().is_some()
+                                )
+                            }
                             Some(ft) => match g.get_type() {
                                 None => {
                                     // f: a -> b
@@ -102,13 +118,22 @@ impl Symbol for ComposeFunction {
                                         Some(gt) => {
                                             // f: a -> b
                                             // g: b -> c
-                                            // f >> g : a -> c
-                                            let b = Some(vec![ft.result.clone()]);
-                                            if gt.args != b {
-                                                bail!("can't compose functions, arguments are incompatible");
+                                            // f >> g : a -> c == g(f a)
+                                            let b = vec![ft.result.clone()];
+                                            match &gt.args {
+                                                None => bail!("can't compose a function that doesn't receive arguments"),
+                                                Some(args) => {
+                                                    if args.iter().zip(b.iter()).any(|(at, bt)| !at.is_compatible_with(bt.deref().deref())) {
+                                                        println!("f = {:?}", f);
+                                                        println!("g = {:?}", g);
+                                                        println!("ft = {:?}", ft);
+                                                        println!("gt = {:?}", ft);
+                                                        bail!("can't compose functions, arguments are incompatible gt.args = {:?} b != {:?}", gt.args, b);
+                                                    }
+                                                    let c = gt.result.clone();
+                                                    self.ty = FuncType::new_opt(Some(b), c);
+                                                }
                                             }
-                                            let c = gt.result.clone();
-                                            self.ty = FuncType::new_opt(b, c);
                                         }
                                     }
                                 }

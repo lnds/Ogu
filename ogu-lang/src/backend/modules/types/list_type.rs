@@ -39,7 +39,7 @@ impl Type for ListType {
         if let Some(other) = other.downcast_ref::<ListType>() {
             if self.is_trait() && other.ty.is_compatible_with(&*self.ty) {
                 self.ty = other.ty.clone();
-             }
+            }
         }
     }
 

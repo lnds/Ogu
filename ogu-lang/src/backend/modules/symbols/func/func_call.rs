@@ -65,7 +65,7 @@ impl Symbol for FuncCallExpr {
                     a.resolve_type(scope)?;
                     a.define_into(scope);
                 }
-                if let Some(func) = scope.resolve(self.func.get_name()) {
+                let func = if let Some(func) = scope.resolve(self.func.get_name()) { func } else { self.func.clone() };
                     if let Some(func) = func.downcast_ref::<Function>() {
                         let mut f = func.clone();
                         f.replace_args(self.args.to_vec(), scope, !recursive)?;
@@ -77,13 +77,34 @@ impl Symbol for FuncCallExpr {
                         if self.func.get_type() != id.get_type() {
                             self.func = Box::new(id)
                         }
+                    } else if let Some(lambda) = func.downcast_ref::<LambdaExpr>() {
+                        let mut lambda = lambda.clone();
+                        lambda.replace_args(self.args.to_vec(), scope)?;
+                        if self.func.get_type() != lambda.get_type()  {
+                            self.func = Box::new(lambda);
+                        } else {
+                            let mut ty_args = vec![];
+                            for a in self.args.iter_mut() {
+                                match a.resolve_type(scope)? {
+                                    None => {
+                                        ty_args.push(TRAIT_UNKNOWN.clone_box());
+                                        a.define_into(scope);
+                                    }
+                                    Some(ty) => {
+                                        ty_args.push(ty.clone_box());
+                                        a.define_into(scope);
+                                    }
+                                }
+                            }
+                            let tf = TRAIT_UNKNOWN.clone();
+                            self.func
+                                .set_type(FuncType::new_opt(Some(ty_args), tf.clone_box()));
+                            self.func.define_into(scope);
+                        }
                     } else {
-                        todo!("ESTE OTRO CASO func = {:?}", func);
+                        todo!("WTF!! func = {:?}", func);
                     }
 
-                } else {
-                    todo!("WTF!!");
-                }
             }
             Some(ft) => {
                 if let Some(ft) = ft.downcast_ref::<FuncType>() {

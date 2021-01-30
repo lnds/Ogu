@@ -32,6 +32,7 @@ use crate::parser::ast::expressions::equations::Equation;
 use crate::parser::ast::expressions::expression::{
     Expression, LambdaArg, ListComprehensionGuard, OptExprTuple, RecurValue,
 };
+use crate::backend::modules::symbols::exprs::index_expr::IndexExpr;
 
 mod arithmetics;
 mod case_expr;
@@ -55,6 +56,7 @@ mod range_expr;
 mod repeat_expr;
 mod tuple_expr;
 mod unary_op_expr;
+mod index_expr;
 
 impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
     fn from(expr: &Expression<'a>) -> Self {
@@ -207,6 +209,8 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
 
             Expression::DoExpr(exprs) => DoExpr::new(vec_exprs_into(exprs)),
 
+            Expression::IndexExpr(expr, index) => IndexExpr::new(expr.into(), index.into()),
+
             Expression::LambdaExpr(args, expr) => {
                 LambdaExpr::new(vec_lambda_args_into(args), expr.into())
             }
@@ -243,8 +247,8 @@ impl<'a> From<Expression<'a>> for Box<dyn Symbol> {
 impl<'a> From<&Equation<'a>> for Box<dyn Symbol> {
     fn from(eq: &Equation<'a>) -> Self {
         match eq {
-            Equation::EqVal(id, expr) => ValueSym::new(id, expr),
-            Equation::EqFunc(name, args, expr) => Function::make_box(name, args, expr),
+            Equation::Val(id, expr) => ValueSym::new(id, expr),
+            Equation::Func(name, args, expr) => Function::make_box(name, args, expr),
             _e => {
                 todo!("not implemented for {:?}", _e);
             }

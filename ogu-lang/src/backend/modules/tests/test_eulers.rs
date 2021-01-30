@@ -426,12 +426,12 @@ fn test_euler_7() {
         length x :: xs = 1 + length xs
 
         prime-factors n = factor n primes
-        where
+          where
+            factor n [] =
             factor n (p::ps)
-            | p * p > n = [n]
-            | n % p == 0 = p :: factor (n // p) (p::ps)
-            | otherwise = factor n ps
-
+                | p * p > n = [n]
+                | n % p == 0 = p :: factor (n // p) (p::ps)
+                | otherwise = factor n ps
         result = primes @ 10000"#},
         default_sym_table(),
     );
@@ -446,3 +446,26 @@ fn test_euler_7() {
         Some(ListType::new_list(BasicType::int()))
     );
 }
+
+
+/*
+    factor n (p::ps)
+                | p * p > n = [n]
+                | n % p == 0 = p :: factor (n // p) (p::ps)
+                | otherwise = factor n ps
+
+    =>
+    factor n (p::ps) =
+            if p * p > n then [n]
+            elsif n % p == 0 then p :: factor (n // p) (p :: ps)
+            else factor n ps
+
+   =>
+   factor n x_1 =
+        let (p :: ps) = x_1
+        in
+            if p * p > n then [n]
+            elsif n % p == 0 then p :: factor (n // p) (p :: ps)
+            else factor n ps
+
+ */

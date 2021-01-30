@@ -3,6 +3,9 @@ use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use indoc::indoc;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
+use crate::backend::scopes::types::TypeClone;
+use crate::backend::modules::types::list_type::ListType;
 
 #[test]
 fn test_let() {
@@ -29,6 +32,23 @@ fn test_let() {
         )
     );
 }
+
+#[test]
+fn test_let_cons() {
+    let module = make_module(
+        indoc! {r#"
+            tail x = let (x :: xs) = x in xs
+            t = tail [1, 2, 3]
+            "#},
+        default_sym_table(),
+    );
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![TRAIT_UNKNOWN.clone_box()]), ListType::new_list(TRAIT_UNKNOWN.clone_box())));
+    assert_eq!(decls[1].get_type(), Some(ListType::new_list(BasicType::int())));
+}
+
 
 #[test]
 fn test_let_2() {

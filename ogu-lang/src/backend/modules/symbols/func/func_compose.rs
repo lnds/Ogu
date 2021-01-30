@@ -1,7 +1,6 @@
 use anyhow::{bail, Result};
 
 use crate::backend::modules::symbols::func::func_def::Function;
-use crate::backend::modules::symbols::func::swap_args;
 use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
@@ -33,20 +32,16 @@ impl ComposeFunction {
         args: Vec<Box<dyn Symbol>>,
         scope: &mut dyn Scope,
     ) -> Result<()> {
-        println!("COMPOSITION CHANGE ARGS = {:?}", args);
-        println!("COMPOSITION, G = {:?}", self.g);
-        println!("COMPOSITION, F = {:?}", self.f);
-
         if let Some(f) = self.f.downcast_ref::<Function>() {
             let mut f = f.clone();
-            f.replace_args(args.clone(), scope, false);
+            f.replace_args(args.clone(), scope, false)?;
             self.f = Box::new(f);
         } else if let Some(id) = self.f.downcast_ref::<IdSym>() {
             let f = scope.resolve(id.get_name());
             if let Some(f) = f {
                 if let Some(f) = f.downcast_ref::<Function>() {
                     let mut f = f.clone();
-                    f.replace_args(args.clone(), scope, false);
+                    f.replace_args(args.clone(), scope, false)?;
                     self.f = Box::new(f);
                 }
             }
@@ -73,14 +68,14 @@ impl ComposeFunction {
 
         if let Some(g) = self.g.downcast_ref::<Function>() {
             let mut g = g.clone();
-            g.replace_args(g_args.clone(), scope, false);
+            g.replace_args(g_args.clone(), scope, false)?;
             self.g = Box::new(g);
         } else if let Some(id) = self.g.downcast_ref::<IdSym>() {
             let g = scope.resolve(id.get_name());
             if let Some(g) = g {
                 if let Some(g) = g.downcast_ref::<Function>() {
                     let mut g = g.clone();
-                    g.replace_args(g_args.clone(), scope, false);
+                    g.replace_args(g_args.clone(), scope, false)?;
                     self.g = Box::new(g);
                 }
             }

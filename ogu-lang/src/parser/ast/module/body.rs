@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 
 use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::module::decls::{DeclParseResult, DeclVec, DeclarationAst};

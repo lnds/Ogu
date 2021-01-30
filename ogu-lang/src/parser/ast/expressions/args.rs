@@ -89,7 +89,12 @@ impl<'a> Arg<'a> {
             }
         }
         let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
-        Ok(Some((Arg::Tuple(args), pos)))
+        if args.len() == 1 {
+            Ok(Some((args[0].clone(), pos)))
+        } else {
+            Ok(Some((Arg::Tuple(args), pos)))
+
+        }
     }
 }
 

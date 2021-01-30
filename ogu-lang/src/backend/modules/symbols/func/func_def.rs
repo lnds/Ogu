@@ -176,7 +176,7 @@ impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
         match arg {
             Arg::Simple(s) => IdSym::new(s),
             Arg::SimpleStr(s) => IdSym::new(&s),
-            _ => panic!("Invalid Arg, internal parser error"),
+            arg => panic!("Invalid Arg: {:?}, internal parser error", arg),
         }
     }
 }

@@ -182,8 +182,6 @@ pub(crate) enum LambdaArg<'a> {
     Tuple(Vec<&'a str>),
 }
 
-
-
 impl<'a> Expression<'a> {
     pub(crate) fn parse(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, mut pos) = Expression::parse_dollar_func_call_expr(parser, pos)?;
@@ -481,7 +479,6 @@ impl<'a> Expression<'a> {
         Expression::parse_pipe_func_call_expr
     );
 
-
     parse_left_assoc!(
         parse_pipe_func_call_expr,
         Lexeme::PipeRight,
@@ -753,8 +750,7 @@ impl<'a> Expression<'a> {
                         }
                         _ => Ok((e, pos)),
                     }
-                }
-                else if parser.peek(pos, Lexeme::Comma) {
+                } else if parser.peek(pos, Lexeme::Comma) {
                     let mut exprs = vec![expr];
                     let mut pos = pos;
                     while parser.peek(pos, Lexeme::Comma) {
@@ -1056,8 +1052,6 @@ impl<'a> Expression<'a> {
         }
     }
 
-
-
     fn parse_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
         if is_func_call_end_symbol(parser.get_token(pos))
@@ -1102,8 +1096,6 @@ impl<'a> Expression<'a> {
         }
     }
 
-
-
     fn parse_prim_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             Some(Lexeme::LeftParen) => Expression::parse_paren_expr(parser, pos),
@@ -1122,7 +1114,7 @@ impl<'a> Expression<'a> {
                     (Expression::QualifiedIdentifier(id, fields), pos)
                 };
 
-                    Ok((expr, pos))
+                Ok((expr, pos))
             }
             sym if is_func_call_end_symbol(sym) => {
                 raise_parser_error("invalid token", parser, pos, true)

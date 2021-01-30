@@ -2,10 +2,10 @@ use crate::backend::compiler::default_sym_table;
 use crate::backend::modules::tests::make_module;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
-use indoc::indoc;
 use crate::backend::modules::types::list_type::ListType;
 use crate::backend::modules::types::trait_type::{TRAIT_ORD, TRAIT_UNKNOWN};
 use crate::backend::scopes::types::TypeClone;
+use indoc::indoc;
 
 #[test]
 fn test_hello() {

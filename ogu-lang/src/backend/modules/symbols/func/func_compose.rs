@@ -1,16 +1,16 @@
 use anyhow::{bail, Result};
 
+use crate::backend::modules::symbols::func::func_def::Function;
+use crate::backend::modules::symbols::func::swap_args;
+use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::basic_type::BasicType;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
+use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use std::ops::Deref;
-use crate::backend::modules::symbols::func::swap_args;
-use crate::backend::modules::symbols::func::func_def::Function;
-use crate::backend::modules::symbols::idents::IdSym;
-use crate::backend::scopes::sym_table::SymbolTable;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ComposeFunction {
@@ -18,7 +18,6 @@ pub(crate) struct ComposeFunction {
     g: Box<dyn Symbol>,
     ty: Option<Box<dyn Type>>,
 }
-
 
 impl ComposeFunction {
     pub(crate) fn new_fwd(f: Box<dyn Symbol>, g: Box<dyn Symbol>) -> Box<Self> {
@@ -64,16 +63,13 @@ impl ComposeFunction {
                 None => vec![],
                 Some(id) => match scope.resolve(id.get_name()) {
                     None => vec![],
-                    Some(f) => {
-                        match f.downcast_ref::<Function>() {
-                            None => vec![],
-                            Some(f) => vec![f.expr.clone_box()]
-                        }
-                    }
-                }
-            }
-        } ;
-
+                    Some(f) => match f.downcast_ref::<Function>() {
+                        None => vec![],
+                        Some(f) => vec![f.expr.clone_box()],
+                    },
+                },
+            },
+        };
 
         if let Some(g) = self.g.downcast_ref::<Function>() {
             let mut g = g.clone();
@@ -134,9 +130,7 @@ impl Symbol for ComposeFunction {
                             let at = match &gt.args {
                                 None => None,
                                 Some(v) if v.is_empty() => None,
-                                Some(v) if v.len() == 1 => {
-                                    Some(vec![TRAIT_UNKNOWN.clone_box()])
-                                }
+                                Some(v) if v.len() == 1 => Some(vec![TRAIT_UNKNOWN.clone_box()]),
                                 Some(v) => {
                                     let mut args = vec![TRAIT_UNKNOWN.clone_box()];
                                     args.append(&mut v.to_vec());
@@ -154,10 +148,10 @@ impl Symbol for ComposeFunction {
                 match ft.downcast_ref::<FuncType>() {
                     None => {
                         bail!(
-                                    "can't compose a non function ft = {:?}\n curried {}\n",
-                                    ft,
-                                    self.f.get_curry().is_some()
-                                )
+                            "can't compose a non function ft = {:?}\n curried {}\n",
+                            ft,
+                            self.f.get_curry().is_some()
+                        )
                     }
                     Some(ft) => match self.g.get_type() {
                         None => {
@@ -166,7 +160,8 @@ impl Symbol for ComposeFunction {
                             // f >> g : a -> c
                             let a = ft.args.clone();
                             let c = TRAIT_UNKNOWN.clone_box();
-                            self.g.set_type(FuncType::new_opt(a.clone(), ft.result.clone()));
+                            self.g
+                                .set_type(FuncType::new_opt(a.clone(), ft.result.clone()));
                             self.ty = FuncType::new_opt(a, c);
                         }
                         Some(gt) => {

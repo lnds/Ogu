@@ -8,7 +8,7 @@ use crate::parser::{consume_symbol, look_ahead_where, parse_opt_dedent, parse_op
 
 impl<'a> DeclarationAst<'a> {
     pub fn parse_func_or_val(parser: &'a Parser<'a>, pos: usize) -> DeclParseResult<'a> {
-        let (eq, pos) = Equation::parse(parser, pos, true)?;
+        let (eq, pos) = Equation::parse(parser, pos, false)?;
         let (opt_where, pos) = if let Some(where_pos) = look_ahead_where(parser, pos) {
             let (where_decl, mut pos) = DeclarationAst::parse_where(parser, where_pos)?;
             if parser.peek(pos, Lexeme::Dedent) {

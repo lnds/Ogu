@@ -1,12 +1,13 @@
 use std::ops::Deref;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 
 use crate::lexer::tokens::Lexeme;
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::{
     consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent, Parser,
 };
+use crate::parser::ast::expressions::args::{Args, Arg};
 
 #[derive(Debug, Clone)]
 pub(crate) struct Guard<'a>(
@@ -26,7 +27,29 @@ impl<'a> Guard<'a> {
             ));
         }
         Expression::if_from(&pairs)
-        //Expression::CondExpr(pairs)
+    }
+
+    pub fn guards_to_case(
+        args: Args<'a>,
+        guards: &[Guard<'a>],
+    ) ->  Expression<'a> {
+        let e_args: Vec<Expression> = match args {
+            Args::Void => vec![],
+            Args::Many(v) => v.iter().map(|a| a.into()).collect(),
+        };
+        if e_args.is_empty() {
+            return Expression::Unit;
+        }
+        let expr = if e_args.len() == 1 {
+            e_args[0].clone()
+        } else {
+            Expression::TupleExpr(e_args.clone())
+        };
+        let case_guards = guards
+            .iter()
+            .map(|g| (g.deref().0.as_ref().map(|e| e.deref().clone()), g.1.deref().clone()))
+            .collect();
+        Expression::CaseExpr(Box::new(expr), case_guards)
     }
 }
 
@@ -67,4 +90,16 @@ fn parse_guard<'a>(parser: &'a Parser<'a>, pos: usize) -> Result<(Guard<'a>, usi
     let (guard_value, pos) = Expression::parse(parser, pos)?;
     let pos = parser.skip_nl(pos);
     Ok((Guard(guard, Box::new(guard_value)), pos))
+}
+
+
+impl<'a> From<&Arg<'a>> for Expression<'a> {
+    fn from(a: &Arg<'a>) -> Self {
+        match a {
+            Arg::Expr(e) => *e.clone(),
+            Arg::Simple(s) => Expression::Name(s),
+            Arg::SimpleStr(s) => Expression::NameStr(s.to_string()),
+            Arg::Tuple(t) => Expression::TupleExpr(t.iter().map(|i| i.into()).collect()),
+        }
+    }
 }

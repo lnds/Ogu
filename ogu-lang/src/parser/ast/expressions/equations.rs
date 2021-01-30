@@ -24,16 +24,15 @@ impl<'a> Equation<'a> {
         inner: bool,
     ) -> Result<(Equation<'a>, usize)> {
         if let Some(Lexeme::Id(id)) = parser.get_token(pos) {
-            Equation::parse_func_or_val(id, parser, pos + 1)
-        } else if inner {
+            Equation::parse_func_or_val(id, parser, pos + 1, inner)
+        } else {
             let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
             if parser.peek(pos, Lexeme::Assign) {
-                Equation::parse_lval_no_guards(expr, parser, pos + 1)
+                let pos = consume_symbol(parser, pos, Lexeme::Assign)?;
+                Equation::parse_lval_no_guards(expr, parser, pos)
             } else {
                 Equation::parse_lval_guards(expr, parser, pos)
             }
-        } else {
-            raise_parser_error("Expecting id", parser, pos, true)
         }
     }
 
@@ -84,11 +83,12 @@ impl<'a> Equation<'a> {
         name: &'a str,
         parser: &'a Parser<'a>,
         pos: usize,
+        inner: bool,
     ) -> Result<(Equation<'a>, usize)> {
         if parser.peek(pos, Lexeme::Assign) {
             Equation::parse_val(name, parser, pos + 1)
         } else {
-            Equation::parse_func(name, parser, pos)
+            Equation::parse_func(name, parser, pos, inner)
         }
     }
 
@@ -107,12 +107,14 @@ impl<'a> Equation<'a> {
         name: &'a str,
         parser: &'a Parser<'a>,
         pos: usize,
+        inner: bool,
     ) -> Result<(Equation<'a>, usize)> {
         let (args, pos) = Arg::parse(parser, pos)?;
         if parser.peek(pos, Lexeme::Assign) {
-            Equation::parse_func_no_guards(name, args, parser, pos + 1)
+            let pos = consume_symbol(parser, pos, Lexeme::Assign)?;
+            Equation::parse_func_no_guards(name, args, parser, pos)
         } else {
-            Equation::parse_func_guards(name, args, parser, pos)
+            Equation::parse_func_guards(name, args, parser, pos, inner)
         }
     }
 
@@ -146,10 +148,17 @@ impl<'a> Equation<'a> {
         args: Args<'a>,
         parser: &'a Parser<'a>,
         pos: usize,
+        inner: bool,
     ) -> Result<(Equation<'a>, usize)> {
         let (guards, pos) = parse_guards(parser, pos)?;
-        let eq = Equation::EqFuncWithGuards(name, args, guards);
-        Ok((eq, pos))
+        if inner {
+            let expr = Guard::guards_to_case(args.clone(), &guards);
+            let eq = Equation::EqFunc(name, args, expr);
+            Ok((eq, pos))
+        } else {
+            let eq = Equation::EqFuncWithGuards(name, args, guards);
+            Ok((eq, pos))
+        }
     }
 
     fn parse_lval_guards(
@@ -162,4 +171,6 @@ impl<'a> Equation<'a> {
         let eq = Equation::EqVal(left_expr, expr);
         Ok((eq, pos))
     }
+
+
 }

@@ -154,7 +154,10 @@ fn test_func_composition_4() {
         decls[4].get_type(),
         FuncType::new_opt(
             Some(vec![
-                FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), TRAIT_UNKNOWN.clone_box()),
+                FuncType::new_func_type(
+                    Some(vec![TRAIT_UNKNOWN.clone_box()]),
+                    TRAIT_UNKNOWN.clone_box()
+                ),
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box())
@@ -163,7 +166,11 @@ fn test_func_composition_4() {
 
     assert_eq!(
         decls[5].get_type(),
-        FuncType::new_opt(Some(vec![ListType::new_list(TRAIT_NUM.clone_box())]), TRAIT_NUM.clone_box()));
+        FuncType::new_opt(
+            Some(vec![ListType::new_list(TRAIT_NUM.clone_box())]),
+            TRAIT_NUM.clone_box()
+        )
+    );
 
     assert_eq!(decls[6].get_type(), Some(TRAIT_NUM.clone_box())); // ????
 }
@@ -190,11 +197,17 @@ fn test_func_composition_5() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]), TRAIT_UNKNOWN.clone_box())
+        FuncType::new_opt(
+            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
+            TRAIT_UNKNOWN.clone_box()
+        )
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]), ListType::new_list(TRAIT_UNKNOWN.clone_box()))
+        FuncType::new_opt(
+            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
+            ListType::new_list(TRAIT_UNKNOWN.clone_box())
+        )
     );
     assert_eq!(decls[2].get_type(), Some(BasicType::int()));
 }

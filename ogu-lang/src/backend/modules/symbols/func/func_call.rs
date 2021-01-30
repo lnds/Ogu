@@ -215,7 +215,8 @@ impl Symbol for FuncCallExpr {
                                     if self.func.get_type() != l.get_type() {
                                         self.func = Box::new(l);
                                     }
-                                } else if let Some(comp) = val.expr.downcast_ref::<ComposeFunction>()
+                                } else if let Some(comp) =
+                                    val.expr.downcast_ref::<ComposeFunction>()
                                 {
                                     let mut c = comp.clone();
                                     c.replace_args(self.args.to_vec(), scope)?;

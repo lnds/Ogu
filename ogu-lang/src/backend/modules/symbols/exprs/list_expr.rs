@@ -61,6 +61,7 @@ impl Symbol for ListExpr {
 
     fn set_type(&mut self, ty: Option<Box<dyn Type>>) {
         self.ty = ty;
+        self.matches_types(self.get_type());
     }
 
     fn matches_types(&mut self, aty: Option<Box<dyn Type>>) {

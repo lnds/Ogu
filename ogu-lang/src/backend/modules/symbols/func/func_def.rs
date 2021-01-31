@@ -67,7 +67,6 @@ impl Function {
     ) -> Result<()> {
         if let Some(own_args) = &self.args {
             let msg = &format!("function {}", self.name);
-
             self.args = Some(swap_args(msg, &own_args, &args)?);
             if resolve {
                 self.resolve_type(scope)?;
@@ -135,11 +134,7 @@ impl Symbol for Function {
                 a.define_into(&mut *sym_table);
             }
         }
-
-        let r = self.expr.resolve_type(&mut *sym_table);
-        if r.is_err() {
-            return r;
-        }
+        self.expr.resolve_type(&mut *sym_table)?;
 
         if let Some(curry) = self.expr.get_curry() {
             self.expr = curry;

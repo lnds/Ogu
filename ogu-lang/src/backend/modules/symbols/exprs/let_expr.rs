@@ -33,7 +33,8 @@ impl Symbol for LetExpr {
     fn resolve_type(&mut self, scope: &mut dyn Scope) -> Result<Option<Box<dyn Type>>> {
         let mut sym_table = SymbolTable::new("let", Some(scope.clone_box()));
         sym_table.set_function_name(&scope.function_scope_name());
-        for e in self.eqs.iter() {
+        for e in self.eqs.iter_mut() {
+            e.resolve_type(scope);
             if e.define_into(&mut *sym_table).is_some() {
                 bail!("duplicated symbol '{} on let declaration", e.get_name());
             }
@@ -52,7 +53,11 @@ impl Symbol for LetExpr {
         }
 
         for s in sym_table.get_symbols().iter() {
-            s.define_into(scope);
+            if let Some(sym) = scope.resolve(s.get_name()) {
+                if sym.get_type().is_none() {
+                    scope.define(s.clone());
+                }
+            }
         }
         Ok(self.get_type())
     }

@@ -65,7 +65,15 @@ impl Symbol for ValueSym {
     }
 
     fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
-        scope.define(self.expr.clone());
-        scope.define(self.name.clone())
+        if self.expr.is_seq() {
+            self.expr.define_into(scope);
+        } else {
+            scope.define(self.expr.clone());
+        }
+        if self.name.is_seq() {
+            self.name.define_into(scope)
+        } else {
+            scope.define(self.name.clone())
+        }
     }
 }

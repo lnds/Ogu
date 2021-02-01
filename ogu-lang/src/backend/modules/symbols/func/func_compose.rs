@@ -82,6 +82,7 @@ impl ComposeFunction {
         }
         self.g.define_into(&mut *sym_table);
         self.resolve_type(&mut *sym_table)?;
+
         Ok(())
     }
 }
@@ -174,7 +175,6 @@ impl Symbol for ComposeFunction {
                                                 bail!("can't compose functions, arguments are incompatible gt.args = {:?} b != {:?}", gt.args, b);
                                             }
                                             let c = gt.result.clone();
-                                            println!("COMPOSED c => {:?}\n f = {:?}\n g = {:?}", c, self.f, self.g);
                                             self.ty = FuncType::new_opt(Some(b), c);
                                         }
                                     }

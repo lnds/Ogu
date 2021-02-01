@@ -59,10 +59,10 @@ fn check_can_replace_args(expr_name: &str, own_args: &SymbolVec, args: &SymbolVe
         if let (Some(ta), Some(tb)) = (a.get_type(), b.get_type()) {
             if !ta.is_compatible_with(&*tb) && !tb.is_compatible_with(&*ta) {
                 bail!(
-                    "incompatible args passed for {}\n TA = {:?}\n TB = {:?}",
+                    "incompatible args passed for {}\n a = {} => {:?}\n b = {} => {:?}",
                     expr_name,
-                    ta,
-                    tb
+                    a.get_name(), ta,
+                    b.get_name(), tb
                 )
             }
         }

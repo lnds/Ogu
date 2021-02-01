@@ -65,6 +65,7 @@ impl Function {
         scope: &mut dyn Scope,
         resolve: bool,
     ) -> Result<()> {
+
         if let Some(own_args) = &self.args {
             let msg = &format!("function {}", self.name);
             self.args = Some(swap_args(msg, &own_args, &args)?);
@@ -134,6 +135,7 @@ impl Symbol for Function {
                 a.define_into(&mut *sym_table);
             }
         }
+
         self.expr.resolve_type(&mut *sym_table)?;
 
         if let Some(curry) = self.expr.get_curry() {
@@ -171,6 +173,7 @@ impl<'a> From<Arg<'a>> for Box<dyn Symbol> {
         match arg {
             Arg::Simple(s) => IdSym::new(s),
             Arg::SimpleStr(s) => IdSym::new(&s),
+            Arg::Expr(e) => e.into(),
             arg => panic!("Invalid Arg: {:?}, internal parser error", arg),
         }
     }

@@ -9,6 +9,7 @@ use crate::parser::{
     consume_symbol, parse_opt_dedent, parse_opt_indent, parse_opt_where_or_dedent,
     raise_parser_error, Parser,
 };
+use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub(crate) enum Equation<'a> {
@@ -154,18 +155,32 @@ impl<'a> Equation<'a> {
         if inner {
             let expr = Guard::guards_to_cond( &guards)?;
 
+            let mut let_eqs = vec![];
             let args = match args {
                 Args::Void => Args::Void,
                 Args::Many(v) => {
                     Args::Many(v.iter().enumerate().map(|(i,arg)| match arg {
                         Arg::Simple(_) => arg.clone(),
                         Arg::SimpleStr(_) => arg.clone(),
-                        _ => Arg::SimpleStr(format!("x_{}", i))
+                        Arg::Expr(expr) => {
+                            let arg_name = format!("x_{}", i);
+                            let_eqs.push(Equation::Val(expr.deref().clone(), Expression::NameStr(arg_name.clone())));
+                            Arg::SimpleStr(arg_name)
+                        }
+                        Arg::Tuple(v) => { // f (a, b, c) = expr => f x = let (a,b,c) = x in expr
+                            let arg_name = format!("x_{}", i);
+                            let_eqs.push(Equation::Val(Expression::TupleExpr(v.iter().map(|a| a.into()).collect()), Expression::NameStr(arg_name.clone())));
+                            Arg::SimpleStr(arg_name)
+                        }
                     }).collect())
                 }
             };
-            let eq = Equation::Func(name, args, expr);
-            Ok((eq, pos))
+            if let_eqs.is_empty() {
+                Ok((Equation::Func(name, args, expr), pos))
+            } else {
+                let expr = Expression::LetExpr(let_eqs, Box::new(expr));
+                Ok((Equation::Func(name, args, expr), pos))
+            }
         } else {
             let eq = Equation::WithGuards(name, args, guards);
             Ok((eq, pos))

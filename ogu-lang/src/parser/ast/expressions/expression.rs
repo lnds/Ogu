@@ -731,6 +731,8 @@ impl<'a> Expression<'a> {
                         | Expression::FuncCallExpr(_, _)
                         | Expression::RecurExpr(_)
                         | Expression::LambdaExpr(_, _)
+                        | Expression::ComposeBckExpr(_, _)
+                        | Expression::ComposeFwdExpr(_, _)
                         | Expression::QualifiedIdentifier(_, _) => {
                             (Expression::ParenExpr(Box::new(expr)), pos + 1)
                         }
@@ -1055,14 +1057,14 @@ impl<'a> Expression<'a> {
     fn parse_func_call_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let (expr, pos) = Expression::parse_primary_expr(parser, pos)?;
         if is_func_call_end_symbol(parser.get_token(pos))
-            || !matches!(expr, Expression::ParenExpr(_)|Expression::Name(_)|Expression::NameStr(_))
+            || !matches!(expr, Expression::Name(_)|Expression::NameStr(_)|Expression::ParenExpr(_))
         {
             Ok((expr, pos))
         } else {
             let mut args = vec![];
             let mut pos = pos;
             while !is_func_call_end_symbol(parser.get_token(pos)) {
-                let (arg, new_pos) = Expression::parse_primary_expr(parser, pos)?;
+                let (arg, new_pos) = Expression::parse_prim_expr(parser, pos)?;
                 args.push(arg);
                 pos = new_pos;
             }
@@ -1073,10 +1075,10 @@ impl<'a> Expression<'a> {
     pub(crate) fn parse_recur(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         let pos = consume_symbol(parser, pos, Lexeme::Recur)?;
         let mut args = vec![];
-        let (expr, mut pos) = Expression::parse_primary_expr(parser, pos)?;
+        let (expr, mut pos) = Expression::parse_prim_expr(parser, pos)?;
         args.push(expr);
         while !is_func_call_end_symbol(parser.get_token(pos)) {
-            let (arg, new_pos) = Expression::parse_primary_expr(parser, pos)?;
+            let (arg, new_pos) = Expression::parse_prim_expr(parser, pos)?;
             args.push(arg);
             pos = new_pos;
         }
@@ -1099,6 +1101,7 @@ impl<'a> Expression<'a> {
     fn parse_prim_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
             Some(Lexeme::LeftParen) => Expression::parse_paren_expr(parser, pos),
+            Some(Lexeme::LeftBracket) => Expression::parse_list_expr(parser, pos),
             Some(Lexeme::Id(_)) => {
                 let (id, mut pos) = consume_id(parser, pos)?;
                 let mut fields = vec![];
@@ -1116,10 +1119,13 @@ impl<'a> Expression<'a> {
 
                 Ok((expr, pos))
             }
+            Some(sym) if is_literal(sym) => Expression::parse_literal_expr(parser, pos),
             sym if is_func_call_end_symbol(sym) => {
                 raise_parser_error("invalid token", parser, pos, true)
             }
-            _ => Expression::parse_dollar_func_call_expr(parser, pos),
+            _ => {
+                Expression::parse_dollar_func_call_expr(parser, pos)
+            },
         }
     }
 

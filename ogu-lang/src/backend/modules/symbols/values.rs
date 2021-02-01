@@ -55,8 +55,13 @@ impl Symbol for ValueSym {
             self.expr = curry;
         }
         self.name.resolve_type(scope)?;
-        self.name.set_type(self.expr.get_type());
-
+        if self.expr.get_type().is_some() {
+            if self.name.get_type().is_none() {
+                self.name.set_type(self.expr.get_type());
+            } else {
+                self.name.matches_types(self.expr.get_type());
+            }
+        }
         Ok(self.get_type())
     }
 

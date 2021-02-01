@@ -154,7 +154,7 @@ impl Symbol for ListExpr {
                                     } else if lt.ty.is_trait() {
                                         list.set_type(Some(ListType::new_list(at.clone_box())));
                                         list.define_into(scope);
-                                    } else {
+                                    } else if !at.is_compatible_with(&*lt.ty) {
                                         bail!("cons expression of different list types at = {:?}. lt={:?}", at, lt);
                                     }
                                     self.ty = list.get_type();

@@ -53,7 +53,7 @@ fn is_subtype(expr_name: &str, a: OptType, b: OptType) -> Result<bool> {
 
 fn check_can_replace_args(expr_name: &str, own_args: &SymbolVec, args: &SymbolVec) -> Result<()> {
     if own_args.len() != args.len() {
-        bail!("wrong arguments passed")
+        bail!("wrong cantity of arguments passed in {}. | own_args = {:?}, args = {:?}", expr_name, own_args, args);
     }
     for (a, b) in own_args.iter().zip(args.iter()) {
         if let (Some(ta), Some(tb)) = (a.get_type(), b.get_type()) {

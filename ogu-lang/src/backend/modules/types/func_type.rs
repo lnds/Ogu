@@ -62,6 +62,7 @@ impl FuncType {
         Box::new(FuncType { args, result })
     }
 
+
     #[allow(dead_code)]
     pub(crate) fn new_opt(
         args: Option<Vec<Box<dyn Type>>>,
@@ -69,6 +70,16 @@ impl FuncType {
     ) -> Option<Box<dyn Type>> {
         Some(Self::new_func_type(args, result))
     }
+
+
+    pub(crate) fn new_box(
+        args: Option<Vec<Box<dyn Type>>>,
+        result: Box<dyn Type>,
+    ) -> Box<Self> {
+        Box::new(FuncType { args, result })
+    }
+
+
 
     pub(crate) fn get_args(&self) -> Option<Vec<Box<dyn Type>>> {
         self.args.clone()

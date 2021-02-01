@@ -64,7 +64,7 @@ pub(crate) enum Expression<'a> {
     NameStr(String), // ok
     QualifiedIdentifier(&'a str, Vec<&'a str>),
     StringLiteral(&'a str),             // ok
-    LargeStringLiteral(Option<String>), // ok
+    LargeStringLiteral(String), // ok
     RegexpLiteral(&'a str),             // ok
     CharLiteral(&'a str),               // ok
     IntegerLiteral(&'a str),            // ok
@@ -975,10 +975,15 @@ impl<'a> Expression<'a> {
 
     fn parse_literal_expr(parser: &'a Parser<'a>, pos: usize) -> ParseResult<'a> {
         match parser.get_token(pos) {
-            Some(Lexeme::LargeString(index)) => Ok((
-                Expression::LargeStringLiteral(parser.get_large_string(index)),
-                pos + 1,
-            )),
+            Some(Lexeme::LargeString(index)) => {
+                match parser.get_large_string(index) {
+                    None => bail!("literal string not found!! {}", index),
+                    Some(s) => Ok((
+                        Expression::LargeStringLiteral(s),
+                        pos + 1,
+                    ))
+                }
+            },
             Some(Lexeme::String(str)) => Ok((Expression::StringLiteral(str), pos + 1)),
             Some(Lexeme::Integer(int)) => Ok((Expression::IntegerLiteral(int), pos + 1)),
             Some(Lexeme::Float(float)) => Ok((Expression::FloatLiteral(float), pos + 1)),
@@ -989,8 +994,7 @@ impl<'a> Expression<'a> {
             Some(Lexeme::False) => Ok((Expression::False, pos + 1)),
             Some(Lexeme::True) => Ok((Expression::True, pos + 1)),
             sym => {
-                println!("parse literal sym = {:?}", sym);
-                todo!()
+                todo!("parse literal sym = {:?}", sym)
             }
         }
     }

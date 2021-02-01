@@ -5,11 +5,12 @@ use crate::backend::modules::symbols::idents::IdSym;
 use crate::backend::modules::types::func_type::FuncType;
 use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
-use crate::backend::scopes::types::Type;
+use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
 use crate::parser::ast::expressions::args::{Arg, Args};
 use crate::parser::ast::expressions::expression::Expression;
 use crate::parser::ast::module::decls::FuncTypeAst;
+use crate::backend::modules::types::trait_type::TRAIT_UNKNOWN;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Function {
@@ -159,6 +160,13 @@ impl Symbol for Function {
                 }
             }
             self.ty = ty;
+        }
+        if self.ty.is_none() {
+            let ftype: Box<FuncType>  = FuncType::new_box(self.args.as_ref().map(|v| v.iter().map(|s| match s.get_type() {
+                None => TRAIT_UNKNOWN.clone_box(),
+                Some(ty) => ty.clone()
+            }).collect()), TRAIT_UNKNOWN.clone_box());
+            self.ty = Some(ftype);
         }
         Ok(self.get_type())
     }

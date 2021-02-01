@@ -66,6 +66,7 @@ impl<'a> From<&Expression<'a>> for Box<dyn Symbol> {
             Expression::IntegerLiteral(l) => Literal::new_int(l),
             Expression::FloatLiteral(f) => Literal::new_float(f),
             Expression::StringLiteral(s) => Literal::new_str(s),
+            Expression::LargeStringLiteral(s) => Literal::new_str(s),
             Expression::CharLiteral(s) => Literal::new_char(s),
             Expression::DateLiteral(s) => Literal::new_date(s),
             Expression::RegexpLiteral(s) => Literal::new_regexp(s),

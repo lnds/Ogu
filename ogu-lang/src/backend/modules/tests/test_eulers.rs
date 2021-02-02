@@ -528,9 +528,7 @@ fn test_euler_8() {
         result = s13 |> take 1000 |> reduce max"#},
         default_sym_table(),
     );
-    if module.is_err() {
-        println!("{:?}", module);
-    }
+
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
@@ -622,3 +620,98 @@ fn test_euler_8() {
         decls[13].get_type(),
         Some(TRAIT_ORD.clone_box())); // MMMM
 }
+
+
+#[test]
+fn test_euler_9() {
+    let module = make_module(
+        indoc! {r#"
+        result = let ((a, b, c)) = [ (a, b, c) | a <- [1..249], b <- [251..499], c <- [1..499], (a + b + c == 1000) && ((a * a + b * b) == c * c) ] in a * b * c"#},
+        default_sym_table(),
+    );
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    assert_eq!(decls[0].get_type(), Some(BasicType::int()));// Some(TRAIT_NUM.clone_box())); /// TODO: CHECK THIS SHOULD BE INT
+}
+
+
+#[test]
+fn test_euler_10() {
+    let module = make_module(
+        indoc! {r#"
+        primes = lazy 2 :: filter (prime-factors >> length >> (== 1)) [3,5..]
+
+        filter f [] = []
+        filter f (x :: xs) = if f x then x :: filter f xs else filter f xs
+
+        length [] = 0
+        length x :: xs = 1 + length xs
+
+        reduce _ [] = error! "reduce undefined for empty list" -- 3
+        reduce _ [x] =  x
+        reduce f [x, y] =  f x y
+        reduce f (x :: y :: xs) = reduce f  ((f x y) :: xs)
+
+        prime-factors n = factor n primes
+          where
+            factor n (p::ps)
+              | p * p > n = [n]
+              | n % p == 0 = p :: factor (n // p) (p :: ps)
+              | otherwise = factor n ps
+
+        dec x = x - 1
+
+        add = (+)
+
+        result = reduce add (primes (dec 2000000))"#},
+        default_sym_table(),
+    );
+    if module.is_err() {
+        println!("module = {:?}", module);
+    }
+    assert!(module.is_ok());
+    let module = module.unwrap();
+    let decls = module.get_decls();
+    println!("{:#?}", decls);
+    assert_eq!(decls[0].get_type(), Some(ListType::new_list(BasicType::int())));
+    assert_eq!(
+        decls[1].get_type(),
+        FuncType::new_opt(
+            Some(vec![
+                FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
+                ListType::new_list(TRAIT_UNKNOWN.clone_box())
+            ]),
+            ListType::new_list(TRAIT_UNKNOWN.clone_box()),
+        )
+    );
+    assert_eq!(
+        decls[2].get_type(),
+        FuncType::new_opt(
+            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]), BasicType::int()));
+
+    assert_eq!(
+        decls[3].get_type(),
+        FuncType::new_opt(
+            Some(vec![
+                FuncType::new_func_type(
+                    Some(vec![TRAIT_UNKNOWN.clone_box(), TRAIT_UNKNOWN.clone_box()]),
+                    TRAIT_UNKNOWN.clone_box(),
+                ),
+                ListType::new_list(TRAIT_UNKNOWN.clone_box())
+            ]),
+            TRAIT_UNKNOWN.clone_box(),
+        )
+    );
+
+    assert_eq!(
+        decls[4].get_type(), FuncType::new_opt(Some(vec![BasicType::int()]), ListType::new_list(BasicType::int())));
+
+    assert_eq!(decls[5].get_type(), FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int()));
+    assert_eq!(decls[6].get_type(), FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()));
+
+    assert_eq!(decls[7].get_type(), Some(BasicType::int()));
+
+
+}
+

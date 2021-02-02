@@ -6,6 +6,7 @@ use crate::backend::scopes::sym_table::SymbolTable;
 use crate::backend::scopes::symbol::Symbol;
 use crate::backend::scopes::types::{Type, TypeClone};
 use crate::backend::scopes::Scope;
+use crate::backend::modules::types::list_type::ListType;
 
 #[derive(Debug, Clone)]
 pub(crate) struct TupleExpr {
@@ -61,6 +62,10 @@ impl Symbol for TupleExpr {
                         }
                     }
                 }
+            }
+            else if let Some(lty) = ty.downcast_ref::<ListType>() {
+                // case (t) = list
+                self.matches_types(Some(lty.ty.clone()))
             }
         }
     }

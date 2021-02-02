@@ -38,11 +38,11 @@ impl Symbol for ListComprehension {
     }
 
     fn define_into(&self, scope: &mut dyn Scope) -> Option<Box<dyn Symbol>> {
-        self.expr.define_into(scope);
+        let r = self.expr.define_into(scope);
         for g in self.guards.iter() {
             g.define_into(scope);
         }
-        None
+        r
     }
 
     fn is_seq(&self) -> bool {

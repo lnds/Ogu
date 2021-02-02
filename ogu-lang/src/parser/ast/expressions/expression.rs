@@ -904,12 +904,29 @@ impl<'a> Expression<'a> {
                 Ok((ListComprehensionGuard::Generator(id, expr), pos))
             }
             Some(Lexeme::LeftParen) => {
-                let pos = consume_symbol(parser, pos, Lexeme::LeftParen)?;
-                let (ids, pos) = consume_ids_sep_by(parser, pos, Lexeme::Comma)?;
-                let pos = consume_symbol(parser, pos, Lexeme::RightParen)?;
-                let pos = consume_symbol(parser, pos + 1, Lexeme::BackArrow)?;
-                let (expr, pos) = Expression::parse(parser, pos)?;
-                Ok((ListComprehensionGuard::TupleGenerator(ids, expr), pos))
+                let p = consume_symbol(parser, pos, Lexeme::LeftParen)?;
+                let r = consume_ids_sep_by(parser, p, Lexeme::Comma);
+                match r {
+                    Err(_) => {
+                        let (expr, pos) = Expression::parse(parser, pos)?;
+                        Ok((ListComprehensionGuard::Expr(expr), pos))
+                    }
+                    Ok((ids, p)) => {
+                        let r = consume_symbol(parser, p, Lexeme::RightParen);
+                        match r {
+                            Err(_) => {
+                                let (expr, pos) = Expression::parse(parser, pos)?;
+                                Ok((ListComprehensionGuard::Expr(expr), pos))
+                            }
+                            Ok(pos) => {
+                                let pos = consume_symbol(parser, pos , Lexeme::BackArrow)?;
+                                let (expr, pos) = Expression::parse(parser, pos)?;
+                                Ok((ListComprehensionGuard::TupleGenerator(ids, expr), pos))
+                            }
+                        }
+                    }
+                }
+
             }
             _ => {
                 let (expr, pos) = Expression::parse(parser, pos)?;

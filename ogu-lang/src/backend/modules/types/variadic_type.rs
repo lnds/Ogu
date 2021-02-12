@@ -32,7 +32,4 @@ impl VariadicType {
         Box::new(VariadicType { result })
     }
 
-    pub(crate) fn new_opt(result: Box<dyn Type>) -> Option<Box<dyn Type>> {
-        Some(Self::new(result))
-    }
 }

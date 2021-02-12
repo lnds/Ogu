@@ -119,10 +119,8 @@ impl Type for BasicType {
                     || other == TRAIT_EQ
                 {
                     true
-                } else if let Some(ot) = other.downcast_ref::<BasicType>() {
-                    matches!(ot, BasicType::Float)
                 } else {
-                    false
+                    matches!(other.downcast_ref::<BasicType>(), Some(BasicType::Float))
                 }
             }
             BasicType::Char => other == TRAIT_UNKNOWN || other == TRAIT_ORD || other == TRAIT_EQ,

@@ -134,8 +134,8 @@ impl Symbol for ComposeFunction {
                                 }
                             };
                             let ct = gt.result.clone();
-                            self.f.set_type(FuncType::new_opt(at.clone(), bt));
-                            self.ty = FuncType::new_opt(at, ct);
+                            self.f.set_type(Some(FuncType::new_func_type(at.clone(), bt)));
+                            self.ty = Some(FuncType::new_func_type(at, ct));
                         }
                     }
                 }
@@ -157,8 +157,8 @@ impl Symbol for ComposeFunction {
                             let a = ft.args.clone();
                             let c = TRAIT_UNKNOWN.clone_box();
                             self.g
-                                .set_type(FuncType::new_opt(a.clone(), ft.result.clone()));
-                            self.ty = FuncType::new_opt(a, c);
+                                .set_type(Some(FuncType::new_func_type(a.clone(), ft.result.clone())));
+                            self.ty = Some(FuncType::new_func_type(a, c));
                         }
                         Some(gt) => {
                             match gt.downcast_ref::<FuncType>() {
@@ -175,7 +175,7 @@ impl Symbol for ComposeFunction {
                                                 bail!("can't compose functions, arguments are incompatible gt.args = {:?} b != {:?}", gt.args, b);
                                             }
                                             let c = gt.result.clone();
-                                            self.ty = FuncType::new_opt(Some(b), c);
+                                            self.ty = Some(FuncType::new_func_type(Some(b), c));
                                         }
                                     }
                                 }

@@ -12,11 +12,11 @@ pub(crate) struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub(crate) fn new(tokens: TokenStream<'a>, large_strings: Vec<String>) -> Result<Parser<'a>> {
-        Ok(Parser {
+    pub(crate) fn new(tokens: TokenStream<'a>, large_strings: Vec<String>) -> Parser<'a> {
+        Parser {
             tokens,
             large_strings,
-        })
+        }
     }
 
     pub(crate) fn peek(&self, pos: usize, symbol: Lexeme) -> bool {

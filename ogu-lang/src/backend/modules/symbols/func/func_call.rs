@@ -101,7 +101,7 @@ impl Symbol for FuncCallExpr {
                         }
                         let tf = TRAIT_UNKNOWN.clone();
                         self.func
-                            .set_type(FuncType::new_opt(Some(ty_args), tf.clone_box()));
+                            .set_type(Some(FuncType::new_func_type(Some(ty_args), tf.clone_box())));
                         self.func.define_into(scope);
                     }
                 } else {
@@ -269,7 +269,7 @@ impl Symbol for FuncCallExpr {
                         }
                     }
                     self.func
-                        .set_type(FuncType::new_opt(Some(ty_args), tf.clone_box()));
+                        .set_type(Some(FuncType::new_func_type(Some(ty_args), tf.clone_box())));
                     self.func.define_into(scope);
                 } else {
                     bail!(

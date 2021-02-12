@@ -268,24 +268,23 @@ impl<'a> Display for Lexeme<'a> {
     }
 }
 
-fn extract_string<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> Option<&'a str> {
+fn extract_string<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> &'a str {
     let slice = lex.slice();
-    Some(&slice[1..slice.len() - 1])
+    &slice[1..slice.len() - 1]
 }
 
-fn extract_f_string<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> Option<&'a str> {
+fn extract_f_string<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> &'a str {
     let slice = lex.slice();
-    Some(&slice[2..slice.len() - 1])
+    &slice[2..slice.len() - 1]
 }
 
-fn extract_slice<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> Option<&'a str> {
-    let slice = lex.slice();
-    Some(slice)
+fn extract_slice<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> &'a str {
+    lex.slice()
 }
 
-fn extract_regex<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> Option<&'a str> {
+fn extract_regex<'a>(lex: &mut Lexer<'a, Lexeme<'a>>) -> &'a str {
     let slice = lex.slice();
-    Some(&slice[2..slice.len() - 2])
+    &slice[2..slice.len() - 2]
 }
 
 #[cfg(test)]

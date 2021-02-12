@@ -20,7 +20,7 @@ fn test_recursive_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
 }
 
@@ -39,10 +39,10 @@ fn test_recursive_2() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::int(), BasicType::int()]),
             BasicType::int()
-        )
+        ))
     );
 }
 
@@ -60,6 +60,6 @@ fn test_recursive_3() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
 }

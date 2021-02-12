@@ -15,7 +15,7 @@ fn test_hello() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(None, BasicType::unit())
+        Some(FuncType::new_func_type(None, BasicType::unit()))
     );
 }
 
@@ -50,7 +50,7 @@ fn test_arithmetic() {
     assert_eq!(decls[8].get_type(), Some(BasicType::float()));
     assert_eq!(
         decls[9].get_type(),
-        FuncType::new_opt(None, BasicType::unit())
+        Some(FuncType::new_func_type(None, BasicType::unit()))
     );
 }
 

@@ -26,7 +26,7 @@ use anyhow::Result;
 pub(crate) fn make_module(source: &str, sym_table: Box<dyn Scope>) -> Result<Module> {
     let mut lexer = Lexer::from(source);
     let (tokens, strs) = lexer.scan()?;
-    let parser = Parser::new(tokens, strs)?;
+    let parser = Parser::new(tokens, strs);
     let module_ast = ModuleAst::parse(&parser, None, 0)?;
     println!("AST {:#?}", module_ast);
     Module::new(module_ast, sym_table)

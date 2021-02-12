@@ -20,7 +20,7 @@ pub fn compile(path: PathBuf, show_tokens: bool, show_ast: bool, dump: bool) -> 
         let syms: Vec<Lexeme> = tokens.iter().map(|t| t.lexeme).collect();
         println!("TOKENS = {:?}", syms);
     }
-    let parser = Parser::new(tokens.to_owned(), strs.to_vec())?;
+    let parser = Parser::new(tokens.to_owned(), strs.to_vec());
     let module_ast = ModuleAst::parse(&parser, Some(path), 0)?;
     if show_ast {
         println!("AST = {:#?}", module_ast);
@@ -37,15 +37,15 @@ pub(crate) fn default_sym_table() -> Box<dyn Scope> {
     let mut symbol_table: Box<dyn Scope> = SymbolTable::new("_ogu", None);
     symbol_table.define(MacroSym::new(
         "println!",
-        VariadicType::new_opt(BasicType::unit()),
+        Some(VariadicType::new(BasicType::unit())),
     ));
     symbol_table.define(MacroSym::new(
         "print!",
-        VariadicType::new_opt(BasicType::unit()),
+        Some(VariadicType::new(BasicType::unit())),
     ));
     symbol_table.define(MacroSym::new(
         "error!",
-        VariadicType::new_opt(TRAIT_UNKNOWN.clone_box()),
+        Some(VariadicType::new(TRAIT_UNKNOWN.clone_box())),
     ));
     symbol_table
 }

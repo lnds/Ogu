@@ -26,10 +26,10 @@ fn test_let() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::int(), BasicType::int()]),
             BasicType::static_str(),
-        )
+        ))
     );
 }
 
@@ -45,7 +45,7 @@ fn test_let_cons() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
-    assert_eq!(decls[0].get_type(), FuncType::new_opt(Some(vec![TRAIT_UNKNOWN.clone_box()]), ListType::new_list(TRAIT_UNKNOWN.clone_box())));
+    assert_eq!(decls[0].get_type(), Some(FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), ListType::new_list(TRAIT_UNKNOWN.clone_box()))));
     assert_eq!(decls[1].get_type(), Some(ListType::new_list(BasicType::int())));
 }
 
@@ -87,9 +87,9 @@ fn test_where() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::int(), BasicType::int()]),
             BasicType::static_str(),
-        )
+        ))
     );
 }

@@ -22,7 +22,7 @@ fn test_vals_1() {
     assert_eq!(decls[0].get_type(), Some(BasicType::int()));
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(None, BasicType::int())
+        Some(FuncType::new_func_type(None, BasicType::int()))
     );
     assert_eq!(decls[3].get_type(), Some(BasicType::int()));
 }

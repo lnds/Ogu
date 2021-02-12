@@ -28,20 +28,20 @@ fn test_euler_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 ListType::new_list(TRAIT_UNKNOWN.clone_box()),
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        )
+        ))
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![ListType::new_list(TRAIT_NUM.clone_box())]),
             TRAIT_NUM.clone_box(),
-        )
+        ))
     );
     assert_eq!(decls[2].get_type(), Some(BasicType::int()));
 }
@@ -76,36 +76,36 @@ fn test_euler_2() {
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::bool())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::bool()))
     );
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        )
+        ))
     );
 
     assert_eq!(
         decls[3].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        )
+        ))
     );
 
     assert_eq!(
         decls[4].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![ListType::new_list(TRAIT_NUM.clone_box())]),
             BasicType::int(),
-        )
+        ))
     );
 
     assert_eq!(decls[5].get_type(), Some(BasicType::int()));
@@ -136,29 +136,29 @@ fn test_euler_3() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
+        Some(FuncType::new_func_type(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool()))
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
             TRAIT_UNKNOWN.clone_box(),
-        )
+        ))
     );
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             BasicType::bool(),
-        )
+        ))
     );
 
     assert_eq!(
         decls[3].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::int(), BasicType::int()]),
             ListType::new_list(TRAIT_NUM.clone_box()),
-        )
+        ))
     );
 
     assert_eq!(decls[4].get_type(), Some(BasicType::int()));
@@ -196,34 +196,34 @@ fn test_euler_4() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
+        Some(FuncType::new_func_type(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool()))
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::bool())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::bool()))
     );
 
     assert_eq!(
         decls[3].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        )
+        ))
     );
 
     assert_eq!(
         decls[4].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![ListType::new_list(TRAIT_ORD.clone_box())]),
             TRAIT_ORD.clone_box(),
-        )
+        ))
     );
     assert_eq!(decls[5].get_type(), Some(BasicType::int()));
 }
@@ -257,26 +257,26 @@ fn test_euler_5() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
+        Some(FuncType::new_func_type(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool()))
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
-        )
+        ))
     );
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             BasicType::int(),
-        )
+        ))
     );
 
     assert_eq!(
         decls[3].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(
                     Some(vec![TRAIT_UNKNOWN.clone_box(), TRAIT_UNKNOWN.clone_box()]),
@@ -286,12 +286,12 @@ fn test_euler_5() {
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             TRAIT_UNKNOWN.clone_box(),
-        )
+        ))
     );
 
     assert_eq!(
         decls[4].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
     assert_eq!(decls[5].get_type(), Some(BasicType::int()));
 }
@@ -337,26 +337,26 @@ fn test_euler_6() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool())
+        Some(FuncType::new_func_type(Some(vec![TRAIT_NUM.clone_box()]), BasicType::bool()))
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
-        )
+        ))
     );
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             BasicType::int(),
-        )
+        ))
     );
 
     assert_eq!(
         decls[3].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(
                     Some(vec![TRAIT_UNKNOWN.clone_box(), TRAIT_UNKNOWN.clone_box()]),
@@ -365,12 +365,12 @@ fn test_euler_6() {
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             TRAIT_UNKNOWN.clone_box(),
-        )
+        ))
     );
 
     assert_eq!(
         decls[4].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(
                     Some(vec![TRAIT_UNKNOWN.clone_box()]),
@@ -379,35 +379,35 @@ fn test_euler_6() {
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        )
+        ))
     );
 
     assert_eq!(
         decls[5].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
 
     assert_eq!(
         decls[6].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
 
     assert_eq!(
         decls[7].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
-        )
+        ))
     );
 
     assert_eq!(
         decls[8].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), TRAIT_NUM.clone_box())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), TRAIT_NUM.clone_box()))
     );
 
     assert_eq!(
         decls[9].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
 
     assert_eq!(decls[10].get_type(), Some(BasicType::int()));
@@ -443,23 +443,23 @@ fn test_euler_7() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        )
+        ))
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
-            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]), BasicType::int()));
+        Some(FuncType::new_func_type(
+            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]), BasicType::int())));
 
     assert_eq!(decls[2].get_type(), Some(ListType::new_list(BasicType::int())));
 
     assert_eq!(
-        decls[3].get_type(), FuncType::new_opt(Some(vec![BasicType::int()]), ListType::new_list(BasicType::int())));
+        decls[3].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), ListType::new_list(BasicType::int()))));
 
     assert_eq!(decls[4].get_type(), Some(BasicType::int()));
 }
@@ -535,17 +535,17 @@ fn test_euler_8() {
     assert_eq!(decls[0].get_type(), Some(BasicType::static_str()));
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        )
+        ))
     );
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(
                     Some(vec![TRAIT_UNKNOWN.clone_box()]),
@@ -554,20 +554,20 @@ fn test_euler_8() {
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        )
+        ))
     );
-    assert_eq!(decls[3].get_type(), FuncType::new_opt(Some(vec![TRAIT_UNKNOWN.clone_box()]), TRAIT_UNKNOWN.clone_box()));
-    assert_eq!(decls[4].get_type(), FuncType::new_opt(Some(vec![TRAIT_UNKNOWN.clone_box()]), TRAIT_UNKNOWN.clone_box()));
+    assert_eq!(decls[3].get_type(), Some(FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), TRAIT_UNKNOWN.clone_box())));
+    assert_eq!(decls[4].get_type(), Some(FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), TRAIT_UNKNOWN.clone_box())));
 
     assert_eq!(
         decls[5].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
-        ));
+        )));
     assert_eq!(
         decls[6].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(
                     Some(vec![TRAIT_UNKNOWN.clone_box(), TRAIT_UNKNOWN.clone_box()]),
@@ -576,22 +576,22 @@ fn test_euler_8() {
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             TRAIT_UNKNOWN.clone_box(),
-        )
+        ))
     );
 
     assert_eq!(
         decls[7].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::int(), ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        ));
+        )));
 
     assert_eq!(
         decls[8].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        ));
+        )));
     assert_eq!(
         decls[9].get_type(),
         Some(ListType::new_list(BasicType::int()))
@@ -599,22 +599,22 @@ fn test_euler_8() {
 
     assert_eq!(
         decls[10].get_type(),
-        FuncType::new_opt(
-            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]),  /// MMMM
-            TRAIT_NUM.clone_box()));
+        Some(FuncType::new_func_type(
+            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]),  // MMMM
+            TRAIT_NUM.clone_box())));
 
     assert_eq!(
         decls[11].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             None,
-            ListType::new_list(BasicType::int())));
+            ListType::new_list(BasicType::int()))));
 
     assert_eq!(
         decls[12].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
             TRAIT_ORD.clone_box(),
-        ));
+        )));
 
     assert_eq!(
         decls[13].get_type(),
@@ -677,22 +677,22 @@ fn test_euler_10() {
     assert_eq!(decls[0].get_type(), Some(ListType::new_list(BasicType::int())));
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box()),
-        )
+        ))
     );
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(
-            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]), BasicType::int()));
+        Some(FuncType::new_func_type(
+            Some(vec![ListType::new_list(TRAIT_UNKNOWN.clone_box())]), BasicType::int())));
 
     assert_eq!(
         decls[3].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(
                     Some(vec![TRAIT_UNKNOWN.clone_box(), TRAIT_UNKNOWN.clone_box()]),
@@ -701,14 +701,14 @@ fn test_euler_10() {
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             TRAIT_UNKNOWN.clone_box(),
-        )
+        ))
     );
 
     assert_eq!(
-        decls[4].get_type(), FuncType::new_opt(Some(vec![BasicType::int()]), ListType::new_list(BasicType::int())));
+        decls[4].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), ListType::new_list(BasicType::int()))));
 
-    assert_eq!(decls[5].get_type(), FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int()));
-    assert_eq!(decls[6].get_type(), FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box()));
+    assert_eq!(decls[5].get_type(), Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int())));
+    assert_eq!(decls[6].get_type(), Some(FuncType::new_func_type(Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]), TRAIT_NUM.clone_box())));
 
     assert_eq!(decls[7].get_type(), Some(BasicType::int()));
 

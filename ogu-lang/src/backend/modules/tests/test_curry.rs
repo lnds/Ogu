@@ -24,37 +24,37 @@ fn test_curry_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box()
-        )
+        ))
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int()))
     );
     assert_eq!(
         decls[2].get_type(),
-        FuncType::new_opt(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![TRAIT_NUM.clone_box()]), BasicType::int()))
     );
     assert_eq!(decls[3].get_type(), Some(BasicType::int()));
     assert_eq!(
         decls[4].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 TRAIT_NUM.clone_box(),
                 TRAIT_NUM.clone_box(),
                 TRAIT_NUM.clone_box()
             ]),
             TRAIT_NUM.clone_box()
-        )
+        ))
     );
     assert_eq!(
         decls[5].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             BasicType::int()
-        )
+        ))
     );
     assert_eq!(decls[6].get_type(), Some(BasicType::int()));
 }

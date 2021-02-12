@@ -19,7 +19,7 @@ fn test_proto_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
 }
 
@@ -38,10 +38,10 @@ fn test_proto_2() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::uint(), BasicType::uint()]),
             BasicType::uint()
-        )
+        ))
     );
 }
 

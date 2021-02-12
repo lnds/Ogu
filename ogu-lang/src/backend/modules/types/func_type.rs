@@ -63,13 +63,6 @@ impl FuncType {
     }
 
 
-    #[allow(dead_code)]
-    pub(crate) fn new_opt(
-        args: Option<Vec<Box<dyn Type>>>,
-        result: Box<dyn Type>,
-    ) -> Option<Box<dyn Type>> {
-        Some(Self::new_func_type(args, result))
-    }
 
 
     pub(crate) fn new_box(

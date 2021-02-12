@@ -56,13 +56,13 @@ impl<'a> Lexer {
             }
         };
 
-        self.scan_lines()
+        Ok(self.scan_lines())
     }
 
-    fn scan_lines(&'a mut self) -> Result<(TokenStream<'a>, Vec<String>)> {
+    fn scan_lines(&'a mut self) -> (TokenStream<'a>, Vec<String>) {
         let mut large_strings = vec![];
         let tokens = self.map_lines(&mut large_strings);
-        Ok((TokenStream::new(tokens), large_strings))
+        (TokenStream::new(tokens), large_strings)
     }
 
     fn map_lines(&'a mut self, mut large_strings: &mut Vec<String>) -> TokenList<'a> {

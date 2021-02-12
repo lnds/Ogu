@@ -21,10 +21,10 @@ fn test_lambda_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box()
-        )
+        ))
     );
     assert_eq!(decls[1].get_type(), Some(BasicType::int()));
     assert_eq!(decls[2].get_type(), Some(BasicType::float()));
@@ -52,20 +52,20 @@ fn test_y_combinator() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_UNKNOWN.clone_box()]),
             TRAIT_UNKNOWN.clone_box()
-        )
+        ))
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()),
                 BasicType::int()
             ]),
             BasicType::int()
-        )
+        ))
     );
     assert_eq!(decls[2].get_type(), Some(BasicType::int()));
 }

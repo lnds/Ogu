@@ -24,7 +24,7 @@ fn test_func_pattern_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
 }
 
@@ -42,10 +42,10 @@ fn test_func_pattern_2() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::int(), BasicType::int()]),
             BasicType::int(),
-        )
+        ))
     );
 }
 
@@ -71,10 +71,10 @@ fn test_func_pattern_strange_case() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::int(), BasicType::int()]),
             BasicType::static_str(),
-        )
+        ))
     );
 }
 
@@ -101,10 +101,10 @@ fn test_guards_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::int(), BasicType::int()]),
             BasicType::static_str(),
-        )
+        ))
     );
 }
 
@@ -129,10 +129,10 @@ fn test_guards2() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![BasicType::int(), BasicType::int()]),
             BasicType::static_str(),
-        )
+        ))
     );
 }
 
@@ -149,7 +149,7 @@ fn test_func_expr_arg() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(Some(vec![BasicType::int()]), BasicType::int())
+        Some(FuncType::new_func_type(Some(vec![BasicType::int()]), BasicType::int()))
     );
 }
 
@@ -168,10 +168,10 @@ fn test_funcs_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
-        )
+        ))
     );
     assert_eq!(decls[1].get_type(), decls[0].get_type());
     assert_eq!(decls[2].get_type(), Some(BasicType::int()));
@@ -193,17 +193,17 @@ fn test_funcs_2() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             TRAIT_NUM.clone_box(),
-        )
+        ))
     );
     assert_eq!(
         decls[1].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
             BasicType::float(),
-        )
+        ))
     );
 }
 
@@ -221,10 +221,10 @@ fn test_args_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TRAIT_ORD.clone_box(), TRAIT_ORD.clone_box()]),
             TRAIT_ORD.clone_box(),
-        )
+        ))
     );
     assert_eq!(decls[1].get_type(), Some(BasicType::int()));
 }
@@ -243,13 +243,13 @@ fn test_args_2() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TupleType::new_box(vec![
                 TRAIT_ORD.clone_box(),
                 TRAIT_ORD.clone_box()
             ])]),
             TRAIT_ORD.clone_box(),
-        )
+        ))
     );
     assert_eq!(decls[1].get_type(), Some(BasicType::int()));
 }
@@ -268,13 +268,13 @@ fn test_args_3() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![TupleType::new_box(vec![
                 TRAIT_UNKNOWN.clone_box(),
                 TRAIT_UNKNOWN.clone_box()
             ])]),
             TupleType::new_box(vec![TRAIT_UNKNOWN.clone_box(), TRAIT_UNKNOWN.clone_box()]),
-        )
+        ))
     );
     assert_eq!(
         decls[1].get_type(),
@@ -296,13 +296,13 @@ fn test_args_4() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
                 TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()])
             ]),
             TupleType::new_box(vec![TRAIT_NUM.clone_box(), TRAIT_NUM.clone_box()]),
-        )
+        ))
     );
     assert_eq!(
         decls[1].get_type(),
@@ -336,13 +336,13 @@ fn test_func_as_args_1() {
     let decls = module.get_decls();
     assert_eq!(
         decls[0].get_type(),
-        FuncType::new_opt(
+        Some(FuncType::new_func_type(
             Some(vec![
                 FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
                 ListType::new_list(TRAIT_UNKNOWN.clone_box())
             ]),
             ListType::new_list(TRAIT_UNKNOWN.clone_box())
-        )
+        ))
     );
 }
 
@@ -358,4 +358,14 @@ fn test_func_as_args_2() {
     assert!(module.is_ok());
     let module = module.unwrap();
     let decls = module.get_decls();
+    assert_eq!(
+        decls[0].get_type(),
+        Some(FuncType::new_func_type(
+            Some(vec![
+                FuncType::new_func_type(Some(vec![TRAIT_UNKNOWN.clone_box()]), BasicType::bool()),
+                ListType::new_list(TRAIT_UNKNOWN.clone_box())
+            ]),
+            ListType::new_list(TRAIT_UNKNOWN.clone_box())
+        ))
+    );
 }
